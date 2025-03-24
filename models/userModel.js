@@ -19,17 +19,6 @@ const userSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
-        enum: ['Male', 'Female', 'Other'],
-    },
-    phone: {
-        type: String,
-        required: true,
-        // match: /^\d{3}-\d{3}-\d{4}$/, // Validate phone number format
-    },
-    role: {
-        type: String,
-        enum: ['admin', 'moderator', 'user'],
-        default: 'user',
     },
     createdAt: {
         type: Date,
@@ -44,7 +33,7 @@ const userSchema = new mongoose.Schema({
         default: false,
     },
 }, {
-    timestamps: true, // Automatically update createdAt and updatedAt fields
+    timestamps: true,
 });
 
 const User = mongoose.model("User", userSchema);

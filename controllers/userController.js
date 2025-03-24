@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 // Register a new user
 export const registerUser = async (req, res) => {
     try {
-        const { name, email, password, phone, gender } = req.body;
+        const { name, email, password } = req.body;
 
         // Validate required fields
         if (!name || !email || !password) {
@@ -18,7 +18,7 @@ export const registerUser = async (req, res) => {
         }
 
         // Create a new user
-        const newUser = new User({ name, email, password, phone, gender });
+        const newUser = new User({ name, email, password });
         await newUser.save();
 
         res.status(201).json({ message: "User created successfully" });
