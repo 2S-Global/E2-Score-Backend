@@ -26,6 +26,14 @@ export const registerUser = async (req, res) => {
         // Create a new user with hashed password
         const newUser = new User({ name, email, password: hashedPassword });
         await newUser.save();
+        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: "30d" });
+
+        res.status(201).json({
+            success: true,
+            message: "User registered and logged in successfully!",
+            token,
+            data: newUser,
+        });
 
         res.status(201).json({ message: "User created successfully" });
     } catch (error) {
