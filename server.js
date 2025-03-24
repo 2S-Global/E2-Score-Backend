@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 
+import db from './config/db.js';
+db();
+
 const app = express();
 // Middleware
 app.use(cors());
