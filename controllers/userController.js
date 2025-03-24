@@ -1,6 +1,6 @@
 import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt"; // Import bcrypt
+import bcrypt from "bcrypt";
 
 
 // Register a new user
