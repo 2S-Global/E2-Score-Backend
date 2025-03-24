@@ -32,7 +32,7 @@ export const registerUser = async (req, res) => {
             success: true,
             message: "User registered and logged in successfully!",
             token,
-            data: newUser,
+            /*  data: newUser, */
         });
 
         res.status(201).json({ message: "User created successfully" });
