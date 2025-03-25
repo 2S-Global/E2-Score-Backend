@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
-
+        const role = 1;
         // Validate required fields
         if (!name || !email || !password) {
             return res.status(400).json({ message: "Name, email, and password are required" });
@@ -24,7 +24,45 @@ export const registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         // Create a new user with hashed password
-        const newUser = new User({ name, email, password: hashedPassword });
+        const newUser = new User({ name, email, password: hashedPassword, role });
+        await newUser.save();
+        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: "30d" });
+
+        res.status(201).json({
+            success: true,
+            message: "User registered and logged in successfully!",
+            token,
+            /*  data: newUser, */
+        });
+
+        res.status(201).json({ message: "User created successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error creating user", error: error.message });
+    }
+};
+
+// Register a new company
+export const registercompany = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        const role = 2;
+        // Validate required fields
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Name, email, and password are required" });
+        }
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "User already exists" });
+        }
+
+        // Hash the password before saving
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        // Create a new user with hashed password
+        const newUser = new User({ name, email, password: hashedPassword, role });
         await newUser.save();
         const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 
@@ -67,6 +105,7 @@ export const loginUser = async (req, res) => {
             message: "Login successful!",
             token,
             data: user,
+            role: user.role,
         });
     } catch (error) {
         res.status(500).json({ message: "Error logging in user", error: error.message });

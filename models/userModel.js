@@ -32,6 +32,12 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    role: {
+        /* 0 for admin ,1 for candidate ,2 for company  */
+        type: Number,
+        required: true,
+        default: 1,
+    }
 }, {
     timestamps: true,
 });

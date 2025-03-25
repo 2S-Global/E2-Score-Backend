@@ -27,11 +27,13 @@ const userRouter = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Register user (assuming registration may need form data)
+// Register user candidate
 userRouter.post('/register', upload.none(), registerUser);
 
-// Login user (use multer for form-data without files)
+// Login user
 userRouter.post('/login', upload.none(), loginUser);
+
+/* company-register */
 
 
 export default userRouter;
