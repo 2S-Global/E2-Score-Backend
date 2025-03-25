@@ -14,11 +14,20 @@ app.use(express.json());
 
 // Import routes
 import AuthRouter from './routes/AuthRoutes.js';
+import userSkillsRoutes from './routes/userSkillsRoutes.js';
+import userProjectsRoutes from './routes/userProjectsRoutes.js';
+import userEmploymentRoutes from './routes/userEmploymentRoutes.js';
+import userEducationRoutes from './routes/userEducationRoutes.js';
+
 // Routes
 app.get('/', (req, res) => {
     res.send('Welcome to the back end of the E2 Score ');
 });
 app.use('/api/auth', AuthRouter);
+app.use('/api/skills', userSkillsRoutes);
+app.use('/api/projects', userProjectsRoutes);
+app.use('/api/employment', userEmploymentRoutes);
+app.use('/api/education', userEducationRoutes);
 
 // Start server
 const PORT = process.env.PORT || 8080;
