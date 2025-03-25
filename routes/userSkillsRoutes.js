@@ -9,7 +9,10 @@ import {
     deleteUserSkill
 } from '../controllers/userSkillsController.js'; // Adjust the path according to your project structure
 
+//Middleware
 import userAuth from '../middleware/authMiddleware.js';
+import Candimid from '../middleware/candidateMiddleware.js';
+
 
 // Initialize dotenv to load environment variables
 dotenv.config();
@@ -28,8 +31,8 @@ const userRouter = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-userRouter.post('/add_user_skills', addUserSkills);
-userRouter.post('/list_user_skills', listUserSkills);
-userRouter.post('/delete_user_skills', deleteUserSkill);
+userRouter.post('/add_user_skills', upload.none(), userAuth, Candimid, addUserSkills);
+userRouter.get('/list_user_skills', upload.none(), userAuth, Candimid, listUserSkills);
+userRouter.delete('/delete_user_skills', upload.none(), userAuth, Candimid, deleteUserSkill);
 
 export default userRouter;

@@ -7,12 +7,17 @@ import UserSkills from "../models/userSkillsModel.js"; // Ensure correct path to
 export const addUserSkills = async (req, res) => {
     try {
         const user_id = req.userId;
+        //check user exists
+        if (!user_id) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
         const { skill_name, software_version, last_used_year, experience_year, experience_month } = req.body;
 
         // Validate required fields
         if (!skill_name || !software_version) {
             return res.status(400).json({ message: "Skill name and software version are required" });
         }
+
 
         // Create a new skill entry
         const newSkill = new UserSkills({

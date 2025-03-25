@@ -1,4 +1,4 @@
-import User from "../models/userModel";
+import User from "../models/userModel.js";
 
 const Companymid = async (req, res, next) => {
     try {
@@ -17,7 +17,7 @@ const Companymid = async (req, res, next) => {
         console.log('Id:', user._id);
         console.log('User role_id:', user.role);
         // Check if the user's role_id is 3 (buyer role)
-        if (user.role !== "2") {
+        if (user.role !== 2) {
             return res.status(403).json({ message: 'You are not authorized to access this resource.' });
         }
         next();

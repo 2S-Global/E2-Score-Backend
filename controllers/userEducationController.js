@@ -4,7 +4,9 @@ import UserEducation from "../models/userEducationModel.js";
 export const addUserEducation = async (req, res) => {
     try {
         const user_id = req.userId;
-        const { level, state, board, year_of_passing, medium_of_education, transcript_data, certificate_data, marks } = req.body;
+        const { level, state, board, year_of_passing,
+            medium_of_education, transcript_data,
+            certificate_data, marks } = req.body;
 
         // Validate required fields
         if (!user_id || !level || !state || !year_of_passing) {

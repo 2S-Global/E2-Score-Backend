@@ -8,7 +8,9 @@ import {
     listUserEmployment,
 } from '../controllers/userEmploymentController.js'; // Adjust the path according to your project structure
 
+//Middleware
 import userAuth from '../middleware/authMiddleware.js';
+import Candimid from '../middleware/candidateMiddleware.js';
 
 // Initialize dotenv to load environment variables
 dotenv.config();
@@ -27,8 +29,8 @@ const userRouter = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-userRouter.post('/add_employment', addUserEmployment);
-userRouter.post('/list_employment',listUserEmployment);
+userRouter.post('/add_employment', upload.none(), userAuth, Candimid, addUserEmployment);
+userRouter.get('/list_employment', upload.none(), userAuth, Candimid, listUserEmployment);
 
 
 export default userRouter;

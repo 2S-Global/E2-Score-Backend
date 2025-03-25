@@ -10,7 +10,9 @@ import {
     editUserProject
 } from '../controllers/userProjectController.js'; // Adjust the path according to your project structure
 
+//Middleware
 import userAuth from '../middleware/authMiddleware.js';
+import Candimid from '../middleware/candidateMiddleware.js';
 
 // Initialize dotenv to load environment variables
 dotenv.config();
@@ -30,10 +32,10 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 
-userRouter.post('/add_user_project', addUserProject);
-userRouter.post('/list_user_project', listUserProject);
-userRouter.post('/delete_user_project', deleteUserProject);
-userRouter.post('/edit_user_project', editUserProject);
+userRouter.post('/add_user_project', upload.none(), userAuth, Candimid, addUserProject);
+userRouter.get('/list_user_project', upload.none(), userAuth, Candimid, listUserProject);
+userRouter.delete('/delete_user_project', upload.none(), userAuth, Candimid, deleteUserProject);
+userRouter.put('/edit_user_project', upload.none(), userAuth, Candimid, editUserProject);
 
 
 export default userRouter;

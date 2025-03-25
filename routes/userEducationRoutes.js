@@ -9,7 +9,7 @@ import {
     updateUserEducation,
     deleteUserEducation
 } from '../controllers/userEducationController.js'; // Adjust the path according to your project structure
-//Middlewa
+//Middleware
 import userAuth from '../middleware/authMiddleware.js';
 import Candimid from '../middleware/candidateMiddleware.js';
 
@@ -31,9 +31,9 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 userRouter.post('/add_user_education', upload.none(), userAuth, Candimid, addUserEducation);
-userRouter.post('/list_user_education', upload.none(), userAuth, Candimid, listUserEducation);
+userRouter.get('/list_user_education', upload.none(), userAuth, Candimid, listUserEducation);
 userRouter.put('/:id', upload.none(), userAuth, Candimid, updateUserEducation);
-userRouter.post('/delete_user_education', upload.none(), userAuth, Candimid, deleteUserEducation);
+userRouter.delete('/delete_user_education', upload.none(), userAuth, Candimid, deleteUserEducation);
 
 
 export default userRouter;
