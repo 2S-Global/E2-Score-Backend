@@ -13,12 +13,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Import routes
-import userrouter from './routes/userRoutes.js';
+import AuthRouter from './routes/AuthRoutes.js';
 // Routes
 app.get('/', (req, res) => {
     res.send('Welcome to the back end of the E2 Score ');
 });
-app.use('/api/users', userrouter);
+app.use('/api/auth', AuthRouter);
 
 // Start server
 const PORT = process.env.PORT || 8080;
