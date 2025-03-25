@@ -59,11 +59,9 @@ export const deleteUserEducation = async (req, res) => {
 
         // Soft delete by setting `is_del: true`
         const deletedRecord = await UserEducation.findByIdAndUpdate(id, { is_del: true }, { new: true });
-
         if (!deletedRecord) {
             return res.status(404).json({ message: "Education record not found" });
         }
-
         res.status(200).json({ message: "Education record deleted successfully", data: deletedRecord });
     } catch (error) {
         res.status(500).json({ message: "Error deleting education record", error: error.message });
