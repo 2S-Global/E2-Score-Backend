@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 
 const userSkillsSchema = new mongoose.Schema({
-    user_id : {
-        type: String,
-        required: true,
+    user_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
     skill_name: {
         type: String,
@@ -18,8 +19,8 @@ const userSkillsSchema = new mongoose.Schema({
     },
     experience_year: {
         type: String,
-/*         required: true,
-        unique: true, */
+        /*         required: true,
+                unique: true, */
     },
     experience_month: {
         type: String,

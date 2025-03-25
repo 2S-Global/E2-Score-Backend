@@ -1,19 +1,18 @@
 import UserProject from "../models/userProjectsModel.js";
-import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 // Register a new user
 export const addUserProject = async (req, res) => {
     try {
-        const { 
-            user_id, 
-            project_title, 
-            employee_role, 
-            client_name, 
-            projrct_status, 
-            work_start_year, 
-            work_start_month, 
-            work_till_year, 
-            work_till_month 
+        const user_id = req.userId;
+        const {
+            project_title,
+            employee_role,
+            client_name,
+            projrct_status,
+            work_start_year,
+            work_start_month,
+            work_till_year,
+            work_till_month
         } = req.body;
 
         // Validate required fields
@@ -48,7 +47,7 @@ export const addUserProject = async (req, res) => {
 
 export const listUserProject = async (req, res) => {
     try {
-        const { user_id } = req.body;
+        const user_id = req.userId;
 
         // Validate user_id
         if (!user_id) {
@@ -99,7 +98,8 @@ export const listUserProject = async (req, res) => {
 
 export const deleteUserProject = async (req, res) => {
     try {
-        const { project_id, user_id } = req.body;
+        const { project_id } = req.body;
+        const user_id = req.userId;
 
         // Validate required fields
         if (!project_id || !user_id) {
@@ -141,17 +141,17 @@ export const deleteUserProject = async (req, res) => {
 
 export const editUserProject = async (req, res) => {
     try {
-        const { 
-            project_id, 
-            user_id, 
-            project_title, 
-            employee_role, 
-            client_name, 
-            projrct_status, 
-            work_start_year, 
-            work_start_month, 
-            work_till_year, 
-            work_till_month 
+        const user_id = req.userId;
+        const {
+            project_id,
+            project_title,
+            employee_role,
+            client_name,
+            projrct_status,
+            work_start_year,
+            work_start_month,
+            work_till_year,
+            work_till_month
         } = req.body;
 
         // Validate required fields
@@ -170,14 +170,14 @@ export const editUserProject = async (req, res) => {
         // Find and update the project
         const updatedProject = await UserProject.findOneAndUpdate(
             { _id: objectId, user_id, is_del: false }, // Ensure project is not deleted
-            { 
-                project_title, 
-                employee_role, 
-                client_name, 
-                projrct_status, 
-                work_start_year, 
-                work_start_month, 
-                work_till_year, 
+            {
+                project_title,
+                employee_role,
+                client_name,
+                projrct_status,
+                work_start_year,
+                work_start_month,
+                work_till_year,
                 work_till_month,
                 updatedAt: Date.now()
             },

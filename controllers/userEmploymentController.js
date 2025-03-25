@@ -4,8 +4,8 @@ import jwt from "jsonwebtoken";
 // Register a new user
 export const addUserEmployment = async (req, res) => {
     try {
+        const user_id = req.userId;
         const {
-            user_id,
             is_current_employment,
             employment_type,
             total_experience_year,
@@ -50,10 +50,9 @@ export const addUserEmployment = async (req, res) => {
 };
 
 
-
 export const listUserEmployment = async (req, res) => {
     try {
-        const { user_id } = req.body;
+        const user_id = req.userId;
 
         // Validate required fields
         if (!user_id) {

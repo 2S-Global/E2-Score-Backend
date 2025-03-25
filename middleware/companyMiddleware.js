@@ -1,6 +1,6 @@
 import User from "../models/userModel";
 
-const Adminmid = async (req, res, next) => {
+const Companymid = async (req, res, next) => {
     try {
         // Ensure that the user is authenticated
         if (!req.user || !req.userId) {
@@ -27,4 +27,4 @@ const Adminmid = async (req, res, next) => {
     }
 };
 
-export default Adminmid;
+export default Companymid;

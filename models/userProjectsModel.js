@@ -2,9 +2,10 @@ import mongoose from "mongoose";
 
 const userProjectSchema = new mongoose.Schema({
     user_id: {
-        type: String,
-        required: true,
-    },   
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     project_title: {
         type: String,
         required: true,
@@ -19,7 +20,7 @@ const userProjectSchema = new mongoose.Schema({
     projrct_status: {
         type: String,
         required: true,
-/*         unique: true, */
+        /*         unique: true, */
     },
     work_start_year: {
         type: String,

@@ -3,7 +3,8 @@ import UserEducation from "../models/userEducationModel.js";
 // Add a new user education record
 export const addUserEducation = async (req, res) => {
     try {
-        const { user_id, level, state, board, year_of_passing, medium_of_education, transcript_data, certificate_data, marks } = req.body;
+        const user_id = req.userId;
+        const { level, state, board, year_of_passing, medium_of_education, transcript_data, certificate_data, marks } = req.body;
 
         // Validate required fields
         if (!user_id || !level || !state || !year_of_passing) {
@@ -34,7 +35,7 @@ export const addUserEducation = async (req, res) => {
 // Get list of user education records
 export const listUserEducation = async (req, res) => {
     try {
-        const { user_id } = req.query; // Optional filtering by employee_id
+        const user_id = req.userId;
 
         let query = {};
         if (user_id) {

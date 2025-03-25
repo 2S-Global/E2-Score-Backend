@@ -6,7 +6,8 @@ import UserSkills from "../models/userSkillsModel.js"; // Ensure correct path to
 
 export const addUserSkills = async (req, res) => {
     try {
-        const { user_id, skill_name, software_version, last_used_year, experience_year, experience_month } = req.body;
+        const user_id = req.userId;
+        const { skill_name, software_version, last_used_year, experience_year, experience_month } = req.body;
 
         // Validate required fields
         if (!skill_name || !software_version) {
@@ -36,7 +37,7 @@ export const addUserSkills = async (req, res) => {
 // Login a user
 export const listUserSkills = async (req, res) => {
     try {
-        const { user_id } = req.body;
+        const user_id = req.userId;
 
         // Validate if user_id is provided
         if (!user_id) {
@@ -63,7 +64,8 @@ export const listUserSkills = async (req, res) => {
 
 export const deleteUserSkill = async (req, res) => {
     try {
-        const { user_id, skill_id } = req.body;
+        const user_id = req.userId;
+        const { skill_id } = req.body;
 
         // Validate required fields
         if (!user_id || !skill_id) {
