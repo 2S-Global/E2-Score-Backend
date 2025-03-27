@@ -8,7 +8,7 @@ export const addUserToCart = async (req, res) => {
         const user_id = req.userId;
         //check user exists
         if (!user_id) {
-            return res.status(400).json({ message: "User ID is required" });
+            return res.status(401).json({ message: "User ID is required" });
         }
 
 
@@ -64,7 +64,7 @@ export const addUserToCart = async (req, res) => {
         await newUserCart.save();
         res.status(201).json({ success: true, message: "User verification cart added successfully", data: newUserCart });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Error adding user verification cart", error: error.message });
+        res.status(401).json({ success: false, message: "Error adding user verification cart", error: error.message });
     }
 };
 
