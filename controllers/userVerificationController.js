@@ -16,7 +16,7 @@ export const listUserVerifiedList = async (req, res) => {
       }
 
       // Fetch all records for the employer_id
-      const users = await UserCartVerification.find({ employer_id });
+      const users = await UserVerification.find({ employer_id });
 
       if (users.length === 0) {
           return res.status(404).json({ message: "No verified users found" });
