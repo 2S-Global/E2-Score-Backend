@@ -18,7 +18,7 @@ import userSkillsRoutes from './routes/userSkillsRoutes.js';
 import userProjectsRoutes from './routes/userProjectsRoutes.js';
 import userEmploymentRoutes from './routes/userEmploymentRoutes.js';
 import userEducationRoutes from './routes/userEducationRoutes.js';
-import userVerificationRoutes from './routes/candidateVerificationRoutes.js';
+import userVerificationRoutes from './routes/userVerificationRoutes.js';
 import userVerificationCartRoutes from './routes/userVerificationCartRoutes.js';
 
 
