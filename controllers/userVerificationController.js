@@ -66,7 +66,7 @@ export const verifyPAN = async (req, res) => {
       const panApiResponse = response.data;
   
   
-        const updatedUser = await UserVerification.findByIdAndUpdate(
+        const updatedUser = await UserCartVerification.findByIdAndUpdate(
           id,
           {
             $set: {
