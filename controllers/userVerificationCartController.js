@@ -130,7 +130,7 @@ export const getUserVerificationCartByEmployer = async (req, res) => {
             overallSubtotal += subtotal;
 
             return {
-                id: index + 1,
+                id: cart._id,
                 name: cart.candidate_name,
                 mobile: cart.candidate_mobile || "",
                 payFor: payForArray.join(", "),
