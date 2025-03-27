@@ -68,7 +68,7 @@ export const addUserToCart = async (req, res) => {
     }
 };
 
-/* export const getUserVerificationCartByEmployer = async (req, res) => {
+export const getUserVerificationCartByEmployerAll = async (req, res) => {
     try {
         const employer_id = req.userId;
         const userCarts = await UserCartVerification.find({ employer_id, is_del: false });
@@ -101,7 +101,7 @@ export const addUserToCart = async (req, res) => {
     } catch (error) {
         res.status(401).json({ success: false, message: "Error fetching user verification carts", error: error.message });
     }
-}; */
+};
 
 export const getUserVerificationCartByEmployer = async (req, res) => {
     try {
