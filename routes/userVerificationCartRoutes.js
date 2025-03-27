@@ -5,7 +5,8 @@ import { v2 as cloudinary } from 'cloudinary';
 
 import {
     addUserToCart,
-    getUserVerificationCartByEmployer
+    getUserVerificationCartByEmployer,
+    getUserVerificationCartByEmployerAll
 } from '../controllers/userVerificationCartController.js'; // Adjust the path according to your project structure
 
 //Middleware
@@ -27,10 +28,12 @@ cloudinary.config({
 const userRouter = express.Router();
 
 // Setup multer with memory storage for handling file uploads
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 userRouter.post('/add_user_cart', upload.none(), userAuth, Companymid, addUserToCart);
 userRouter.get('/list_user_cart', upload.none(), userAuth, Companymid, getUserVerificationCartByEmployer);
+userRouter.get('/list_user_cart_all', upload.none(), userAuth, Companymid, getUserVerificationCartByEmployerAll);
 
 export default userRouter;
