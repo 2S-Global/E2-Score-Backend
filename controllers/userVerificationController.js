@@ -342,9 +342,9 @@ export const verifyPassport = async (req, res) => {
 
 export const verifyDL = async (req, res) => {
   try {
-    const { customer_dl_number, candidate_name, candidate_dob,id } = req.body;
+    const { customer_dl_number, name_to_match, customer_dob,id } = req.body;
 
-    if (!customer_dl_number || !candidate_name || !candidate_dob) {
+    if (!customer_dl_number || !name_to_match || !customer_dob) {
       return res.status(400).json({ message: "DL number, name, and DOB are required" });
     }
 
@@ -352,8 +352,8 @@ export const verifyDL = async (req, res) => {
       mode: "sync",
       data: {
         customer_dl_number,
-        candidate_name,
-        candidate_dob,
+        name_to_match,
+        customer_dob,
         consent: "Y",
         consent_text:
           "I hereby declare my consent agreement for fetching my information via ZOOP API"
