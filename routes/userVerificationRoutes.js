@@ -34,7 +34,7 @@ userRouter.post("/verifyPAN",upload.none(), userAuth, Companymid, verifyPAN);
 userRouter.post("/verifyEPIC",upload.none(), userAuth, Companymid, verifyEPIC);
 userRouter.post("/cloneAndMoveRecordById",upload.none(), userAuth, Companymid, cloneAndMoveRecordById);
 userRouter.post("/verifyAadhaar",upload.none(), userAuth, Companymid, verifyAadhaar);
-userRouter.post("/varifyPassport",upload.none(), userAuth, Companymid, verifyPassport);
+userRouter.post("/verifyPassport",upload.none(), userAuth, Companymid, verifyPassport);
 userRouter.post("/verifyDL",upload.none(), userAuth, Companymid, verifyDL);
 
 export default userRouter;
