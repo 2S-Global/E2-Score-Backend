@@ -18,6 +18,9 @@ import userSkillsRoutes from './routes/userSkillsRoutes.js';
 import userProjectsRoutes from './routes/userProjectsRoutes.js';
 import userEmploymentRoutes from './routes/userEmploymentRoutes.js';
 import userEducationRoutes from './routes/userEducationRoutes.js';
+import userVerificationRoutes from './routes/candidateVerificationRoutes.js';
+import userVerificationCartRoutes from './routes/userVerificationCartRoutes.js';
+
 
 // Routes
 app.get('/', (req, res) => {
@@ -28,6 +31,8 @@ app.use('/api/skills', userSkillsRoutes);
 app.use('/api/projects', userProjectsRoutes);
 app.use('/api/employment', userEmploymentRoutes);
 app.use('/api/education', userEducationRoutes);
+app.use('/api/verify', userVerificationRoutes);
+app.use('/api/usercart', userVerificationCartRoutes);
 
 // Start server
 const PORT = process.env.PORT || 8080;
