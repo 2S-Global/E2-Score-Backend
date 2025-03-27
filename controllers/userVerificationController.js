@@ -128,7 +128,7 @@ export const verifyPAN = async (req, res) => {
   
       const epicApiResponse = response.data;
   
-      const updatedUser = await DomesticUser.findByIdAndUpdate(
+      const updatedUser = await UserVerification.findByIdAndUpdate(
         id,
         {
           $set: {
@@ -144,6 +144,64 @@ export const verifyPAN = async (req, res) => {
       res.status(500).json({
         message: "EPIC verification failed",
         error: error.response ? error.response.data : error.message,
+      });
+    }
+  };
+
+  
+
+ export const verifyAadhaar = async (req, res) => {
+    try {
+      const { customer_aadhaar_number,userId } = req.body;
+  
+      if (!customer_aadhaar_number) {
+        return res.status(400).json({ message: "Aadhaar number is required" });
+      }
+  
+      const aadhaarData = {
+        mode: "sync",
+        data: {
+          customer_aadhaar_number,
+          consent: "Y",
+          consent_text:
+            "I hereby declare my consent agreement for fetching my information via ZOOP API"
+        },
+        task_id: "ecc326d9-d676-4b10-a82b-50b4b9dd8a16"
+      };
+  
+      // Sending request to Zoop API
+      const response = await axios.post(
+        "https://test.zoop.one/api/v1/in/identity/aadhaar/verification",
+        aadhaarData,
+        {
+          headers: {
+            "app-id": "67b8252871c07100283cedc6",
+            "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+            "Content-Type": "application/json"
+          },
+          timeout: 10000, // 10 seconds timeout
+          maxRedirects: 10
+        }
+      );
+  
+      const aadhaarApiResponse = response.data;
+  
+      const updatedUser = await UserVerification.findByIdAndUpdate(
+        userId,
+        {
+          $set: {
+            aadhaar_response: aadhaarApiResponse,
+
+          }
+        },
+        { new: true } 
+      );
+  
+      res.status(200).json(response.data);
+    } catch (error) {
+      res.status(500).json({
+        message: "Aadhaar verification failed",
+        error: error.response ? error.response.data : error.message
       });
     }
   };
