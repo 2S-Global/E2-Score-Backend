@@ -19,7 +19,7 @@ export const listUserVerifiedList = async (req, res) => {
       const users = await UserVerification.find({ employer_id });
 
       if (users.length === 0) {
-          return res.status(404).json({ message: "No verified users found" });
+          return res.status(202).json({ message: "No verified users found" });
       }
 
       res.status(200).json(users);
