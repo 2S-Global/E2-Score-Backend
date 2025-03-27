@@ -3,7 +3,7 @@ import multer from 'multer';
 import dotenv from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
 
-import {listUserVerifiedList,verifyPAN,verifyEPIC,cloneAndMoveRecordById} from '../controllers/userVerificationController.js';
+import {listUserVerifiedList,verifyPAN,verifyEPIC,cloneAndMoveRecordById,verifyAadhaar} from '../controllers/userVerificationController.js';
 
 //Middleware
 import userAuth from '../middleware/authMiddleware.js';
@@ -33,4 +33,6 @@ userRouter.get("/listUserVerifiedList",upload.none(), userAuth, Companymid, list
 userRouter.post("/verifyPAN",upload.none(), userAuth, Companymid, verifyPAN);
 userRouter.post("/verifyEPIC",upload.none(), userAuth, Companymid, verifyEPIC);
 userRouter.post("/cloneAndMoveRecordById",upload.none(), userAuth, Companymid, cloneAndMoveRecordById);
+userRouter.post("/verifyAadhaar",upload.none(), userAuth, Companymid, verifyAadhaar);
+
 export default userRouter;
