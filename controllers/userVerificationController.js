@@ -152,16 +152,21 @@ export const verifyPAN = async (req, res) => {
 
  export const verifyAadhaar = async (req, res) => {
     try {
-      const { customer_aadhaar_number,userId } = req.body;
+      const { candidate_aadhaar_number,id } = req.body;
   
-      if (!customer_aadhaar_number) {
+      if (!candidate_aadhaar_number) {
         return res.status(400).json({ message: "Aadhaar number is required" });
       }
+
+      const employer_id = req.userId;
+      if (!employer_id) {
+        return res.status(400).json({ message: "Employer ID is required" });
+    }
   
       const aadhaarData = {
         mode: "sync",
         data: {
-          customer_aadhaar_number,
+          candidate_aadhaar_number,
           consent: "Y",
           consent_text:
             "I hereby declare my consent agreement for fetching my information via ZOOP API"
@@ -187,7 +192,7 @@ export const verifyPAN = async (req, res) => {
       const aadhaarApiResponse = response.data;
   
       const updatedUser = await UserVerification.findByIdAndUpdate(
-        userId,
+        id,
         {
           $set: {
             aadhaar_response: aadhaarApiResponse,
@@ -281,13 +286,13 @@ export const verifyPassport = async (req, res) => {
     if (!employer_id) {
       return res.status(400).json({ message: "Employer ID is required" });
   }
-    const { customer_file_number, candidate_name, candidate_dob  } = req.body;
+    const { customer_file_number, candidate_name, candidate_dob ,id } = req.body;
 
     if (!customer_file_number || !candidate_name || !candidate_dob) {
       return res.status(400).json({ message: "Passport number and name are required" });
     }
 
-    const panData = {
+    const passportData = {
       mode: "sync",
       data: {
         customer_file_number,
@@ -303,7 +308,7 @@ export const verifyPassport = async (req, res) => {
     // Sending request to Zoop API
     const response = await axios.post(
       "https://test.zoop.one/api/v1/in/identity/passport/advance",
-      panData,
+      passportData,
       {
         headers: {
           "app-id": "67b8252871c07100283cedc6",
@@ -316,7 +321,7 @@ export const verifyPassport = async (req, res) => {
 
 
       const updatedUser = await UserCartVerification.findByIdAndUpdate(
-        employer_id,
+        id,
         {
           $set: {
             passport_response: passportApiResponse,
@@ -337,7 +342,7 @@ export const verifyPassport = async (req, res) => {
 
 export const verifyDL = async (req, res) => {
   try {
-    const { customer_dl_number, candidate_name, candidate_dob,userId } = req.body;
+    const { customer_dl_number, candidate_name, candidate_dob,id } = req.body;
 
     if (!customer_dl_number || !candidate_name || !candidate_dob) {
       return res.status(400).json({ message: "DL number, name, and DOB are required" });
@@ -374,11 +379,11 @@ export const verifyDL = async (req, res) => {
     const dlApiResponse = response.data;
 
     const updatedUser = await UserCartVerification.findByIdAndUpdate(
-      userId,
+      id,
       {
         $set: {
           dl_response: dlApiResponse,
-          status:"1"
+      
         }
       },
       { new: true } 
