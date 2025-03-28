@@ -213,7 +213,7 @@ export const verifyPAN = async (req, res) => {
 
   export const cloneAndMoveRecordById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { id } = req.body;
 
         const employer_id = req.userId;
         if (!employer_id) {
