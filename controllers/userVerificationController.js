@@ -25,7 +25,7 @@ export const listUserVerifiedList = async (req, res) => {
       res.status(200).json(users);
   } catch (error) {
       console.error("Error fetching verified users:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(500).json({ message: error });
   }
 };
 export const verifyPAN = async (req, res) => {
@@ -413,9 +413,7 @@ export const verifiedDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!employer_id) {
-      return res.status(400).json({ message: "Employer ID is required" });
-  }
+
 
    if (!id) {
       return res.status(400).json({ message: "User ID is required" });
