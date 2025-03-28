@@ -272,7 +272,6 @@ export const searchUserVerifiedList = async (req, res) => {
 
     // Fetch users with filters
     const users = await UserCartVerification.find(filter)
-      .select("candidate_name candidate_email candidate_mobile employer_id");
 
     // Check if users were found
     if (users.length === 0) {
