@@ -220,16 +220,16 @@ export const verifyPAN = async (req, res) => {
           return res.status(400).json({ message: "Employer ID is required" });
       }
 
-        const record = await UserCartVerification.findById(id);
-        if (!record) {
-            return res.status(404).json({ message: "Record not found" });
-        }
+        // const record = await UserCartVerification.findById(id);
+        // if (!record) {
+        //     return res.status(404).json({ message: "Record not found" });
+        // }
 
-        const { _id, ...recordData } = record.toObject();
+        // const { _id, ...recordData } = record.toObject();
 
-        const newRecord = await UserVerification.create(recordData);
+        // const newRecord = await UserVerification.create(recordData);
 
-        await UserCartVerification.findByIdAndDelete(id);
+        // await UserCartVerification.findByIdAndDelete(id);
 
         res.status(200).json({
             message: "Record successfully moved!",
