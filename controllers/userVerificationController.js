@@ -98,7 +98,7 @@ export const verifyPAN = async (req, res) => {
         return res.status(400).json({ message: "Employer ID is required" });
     }
   
-      if (!epic_number || !epic_name) {
+      if (!customer_epic_number || !name_to_match) {
         return res.status(400).json({ message: "EPIC number and name are required" });
       }
   
@@ -154,7 +154,7 @@ export const verifyPAN = async (req, res) => {
     try {
       const { customer_aadhaar_number,id } = req.body;
   
-      if (!candidate_aadhaar_number) {
+      if (!customer_aadhaar_number) {
         return res.status(400).json({ message: "Aadhaar number is required" });
       }
 
@@ -288,7 +288,7 @@ export const verifyPassport = async (req, res) => {
   }
     const { customer_file_number, name_to_match,customer_dob,id } = req.body;
 
-    if (!customer_file_number || !candidate_name || !candidate_dob) {
+    if (!customer_file_number || !name_to_match || !customer_dob) {
       return res.status(400).json({ message: "Passport number and name are required" });
     }
 
