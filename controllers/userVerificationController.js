@@ -246,38 +246,48 @@ export const verifyPAN = async (req, res) => {
 
 export const searchUserVerifiedList = async (req, res) => {
   try {
-      // Extract query parameters
-      const { candidate_name } = req.query;
-      const employer_id = req.userId;
-      if (!employer_id) {
-        return res.status(400).json({ message: "Employer ID is required" });
+    // Extract query parameters
+    const { candidate_name, candidate_email, candidate_mobile } = req.query;
+    const employer_id = req.userId;
+
+    // Validate employer_id
+    if (!employer_id) {
+      return res.status(400).json({ message: "Employer ID is required" });
     }
-      // Check if employer_id is valid
-      if (!mongoose.Types.ObjectId.isValid(employer_id)) {
-          return res.status(400).json({ message: "Invalid Employer ID" });
-      }
+    if (!mongoose.Types.ObjectId.isValid(employer_id)) {
+      return res.status(400).json({ message: "Invalid Employer ID" });
+    }
 
-      // Create a search condition
-      let filter = { employer_id: employer_id };
-      if (keyword) {
-          filter.$or = [
-              { candidate_name: { $regex: candidate_name, $options: "i" } }, 
-             
-          ];
-      }
+    // Build search conditions
+    let filter = { employer_id };
 
-      // Query MongoDB with filters
-      const users = await UserCartVerification.find(filter).limit(50); // Limit results for performance
+    let searchConditions = [];
+    if (candidate_name) {
+      searchConditions.push({ candidate_name: { $regex: candidate_name, $options: "i" } });
+    }
+    if (candidate_email) {
+      searchConditions.push({ candidate_email: { $regex: candidate_email, $options: "i" } });
+    }
+    if (candidate_mobile) {
+      searchConditions.push({ candidate_mobile: { $regex: candidate_mobile, $options: "i" } });
+    }
 
-      if (users.length === 0) {
-          return res.status(404).json({ message: "No verified users found" });
-      }
+    if (searchConditions.length > 0) {
+      filter.$or = searchConditions;
+    }
 
-      res.status(200).json(users);
+    // Fetch users with filters
+    const users = await UserCartVerification.find(filter)
+      .select("candidate_name candidate_email candidate_mobile employer_id"); // Select only required fields
 
+    if (users.length === 0) {
+      return res.status(200).json({ message: "No verified users found" });
+    }
+
+    res.status(200).json(users);
   } catch (error) {
-      console.error("Error fetching verified users:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error fetching verified users:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
