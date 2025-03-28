@@ -77,7 +77,8 @@ export const verifyPAN = async (req, res) => {
         //   { new: true } 
         // );
         
-      res.status(200).json(response.data);
+      // res.status(200).json(response.data);
+      res.status(200);
     } catch (error) {
       res.status(200).json({
         message: "PAN verification failed",
@@ -139,7 +140,8 @@ export const verifyPAN = async (req, res) => {
       //   { new: true } 
       // );
   
-      res.status(200).json(response.data);
+      // res.status(200).json(response.data);
+          res.status(200);
     } catch (error) {
       res.status(500).json({
         message: "EPIC verification failed",
@@ -201,8 +203,8 @@ export const verifyPAN = async (req, res) => {
       //   },
       //   { new: true } 
       // );
-  
-      res.status(200).json(response.data);
+      res.status(200);
+      // res.status(200).json(response.data);
     } catch (error) {
       res.status(500).json({
         message: "Aadhaar verification failed",
@@ -331,7 +333,8 @@ export const verifyPassport = async (req, res) => {
     //     { new: true } 
     //   );
       
-    res.status(200).json(response.data);
+    // res.status(200).json(response.data);
+        res.status(200);
   } catch (error) {
     res.status(200).json({
       message: "Passport verification failed",
@@ -390,7 +393,8 @@ export const verifyDL = async (req, res) => {
     // );
 
 
-    res.status(200).json(response.data);
+    // res.status(200).json(response.data);
+        res.status(200);
   } catch (error) {
     res.status(500).json({
       message: "DL verification failed",
