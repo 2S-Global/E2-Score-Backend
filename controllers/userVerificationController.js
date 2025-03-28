@@ -411,7 +411,7 @@ export const verifyDL = async (req, res) => {
 
 export const verifiedDetails = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body;
 
 
 
