@@ -247,45 +247,34 @@ export const verifyPAN = async (req, res) => {
 export const searchUserVerifiedList = async (req, res) => {
   try {
     const { keyword } = req.body;
-    const employer_id = req.userId;
 
-    if (!employer_id) {
-      return res.status(400).json({ message: "Employer ID is required" });
-    }
-    if (!mongoose.Types.ObjectId.isValid(employer_id)) {
-      return res.status(400).json({ message: "Invalid Employer ID" });
-    }
-
-    // Check if a keyword is provided
     if (!keyword) {
       return res.status(400).json({ message: "Search keyword is required" });
     }
 
-    // Build dynamic search condition
-    let filter = { employer_id, $or: [] };
-
-    filter.$or.push(
- { candidate_name: { $regex: `^${keyword}`, $options: "i" } }, // Match from start
-      { candidate_email: { $regex: `^${keyword}`, $options: "i" } },
-      { candidate_mobile: { $regex: `^${keyword}`, $options: "i" } },
-    );
+    // Build search condition (match from the start of the field)
+    let filter = {
+      $or: [
+        { candidate_name: { $regex: `^${keyword}`, $options: "i" } },
+        { candidate_email: { $regex: `^${keyword}`, $options: "i" } },
+        { candidate_mobile: { $regex: `^${keyword}`, $options: "i" } },
+      ],
+    };
 
     // Fetch users with filters
-    const users = await UserVerification.find(filter)
+    const users = await UserVerification.find(filter);
 
-    // Check if users were found
-    if (users.length === 0) {
-      return res.status(200).json({ message: "No verified users found", users: [] });
-    }
-
-    // Return users if found
-    res.status(200).json({ users });
+    res.status(200).json({
+      message: users.length ? "Users found" : "No verified users found",
+      users,
+    });
 
   } catch (error) {
     console.error("Error fetching verified users:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 export const verifyPassport = async (req, res) => {
   try {
