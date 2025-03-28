@@ -307,7 +307,7 @@ export const verifyPassport = async (req, res) => {
       task_id: "8bbb54f3-d299-4535-b00e-e74d2d5a3997",
     };
 
-    Sending request to Zoop API
+
     const response = await axios.post(
       "https://test.zoop.one/api/v1/in/identity/passport/advance",
       passportData,
@@ -364,7 +364,7 @@ export const verifyDL = async (req, res) => {
       task_id: "f26eb21e-4c35-4491-b2d5-41fa0e545a34"
     };
 
-    Sending request to Zoop API
+
     const response = await axios.post(
       "https://test.zoop.one/api/v1/in/identity/dl/advance",
       dlData,
@@ -410,4 +410,3 @@ export const verifyDL = async (req, res) => {
 
 
   
-
