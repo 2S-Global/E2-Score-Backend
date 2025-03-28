@@ -51,7 +51,7 @@ export const verifyPAN = async (req, res) => {
         task_id: "8bbb54f3-d299-4535-b00e-e74d2d5a3997",
       };
   
-      Sending request to Zoop API
+    
       const response = await axios.post(
         "https://test.zoop.one/api/v1/in/identity/pan/lite",
         panData,
@@ -114,7 +114,7 @@ export const verifyPAN = async (req, res) => {
         task_id: "d15a2a3b-9989-46ef-9b63-e24728292dc0",
       };
   
-      Sending request to Zoop API
+
       const response = await axios.post(
         "https://test.zoop.one/api/v1/in/identity/voter/advance",
         epicData,
@@ -176,7 +176,7 @@ export const verifyPAN = async (req, res) => {
         task_id: "ecc326d9-d676-4b10-a82b-50b4b9dd8a16"
       };
   
-      Sending request to Zoop API
+ 
       const response = await axios.post(
         "https://test.zoop.one/api/v1/in/identity/aadhaar/verification",
         aadhaarData,
