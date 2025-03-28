@@ -63,19 +63,19 @@ export const verifyPAN = async (req, res) => {
       //     },
       //   }
       // );
-      const panApiResponse = response.data;
+      // const panApiResponse = response.data;
   
   
-        const updatedUser = await UserCartVerification.findByIdAndUpdate(
-          id,
-          {
-            $set: {
-              pan_response: panApiResponse,
+        // const updatedUser = await UserCartVerification.findByIdAndUpdate(
+        //   id,
+        //   {
+        //     $set: {
+        //       pan_response: panApiResponse,
          
-            }
-          },
-          { new: true } 
-        );
+        //     }
+        //   },
+        //   { new: true } 
+        // );
         
       res.status(200).json(response.data);
     } catch (error) {
@@ -126,18 +126,18 @@ export const verifyPAN = async (req, res) => {
       //   }
       // );
   
-      const epicApiResponse = response.data;
+      // const epicApiResponse = response.data;
   
-      const updatedUser = await UserCartVerification.findByIdAndUpdate(
-        id,
-        {
-          $set: {
-            epic_response: epicApiResponse,
+      // const updatedUser = await UserCartVerification.findByIdAndUpdate(
+      //   id,
+      //   {
+      //     $set: {
+      //       epic_response: epicApiResponse,
  
-          }
-        },
-        { new: true } 
-      );
+      //     }
+      //   },
+      //   { new: true } 
+      // );
   
       res.status(200).json(response.data);
     } catch (error) {
@@ -189,18 +189,18 @@ export const verifyPAN = async (req, res) => {
       //   }
       // );
   
-      const aadhaarApiResponse = response.data;
+      // const aadhaarApiResponse = response.data;
   
-      const updatedUser = await UserVerification.findByIdAndUpdate(
-        id,
-        {
-          $set: {
-            aadhaar_response: aadhaarApiResponse,
+      // const updatedUser = await UserVerification.findByIdAndUpdate(
+      //   id,
+      //   {
+      //     $set: {
+      //       aadhaar_response: aadhaarApiResponse,
 
-          }
-        },
-        { new: true } 
-      );
+      //     }
+      //   },
+      //   { new: true } 
+      // );
   
       res.status(200).json(response.data);
     } catch (error) {
@@ -317,19 +317,19 @@ export const verifyPassport = async (req, res) => {
     //     },
     //   }
     // );
-    const passportApiResponse = response.data;
+    // const passportApiResponse = response.data;
 
 
-      const updatedUser = await UserCartVerification.findByIdAndUpdate(
-        id,
-        {
-          $set: {
-            passport_response: passportApiResponse,
-            status:"1"
-          }
-        },
-        { new: true } 
-      );
+    //   const updatedUser = await UserCartVerification.findByIdAndUpdate(
+    //     id,
+    //     {
+    //       $set: {
+    //         passport_response: passportApiResponse,
+    //         status:"1"
+    //       }
+    //     },
+    //     { new: true } 
+    //   );
       
     res.status(200).json(response.data);
   } catch (error) {
@@ -376,18 +376,18 @@ export const verifyDL = async (req, res) => {
     //   }
     // );
 
-    const dlApiResponse = response.data;
+    // const dlApiResponse = response.data;
 
-    const updatedUser = await UserCartVerification.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          dl_response: dlApiResponse,
+    // const updatedUser = await UserCartVerification.findByIdAndUpdate(
+    //   id,
+    //   {
+    //     $set: {
+    //       dl_response: dlApiResponse,
       
-        }
-      },
-      { new: true } 
-    );
+    //     }
+    //   },
+    //   { new: true } 
+    // );
 
 
     res.status(200).json(response.data);
