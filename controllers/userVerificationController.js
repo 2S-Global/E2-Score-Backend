@@ -51,34 +51,34 @@ export const verifyPAN = async (req, res) => {
         task_id: "8bbb54f3-d299-4535-b00e-e74d2d5a3997",
       };
   
-      // Sending request to Zoop API
-      // const response = await axios.post(
-      //   "https://test.zoop.one/api/v1/in/identity/pan/lite",
-      //   panData,
-      //   {
-      //     headers: {
-      //       "app-id": "67b8252871c07100283cedc6",
-      //       "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
-      //       "Content-Type": "application/json",
-      //     },
-      //   }
-      // );
-      // const panApiResponse = response.data;
+      Sending request to Zoop API
+      const response = await axios.post(
+        "https://test.zoop.one/api/v1/in/identity/pan/lite",
+        panData,
+        {
+          headers: {
+            "app-id": "67b8252871c07100283cedc6",
+            "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const panApiResponse = response.data;
   
   
-        // const updatedUser = await UserCartVerification.findByIdAndUpdate(
-        //   id,
-        //   {
-        //     $set: {
-        //       pan_response: panApiResponse,
+        const updatedUser = await UserCartVerification.findByIdAndUpdate(
+          id,
+          {
+            $set: {
+              pan_response: panApiResponse,
          
-        //     }
-        //   },
-        //   { new: true } 
-        // );
+            }
+          },
+          { new: true } 
+        );
         
-      // res.status(200).json(response.data);
-      res.status(200);
+      res.status(200).json(response.data);
+      // res.status(200);
     } catch (error) {
       res.status(200).json({
         message: "PAN verification failed",
@@ -114,34 +114,34 @@ export const verifyPAN = async (req, res) => {
         task_id: "d15a2a3b-9989-46ef-9b63-e24728292dc0",
       };
   
-      // Sending request to Zoop API
-      // const response = await axios.post(
-      //   "https://test.zoop.one/api/v1/in/identity/voter/advance",
-      //   epicData,
-      //   {
-      //     headers: {
-      //       "app-id": "67b8252871c07100283cedc6",
-      //       "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
-      //       "Content-Type": "application/json",
-      //     },
-      //   }
-      // );
+      Sending request to Zoop API
+      const response = await axios.post(
+        "https://test.zoop.one/api/v1/in/identity/voter/advance",
+        epicData,
+        {
+          headers: {
+            "app-id": "67b8252871c07100283cedc6",
+            "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+            "Content-Type": "application/json",
+          },
+        }
+      );
   
-      // const epicApiResponse = response.data;
+      const epicApiResponse = response.data;
   
-      // const updatedUser = await UserCartVerification.findByIdAndUpdate(
-      //   id,
-      //   {
-      //     $set: {
-      //       epic_response: epicApiResponse,
+      const updatedUser = await UserCartVerification.findByIdAndUpdate(
+        id,
+        {
+          $set: {
+            epic_response: epicApiResponse,
  
-      //     }
-      //   },
-      //   { new: true } 
-      // );
+          }
+        },
+        { new: true } 
+      );
   
-      // res.status(200).json(response.data);
-          res.status(200);
+      res.status(200).json(response.data);
+          // res.status(200);
     } catch (error) {
       res.status(500).json({
         message: "EPIC verification failed",
@@ -176,35 +176,35 @@ export const verifyPAN = async (req, res) => {
         task_id: "ecc326d9-d676-4b10-a82b-50b4b9dd8a16"
       };
   
-      // Sending request to Zoop API
-      // const response = await axios.post(
-      //   "https://test.zoop.one/api/v1/in/identity/aadhaar/verification",
-      //   aadhaarData,
-      //   {
-      //     headers: {
-      //       "app-id": "67b8252871c07100283cedc6",
-      //       "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
-      //       "Content-Type": "application/json"
-      //     },
-      //     timeout: 10000, // 10 seconds timeout
-      //     maxRedirects: 10
-      //   }
-      // );
+      Sending request to Zoop API
+      const response = await axios.post(
+        "https://test.zoop.one/api/v1/in/identity/aadhaar/verification",
+        aadhaarData,
+        {
+          headers: {
+            "app-id": "67b8252871c07100283cedc6",
+            "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+            "Content-Type": "application/json"
+          },
+          timeout: 10000, // 10 seconds timeout
+          maxRedirects: 10
+        }
+      );
   
-      // const aadhaarApiResponse = response.data;
+      const aadhaarApiResponse = response.data;
   
-      // const updatedUser = await UserVerification.findByIdAndUpdate(
-      //   id,
-      //   {
-      //     $set: {
-      //       aadhaar_response: aadhaarApiResponse,
+      const updatedUser = await UserVerification.findByIdAndUpdate(
+        id,
+        {
+          $set: {
+            aadhaar_response: aadhaarApiResponse,
 
-      //     }
-      //   },
-      //   { new: true } 
-      // );
-      res.status(200);
-      // res.status(200).json(response.data);
+          }
+        },
+        { new: true } 
+      );
+      // res.status(200);
+      res.status(200).json(response.data);
     } catch (error) {
       res.status(500).json({
         message: "Aadhaar verification failed",
@@ -222,16 +222,16 @@ export const verifyPAN = async (req, res) => {
           return res.status(400).json({ message: "Employer ID is required" });
       }
 
-        // const record = await UserCartVerification.findById(id);
-        // if (!record) {
-        //     return res.status(404).json({ message: "Record not found" });
-        // }
+        const record = await UserCartVerification.findById(id);
+        if (!record) {
+            return res.status(404).json({ message: "Record not found" });
+        }
 
-        // const { _id, ...recordData } = record.toObject();
+        const { _id, ...recordData } = record.toObject();
 
-        // const newRecord = await UserVerification.create(recordData);
+        const newRecord = await UserVerification.create(recordData);
 
-        // await UserCartVerification.findByIdAndDelete(id);
+        await UserCartVerification.findByIdAndDelete(id);
 
         res.status(200).json({
             message: "Record successfully moved!",
@@ -307,34 +307,34 @@ export const verifyPassport = async (req, res) => {
       task_id: "8bbb54f3-d299-4535-b00e-e74d2d5a3997",
     };
 
-    // Sending request to Zoop API
-    // const response = await axios.post(
-    //   "https://test.zoop.one/api/v1/in/identity/passport/advance",
-    //   passportData,
-    //   {
-    //     headers: {
-    //       "app-id": "67b8252871c07100283cedc6",
-    //       "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
-    //       "Content-Type": "application/json",
-    //     },
-    //   }
-    // );
-    // const passportApiResponse = response.data;
+    Sending request to Zoop API
+    const response = await axios.post(
+      "https://test.zoop.one/api/v1/in/identity/passport/advance",
+      passportData,
+      {
+        headers: {
+          "app-id": "67b8252871c07100283cedc6",
+          "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const passportApiResponse = response.data;
 
 
-    //   const updatedUser = await UserCartVerification.findByIdAndUpdate(
-    //     id,
-    //     {
-    //       $set: {
-    //         passport_response: passportApiResponse,
-    //         status:"1"
-    //       }
-    //     },
-    //     { new: true } 
-    //   );
+      const updatedUser = await UserCartVerification.findByIdAndUpdate(
+        id,
+        {
+          $set: {
+            passport_response: passportApiResponse,
+            status:"1"
+          }
+        },
+        { new: true } 
+      );
       
-    // res.status(200).json(response.data);
-        res.status(200);
+    res.status(200).json(response.data);
+        // res.status(200);
   } catch (error) {
     res.status(200).json({
       message: "Passport verification failed",
@@ -364,37 +364,37 @@ export const verifyDL = async (req, res) => {
       task_id: "f26eb21e-4c35-4491-b2d5-41fa0e545a34"
     };
 
-    // Sending request to Zoop API
-    // const response = await axios.post(
-    //   "https://test.zoop.one/api/v1/in/identity/dl/advance",
-    //   dlData,
-    //   {
-    //     headers: {
-    //       "app-id": "67b8252871c07100283cedc6",
-    //       "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
-    //       "Content-Type": "application/json"
-    //     },
-    //     timeout: 10000, // 10 seconds timeout
-    //     maxRedirects: 10
-    //   }
-    // );
+    Sending request to Zoop API
+    const response = await axios.post(
+      "https://test.zoop.one/api/v1/in/identity/dl/advance",
+      dlData,
+      {
+        headers: {
+          "app-id": "67b8252871c07100283cedc6",
+          "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+          "Content-Type": "application/json"
+        },
+        timeout: 10000, // 10 seconds timeout
+        maxRedirects: 10
+      }
+    );
 
-    // const dlApiResponse = response.data;
+    const dlApiResponse = response.data;
 
-    // const updatedUser = await UserCartVerification.findByIdAndUpdate(
-    //   id,
-    //   {
-    //     $set: {
-    //       dl_response: dlApiResponse,
+    const updatedUser = await UserCartVerification.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          dl_response: dlApiResponse,
       
-    //     }
-    //   },
-    //   { new: true } 
-    // );
+        }
+      },
+      { new: true } 
+    );
 
 
-    // res.status(200).json(response.data);
-        res.status(200);
+    res.status(200).json(response.data);
+        // res.status(200);
   } catch (error) {
     res.status(500).json({
       message: "DL verification failed",
