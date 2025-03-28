@@ -409,6 +409,35 @@ export const verifyDL = async (req, res) => {
   }
 };
 
+export const verifiedDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!employer_id) {
+      return res.status(400).json({ message: "Employer ID is required" });
+  }
+
+   if (!id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+
+
+
+    const user = await UserVerification.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ user });
+
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 
 
 
