@@ -68,7 +68,68 @@ export const addUserToCart = async (req, res) => {
     }
 };
 
+
 export const getUserVerificationCartByEmployerAll = async (req, res) => {
+    try {
+        const employer_id = req.userId;
+        const userCarts = await UserCartVerification.find({ employer_id, is_del: false });
+
+        let totalVerifications = 0;
+        const verificationCharge = 50;
+
+        // Process each user's cart
+        const userData = userCarts.map(cart => {
+            let payFor = [];
+
+            if (cart.pan_number) {
+                totalVerifications++;
+                payFor.push("PAN");
+            }
+            if (cart.aadhar_number) {
+                totalVerifications++;
+                payFor.push("Aadhar");
+            }
+            if (cart.dl_number) {
+                totalVerifications++;
+                payFor.push("Driving Licence");
+            }
+            if (cart.passport_file_number) {
+                totalVerifications++;
+                payFor.push("Passport");
+            }
+            if (cart.epic_number) {
+                totalVerifications++;
+                payFor.push("EPIC");
+            }
+
+            return {
+                ...cart._doc,  // Spread existing user cart data
+                selected_verifications: payFor.join(",") // Add pay_for to each user entry
+            };
+        });
+
+        const subtotal = totalVerifications * verificationCharge;
+        const gst = subtotal * 0.18;
+        const total = subtotal + gst;
+
+        res.status(200).json({ 
+            success: true, 
+            data: userData, // Updated user list with pay_for field
+            billing: {
+                subtotal: subtotal.toFixed(2),
+                gst: gst.toFixed(2),
+                total: total.toFixed(2)
+            }
+        });
+    } catch (error) {
+        res.status(401).json({ success: false, message: "Error fetching user verification carts", error: error.message });
+    }
+};
+
+
+
+
+export const getUserVerificationCartByEmployerAll_OLD = async (req, res) => {
     try {
         const employer_id = req.userId;
         const userCarts = await UserCartVerification.find({ employer_id, is_del: false });
