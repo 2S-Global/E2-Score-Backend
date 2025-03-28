@@ -250,7 +250,7 @@ export const searchUserVerifiedList = async (req, res) => {
     const { candidate_name, candidate_email, candidate_mobile } = req.query;
     const employer_id = req.userId;
 
-    // Validate employer_id
+
     if (!employer_id) {
       return res.status(400).json({ message: "Employer ID is required" });
     }
@@ -278,7 +278,7 @@ export const searchUserVerifiedList = async (req, res) => {
 
     // Fetch users with filters
     const users = await UserCartVerification.find(filter)
-      .select("candidate_name candidate_email candidate_mobile employer_id"); // Select only required fields
+      .select("candidate_name candidate_email candidate_mobile employer_id"); 
 
     if (users.length === 0) {
       return res.status(200).json({ message: "No verified users found" });
