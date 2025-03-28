@@ -36,5 +36,6 @@ userRouter.post("/cloneAndMoveRecordById",upload.none(), userAuth, Companymid, c
 userRouter.post("/verifyAadhaar",upload.none(), userAuth, Companymid, verifyAadhaar);
 userRouter.post("/verifyPassport",upload.none(), userAuth, Companymid, verifyPassport);
 userRouter.post("/verifyDL",upload.none(), userAuth, Companymid, verifyDL);
+userRouter.get("/searchUserVerifiedList",upload.none(), userAuth, Companymid, searchUserVerifiedList);
 
 export default userRouter;
