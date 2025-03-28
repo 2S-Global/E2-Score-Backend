@@ -52,17 +52,17 @@ export const verifyPAN = async (req, res) => {
       };
   
       // Sending request to Zoop API
-      const response = await axios.post(
-        "https://test.zoop.one/api/v1/in/identity/pan/lite",
-        panData,
-        {
-          headers: {
-            "app-id": "67b8252871c07100283cedc6",
-            "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // const response = await axios.post(
+      //   "https://test.zoop.one/api/v1/in/identity/pan/lite",
+      //   panData,
+      //   {
+      //     headers: {
+      //       "app-id": "67b8252871c07100283cedc6",
+      //       "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+      //       "Content-Type": "application/json",
+      //     },
+      //   }
+      // );
       const panApiResponse = response.data;
   
   
@@ -114,17 +114,17 @@ export const verifyPAN = async (req, res) => {
       };
   
       // Sending request to Zoop API
-      const response = await axios.post(
-        "https://test.zoop.one/api/v1/in/identity/voter/advance",
-        epicData,
-        {
-          headers: {
-            "app-id": "67b8252871c07100283cedc6",
-            "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // const response = await axios.post(
+      //   "https://test.zoop.one/api/v1/in/identity/voter/advance",
+      //   epicData,
+      //   {
+      //     headers: {
+      //       "app-id": "67b8252871c07100283cedc6",
+      //       "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+      //       "Content-Type": "application/json",
+      //     },
+      //   }
+      // );
   
       const epicApiResponse = response.data;
   
@@ -175,19 +175,19 @@ export const verifyPAN = async (req, res) => {
       };
   
       // Sending request to Zoop API
-      const response = await axios.post(
-        "https://test.zoop.one/api/v1/in/identity/aadhaar/verification",
-        aadhaarData,
-        {
-          headers: {
-            "app-id": "67b8252871c07100283cedc6",
-            "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
-            "Content-Type": "application/json"
-          },
-          timeout: 10000, // 10 seconds timeout
-          maxRedirects: 10
-        }
-      );
+      // const response = await axios.post(
+      //   "https://test.zoop.one/api/v1/in/identity/aadhaar/verification",
+      //   aadhaarData,
+      //   {
+      //     headers: {
+      //       "app-id": "67b8252871c07100283cedc6",
+      //       "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+      //       "Content-Type": "application/json"
+      //     },
+      //     timeout: 10000, // 10 seconds timeout
+      //     maxRedirects: 10
+      //   }
+      // );
   
       const aadhaarApiResponse = response.data;
   
@@ -306,17 +306,17 @@ export const verifyPassport = async (req, res) => {
     };
 
     // Sending request to Zoop API
-    const response = await axios.post(
-      "https://test.zoop.one/api/v1/in/identity/passport/advance",
-      passportData,
-      {
-        headers: {
-          "app-id": "67b8252871c07100283cedc6",
-          "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    // const response = await axios.post(
+    //   "https://test.zoop.one/api/v1/in/identity/passport/advance",
+    //   passportData,
+    //   {
+    //     headers: {
+    //       "app-id": "67b8252871c07100283cedc6",
+    //       "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+    //       "Content-Type": "application/json",
+    //     },
+    //   }
+    // );
     const passportApiResponse = response.data;
 
 
@@ -362,19 +362,19 @@ export const verifyDL = async (req, res) => {
     };
 
     // Sending request to Zoop API
-    const response = await axios.post(
-      "https://test.zoop.one/api/v1/in/identity/dl/advance",
-      dlData,
-      {
-        headers: {
-          "app-id": "67b8252871c07100283cedc6",
-          "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
-          "Content-Type": "application/json"
-        },
-        timeout: 10000, // 10 seconds timeout
-        maxRedirects: 10
-      }
-    );
+    // const response = await axios.post(
+    //   "https://test.zoop.one/api/v1/in/identity/dl/advance",
+    //   dlData,
+    //   {
+    //     headers: {
+    //       "app-id": "67b8252871c07100283cedc6",
+    //       "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+    //       "Content-Type": "application/json"
+    //     },
+    //     timeout: 10000, // 10 seconds timeout
+    //     maxRedirects: 10
+    //   }
+    // );
 
     const dlApiResponse = response.data;
 
