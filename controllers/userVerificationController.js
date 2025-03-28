@@ -30,12 +30,12 @@ export const listUserVerifiedList = async (req, res) => {
 };
 export const verifyPAN = async (req, res) => {
     try {
-      const { customer_pan_number, pan_name,id } = req.body;
+      const { customer_pan_number, pan_holder_name,id } = req.body;
       const employer_id = req.userId;
       if (!employer_id) {
         return res.status(400).json({ message: "Employer ID is required" });
     }
-      if (!customer_pan_number || !pan_name) {
+      if (!customer_pan_number || !pan_holder_name) {
         return res.status(400).json({ message: "PAN number and name are required" });
       }
   
@@ -286,7 +286,7 @@ export const verifyPassport = async (req, res) => {
     if (!employer_id) {
       return res.status(400).json({ message: "Employer ID is required" });
   }
-    const { customer_file_number, name_to_match,customer_dob,id } = req.body;
+    const { customer_file_number, name_to_match, customer_dob ,id } = req.body;
 
     if (!customer_file_number || !name_to_match || !customer_dob) {
       return res.status(400).json({ message: "Passport number and name are required" });
