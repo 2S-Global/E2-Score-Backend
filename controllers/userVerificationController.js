@@ -91,7 +91,7 @@ export const verifyPAN = async (req, res) => {
     try {
 
       
-      const { epic_number, epic_name,id } = req.body;
+      const { customer_epic_number, name_to_match,id } = req.body;
 
       const employer_id = req.userId;
       if (!employer_id) {
