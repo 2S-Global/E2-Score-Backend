@@ -152,7 +152,7 @@ export const verifyPAN = async (req, res) => {
 
  export const verifyAadhaar = async (req, res) => {
     try {
-      const { candidate_aadhaar_number,id } = req.body;
+      const { customer_aadhaar_number,id } = req.body;
   
       if (!candidate_aadhaar_number) {
         return res.status(400).json({ message: "Aadhaar number is required" });
@@ -286,7 +286,7 @@ export const verifyPassport = async (req, res) => {
     if (!employer_id) {
       return res.status(400).json({ message: "Employer ID is required" });
   }
-    const { customer_file_number, candidate_name, candidate_dob ,id } = req.body;
+    const { customer_file_number, name_to_match,customer_dob,id } = req.body;
 
     if (!customer_file_number || !candidate_name || !candidate_dob) {
       return res.status(400).json({ message: "Passport number and name are required" });
