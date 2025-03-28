@@ -37,6 +37,6 @@ userRouter.post("/verifyAadhaar",upload.none(), userAuth, Companymid, verifyAadh
 userRouter.post("/verifyPassport",upload.none(), userAuth, Companymid, verifyPassport);
 userRouter.post("/verifyDL",upload.none(), userAuth, Companymid, verifyDL);
 userRouter.post("/searchUserVerifiedList",upload.none(), userAuth, Companymid, searchUserVerifiedList);
-userRouter.get("/verifiedDetails/:id",upload.none(),  verifiedDetails);
+userRouter.post("/verifiedDetails",upload.none(),  verifiedDetails);
 
 export default userRouter;
