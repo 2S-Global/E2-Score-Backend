@@ -265,9 +265,9 @@ export const searchUserVerifiedList = async (req, res) => {
     let filter = { employer_id, $or: [] };
 
     filter.$or.push(
-      { candidate_name: { $regex: keyword, $options: "i" } },
-      { candidate_email: { $regex: keyword, $options: "i" } },
-      { candidate_mobile: { $regex: keyword, $options: "i" } }
+ { candidate_name: { $regex: `^${keyword}`, $options: "i" } }, // Match from start
+      { candidate_email: { $regex: `^${keyword}`, $options: "i" } },
+      { candidate_mobile: { $regex: `^${keyword}`, $options: "i" } },
     );
 
     // Fetch users with filters
