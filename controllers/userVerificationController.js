@@ -271,7 +271,7 @@ export const searchUserVerifiedList = async (req, res) => {
     );
 
     // Fetch users with filters
-    const users = await UserCartVerification.find(filter)
+    const users = await UserVerification.find(filter)
 
     // Check if users were found
     if (users.length === 0) {
