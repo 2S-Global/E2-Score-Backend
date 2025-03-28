@@ -246,10 +246,8 @@ export const verifyPAN = async (req, res) => {
 
 export const searchUserVerifiedList = async (req, res) => {
   try {
-    // Extract query parameters
-    const { candidate_name, candidate_email, candidate_mobile } = req.query;
+    const { keyword } = req.query;
     const employer_id = req.userId;
-
 
     if (!employer_id) {
       return res.status(400).json({ message: "Employer ID is required" });
@@ -258,33 +256,32 @@ export const searchUserVerifiedList = async (req, res) => {
       return res.status(400).json({ message: "Invalid Employer ID" });
     }
 
-    // Build search conditions
-    let filter = { employer_id };
-
-    let searchConditions = [];
-    if (candidate_name) {
-      searchConditions.push({ candidate_name: { $regex: candidate_name, $options: "i" } });
-    }
-    if (candidate_email) {
-      searchConditions.push({ candidate_email: { $regex: candidate_email, $options: "i" } });
-    }
-    if (candidate_mobile) {
-      searchConditions.push({ candidate_mobile: { $regex: candidate_mobile, $options: "i" } });
+    // Check if a keyword is provided
+    if (!keyword) {
+      return res.status(400).json({ message: "Search keyword is required" });
     }
 
-    if (searchConditions.length > 0) {
-      filter.$or = searchConditions;
-    }
+    // Build dynamic search condition
+    let filter = { employer_id, $or: [] };
+
+    filter.$or.push(
+      { candidate_name: { $regex: keyword, $options: "i" } },
+      { candidate_email: { $regex: keyword, $options: "i" } },
+      { candidate_mobile: { $regex: keyword, $options: "i" } }
+    );
 
     // Fetch users with filters
     const users = await UserCartVerification.find(filter)
-      .select("candidate_name candidate_email candidate_mobile employer_id"); 
+      .select("candidate_name candidate_email candidate_mobile employer_id");
 
+    // Check if users were found
     if (users.length === 0) {
-      return res.status(200).json({ message: "No verified users found" });
+      return res.status(200).json({ message: "No verified users found", users: [] });
     }
 
-    res.status(200).json(users);
+    // Return users if found
+    res.status(200).json({ users });
+
   } catch (error) {
     console.error("Error fetching verified users:", error);
     res.status(500).json({ message: "Internal Server Error" });
