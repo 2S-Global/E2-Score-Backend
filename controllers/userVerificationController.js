@@ -43,7 +43,7 @@ export const verifyPAN = async (req, res) => {
         mode: "sync",
         data: {
           customer_pan_number,
-          pan_name,
+          pan_holder_name,
           consent: "Y",
           consent_text:
             "I hereby declare my consent agreement for fetching my information via ZOOP API",
@@ -105,8 +105,8 @@ export const verifyPAN = async (req, res) => {
   
       const epicData = {
         data: {
-          epic_number,
-          epic_name,
+          customer_epic_number,
+          name_to_match,
           consent: "Y",
           consent_text:
             "I hereby declare my consent agreement for fetching my information via ZOOP API",
@@ -168,7 +168,7 @@ export const verifyPAN = async (req, res) => {
       const aadhaarData = {
         mode: "sync",
         data: {
-          candidate_aadhaar_number,
+          customer_aadhaar_number,
           consent: "Y",
           consent_text:
             "I hereby declare my consent agreement for fetching my information via ZOOP API"
@@ -298,7 +298,7 @@ export const verifyPassport = async (req, res) => {
       mode: "sync",
       data: {
         customer_file_number,
-        candidate_name,
+        name_to_match,
         customer_dob,
         consent: "Y",
         consent_text:
