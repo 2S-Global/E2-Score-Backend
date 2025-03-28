@@ -246,7 +246,7 @@ export const verifyPAN = async (req, res) => {
 
 export const searchUserVerifiedList = async (req, res) => {
   try {
-    const { keyword } = req.query;
+    const { keyword } = req.body;
     const employer_id = req.userId;
 
     if (!employer_id) {
