@@ -177,21 +177,21 @@ export const verifyPAN = async (req, res) => {
       };
   
  
-      // const response = await axios.post(
-      //   "https://test.zoop.one/api/v1/in/identity/aadhaar/verification",
-      //   aadhaarData,
-      //   {
-      //     headers: {
-      //       "app-id": "67b8252871c07100283cedc6",
-      //       "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
-      //       "Content-Type": "application/json"
-      //     },
-      //     timeout: 10000, // 10 seconds timeout
-      //     maxRedirects: 10
-      //   }
-      // );
+      const response = await axios.post(
+        "https://test.zoop.one/api/v1/in/identity/aadhaar/verification",
+        aadhaarData,
+        {
+          headers: {
+            "app-id": "67b8252871c07100283cedc6",
+            "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
+            "Content-Type": "application/json"
+          },
+          timeout: 10000, // 10 seconds timeout
+          maxRedirects: 10
+        }
+      );
 
-      const response =hello;
+      // const response =hello;
   
       const aadhaarApiResponse = response.data;
   
