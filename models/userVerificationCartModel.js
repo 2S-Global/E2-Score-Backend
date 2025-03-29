@@ -49,7 +49,7 @@ const userVerificationCartSchema = new mongoose.Schema(
         aadhar_image: {
             type: String, // Ensure marks is stored properly
         },
-        aadhar_response: { 
+        aadhaar_response: { 
             type: Object
         },
         dl_name: {
