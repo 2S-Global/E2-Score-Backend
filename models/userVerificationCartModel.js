@@ -92,6 +92,11 @@ const userVerificationCartSchema = new mongoose.Schema(
             type: Date,
             default: Date.now,
         },
+        is_paid: { 
+            type: Number, 
+            default: 0 
+        },
+
         is_del: {
             type: Boolean,
             default: false,
