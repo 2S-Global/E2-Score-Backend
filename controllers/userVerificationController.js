@@ -16,7 +16,7 @@ export const listUserVerifiedList = async (req, res) => {
       }
 
       // Fetch all records for the employer_id
-      const users = await UserVerification.find({ employer_id });
+      const users = await UserVerification.find({ employer_id ,is_paid:1});
 
       if (users.length === 0) {
           return res.status(404).json({ message: "No verified users found" });
@@ -428,7 +428,48 @@ export const verifiedDetails = async (req, res) => {
 };
 
 
+export const paynow = async (req, res) => {
+  try {
+    const employer_id = req.userId;
+    if (!employer_id) {
+      return res.status(400).json({ message: "Employer ID is required" });
+    }
 
+    const { id } = req.body;
+
+    // Validate ID
+    if (!id) {
+      return res.status(400).json({ message: "ID is required" });
+    }
+
+    // Check if ID is valid
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
+
+    // Update is_paid field
+    const updatedUser = await UserCartVerification.findByIdAndUpdate(
+      id,
+      { $set: { is_paid: 1 } }, 
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      message: "Payment successful",
+      updatedUser,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error processing payment",
+      error: error.message,
+    });
+  }
+};
 
 
 

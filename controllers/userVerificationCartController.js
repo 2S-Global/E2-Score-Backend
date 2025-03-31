@@ -72,7 +72,7 @@ export const addUserToCart = async (req, res) => {
 export const getUserVerificationCartByEmployerAll = async (req, res) => {
     try {
         const employer_id = req.userId;
-        const userCarts = await UserCartVerification.find({ employer_id, is_del: false });
+        const userCarts = await UserCartVerification.find({ employer_id, is_del: false,is_paid:0 });
 
         let totalVerifications = 0;
         const verificationCharge = 50;
