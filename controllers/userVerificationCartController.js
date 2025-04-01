@@ -220,11 +220,11 @@ export const getUserVerificationCartByEmployer = async (req, res) => {
 
 export const getPaidUserVerificationCartByEmployer = async (req, res) => {
     try {
-        const { employerId } = req.body;
+         const employer_id = req.userId;
         if (!mongoose.Types.ObjectId.isValid(employerId)) {
             return res.status(400).json({ message: "Invalid employer ID" });
         }
-        const paidUsers = await UserCartVerification.find({ employerId, is_paid: 1 });
+        const paidUsers = await UserCartVerification.find({ employer_id, is_paid: 1 });
         res.status(200).json(paidUsers);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
