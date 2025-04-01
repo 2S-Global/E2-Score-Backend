@@ -228,8 +228,9 @@ export const getPaidUserVerificationCartByEmployer = async (req, res) => {
             return res.status(400).json({ message: "Invalid employer ID" });
         }
 
-        // Fetch users with paid verification
-        const paidUsers = await UserCartVerification.find({ employer_id, is_paid: 1 });
+        // Fetch users with paid verification and sort by createdAt in descending order
+        const paidUsers = await UserCartVerification.find({ employer_id, is_paid: 1 })
+            .sort({ createdAt: -1 });
 
         if (!paidUsers.length) {
             return res.status(404).json({ message: "No paid users found for this employer" });
@@ -242,5 +243,6 @@ export const getPaidUserVerificationCartByEmployer = async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
 
 
