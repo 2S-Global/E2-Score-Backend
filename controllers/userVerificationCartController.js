@@ -220,11 +220,25 @@ export const getUserVerificationCartByEmployer = async (req, res) => {
 
 export const getPaidUserVerificationCartByEmployer = async (req, res) => {
     try {
-         const employer_id = req.userId;
+        // Assuming the userId is available from authentication middleware (e.g., JWT)
+        const employer_id = req.userId;
 
+        // Check if employer_id is a valid ObjectId (Optional, but recommended)
+        if (!mongoose.Types.ObjectId.isValid(employer_id)) {
+            return res.status(400).json({ message: "Invalid employer ID" });
+        }
+
+        // Fetch users with paid verification
         const paidUsers = await UserCartVerification.find({ employer_id, is_paid: 1 });
+
+        if (!paidUsers.length) {
+            return res.status(404).json({ message: "No paid users found for this employer" });
+        }
+
+        // Return the fetched users
         res.status(200).json(paidUsers);
     } catch (error) {
+        console.error("Error fetching paid users:", error);
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
