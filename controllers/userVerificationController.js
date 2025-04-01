@@ -435,21 +435,12 @@ export const paynow = async (req, res) => {
       return res.status(400).json({ message: "Employer ID is required" });
     }
 
-    const { id } = req.body;
 
-    // Validate ID
-    if (!id) {
-      return res.status(400).json({ message: "ID is required" });
-    }
 
-    // Check if ID is valid
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid ID format" });
-    }
 
     // Update is_paid field
     const updatedUser = await UserCartVerification.findByIdAndUpdate(
-      id,
+      employer_id,
       { $set: { is_paid: 1 } }, 
       { new: true }
     );
