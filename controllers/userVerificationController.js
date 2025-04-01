@@ -435,25 +435,34 @@ export const paynow = async (req, res) => {
       return res.status(400).json({ message: "Employer ID is required" });
     }
 
-
-
-
-    // Update is_paid field
-    const updatedUser = await UserCartVerification.findByIdAndUpdate(
-      employer_id,
-      { $set: { is_paid: 1 } }, 
-      { new: true }
+    // Step 1: Update the 'is_paid' field to 1 for all records of this employer
+    const updatedUsers = await UserCartVerification.updateMany(
+      { employer_id: employer_id },
+      { $set: { is_paid: 1 } }
     );
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
+    if (updatedUsers.nModified === 0) {
+      return res.status(404).json({ message: "No users found for this employer" });
     }
 
-    return res.status(200).json({
-      message: "Payment successful",
-      updatedUser,
-    });
+    // Step 2: Insert the updated records into the 'ArchivedUserCartVerification' table
+    const usersToArchive = await UserCartVerification.find({ employer_id: employer_id, is_paid: 1 });
 
+    if (usersToArchive.length === 0) {
+      return res.status(404).json({ message: "No updated users to archive" });
+    }
+
+    // Insert the updated records into the archived collection
+    await UserVerification.insertMany(usersToArchive);
+
+    // Step 3: Optionally, delete the records from the original collection (if you want to move them)
+    await UserCartVerification.deleteMany({ employer_id: employer_id, is_paid: 1 });
+
+    return res.status(200).json({
+      message: "Payment status updated, records archived, and original records deleted",
+      archivedUsersCount: UserVerification.length,
+    });
+    
   } catch (error) {
     return res.status(500).json({
       message: "Error processing payment",
@@ -461,6 +470,7 @@ export const paynow = async (req, res) => {
     });
   }
 };
+
 
 
 
