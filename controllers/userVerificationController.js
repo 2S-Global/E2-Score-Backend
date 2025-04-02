@@ -455,20 +455,7 @@ export const paynow = async (req, res) => {
 
   await transaction.save();
   console.log("Transaction saved:", transaction);
-
-
-
-
-
-
-
-    if (paymentData) {
-      console.log("Payment Data:", paymentData);
-    }    
-
-    if (!employer_id) {
-      return res.status(400).json({ message: "Employer ID is required" });
-    }
+  
 
     // Step 1: Update the 'is_paid' field to 1 for all records of this employer
     const updatedUsers = await UserCartVerification.updateMany(
