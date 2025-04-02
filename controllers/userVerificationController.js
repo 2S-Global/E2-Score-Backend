@@ -431,6 +431,13 @@ export const verifiedDetails = async (req, res) => {
 export const paynow = async (req, res) => {
   try {
     const employer_id = req.userId;
+
+    const { paymentData } = req.body;
+
+    if (paymentData) {
+      console.log("Payment Data:", paymentData);
+    }    
+
     if (!employer_id) {
       return res.status(400).json({ message: "Employer ID is required" });
     }
