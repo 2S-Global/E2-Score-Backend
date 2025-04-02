@@ -169,7 +169,7 @@ export const getUserVerificationCartByEmployer = async (req, res) => {
         const employer_id = req.userId;
         const verificationCharge = 50;
 
-        const userCarts = await UserCartVerification.find({ employer_id, is_del: false });
+        const userCarts = await UserCartVerification.find({ employer_id, is_del: false,is_paid:false });
 
         let overallTotalVerifications = 0;
         let overallSubtotal = 0;
@@ -246,40 +246,83 @@ export const getPaidUserVerificationCartByEmployer = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
     try {
-      const { id } = req.body;
-  
-      // Validate ID
-      if (!id) {
-        return res.status(400).json({ message: "ID is required" });
-      }
-  
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-  
-     
-      const updatedUser = await UserCartVerification.findByIdAndUpdate(
-        id,
-        { $set: { is_del: true } }, 
-        { new: true }
-      );
-  
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-  
-      return res.status(200).json({
-        message: "User marked as deleted successfully",
-        updatedUser,
-      });
-  
+        const { id } = req.body;
+
+        // Validate ID
+        if (!id) {
+            return res.status(400).json({ message: "ID is required" });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid ID format" });
+        }
+
+        // Delete user from database
+        const deletedUser = await UserCartVerification.findByIdAndDelete(id);
+
+        if (!deletedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Fetch updated user cart after deletion
+        const employer_id = req.userId;
+        const verificationCharge = 50;
+
+        const userCarts = await UserCartVerification.find({ employer_id });
+
+        let overallTotalVerifications = 0;
+        let overallSubtotal = 0;
+
+        // Prepare formatted response
+        const formattedData = userCarts.map((cart) => {
+            const payForArray = [];
+
+            if (cart.pan_number) payForArray.push("PAN");
+            if (cart.aadhar_number) payForArray.push("Aadhaar");
+            if (cart.dl_number) payForArray.push("Driving Licence");
+            if (cart.passport_file_number) payForArray.push("Passport");
+            if (cart.epic_number) payForArray.push("Voter ID (EPIC)");
+
+            const totalVerifications = payForArray.length;
+            const subtotal = totalVerifications * verificationCharge;
+
+            overallTotalVerifications += totalVerifications;
+            overallSubtotal += subtotal;
+
+            return {
+                id: cart._id,
+                name: cart.candidate_name,
+                mobile: cart.candidate_mobile || "",
+                payFor: payForArray.join(", "),
+                amount: subtotal
+            };
+        });
+
+        const overallGst = overallSubtotal * 0.18;
+        const overallTotal = overallSubtotal + overallGst;
+
+        return res.status(200).json({
+            message: "User deleted successfully",
+            updatedCart: {
+                success: true,
+                data: formattedData,
+                overall_billing: {
+                    total_verifications: overallTotalVerifications,
+                    subtotal: overallSubtotal.toFixed(2),
+                    gst: overallGst.toFixed(2),
+                    total: overallTotal.toFixed(2)
+                }
+            }
+        });
+
     } catch (error) {
-      return res.status(500).json({
-        message: "Error deleting user",
-        error: error.message,
-      });
+        return res.status(500).json({
+            message: "Error deleting user",
+            error: error.message,
+        });
     }
-  };
+};
+
 
 
 
