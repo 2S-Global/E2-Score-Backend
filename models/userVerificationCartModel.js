@@ -101,6 +101,9 @@ const userVerificationCartSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        all_verified:{
+             type: Number,
+            default: 0,
     },
     {
         timestamps: true,
