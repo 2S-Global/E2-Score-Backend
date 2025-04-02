@@ -18,7 +18,7 @@ export const listUserVerifiedList = async (req, res) => {
       }
 
       // Fetch all records for the employer_id and sort by createdAt (newest first)
-      const users = await UserVerification.find({ employer_id, is_paid: 1, all_verified: 1 })
+      const users = await UserVerification.find({ employer_id, all_verified: 1 })
           .sort({ createdAt: -1 });  // -1 for descending order (newest first)
 
       if (!users.length) {
