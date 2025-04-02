@@ -6,7 +6,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import {
     addUserToCart,
     getUserVerificationCartByEmployer,
-    getUserVerificationCartByEmployerAll,getPaidUserVerificationCartByEmployer
+    getUserVerificationCartByEmployerAll,getPaidUserVerificationCartByEmployer,deleteUser 
 } from '../controllers/userVerificationCartController.js'; // Adjust the path according to your project structure
 
 //Middleware
@@ -36,5 +36,6 @@ userRouter.post('/add_user_cart', upload.none(), userAuth, Companymid, addUserTo
 userRouter.get('/list_user_cart', upload.none(), userAuth, Companymid, getUserVerificationCartByEmployer);
 userRouter.get('/list_user_cart_all', upload.none(), userAuth, Companymid, getUserVerificationCartByEmployerAll);
 userRouter.post('/getPaidUserVerificationCartByEmployer', upload.none(), userAuth, Companymid, getPaidUserVerificationCartByEmployer);
+userRouter.post('/deleteUser', upload.none(), userAuth, Companymid, deleteUser);
 
 export default userRouter;
