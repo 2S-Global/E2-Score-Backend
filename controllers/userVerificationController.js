@@ -438,16 +438,10 @@ export const paynow = async (req, res) => {
       return res.status(400).json({ error: "User ID is missing." });
   }
 
-  const { paymentData } = req.body;
-  if (!paymentData) {
-      return res.status(400).json({ error: "Payment data is missing." });
-  }
+  const { razorpay_response , amount  , paymentIds} = req.body;
+  
 
-  const razorpay_response = paymentData.razorpay_response;
-  const amount = paymentData.amount;
-  const paymentIds = paymentData.paymentIds; // Convert string to array
-
-  if (!razorpay_response?.razorpay_payment_id || !amount || paymentIds.length === 0) {
+  if (!razorpay_response?.razorpay_payment_id || !amount ) {
       return res.status(400).json({ error: "Incomplete payment details." });
   }
 
