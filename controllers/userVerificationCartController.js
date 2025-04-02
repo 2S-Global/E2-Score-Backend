@@ -1,4 +1,5 @@
 import UserCartVerification from "../models/userVerificationCartModel.js";
+import UserVerification from "../models/userVerificationModel.js";
 import mongoose from "mongoose";
 // Register a new user
 
@@ -229,7 +230,7 @@ export const getPaidUserVerificationCartByEmployer = async (req, res) => {
         }
 
         // Fetch users with paid verification and sort by createdAt in descending order
-        const paidUsers = await UserCartVerification.find({ employer_id, is_paid: 1 })
+        const paidUsers = await UserVerification.find({ employer_id, is_paid: 1 })
             .sort({ createdAt: -1 });
 
         if (!paidUsers.length) {
