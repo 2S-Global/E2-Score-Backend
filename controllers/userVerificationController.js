@@ -17,17 +17,18 @@ export const listUserVerifiedList = async (req, res) => {
           return res.status(400).json({ message: "Invalid Employer ID" });
       }
 
-      // Fetch all records for the employer_id
-      const users = await UserVerification.find({ employer_id ,is_paid:1,all_verified:1}.sort({ createdAt: -1 }));
+      // Fetch all records for the employer_id and sort by createdAt (newest first)
+      const users = await UserVerification.find({ employer_id, is_paid: 1, all_verified: 1 })
+          .sort({ createdAt: -1 });  // -1 for descending order (newest first)
 
-      if (users.length === 0) {
+      if (!users.length) {
           return res.status(404).json({ message: "No verified users found" });
       }
 
       res.status(200).json(users);
   } catch (error) {
       console.error("Error fetching verified users:", error);
-      res.status(500).json({ message: error });
+      res.status(500).json({ message: error.message });
   }
 };
 export const verifyPAN = async (req, res) => {
