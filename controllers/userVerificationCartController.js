@@ -230,7 +230,7 @@ export const getPaidUserVerificationCartByEmployer = async (req, res) => {
         }
 
         // Fetch users with paid verification and sort by createdAt in descending order
-        const paidUsers = await UserVerification.find({ employer_id, is_paid: 1 })
+        const paidUsers = await UserVerification.find({ employer_id })
             .sort({ createdAt: -1 });
 
         if (!paidUsers.length) {
