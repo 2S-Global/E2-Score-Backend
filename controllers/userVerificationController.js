@@ -472,11 +472,15 @@ export const paynow = async (req, res) => {
 };
 
 
+function convertDateFormat(dateString) {
+  const [year, month, day] = dateString.split('-');
+  return `${day}-${month}-${year}`;
+}
   
 export const verifyDataBackground = async (req, res) => {
   try {
     // Fetch only one user that needs verification
-    const userCart = await userVerificationCartModel.findOne({ is_paid: 1, is_del: false, all_verified: 0 });
+    const userCart = await UserVerification.findOne({ is_paid: 1, is_del: false, all_verified: 0 });
 
     if (!userCart) {
       console.log("No users left for verification.");
@@ -485,6 +489,7 @@ export const verifyDataBackground = async (req, res) => {
 
     const currentUserID = userCart._id;
 
+    console.log(userCart._id,' == >>>> ',userCart.candidate_name);
     // Function to introduce a delay
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -507,7 +512,7 @@ export const verifyDataBackground = async (req, res) => {
         { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
       );
 
-      await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { pan_response: response.data } }, { new: true });
+      await UserVerification.findByIdAndUpdate(currentUserID, { $set: { pan_response: response.data } }, { new: true });
       await delay(2000); // Wait 2 seconds before the next API call
     }
 
@@ -529,7 +534,7 @@ export const verifyDataBackground = async (req, res) => {
         { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
       );
 
-      await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { aadhaar_response: response.data } }, { new: true });
+      await UserVerification.findByIdAndUpdate(currentUserID, { $set: { aadhaar_response: response.data } }, { new: true });
       await delay(2000);
     }
 
@@ -538,9 +543,9 @@ export const verifyDataBackground = async (req, res) => {
       const dlData = {
         mode: "sync",
         data: {
-          dl_number: userCart.dl_number,
-          dl_name: userCart.dl_name,
-          dl_dob: userCart.candidate_dob,
+          customer_dl_number: userCart.dl_number,
+          name_to_match: userCart.dl_name,
+          customer_dob: convertDateFormat(userCart.candidate_dob),
           consent: "Y",
           consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
         },
@@ -553,7 +558,7 @@ export const verifyDataBackground = async (req, res) => {
         { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
       );
 
-      await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { dl_response: response.data } }, { new: true });
+      await UserVerification.findByIdAndUpdate(currentUserID, { $set: { dl_response: response.data } }, { new: true });
       await delay(2000);
     }
 
@@ -562,14 +567,16 @@ export const verifyDataBackground = async (req, res) => {
       const passportData = {
         mode: "sync",
         data: {
-          passport_file_number: userCart.passport_file_number,
-          passport_name: userCart.passport_name,
-          passport_dob: userCart.candidate_dob,
+          customer_file_number: userCart.passport_file_number,
+          name_to_match: userCart.passport_name,
+          customer_dob: convertDateFormat(userCart.candidate_dob),
           consent: "Y",
           consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
         },
         task_id: "8bbb54f3-d299-4535-b00e-e74d2d5a3997",
       };
+
+  //console.log(passportData);
 
       const response = await axios.post(
         "https://test.zoop.one/api/v1/in/identity/passport/advance",
@@ -577,7 +584,7 @@ export const verifyDataBackground = async (req, res) => {
         { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
       );
 
-      await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { passport_response: response.data } }, { new: true });
+      await UserVerification.findByIdAndUpdate(currentUserID, { $set: { passport_response: response.data } }, { new: true });
       await delay(2000);
     }
 
@@ -586,7 +593,7 @@ export const verifyDataBackground = async (req, res) => {
       const epicData = {
         data: {
           customer_epic_number: userCart.epic_number,
-          epic_name: userCart.epic_name,
+          name_to_match: userCart.epic_name,
           consent: "Y",
           consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
         },
@@ -599,12 +606,12 @@ export const verifyDataBackground = async (req, res) => {
         { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
       );
 
-      await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { epic_response: response.data } }, { new: true });
+      await UserVerification.findByIdAndUpdate(currentUserID, { $set: { epic_response: response.data } }, { new: true });
       await delay(2000);
     }
 
     // After all verifications are done, update all_verified to 1
-    await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { all_verified: 1 } }, { new: true });
+    await UserVerification.findByIdAndUpdate(currentUserID, { $set: { all_verified: 1 } }, { new: true });
 
     return res.status(200).json({ message: "Verification completed successfully for one user." });
 
@@ -613,6 +620,5 @@ export const verifyDataBackground = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 
   
