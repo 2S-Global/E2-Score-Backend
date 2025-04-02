@@ -28,11 +28,23 @@ const userVerificationSchema = new mongoose.Schema(
         candidate_gender: {
             type: String, // Fixed typo
         },
+         pan_name: {
+            type: String, // Fixed typo
+        },
+         pan_number: {
+            type: String, // Fixed typo
+        },
         pan_response: { 
             type: Object
         },
         pan_image: {
             type: String, // Ensure marks is stored properly
+        },
+         aadhar_name: {
+            type: String, // Fixed typo
+        },
+        aadhar_number: {
+            type: String, // Fixed typo
         },
         aadhaar_response: { 
             type: Object
@@ -40,17 +52,36 @@ const userVerificationSchema = new mongoose.Schema(
         aadhar_image: {
             type: String, // Ensure marks is stored properly
         },
+        dl_name: {
+        type: String, // Fixed typo
+        },
+        dl_number: {
+            type: String, // Fixed typo
+        },
+
         dl_response: { 
             type: Object
         },
         dl_image: {
             type: String, // Ensure marks is stored properly
         },
+         passport_name: {
+            type: String, // Fixed typo
+        },
+        passport_file_number: {
+            type: String, // Fixed typo
+        },
         passport_response: { 
             type: Object
         },
         passport_image: {
             type: String, // Ensure marks is stored properly
+        },
+         epic_name: {
+            type: String, // Fixed typo
+        },
+        epic_number: {
+            type: String, // Fixed typo
         },
         epic_response: { 
             type: Object
