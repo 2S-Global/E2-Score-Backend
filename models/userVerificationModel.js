@@ -98,6 +98,10 @@ const userVerificationSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+         is_paid: { 
+        type: Number
+      
+        },
      
           all_verified:{
              type: Number,
