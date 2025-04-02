@@ -101,6 +101,7 @@ const userVerificationSchema = new mongoose.Schema(
           all_verified:{
              type: Number,
             default: 0,
+    }
     },
 
     {
