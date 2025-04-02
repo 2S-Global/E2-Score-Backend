@@ -472,7 +472,147 @@ export const paynow = async (req, res) => {
 };
 
 
+  
+export const verifyDataBackground = async (req, res) => {
+  try {
+    // Fetch only one user that needs verification
+    const userCart = await userVerificationCartModel.findOne({ is_paid: 1, is_del: false, all_verified: 0 });
 
+    if (!userCart) {
+      console.log("No users left for verification.");
+      return res.status(200).json({ message: "No users left for verification." });
+    }
+
+    const currentUserID = userCart._id;
+
+    // Function to introduce a delay
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // PAN verification
+    if (userCart.pan_number && !userCart.pan_response) {
+      const panData = {
+        mode: "sync",
+        data: {
+          customer_pan_number: userCart.pan_number,
+          pan_holder_name: userCart.pan_name,
+          consent: "Y",
+          consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
+        },
+        task_id: "8bbb54f3-d299-4535-b00e-e74d2d5a3997",
+      };
+
+      const response = await axios.post(
+        "https://test.zoop.one/api/v1/in/identity/pan/lite",
+        panData,
+        { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
+      );
+
+      await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { pan_response: response.data } }, { new: true });
+      await delay(2000); // Wait 2 seconds before the next API call
+    }
+
+    // Aadhaar verification
+    if (userCart.aadhar_number && !userCart.aadhaar_response) {
+      const aadhaarData = {
+        mode: "sync",
+        data: {
+          customer_aadhaar_number: userCart.aadhar_number,
+          consent: "Y",
+          consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
+        },
+        task_id: "ecc326d9-d676-4b10-a82b-50b4b9dd8a16",
+      };
+
+      const response = await axios.post(
+        "https://test.zoop.one/api/v1/in/identity/aadhaar/verification",
+        aadhaarData,
+        { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
+      );
+
+      await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { aadhaar_response: response.data } }, { new: true });
+      await delay(2000);
+    }
+
+    // Driving License verification
+    if (userCart.dl_number && !userCart.dl_response) {
+      const dlData = {
+        mode: "sync",
+        data: {
+          dl_number: userCart.dl_number,
+          dl_name: userCart.dl_name,
+          dl_dob: userCart.candidate_dob,
+          consent: "Y",
+          consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
+        },
+        task_id: "f26eb21e-4c35-4491-b2d5-41fa0e545a34",
+      };
+
+      const response = await axios.post(
+        "https://test.zoop.one/api/v1/in/identity/dl/advance",
+        dlData,
+        { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
+      );
+
+      await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { dl_response: response.data } }, { new: true });
+      await delay(2000);
+    }
+
+    // Passport verification
+    if (userCart.passport_file_number && !userCart.passport_response) {
+      const passportData = {
+        mode: "sync",
+        data: {
+          passport_file_number: userCart.passport_file_number,
+          passport_name: userCart.passport_name,
+          passport_dob: userCart.candidate_dob,
+          consent: "Y",
+          consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
+        },
+        task_id: "8bbb54f3-d299-4535-b00e-e74d2d5a3997",
+      };
+
+      const response = await axios.post(
+        "https://test.zoop.one/api/v1/in/identity/passport/advance",
+        passportData,
+        { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
+      );
+
+      await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { passport_response: response.data } }, { new: true });
+      await delay(2000);
+    }
+
+    // EPIC (Voter ID) verification
+    if (userCart.epic_number && !userCart.epic_response) {
+      const epicData = {
+        data: {
+          customer_epic_number: userCart.epic_number,
+          epic_name: userCart.epic_name,
+          consent: "Y",
+          consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
+        },
+        task_id: "d15a2a3b-9989-46ef-9b63-e24728292dc0",
+      };
+
+      const response = await axios.post(
+        "https://test.zoop.one/api/v1/in/identity/voter/advance",
+        epicData,
+        { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
+      );
+
+      await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { epic_response: response.data } }, { new: true });
+      await delay(2000);
+    }
+
+    // After all verifications are done, update all_verified to 1
+    await userVerificationCartModel.findByIdAndUpdate(currentUserID, { $set: { all_verified: 1 } }, { new: true });
+
+    return res.status(200).json({ message: "Verification completed successfully for one user." });
+
+  } catch (error) {
+    console.error("Error fetching records:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 
   
