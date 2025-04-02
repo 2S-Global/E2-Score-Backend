@@ -2,6 +2,8 @@ import UserCartVerification from "../models/userVerificationCartModel.js";
 import UserVerification from "../models/userVerificationModel.js";
 import mongoose from "mongoose";
 import axios from "axios";
+
+import Transaction from "../models/transactionModel.js";
 // Register a new user
 export const listUserVerifiedList = async (req, res) => {
   try {
@@ -433,6 +435,27 @@ export const paynow = async (req, res) => {
     const employer_id = req.userId;
 
     const { paymentData } = req.body;
+    if (paymentData) {
+      const razorpay_response = paymentData.razorpay_response;
+      const amount = paymentData.amount;
+      const paymentIds = paymentData.paymentId; 
+
+      //save to Transaction
+      const transaction = new Transaction({
+        employeeId: employer_id,
+        transactionId: razorpay_response.razorpay_payment_id,
+        amount: amount,
+        paymentids: paymentIds,
+      });
+      await transaction.save();
+      console.log("Transaction saved:", transaction);
+    }
+
+
+
+
+
+
 
     if (paymentData) {
       console.log("Payment Data:", paymentData);
