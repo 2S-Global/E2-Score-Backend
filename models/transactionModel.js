@@ -2,10 +2,13 @@ import mongoose from "mongoose";
 
 const transactionSchema = new mongoose.Schema({
 
-    employeeId: {
+    employer_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
+    },
+    order_ids: {
+        type: String,
     },
     transactionId: {
         type: String,

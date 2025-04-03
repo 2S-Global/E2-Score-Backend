@@ -446,16 +446,7 @@ export const paynow = async (req, res) => {
       return res.status(400).json({ error: "Incomplete payment details." });
   }
 
-  // Save transaction
-  const transaction = new Transaction({
-      employeeId: employer_id,
-      transactionId: razorpay_response.razorpay_payment_id,
-      amount: amount,
-      paymentids: paymentIds,
-  });
-
-  await transaction.save();
-  console.log("Transaction saved:", transaction);
+ 
   
 
     // Step 1: Update the 'is_paid' field to 1 for all records of this employer
@@ -478,9 +469,22 @@ export const paynow = async (req, res) => {
     // Insert the updated records into the archived collection
     await UserVerification.insertMany(usersToArchive);
 
+    const userIds = usersToArchive.map(user => user._id);
+
+
     // Step 3: Optionally, delete the records from the original collection (if you want to move them)
     await UserCartVerification.deleteMany({ employer_id: employer_id, is_paid: 1 });
+    // Save transaction
+    const transaction = new Transaction({
+    employer_id: employer_id,
+    transactionId: razorpay_response.razorpay_payment_id,
+    amount: amount,
+    paymentids: paymentIds,
+    order_ids: userIds.join(','),
+      });
 
+await transaction.save();
+console.log("Transaction saved:", transaction);
     return res.status(200).json({
       message: "Payment status updated, records archived, and original records deleted",
       archivedUsersCount: UserVerification.length,
