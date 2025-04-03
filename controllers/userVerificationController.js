@@ -259,6 +259,8 @@ export const searchUserVerifiedList = async (req, res) => {
 
     // Build search condition (match from the start of the field)
     let filter = {
+      all_verified: 1,  // ✅ Only verified users
+      is_del: false,     // ✅ Exclude deleted users
       $or: [
         { candidate_name: { $regex: `^${keyword}`, $options: "i" } },
         { candidate_email: { $regex: `^${keyword}`, $options: "i" } },
