@@ -452,7 +452,7 @@ export const paynow = async (req, res) => {
     // Step 1: Update the 'is_paid' field to 1 for all records of this employer
     const updatedUsers = await UserCartVerification.updateMany(
       { employer_id: employer_id },
-      { $set: { is_paid: 1 } }
+      { $set: { is_paid: 1,createdAt: new Date()  } }
     );
 
     if (updatedUsers.nModified === 0) {
