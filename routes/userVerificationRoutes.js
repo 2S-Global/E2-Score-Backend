@@ -39,6 +39,6 @@ userRouter.post("/verifyDL",upload.none(), userAuth, Companymid, verifyDL);
 userRouter.post("/searchUserVerifiedList",upload.none(), userAuth, Companymid, searchUserVerifiedList);
 userRouter.post("/verifiedDetails",upload.none(),verifiedDetails);
 userRouter.post("/paynow",upload.none(),userAuth, Companymid,paynow);
-userRouter.post("/verifyDataBackground",verifyDataBackground);
+userRouter.get("/verifyDataBackground",verifyDataBackground);
 
 export default userRouter;
