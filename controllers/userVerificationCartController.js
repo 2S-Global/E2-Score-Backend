@@ -60,7 +60,8 @@ export const addUserToCart = async (req, res) => {
             passport_image : passportdoc,
             epic_name : votername,
             epic_number : voternumber,
-            epic_image : voterdoc
+            epic_image : voterdoc,
+            uan_number:uannumber
         });
 
         await newUserCart.save();
