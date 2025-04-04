@@ -715,7 +715,7 @@ export const verifyDataBackground = async (req, res) => {
 };
 
 
-export const verifyEpfo = async () => {
+export const verifyEpfo = async (req, res) => {
   try {
     const data = {
       mode: 'sync',
