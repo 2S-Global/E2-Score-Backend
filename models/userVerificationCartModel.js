@@ -88,6 +88,16 @@ const userVerificationCartSchema = new mongoose.Schema(
         epic_response: { 
             type: Object
         },
+        uan_name: {
+        type:String,
+         },
+        uan_number: {
+        type:String,
+         },
+       uan_response: { 
+            type: Object
+        },
+                    
         updatedAt: {
             type: Date,
             default: Date.now,
