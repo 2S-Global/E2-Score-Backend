@@ -108,7 +108,7 @@ const userVerificationSchema = new mongoose.Schema(
         epfo_number:{
             type:String,
         },
-        epfo_response{
+        epfo_response:{
         type: Object
         },
     updatedAt: {
