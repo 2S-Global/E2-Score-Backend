@@ -663,9 +663,36 @@ export const verifyDataBackground = async (req, res) => {
         },
       }
         );
- await UserVerification.findByIdAndUpdate(currentUserID, { $set: { uan_response: response.data } }, { new: true });
+     await UserVerification.findByIdAndUpdate(currentUserID, { $set: { uan_response: response.data } }, { new: true });
       await delay(2000);
       }
+
+    ///Epfo Verification
+    if(userCart.epfo_number && !userCart.epfo_response){
+    const data = {
+      mode: 'sync',
+      data: {
+        customer_phone_number: '9051624898',
+        consent: 'Y',
+        consent_text: 'I hereby declare my consent agreement for fetching my information via ZOOP API',
+      },
+      task_id: '9791f6f3-3106-4385-b2f0-5d391f1463cb',
+    };
+
+    const response = await axios.post(
+      'https://test.zoop.one/api/v1/in/identity/epfo/pro',
+      data,
+      {
+        headers: {
+          'app-id': '67b8252871c07100283cedc6',
+          'api-key': '52HD084-W614E0Q-JQY5KJG-R8EW1TW',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+   await UserVerification.findByIdAndUpdate(currentUserID, { $set: { epfo_response: response.data } }, { new: true });
+      await delay(2000);
+    }
     
 
     // After all verifications are done, update all_verified to 1
