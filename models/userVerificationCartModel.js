@@ -97,6 +97,15 @@ const userVerificationCartSchema = new mongoose.Schema(
        uan_response: { 
             type: Object
         },
+        epfo_name:{
+            type:String,
+        },
+        epfo_number:{
+            type:String,
+        },
+        epfo_response{
+        type: Object
+        },
                     
         updatedAt: {
             type: Date,
