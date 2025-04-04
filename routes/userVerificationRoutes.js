@@ -40,6 +40,6 @@ userRouter.post("/searchUserVerifiedList",upload.none(), userAuth, Companymid, s
 userRouter.post("/verifiedDetails",upload.none(),verifiedDetails);
 userRouter.post("/paynow",upload.none(),userAuth, Companymid,paynow);
 userRouter.get("/verifyDataBackground",verifyDataBackground);
-userRouter.post("/verifyUan",verifyUae);
+userRouter.post("/verifyUan",verifyUan);
 
 export default userRouter;
