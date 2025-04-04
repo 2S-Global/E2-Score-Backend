@@ -715,8 +715,6 @@ export const verifyDataBackground = async (req, res) => {
 };
 
 
-import axios from 'axios';
-
 export const verifyEpfo = async (req, res) => {
   try {
     const data = {
