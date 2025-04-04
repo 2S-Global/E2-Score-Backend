@@ -715,6 +715,8 @@ export const verifyDataBackground = async (req, res) => {
 };
 
 
+import axios from 'axios';
+
 export const verifyEpfo = async (req, res) => {
   try {
     const data = {
@@ -740,7 +742,15 @@ export const verifyEpfo = async (req, res) => {
     );
 
     console.log('EPFO Response:', response.data);
+
+    // ✅ Send response to client
+    return res.status(200).json({ success: true, data: response.data });
+
   } catch (error) {
     console.error('Error verifying EPFO:', error.response?.data || error.message);
+
+    // ✅ Send error response to client
+    return res.status(500).json({ success: false, error: error.response?.data || error.message });
   }
 };
+
