@@ -639,6 +639,35 @@ export const verifyDataBackground = async (req, res) => {
       await delay(2000);
     }
 
+    /////UAN VERIFICATION
+      if (userCart.uan_number && !userCart.uan_response) {
+
+     const data = {
+      mode: 'sync',
+      data: {
+        customer_uan_number: userCart.uan_number,
+        consent: 'Y',
+        consent_text: 'I consent to this information being shared with zoop.one.',
+      },
+      task_id: 'ecc326d9-d676-4b10-a82b-50b4b9dd8a16',
+    };
+
+    const response = await axios.post(
+      'https://test.zoop.one/api/v1/in/identity/uan/advance',
+      data,
+      {
+        headers: {
+          'app-id': '67b8252871c07100283cedc6',
+          'api-key': '52HD084-W614E0Q-JQY5KJG-R8EW1TW',
+          'Content-Type': 'application/json',
+        },
+      }
+        );
+ await UserVerification.findByIdAndUpdate(currentUserID, { $set: { uan_response: response.data } }, { new: true });
+      await delay(2000);
+      }
+    
+
     // After all verifications are done, update all_verified to 1
     await UserVerification.findByIdAndUpdate(currentUserID, { $set: { all_verified: 1 } }, { new: true });
 
