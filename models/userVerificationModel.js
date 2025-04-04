@@ -92,6 +92,25 @@ const userVerificationSchema = new mongoose.Schema(
     epic_image: {
       type: String, // Ensure marks is stored properly
     },
+
+     uan_name: {
+        type:String,
+         },
+        uan_number: {
+        type:String,
+         },
+       uan_response: { 
+            type: Object
+        },
+        epfo_name:{
+            type:String,
+        },
+        epfo_number:{
+            type:String,
+        },
+        epfo_response{
+        type: Object
+        },
     updatedAt: {
       type: Date,
       default: Date.now,
