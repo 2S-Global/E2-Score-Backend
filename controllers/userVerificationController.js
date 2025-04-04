@@ -650,7 +650,7 @@ export const verifyDataBackground = async (req, res) => {
   }
 };
 
-  export const verifyUae = async (req, res) => {
+  export const verifyUan = async (req, res) => {
   try {
 
 const data = {
