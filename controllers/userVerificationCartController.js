@@ -34,7 +34,8 @@ export const addUserToCart = async (req, res) => {
             passportdoc,
             votername,
             voternumber,
-            voterdoc
+            voterdoc,
+            uannumber
         } = req.body;
 
         const newUserCart = new UserCartVerification({
