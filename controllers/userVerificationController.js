@@ -58,7 +58,7 @@ export const verifyPAN = async (req, res) => {
       const response = await axios.post(
         "https://test.zoop.one/api/v1/in/identity/pan/lite",
         panData,
-        {
+        {  
           headers: {
             "app-id": "67b8252871c07100283cedc6",
             "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW",
