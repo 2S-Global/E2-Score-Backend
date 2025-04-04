@@ -3,7 +3,7 @@ import multer from 'multer';
 import dotenv from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
 
-import {listUserVerifiedList,verifyPAN,verifyEPIC,cloneAndMoveRecordById,verifyAadhaar,verifyPassport,verifyDL,searchUserVerifiedList,verifiedDetails,paynow, verifyDataBackground ,verifyUae } from '../controllers/userVerificationController.js';
+import {listUserVerifiedList,verifyPAN,verifyEPIC,cloneAndMoveRecordById,verifyAadhaar,verifyPassport,verifyDL,searchUserVerifiedList,verifiedDetails,paynow, verifyDataBackground ,verifyUan } from '../controllers/userVerificationController.js';
 
 //Middleware
 import userAuth from '../middleware/authMiddleware.js';
@@ -40,6 +40,6 @@ userRouter.post("/searchUserVerifiedList",upload.none(), userAuth, Companymid, s
 userRouter.post("/verifiedDetails",upload.none(),verifiedDetails);
 userRouter.post("/paynow",upload.none(),userAuth, Companymid,paynow);
 userRouter.get("/verifyDataBackground",verifyDataBackground);
-userRouter.post("/verifyUae",verifyUae);
+userRouter.post("/verifyUan",verifyUae);
 
 export default userRouter;
