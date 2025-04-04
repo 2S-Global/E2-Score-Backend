@@ -652,29 +652,35 @@ export const verifyDataBackground = async (req, res) => {
 
   export const verifyUan = async (req, res) => {
   try {
+    const data = {
+      mode: 'sync',
+      data: {
+        customer_uan_number: '100003213093',
+        consent: 'Y',
+        consent_text: 'I consent to this information being shared with zoop.one.',
+      },
+      task_id: 'ecc326d9-d676-4b10-a82b-50b4b9dd8a16',
+    };
 
-const data = {
-  mode: 'sync',
-  data: {
-    customer_uan_number: '100003213093',
-    consent: 'Y',
-    consent_text: 'I consent to this information being shared with zoop.one.',
-  },
-  task_id: 'ecc326d9-d676-4b10-a82b-50b4b9dd8a16',
+    const response = await axios.post(
+      'https://test.zoop.one/api/v1/in/identity/uan/advance',
+      data,
+      {
+        headers: {
+          'app-id': '67b8252871c07100283cedc6',
+          'api-key': '52HD084-W614E0Q-JQY5KJG-R8EW1TW',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log(response.data);
+
+    // Send response back to client
+    return res.status(200).json(response.data);
+
+  } catch (error) {
+    console.error('Error verifying UAN:', error?.response?.data || error.message);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
-
-axios.post('https://test.zoop.one/api/v1/in/identity/uan/advance', data, {
-  headers: {
-    'app-id': '67b8252871c07100283cedc6',
-    'api-key': '52HD084-W614E0Q-JQY5KJG-R8EW1TW',
-    'Content-Type': 'application/json',
-  },
-})
-.then(response => {
-  console.log(response.data);
-})
- }catch(error){
-      console.error("Error fetching records:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
-  }
-  }
