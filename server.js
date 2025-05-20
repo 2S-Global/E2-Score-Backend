@@ -23,6 +23,9 @@ import userVerificationRoutes from "./routes/userVerificationRoutes.js";
 import userVerificationCartRoutes from "./routes/userVerificationCartRoutes.js";
 import pdfRouter from "./routes/pdfRoutes.js";
 
+//import form location routes
+import LocationRouterouter from "./routes/sql/LocationRoute.js";
+
 // Routes
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
@@ -35,6 +38,9 @@ app.use("/api/education", userEducationRoutes);
 app.use("/api/verify", userVerificationRoutes);
 app.use("/api/usercart", userVerificationCartRoutes);
 app.use("/api/pdf", pdfRouter);
+
+//location routes
+app.use("/api/sql/locations", LocationRouterouter);
 // Start server
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
