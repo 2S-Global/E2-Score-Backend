@@ -1,5 +1,11 @@
 import db_sql from "../../config/sqldb.js";
 
+/**
+ * @description Get all countries from the database
+ * @route GET /api/sql/locations/All_contry
+ * @success {object} 200 - All countries
+ * @error {object} 500 - Database query failed
+ */
 export const All_contry = async (req, res) => {
   try {
     const [rows] = await db_sql.execute(
