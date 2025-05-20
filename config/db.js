@@ -15,6 +15,6 @@ const db = async () => {
         console.error(`Error connecting to MongoDB: ${error.message}`.red.inverse);
         process.exit(1); // Exit process with failure
     }
-};
+};  
 
 export default db;
