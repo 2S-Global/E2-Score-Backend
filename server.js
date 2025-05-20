@@ -26,6 +26,10 @@ import pdfRouter from "./routes/pdfRoutes.js";
 //import form location routes
 import LocationRouterouter from "./routes/sql/LocationRoute.js";
 
+import pacakageRoute from "./routes/admin/pacakageRoute.js";
+import companyPackageRoute from "./routes/admin/companyPackageRoute.js";
+
+
 // Routes
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
@@ -41,6 +45,11 @@ app.use("/api/pdf", pdfRouter);
 
 //location routes
 app.use("/api/sql/locations", LocationRouterouter);
+
+app.use("/api/pacakageRoute", pacakageRoute);
+app.use("/api/companyPackageRoute", companyPackageRoute);
+
+
 // Start server
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
