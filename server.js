@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 
 import db from "./config/db.js";
+
 db();
 
 const app = express();
