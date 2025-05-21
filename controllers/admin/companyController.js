@@ -193,7 +193,7 @@ export const registerCompanyUser = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+   // await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -333,7 +333,7 @@ export const RegisterFrontEnd = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+  //  await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -447,7 +447,7 @@ export const editUser = async (req, res) => {
         `,
       };
 
-      await transporter.sendMail(mailOptions);
+   //   await transporter.sendMail(mailOptions);
     }
 
     res.status(200).json({
@@ -575,7 +575,7 @@ export const sendAccessEmail = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+  //  await transporter.sendMail(mailOptions);
 
     res
       .status(200)
@@ -651,7 +651,7 @@ export const forgotPassword = async (req, res) => {
           `,
     };
 
-    await transporter.sendMail(mailOptions);
+  //  await transporter.sendMail(mailOptions);
 
     res.status(200).json({ message: "New password sent to your email" });
   } catch (error) {
