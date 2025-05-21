@@ -1,7 +1,7 @@
 import User from "../../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
 import PersonalDetails from "../../models/personalDetails.js";
-import CandidateDetails from "../../models/candidateDetailsModel.js";
+import CandidateDetails from "../../models/CandidateDetailsModel.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
