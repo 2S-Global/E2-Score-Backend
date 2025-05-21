@@ -26,8 +26,9 @@ import pdfRouter from "./routes/pdfRoutes.js";
 //import form location routes
 import LocationRouterouter from "./routes/sql/LocationRoute.js";
 
-//user Action
+//candidate Routes
 import userRouter from "./routes/candidate/useractionRoute.js";
+import userdataRouter from "./routes/candidate/userdataRoute.js";
 
 // Routes
 app.get("/", (req, res) => {
@@ -45,8 +46,9 @@ app.use("/api/pdf", pdfRouter);
 //location routes
 app.use("/api/sql/locations", LocationRouterouter);
 
-//user action routes
+//user routes
 app.use("/api/useraction", userRouter);
+app.use("/api/userdata", userdataRouter);
 // Start server
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
