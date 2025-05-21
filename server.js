@@ -26,6 +26,9 @@ import pdfRouter from "./routes/pdfRoutes.js";
 //import form location routes
 import LocationRouterouter from "./routes/sql/LocationRoute.js";
 
+//import useraction
+import userRouter from "./routes/candidate/useractionRoute.js";
+
 // Routes
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
@@ -41,6 +44,10 @@ app.use("/api/pdf", pdfRouter);
 
 //location routes
 app.use("/api/sql/locations", LocationRouterouter);
+
+//useraction routes
+app.use("/api/useraction", userRouter);
+
 // Start server
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
