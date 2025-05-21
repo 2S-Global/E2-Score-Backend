@@ -1,6 +1,7 @@
 import User from "../../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
 import PersonalDetails from "../../models/personalDetails.js";
+import CandidateDetails from "../../models/candidateDetailsModel.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -113,12 +114,77 @@ export const addResumeHeadline = async (req, res) => {
     const updated = await PersonalDetails.findOneAndUpdate(
       { user: user },
       { resumeHeadline: resumeHeadline },
-      { new: true }
+      { new: true, upsert: true }
     );
     console.log(updated);
     res.status(201).json({
       success: true,
       message: "Resume Headline Saved successfully!",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error saving resumeHeadline", error: error.message });
+  }
+};
+
+//update user Details
+
+/**
+ * @route POST /api/useraction/update-user-details
+ * @summary Update the user's personal details
+ * @description This endpoint updates the user's personal details.
+ *              It updates the user's profile with the new details and
+ *              updates the user's personal details with the new details.
+ * @security BearerAuth
+ * @param {object} req.body - Details to update
+ * @param {string} req.body.full_name - Full name
+ * @param {string} req.body.gender - Gender
+ * @param {date} req.body.dob - Date of birth
+ * @param {string} req.body.country - Country
+ * @param {string} req.body.currentLocation - Current location
+ * @param {string} req.body.hometown - Hometown
+ * @returns {object} 201 - User details saved successfully
+ * @returns {object} 400 - Validation error
+ * @returns {object} 404 - User not found
+ * @returns {object} 500 - Error saving user details
+ */
+
+export const updateUserDetails = async (req, res) => {
+  try {
+    const user_id = req.userId;
+    const user = await User.findById(user_id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const { full_name, gender, dob, country, currentLocation, hometown } =
+      req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(user_id, {
+      name: full_name,
+      gender: gender,
+      updatedAt: new Date(),
+    });
+
+    const personalDetails = await CandidateDetails.findOneAndUpdate(
+      { userId: user_id },
+      {
+        dob: dob,
+        country_id: country,
+        currentLocation: currentLocation,
+        hometown: hometown,
+        updatedAt: new Date(),
+      },
+      {
+        new: true,
+        upsert: true,
+      }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "User Details Saved successfully!",
     });
   } catch (error) {
     res

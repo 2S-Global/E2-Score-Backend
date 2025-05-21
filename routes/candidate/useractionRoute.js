@@ -6,6 +6,7 @@ import { v2 as cloudinary } from "cloudinary";
 import {
   addProfilePicture,
   addResumeHeadline,
+  updateUserDetails,
 } from "../../controllers/candidate/useractionController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -24,7 +25,15 @@ userRouter.post(
   upload.single("profile_picture"),
   addProfilePicture
 );
+// Update user details
+userRouter.post(
+  "/update-user-details",
+  userAuth,
+  upload.none(),
+  updateUserDetails
+);
 
+// Update user resume Headline
 userRouter.post("/resumeheadline", userAuth, upload.none(), addResumeHeadline);
 
 export default userRouter;
