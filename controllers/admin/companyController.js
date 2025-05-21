@@ -898,7 +898,7 @@ export const listFieldsByCompany = async (req, res) => {
 
 export const deleteCompany = async (req, res) => {
   try {
-    const { companyId } = req.body;
+    const { companyId, role } = req.body;
 
     // Validate and convert companyId to ObjectId
     if (!mongoose.Types.ObjectId.isValid(companyId)) {
@@ -911,7 +911,7 @@ export const deleteCompany = async (req, res) => {
 
     // Find and update the company
     const deletedCompany = await User.findOneAndUpdate(
-      { _id: objectId, role: 1, is_del: false },
+      { _id: objectId, role: role, is_del: false },
       { is_del: true, updatedAt: new Date() },
       { new: true }
     );
