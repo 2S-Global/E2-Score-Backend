@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+//try
 const candidateDetailsSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
