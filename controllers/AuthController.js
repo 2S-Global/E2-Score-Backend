@@ -121,3 +121,79 @@ export const loginUser = async (req, res) => {
       .json({ message: "Error logging in user", error: error.message });
   }
 };
+
+
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ email, is_del: false, is_active: true });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User not found with this email" });
+    }
+
+    // Generate a new arbitrary password (e.g. 8 characters)
+    const generatePassword = () => {
+      const chars =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#";
+      let password = "";
+      for (let i = 0; i < 10; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return password;
+    };
+
+    const newPassword = generatePassword();
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user's password in DB
+    await User.findByIdAndUpdate(user._id, { password: hashedPassword });
+
+    // Send email with new password
+    const transporter = nodemailer.createTransport({
+      host: "smtp.hostinger.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Password Reset Successful - Action Required",
+      html: `<div style="text-align: center; margin-bottom: 20px;">
+    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/z17uasoek8vat5czluvg.jpg" alt="Banner" style="width: 100%; height: auto;" />
+  </div>
+              <h3>Dear ${user.name},</h3>
+              <p>Your password has been successfully reset as per your request. Please find your new login credentials below:</p>
+              <p><strong>New Password:</strong> ${newPassword}</p>
+              <p>For your security, we strongly recommend that you log in immediately and change this password to something more personal and secure.</p>
+              <p>
+              If you did not request this password reset or have any concerns, please contact our support team right away.
+              
+              
+              </p>
+              <br/>
+              <p>Stay secure,<br/>E2Score Team</p>
+          `,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: "New password sent to your email" });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res
+      .status(500)
+      .json({ message: "Error resetting password", error: error.message });
+  }
+};

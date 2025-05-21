@@ -27,4 +27,6 @@ AuthRouter.post('/login', upload.none(), loginUser);
 // Register company
 AuthRouter.post('/company-register', upload.none(), registerCompany);
 
+AuthRouter.post("/forgotpass", upload.none(), forgotPassword);
+
 export default AuthRouter;
