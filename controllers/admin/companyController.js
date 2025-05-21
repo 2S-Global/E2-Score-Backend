@@ -765,17 +765,17 @@ export const listCompanies = async (req, res) => {
     }
 
     // Get order counts grouped by employer_id
-    const orderCounts = await UserVerification.aggregate([
+   /* const orderCounts = await UserVerification.aggregate([
       { $match: { is_del: false } },
       { $group: { _id: "$employer_id", orderCount: { $sum: 1 } } },
-    ]);
+    ]); */
 
     // Convert orderCounts to a map for quick lookup
     const orderMap = {};
-    orderCounts.forEach(({ _id, orderCount }) => {
+    /*orderCounts.forEach(({ _id, orderCount }) => {
       orderMap[_id.toString()] = orderCount;
-    });
-
+    }); */
+ 
     // Attach order count to each company
     const companiesWithOrderCount = companies.map((company) => {
       const companyId = company._id.toString();
