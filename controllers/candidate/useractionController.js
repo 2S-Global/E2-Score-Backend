@@ -1,5 +1,6 @@
 import User from "../../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
+import PersonalDetails from "../../models/personalDetails.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -80,5 +81,48 @@ export const addProfilePicture = async (req, res) => {
   } catch (error) {
     console.error("Error adding profile picture:", error);
     res.status(500).json({ message: "Error adding profile picture" });
+  }
+};
+
+/**
+ * @route POST /api/useraction/resumeheadline
+ * @summary Add or update the user's resume headline
+ * @description This endpoint adds a new resume headline for the authenticated user.
+ *              It deletes the old resume title if it exists and updates the user's resume headline with the new URL.
+ * @security BearerAuth
+ * @param {text} file.formData.required - Resume Headline (resumeHeadline)
+ * @returns {object} 200 - Resume Headline saved successfully
+ * @returns {object} 400 - ResumeHeadline are required.
+ * @returns {object} 500 - Error saving resumeHeadline
+ */
+
+// Add Resume Headline
+export const addResumeHeadline = async (req, res) => {
+  try {
+    const { resumeHeadline } = req.body;
+    const user = req.userId;
+
+    console.log("User Id generated from mongoDB");
+    console.log(user);
+
+    if (!user || !resumeHeadline) {
+      return res.status(400).json({ message: "ResumeHeadline are required." });
+    }
+
+    // Update the user's profile with the new picture URL
+    const updated = await PersonalDetails.findOneAndUpdate(
+      { user: user },
+      { resumeHeadline: resumeHeadline },
+      { new: true }
+    );
+    console.log(updated);
+    res.status(201).json({
+      success: true,
+      message: "Resume Headline Saved successfully!",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error saving resumeHeadline", error: error.message });
   }
 };

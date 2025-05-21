@@ -3,7 +3,10 @@ import multer from "multer";
 import dotenv from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
 
-import { addProfilePicture } from "../../controllers/candidate/useractionController.js";
+import {
+  addProfilePicture,
+  addResumeHeadline,
+} from "../../controllers/candidate/useractionController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
 
@@ -21,5 +24,7 @@ userRouter.post(
   upload.single("profile_picture"),
   addProfilePicture
 );
+
+userRouter.post("/resumeheadline", userAuth, upload.none(), addResumeHeadline);
 
 export default userRouter;
