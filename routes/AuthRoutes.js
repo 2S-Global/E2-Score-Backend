@@ -6,6 +6,7 @@ import {
     registerUser,
     loginUser,
     registerCompany,
+    forgotPassword
 } from '../controllers/AuthController.js'; // Adjust the path according to your project structure
 // Initialize dotenv to load environment variables
 dotenv.config();
