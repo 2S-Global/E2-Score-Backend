@@ -193,7 +193,7 @@ export const registerCompanyUser = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+   // await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -333,7 +333,7 @@ export const RegisterFrontEnd = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+  //  await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -447,7 +447,7 @@ export const editUser = async (req, res) => {
         `,
       };
 
-      await transporter.sendMail(mailOptions);
+   //   await transporter.sendMail(mailOptions);
     }
 
     res.status(200).json({
@@ -575,7 +575,7 @@ export const sendAccessEmail = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+  //  await transporter.sendMail(mailOptions);
 
     res
       .status(200)
@@ -651,7 +651,7 @@ export const forgotPassword = async (req, res) => {
           `,
     };
 
-    await transporter.sendMail(mailOptions);
+  //  await transporter.sendMail(mailOptions);
 
     res.status(200).json({ message: "New password sent to your email" });
   } catch (error) {
@@ -765,17 +765,17 @@ export const listCompanies = async (req, res) => {
     }
 
     // Get order counts grouped by employer_id
-    const orderCounts = await UserVerification.aggregate([
+   /* const orderCounts = await UserVerification.aggregate([
       { $match: { is_del: false } },
       { $group: { _id: "$employer_id", orderCount: { $sum: 1 } } },
-    ]);
+    ]); */
 
     // Convert orderCounts to a map for quick lookup
     const orderMap = {};
-    orderCounts.forEach(({ _id, orderCount }) => {
+    /*orderCounts.forEach(({ _id, orderCount }) => {
       orderMap[_id.toString()] = orderCount;
-    });
-
+    }); */
+ 
     // Attach order count to each company
     const companiesWithOrderCount = companies.map((company) => {
       const companyId = company._id.toString();
@@ -898,7 +898,7 @@ export const listFieldsByCompany = async (req, res) => {
 
 export const deleteCompany = async (req, res) => {
   try {
-    const { companyId } = req.body;
+    const { companyId, role } = req.body;
 
     // Validate and convert companyId to ObjectId
     if (!mongoose.Types.ObjectId.isValid(companyId)) {
@@ -911,7 +911,7 @@ export const deleteCompany = async (req, res) => {
 
     // Find and update the company
     const deletedCompany = await User.findOneAndUpdate(
-      { _id: objectId, role: 1, is_del: false },
+      { _id: objectId, role: role, is_del: false },
       { is_del: true, updatedAt: new Date() },
       { new: true }
     );
@@ -939,7 +939,7 @@ export const deleteCompany = async (req, res) => {
 
 export const toggleCompanyStatus = async (req, res) => {
   try {
-    const { status, companyId } = req.body;
+    const { status, companyId, role } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(companyId)) {
       return res
@@ -957,7 +957,7 @@ export const toggleCompanyStatus = async (req, res) => {
     const objectId = new mongoose.Types.ObjectId(companyId);
 
     const updatedCompany = await User.findOneAndUpdate(
-      { _id: objectId, role: 1, is_del: false }, // 👈 FIXED HERE
+      { _id: objectId, role: role, is_del: false }, // 👈 FIXED HERE
       { is_active: status, updatedAt: new Date() },
       { new: true }
     );
