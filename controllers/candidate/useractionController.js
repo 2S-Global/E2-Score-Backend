@@ -149,7 +149,6 @@ export const addResumeHeadline = async (req, res) => {
  * @returns {object} 404 - User not found
  * @returns {object} 500 - Error saving user details
  */
-
 export const updateUserDetails = async (req, res) => {
   try {
     const user_id = req.userId;
