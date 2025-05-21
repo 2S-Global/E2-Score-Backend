@@ -7,6 +7,7 @@ import {
   addProfilePicture,
   addResumeHeadline,
   updateUserDetails,
+  addProfileSummary,
 } from "../../controllers/candidate/useractionController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -35,5 +36,7 @@ userRouter.post(
 
 // Update user resume Headline
 userRouter.post("/resumeheadline", userAuth, upload.none(), addResumeHeadline);
+// Update user profile summary
+userRouter.post("/profilesummary", userAuth, upload.none(), addProfileSummary);
 
 export default userRouter;

@@ -191,3 +191,46 @@ export const updateUserDetails = async (req, res) => {
       .json({ message: "Error saving resumeHeadline", error: error.message });
   }
 };
+
+/**
+ * @route POST /api/useraction/profilesummary
+ * @summary Add or update the user's Profile Summary
+ * @description This endpoint adds a new Profile Summary for the authenticated user.
+ *              It deletes the old Profile Summary if it exists and updates the user's Profile Summary with the new URL.
+ * @security BearerAuth
+ * @param {text} file.formData.required - Profile Summary (profileSummary)
+ * @returns {object} 200 - Profile Summary Saved successfully!
+ * @returns {object} 400 - Profile Summary is required.
+ * @returns {object} 500 - Error saving Profile Summary
+ */
+
+// Add Profile Summary
+export const addProfileSummary = async (req, res) => {
+  try {
+    const { profileSummary } = req.body;
+    const user = req.userId;
+
+    console.log("User Id generated from mongoDB");
+    console.log(user);
+
+    if (!user || !profileSummary) {
+      return res.status(400).json({ message: "Profile Summary is required." });
+    }
+
+    // Update the user's profile with the new picture URL
+    const updated = await PersonalDetails.findOneAndUpdate(
+      { user: user },
+      { profileSummary: profileSummary },
+      { new: true }
+    );
+    console.log(updated);
+    res.status(201).json({
+      success: true,
+      message: "Profile Summary Saved successfully!",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error saving Profile Summary", error: error.message });
+  }
+};

@@ -43,3 +43,20 @@ export const getResumeHeadline = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/**
+ * @description Get the Profile Summary by user_id
+ * @route GET /api/userdata/profile_summary
+ * @access protected
+ */
+export const getProfileSummary = async (req, res) => {
+  try {
+    const user_id = req.userId;
+    const user = await personalDetails.findOne({ user: user_id });
+    console.log(user);
+    console.log(user.profileSummary);
+    res.status(200).json(user.profileSummary);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
