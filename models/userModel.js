@@ -12,10 +12,38 @@ const userSchema = new mongoose.Schema({
     profilePicture: {
         type: String,
     },
+    required_services: {
+      type: String,
+    //  default: 'company',
+    },
     email: {
-        type: String,
-        required: true,
-        unique: true,
+    type: String,
+    required: true,
+    unique: true,
+    },
+      phone_number: {
+      type: String,
+    },
+    address: {
+      type: String,
+    },
+    gst_no: {
+      type: String,
+    },
+    package_id: {
+      type: String,
+    },
+    allowed_verifications: {
+      type: String,
+    },
+    discount_percent: {
+      type: String,
+    },
+    transaction_fee: {
+      type: String,
+    },
+    transaction_gst: {
+      type: String,
     },
     gender: {
         type: String,
