@@ -22,6 +22,10 @@ import userEducationRoutes from "./routes/userEducationRoutes.js";
 import userVerificationRoutes from "./routes/userVerificationRoutes.js";
 import userVerificationCartRoutes from "./routes/userVerificationCartRoutes.js";
 import pdfRouter from "./routes/pdfRoutes.js";
+import pacakageRoute from "./routes/admin/pacakageRoute.js";
+import companyPackageRoute from "./routes/admin/companyPackageRoute.js";
+import companyRoutes from "./routes/admin/companyRoutes.js";
+
 
 //import form location routes
 import LocationRouterouter from "./routes/sql/LocationRoute.js";
@@ -50,6 +54,13 @@ app.use("/api/sql/locations", LocationRouterouter);
 app.use("/api/useraction", userRouter);
 app.use("/api/userdata", userdataRouter);
 // Start server
+
+
+// Admin Routes
+app.use("/api/pacakageRoute", pacakageRoute);
+app.use("/api/companyPackageRoute", companyPackageRoute);
+app.use("/api/companyRoutes", companyRoutes);
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
