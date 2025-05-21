@@ -939,7 +939,7 @@ export const deleteCompany = async (req, res) => {
 
 export const toggleCompanyStatus = async (req, res) => {
   try {
-    const { status, companyId } = req.body;
+    const { status, companyId, role } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(companyId)) {
       return res
@@ -957,7 +957,7 @@ export const toggleCompanyStatus = async (req, res) => {
     const objectId = new mongoose.Types.ObjectId(companyId);
 
     const updatedCompany = await User.findOneAndUpdate(
-      { _id: objectId, role: 1, is_del: false }, // 👈 FIXED HERE
+      { _id: objectId, role: role, is_del: false }, // 👈 FIXED HERE
       { is_active: status, updatedAt: new Date() },
       { new: true }
     );
