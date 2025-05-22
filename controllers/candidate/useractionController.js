@@ -97,7 +97,7 @@ export const addProfilePicture = async (req, res) => {
  * @returns {object} 500 - Error saving resumeHeadline
  */
 
-// Add Resume Headline add test comand
+// Add Resume Headline add test comand new
 export const addResumeHeadline = async (req, res) => {
   try {
     const { resumeHeadline } = req.body;
