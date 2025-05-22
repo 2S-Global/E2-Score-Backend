@@ -32,13 +32,43 @@ export const getUser = async (req, res) => {
  * @throws {Error} 500 - Internal server error if fetching fails
  */
 
+/**
+ * @function getResumeHeadline
+ * @description Fetch the resume headline of the authenticated user from personal details.
+ * @route GET /api/userdata/resumeheadline
+ * @param {Object} req - Express request object containing userId
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ * @access protected
+ * @throws {Error} 400 - User ID is required
+ * @throws {Error} 404 - No headline found
+ * @throws {Error} 404 - Resume headline not found
+ * @throws {Error} 500 - Internal server error if fetching fails
+ */
+
 export const getResumeHeadline = async (req, res) => {
   try {
     const user_id = req.userId;
+
+    // Validate user_id
+    if (!user_id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Find user in personalDetails collection
     const user = await personalDetails.findOne({ user: user_id });
-    console.log(user);
-    console.log(user.resumeHeadline);
-    res.status(200).json(user.resumeHeadline);
+
+    // Validate if user exists
+    if (!user) {
+      return res.status(404).json({ message: "No headline found" });
+    }
+
+    // Validate if resumeHeadline exists
+    if (!user.resumeHeadline || user.resumeHeadline.trim() === "") {
+      return res.status(404).json({ message: "Resume headline not found" });
+    }
+
+    res.status(200).json({ resumeHeadline: user.resumeHeadline });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
