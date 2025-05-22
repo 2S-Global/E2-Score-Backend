@@ -1,7 +1,7 @@
 import User from "../../models/userModel.js";
 import personalDetails from "../../models/personalDetails.js";
 import candidateDetails from "../../models/CandidateDetailsModel.js";
-
+import db_sql from "../../config/sqldb.js";
 /**
  * @function getUser
  *  @route GET /api/userdata/userdata
@@ -14,10 +14,44 @@ import candidateDetails from "../../models/CandidateDetailsModel.js";
 export const getUser = async (req, res) => {
   try {
     const user_id = req.userId;
-    const user = await User.findById(user_id);
-    res.status(200).json(user);
+    const user = await User.findById(user_id).lean();
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const personalData = await candidateDetails
+      .findOne({ userId: user_id }, "dob country_id currentLocation hometown")
+      .lean();
+
+    // Fetch gender name from SQL
+    let gender_name = "";
+    if (user.gender) {
+      const [genderResult] = await db_sql.query(
+        "SELECT name FROM gender WHERE id = ?",
+        [user.gender]
+      );
+      if (genderResult?.length) {
+        gender_name = genderResult[0].name;
+      }
+    }
+
+    // Combine final data
+    const responseData = {
+      ...user,
+      ...(personalData && {
+        dob: personalData.dob,
+        country_id: personalData.country_id,
+        currentLocation: personalData.currentLocation,
+        hometown: personalData.hometown,
+      }),
+      gender_name,
+    };
+
+    res.status(200).json(responseData);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error in getUser:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
