@@ -3,6 +3,7 @@ import {
   All_contry,
   All_gender,
   getSkill,
+  getMatchingSkill,
 } from "../../controllers/sql/dropdownController.js";
 
 const DropdownRouterouter = express.Router();
@@ -14,5 +15,11 @@ DropdownRouterouter.get("/All_gender", All_gender);
 
 //get 50 random skills
 DropdownRouterouter.get("/Random_Skill", getSkill);
+
+//search skill
+DropdownRouterouter.get(
+  "/matching_Skill?skill_name =:skill_name ",
+  getMatchingSkill
+);
 
 export default DropdownRouterouter;

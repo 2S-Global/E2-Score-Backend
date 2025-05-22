@@ -73,3 +73,42 @@ export const getSkill = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+/**
+ * @description Search for matching skills based on the query parameter skill_name
+ * @route GET /api/sql/dropdown/searchSkill?skill_name=:skill_name
+ * @param {string} skill_name - The string to search for in the skills table
+ * @success {object} 200 - Matching skills
+ * @error {object} 400 - skill_name query parameter is required
+ * @error {object} 500 - Database query failed
+ */
+export const getMatchingSkill = async (req, res) => {
+  const { skill_name } = req.query;
+
+  if (!skill_name || skill_name.trim() === "") {
+    return res.status(400).json({
+      success: false,
+      message: "skill_name query parameter is required",
+    });
+  }
+
+  try {
+    const [rows] = await db_sql.execute(
+      `SELECT Skill FROM key_skills 
+       WHERE is_del = 0 AND is_active = 1 AND Skill LIKE ? 
+       ORDER BY Skill LIMIT 50;`,
+      [`%${skill_name}%`]
+    );
+
+    const skills = rows.map((row) => row.Skill);
+
+    res.status(200).json({
+      success: true,
+      data: skills,
+      message: `Matching skills for "${skill_name}"`,
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
