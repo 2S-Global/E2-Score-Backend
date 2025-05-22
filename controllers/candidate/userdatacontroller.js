@@ -167,3 +167,25 @@ export const getUserDetails = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/**
+ * @description Get the skills of a candidate by user_id
+ * @route GET /api/userdata/candidateskills
+ * @access protected
+ * @returns {object} 200 - Array of skills
+ * @returns {object} 404 - User data not found
+ * @returns {object} 500 - Error fetching skills
+ */
+export const getcandidateskills = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const candidate = await personalDetails.findOne({ user: userId });
+
+    if (!candidate) {
+      return res.status(404).json({ message: "User data not found" });
+    }
+    res.status(200).json(candidate.skills);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -6,6 +6,7 @@ import {
   getResumeHeadline,
   getProfileSummary,
   getUserDetails,
+  getcandidateskills,
 } from "../../controllers/candidate/userdatacontroller.js";
 
 //middleware
@@ -23,5 +24,8 @@ userdataRouter.get("/profile_summary", userAuth, getProfileSummary);
 
 //get user - details
 userdataRouter.get("/user_details", userAuth, getUserDetails);
+
+//get user skills
+userdataRouter.get("/candidateskills", userAuth, getcandidateskills);
 
 export default userdataRouter;
