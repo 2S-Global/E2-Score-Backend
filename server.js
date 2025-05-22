@@ -32,6 +32,7 @@ import DropdownRouterouter from "./routes/sql/DropdownRoute.js";
 //candidate Routes
 import userRouter from "./routes/candidate/useractionRoute.js";
 import userdataRouter from "./routes/candidate/userdataRoute.js";
+import dashboardRoute from "./routes/admin/dashboardRoute.js";
 
 // Routes
 app.get("/", (req, res) => {
@@ -58,6 +59,7 @@ app.use("/api/userdata", userdataRouter);
 app.use("/api/pacakageRoute", pacakageRoute);
 app.use("/api/companyPackageRoute", companyPackageRoute);
 app.use("/api/companyRoutes", companyRoutes);
+app.use("/api/dashboard", dashboardRoute);
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
