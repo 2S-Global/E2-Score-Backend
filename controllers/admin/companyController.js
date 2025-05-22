@@ -941,10 +941,20 @@ export const toggleCompanyStatus = async (req, res) => {
   try {
     const { status, companyId, role } = req.body;
 
+    let entityName = "Company";
+    if (role === 3) {
+      entityName = "Institute";
+    } else if (role === 2) {
+      entityName = "Company";
+    }
+
+
+    
+
     if (!mongoose.Types.ObjectId.isValid(companyId)) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid company ID" });
+        .json({ success: false, message: `Invalid ${entityName} ID` });
     }
 
     if (typeof status !== "boolean") {
@@ -965,12 +975,12 @@ export const toggleCompanyStatus = async (req, res) => {
     if (!updatedCompany) {
       return res
         .status(404)
-        .json({ success: false, message: "Company not found" });
+        .json({ success: false, message: `${entityName} not found` });
     }
 
     res.status(200).json({
       success: true,
-      message: `Company has been ${
+      message: `${entityName} has been ${
         status ? "activated" : "deactivated"
       } successfully`,
       data: updatedCompany,
