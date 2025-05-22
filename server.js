@@ -26,9 +26,8 @@ import pacakageRoute from "./routes/admin/pacakageRoute.js";
 import companyPackageRoute from "./routes/admin/companyPackageRoute.js";
 import companyRoutes from "./routes/admin/companyRoutes.js";
 
-
-//import form location routes
-import LocationRouterouter from "./routes/sql/LocationRoute.js";
+//import form Dropdown routes
+import DropdownRouterouter from "./routes/sql/DropdownRoute.js";
 
 //candidate Routes
 import userRouter from "./routes/candidate/useractionRoute.js";
@@ -47,14 +46,13 @@ app.use("/api/verify", userVerificationRoutes);
 app.use("/api/usercart", userVerificationCartRoutes);
 app.use("/api/pdf", pdfRouter);
 
-//location routes
-app.use("/api/sql/locations", LocationRouterouter);
+//dropdown routes
+app.use("/api/sql/dropdown", DropdownRouterouter);
 
 //user routes
 app.use("/api/useraction", userRouter);
 app.use("/api/userdata", userdataRouter);
 // Start server
-
 
 // Admin Routes
 app.use("/api/pacakageRoute", pacakageRoute);
