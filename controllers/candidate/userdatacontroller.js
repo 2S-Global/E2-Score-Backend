@@ -1,5 +1,6 @@
 import User from "../../models/userModel.js";
 import personalDetails from "../../models/personalDetails.js";
+import candidateDetails from "../../models/CandidateDetailsModel.js";
 
 /**
  * @function getUser
