@@ -98,7 +98,7 @@ export const getMatchingSkill = async (req, res) => {
       `SELECT Skill FROM key_skills 
        WHERE is_del = 0 AND is_active = 1 AND Skill LIKE ? 
        ORDER BY Skill LIMIT 50;`,
-      [`%${skill_name}%`]
+      [`${skill_name}%`]
     );
 
     const skills = rows.map((row) => row.Skill);
