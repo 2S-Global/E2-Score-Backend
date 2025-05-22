@@ -15,7 +15,14 @@ export const changePassword = async (req, res) => {
     const userId = req.userId;
 
     // Validate request body
-    const { oldPassword, newPassword } = req.body;
+    const { oldPassword, newPassword, role } = req.body;
+
+    let entityName = "Company";
+    if (role === 3) {
+      entityName = "Institute";
+    } else if (role === 2) {
+      entityName = "Company";
+    }
 
     if (!oldPassword?.trim() || !newPassword?.trim()) {
       return res.status(400).json({
@@ -28,7 +35,7 @@ export const changePassword = async (req, res) => {
     const user = await User.findById(userId);
     if (!user || user.is_del) {
       return res.status(404).json({
-        message: "User not found.",
+        message: `${entityName} not found.`,
         success: false,
       });
     }
@@ -84,6 +91,14 @@ export const registerCompanyUser = async (req, res) => {
       return res.status(400).json({ message: "Name, email, password" });
     }
 
+
+        let entityName = "Company";
+    if (role === 3) {
+      entityName = "Institute";
+    } else if (role === 2) {
+      entityName = "Company";
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({
       email,
@@ -91,7 +106,7 @@ export const registerCompanyUser = async (req, res) => {
       is_active: true,
     });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: `${entityName} already exists` });
     }
 
     // Hash the password before saving
@@ -197,13 +212,13 @@ export const registerCompanyUser = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "User registered and logged in successfully!",
+      message: `${entityName} registered and logged in successfully!`,
       /* token, */
     });
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Error creating user", error: error.message });
+      .json({ message: `Error creating ${entityName}`, error: error.message });
   }
 };
 
@@ -360,10 +375,20 @@ export const editUser = async (req, res) => {
     gst_no,
     package_id,
     discount_percent,
+    role,
   } = req.body;
 
   try {
     const updatedFields = {};
+
+    let entityName = "Company";
+    if (role === 3) {
+    entityName = "Institute";
+    } else if (role === 2) {
+    entityName = "Company";
+    }
+
+
     // Check if user already exists
     const existingUser = await User.findOne({
       email,
@@ -409,7 +434,7 @@ export const editUser = async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: `${entityName} not found` });
     }
 
     if (oldemail != email) {
@@ -452,13 +477,13 @@ export const editUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "User updated successfully",
+      message: `${entityName} updated successfully`,
       user: updatedUser,
     });
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Error updating user", error: error.message });
+      .json({ message: `Error updating ${entityName}`, error: error.message });
   }
 };
 
@@ -754,6 +779,13 @@ export const listCompanies = async (req, res) => {
 
     const { role } = req.body;
 
+        let entityName = "Company";
+    if (role === 3) {
+    entityName = "Institute";
+    } else if (role === 2) {
+    entityName = "Company";
+    }
+
     const companies = await User.find({
       is_del: false,
       role: role,
@@ -761,7 +793,7 @@ export const listCompanies = async (req, res) => {
     }).select("-password");
 
     if (!companies.length) {
-      return res.status(404).json({ message: "No companies found" });
+      return res.status(404).json({ message: `No ${entityName} found` });
     }
 
     // Get order counts grouped by employer_id
@@ -787,7 +819,7 @@ export const listCompanies = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Companies retrieved successfully",
+      message: `${entityName} retrieved successfully`,
       data: companiesWithOrderCount,
     });
   } catch (error) {
@@ -900,11 +932,18 @@ export const deleteCompany = async (req, res) => {
   try {
     const { companyId, role } = req.body;
 
+    let entityName = "Company";
+    if (role === 3) {
+    entityName = "Institute";
+    } else if (role === 2) {
+    entityName = "Company";
+    }
+
     // Validate and convert companyId to ObjectId
     if (!mongoose.Types.ObjectId.isValid(companyId)) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid company ID" });
+        .json({ success: false, message: `Invalid ${entityName} ID` });
     }
 
     const objectId = new mongoose.Types.ObjectId(companyId);
@@ -919,13 +958,13 @@ export const deleteCompany = async (req, res) => {
     if (!deletedCompany) {
       return res.status(404).json({
         success: false,
-        message: "Company not found or already deleted",
+        message: `${entityName} not found or already deleted`,
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Company deleted successfully",
+      message: `${entityName} deleted successfully`,
       data: deletedCompany,
     });
   } catch (error) {
