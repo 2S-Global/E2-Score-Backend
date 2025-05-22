@@ -94,3 +94,41 @@ export const getProfileSummary = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/**
+ * @description Get the User Details by user_id
+ * @route GET /api/userdata/user_details (new)
+ * @access protected
+ */
+export const getUserDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Fetch data from User collection
+    const userData = await User.findById(userId, "name gender"); // Only select name and gender
+
+    // Fetch data from personalDetails collection
+    const personalData = await candidateDetails.findOne(
+      { userId: userId },
+      "dob country_id currentLocation hometown" // Select only required fields
+    );
+
+    if (!userData || !personalData) {
+      return res.status(404).json({ message: "User data not found" });
+    }
+
+    // Combine and send response
+    const result = {
+      name: userData.name,
+      gender: userData.gender,
+      dob: personalData.dob,
+      country_id: personalData.country_id,
+      currentLocation: personalData.currentLocation,
+      hometown: personalData.hometown,
+    };
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
