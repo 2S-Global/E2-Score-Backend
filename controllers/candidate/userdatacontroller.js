@@ -10,7 +10,6 @@ import personalDetails from "../../models/personalDetails.js";
  * @returns {Promise}
  *  @access protected
  */
-
 export const getUser = async (req, res) => {
   try {
     const user_id = req.userId;
@@ -29,23 +28,11 @@ export const getUser = async (req, res) => {
  * @param {Object} res - Express response object
  * @returns {Promise<void>}
  * @access protected
- * @throws {Error} 500 - Internal server error if fetching fails
- */
-
-/**
- * @function getResumeHeadline
- * @description Fetch the resume headline of the authenticated user from personal details.
- * @route GET /api/userdata/resumeheadline
- * @param {Object} req - Express request object containing userId
- * @param {Object} res - Express response object
- * @returns {Promise<void>}
- * @access protected
  * @throws {Error} 400 - User ID is required
  * @throws {Error} 404 - No headline found
  * @throws {Error} 404 - Resume headline not found
  * @throws {Error} 500 - Internal server error if fetching fails
  */
-
 export const getResumeHeadline = async (req, res) => {
   try {
     const user_id = req.userId;
