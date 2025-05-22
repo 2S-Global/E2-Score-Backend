@@ -76,7 +76,7 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
     role: {
-      /* 0 for admin ,1 for candidate ,2 for company  */
+      /* 0 for admin ,1 for candidate ,2 for company, 3 institute  */
       type: Number,
       required: true,
       default: 1,
