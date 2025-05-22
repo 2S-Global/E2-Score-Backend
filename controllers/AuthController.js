@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 // Register a new user
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone_number } = req.body;
     const role = 1;
     // Validate required fields
     if (!name || !email || !password) {
@@ -25,7 +25,13 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create a new user with hashed password
-    const newUser = new User({ name, email, password: hashedPassword, role });
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      phone_number,
+    });
     await newUser.save();
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
@@ -35,7 +41,7 @@ export const registerUser = async (req, res) => {
       success: true,
       message: "User registered and logged in successfully!",
       token,
-      /*  data: newUser, */
+      data: newUser,
     });
   } catch (error) {
     res
@@ -121,8 +127,6 @@ export const loginUser = async (req, res) => {
       .json({ message: "Error logging in user", error: error.message });
   }
 };
-
-
 
 export const forgotPassword = async (req, res) => {
   try {
