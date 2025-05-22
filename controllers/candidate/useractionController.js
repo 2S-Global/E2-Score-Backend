@@ -97,15 +97,11 @@ export const addProfilePicture = async (req, res) => {
  * @returns {object} 500 - Error saving resumeHeadline
  */
 
-// Add Resume Headline
+// Add Resume Headline add test comand
 export const addResumeHeadline = async (req, res) => {
   try {
     const { resumeHeadline } = req.body;
     const user = req.userId;
-
-    console.log("User Id generated from mongoDB");
-    console.log(user);
-
     if (!user || !resumeHeadline) {
       return res.status(400).json({ message: "ResumeHeadline are required." });
     }
