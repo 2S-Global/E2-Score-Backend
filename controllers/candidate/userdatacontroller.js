@@ -69,10 +69,27 @@ export const getResumeHeadline = async (req, res) => {
 export const getProfileSummary = async (req, res) => {
   try {
     const user_id = req.userId;
+
+    // Validate user_id
+    if (!user_id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Fetch user details
     const user = await personalDetails.findOne({ user: user_id });
-    console.log(user);
-    console.log(user.profileSummary);
-    res.status(200).json(user.profileSummary);
+
+    // Validate if user document exists
+    if (!user) {
+      return res.status(404).json({ message: "Profile Sumnmary is not Found" });
+    }
+
+    // Validate if profileSummary exists and is non-empty
+    if (!user.profileSummary || user.profileSummary.trim() === "") {
+      return res.status(404).json({ message: "Profile summary not found" });
+    }
+
+    // Success response
+    res.status(200).json({ profileSummary: user.profileSummary });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
