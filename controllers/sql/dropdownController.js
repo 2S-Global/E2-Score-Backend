@@ -53,7 +53,6 @@ export const All_gender = async (req, res) => {
  * @success {object} 200 - Random 50 Skills
  * @error {object} 500 - Database query failed
  */
-
 export const getSkill = async (req, res) => {
   try {
     const [rows] = await db_sql.execute(
