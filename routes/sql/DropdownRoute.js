@@ -17,9 +17,6 @@ DropdownRouterouter.get("/All_gender", All_gender);
 DropdownRouterouter.get("/Random_Skill", getSkill);
 
 //search skill
-DropdownRouterouter.get(
-  "/matching_Skill?skill_name =:skill_name ",
-  getMatchingSkill
-);
+DropdownRouterouter.get("/matching_Skill", getMatchingSkill);
 
 export default DropdownRouterouter;

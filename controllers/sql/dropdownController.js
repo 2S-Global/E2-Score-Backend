@@ -84,6 +84,7 @@ export const getSkill = async (req, res) => {
  */
 export const getMatchingSkill = async (req, res) => {
   const { skill_name } = req.query;
+  console.log(skill_name);
 
   if (!skill_name || skill_name.trim() === "") {
     return res.status(400).json({
