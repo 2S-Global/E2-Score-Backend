@@ -186,13 +186,9 @@ export const registerCompanyUser = async (req, res) => {
           <li>Audit Trail: Complete record of all verification activity.</li>
         </ul>
       
-        <p>
-          We are confident that E2Score will significantly improve your KYC verification workflow.
-        </p>
+        <p>We are confident that E2Score will significantly improve your KYC verification workflow.</p>
       
-        <p>
-          For any assistance with the platform, including login issues or technical support, please contact our support team at:
-        </p>
+        <p>For any assistance with the platform, including login issues or technical support, please contact our support team at: </p>
         <ul>
           <li><strong>Email:</strong> <a href="mailto:info@geisil.com">info@geisil.com</a></li>
           <li><strong>Phone:</strong> 9831823898</li>
@@ -387,7 +383,9 @@ export const editUser = async (req, res) => {
     } else if (role === 2) {
     entityName = "Company";
     }
-
+    else if (role === 1) {
+    entityName = "Candidate";
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -785,6 +783,9 @@ export const listCompanies = async (req, res) => {
     } else if (role === 2) {
     entityName = "Company";
     }
+    else if (role === 1) {
+    entityName = "Candidate";
+    }
 
     const companies = await User.find({
       is_del: false,
@@ -938,6 +939,9 @@ export const deleteCompany = async (req, res) => {
     } else if (role === 2) {
     entityName = "Company";
     }
+    else if (role === 1) {
+    entityName = "Candidate";
+    }
 
     // Validate and convert companyId to ObjectId
     if (!mongoose.Types.ObjectId.isValid(companyId)) {
@@ -986,7 +990,9 @@ export const toggleCompanyStatus = async (req, res) => {
     } else if (role === 2) {
       entityName = "Company";
     }
-
+    else if (role === 1) {
+    entityName = "Candidate";
+    }
 
     
 
