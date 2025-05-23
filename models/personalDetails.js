@@ -98,11 +98,14 @@ const personalSchema = new mongoose.Schema(
         },
       },
     ],
-    skills: [
+    /*   skills: [
       {
         type: String,
       },
-    ],
+    ], */
+    skills: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

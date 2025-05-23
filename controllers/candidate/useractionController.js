@@ -2,6 +2,7 @@ import User from "../../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
 import PersonalDetails from "../../models/personalDetails.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
+import db_sql from "../../config/sqldb.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -228,5 +229,84 @@ export const addProfileSummary = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error saving Profile Summary", error: error.message });
+  }
+};
+
+// Add Key Skills
+/**
+ * @route POST /api/useraction/keyskills
+ * @summary Add or update Key Skills
+ * @description This endpoint adds a new Key Skills for the authenticated user.
+ *              It deletes the old Key Skills if it exists and updates the user's Key Skills with the new URL.
+ * @security BearerAuth
+ * @param {text} file.formData.required - Key Skills (skills)
+ * @returns {object} 200 - Skills saved successfully!
+ * @returns {object} 400 - Skills must be a non-empty array of strings..
+ * @returns {object} 500 - Error saving skills
+ */
+export const addKeySkills = async (req, res) => {
+  try {
+    const { skills } = req.body; // array of strings
+    const user = req.userId;
+
+    if (!user) {
+      return res.status(400).json({ message: "User ID is missing." });
+    }
+
+    if (!Array.isArray(skills) || skills.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Skills must be a non-empty array of strings." });
+    }
+
+    const allStrings = skills.every((skill) => typeof skill === "string");
+    if (!allStrings) {
+      return res.status(400).json({ message: "All skills must be strings." });
+    }
+
+    // 🔍 Get skill IDs from SQL
+    const placeholders = skills.map(() => "?").join(", ");
+    const [rows] = await db_sql.execute(
+      `SELECT id, Skill FROM key_skills WHERE Skill IN (${placeholders})`,
+      skills
+    );
+
+    const skillMap = {};
+    rows.forEach((row) => {
+      skillMap[row.Skill] = row.id;
+    });
+
+    // ❌ Check for missing skills
+    const missingSkills = skills.filter((skill) => !skillMap[skill]);
+    if (missingSkills.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Some skills not found in SQL table.",
+        missingSkills,
+      });
+    }
+
+    // ✅ Convert to comma-separated string of IDs
+    const skillIds = skills.map((skill) => skillMap[skill]).join(",");
+
+    // 💾 Save in MongoDB
+    await PersonalDetails.findOneAndUpdate(
+      { user },
+      { skills: skillIds },
+      { upsert: true, new: true }
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Skill IDs saved successfully!",
+      data: skillIds,
+    });
+  } catch (error) {
+    console.error("Error saving skills:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };

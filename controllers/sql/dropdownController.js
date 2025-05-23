@@ -46,7 +46,6 @@ export const All_gender = async (req, res) => {
   }
 };
 
-/*************  ✨ Windsurf Command ⭐  *************/
 /**
  * @description Get 50 random skills from the database
  * @route GET /api/sql/dropdown/Random_Skill
