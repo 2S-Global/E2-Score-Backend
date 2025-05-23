@@ -111,3 +111,26 @@ export const getMatchingSkill = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+/**
+ * @description Get all Education Level from the database
+ * @route GET /api/sql/dropdown/education_level
+ * @success {object} 200 - All Education Level
+ * @error {object} 500 - Database query failed
+ */
+export const getEducationLevel = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id , level, duration FROM `education_level` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All Education Level",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error); // 👈 Add this
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
