@@ -5,6 +5,11 @@ import {
   getSkill,
   getMatchingSkill,
   getEducationLevel,
+  getAllState,
+  getUniversityByState,
+  getCourseByUniversity,
+  getGradingSystem,
+  getCourseType,
 } from "../../controllers/sql/dropdownController.js";
 
 const DropdownRouterouter = express.Router();
@@ -22,4 +27,19 @@ DropdownRouterouter.get("/matching_Skill", getMatchingSkill);
 
 //get education level
 DropdownRouterouter.get("/education_level", getEducationLevel);
+
+//get All university state
+DropdownRouterouter.get("/all_university_state", getAllState);
+
+//get university by state
+DropdownRouterouter.get("/university_state", getUniversityByState);
+
+//get course  by university
+DropdownRouterouter.get("/university_course", getCourseByUniversity);
+
+//get Grading System
+DropdownRouterouter.get("/grading_system", getGradingSystem);
+
+//get Course Type
+DropdownRouterouter.get("/course_type", getCourseType);
 export default DropdownRouterouter;

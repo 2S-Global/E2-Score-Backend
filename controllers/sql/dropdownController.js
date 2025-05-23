@@ -134,3 +134,170 @@ export const getEducationLevel = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+/**
+ * @description Get all University State from the database
+ * @route GET /api/sql/dropdown/all_university_state
+ * @success {object} 200 - All University States
+ * @error {object} 500 - Database query failed
+ */
+export const getAllState = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `university_state` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All University States",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error); // 👈 Add this
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all University By State from the database
+ * @route GET /api/sql/dropdown/university_state?state_id=4
+ * @success {object} 200 - Universities in state ID ${stateId}
+ * @error {object} 500 - Database query failede
+ */
+export const getUniversityByState = async (req, res) => {
+  try {
+    const stateId = req.query.state_id;
+
+    if (!stateId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing state_id in query." });
+    }
+
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `university_univercity` WHERE state_id = ? AND is_del = 0 AND is_active = 1;",
+      [stateId]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: `Universities in state ID ${stateId}`,
+    });
+  } catch (error) {
+    console.error("MySQL error →", error); // 👈 Add this
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all Course By University from the database
+ * @route GET http://localhost:8080/api/sql/dropdown/university_course?university_id=4&course_type=UG
+ * @success {object} 200 - Courses for university
+ * @error {object} 500 - Database query failede
+ */
+
+// getUniversityCourse
+export const getCourseByUniversity = async (req, res) => {
+  try {
+    const universityId = req.query.university_id;
+    const courseType = req.query.course_type;
+
+    if (!universityId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing university_id in query." });
+    }
+
+    // Step 1: Fetch course IDs string from university_college
+    const [collegeRows] = await db_sql.execute(
+      "SELECT courses FROM university_college WHERE id = ? AND is_del = 0 AND is_active = 1;",
+      [universityId]
+    );
+
+    if (collegeRows.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "University college not found." });
+    }
+
+    const courseIdsStr = collegeRows[0].courses;
+    if (!courseIdsStr) {
+      return res.status(404).json({
+        success: false,
+        message: "No courses found for this university.",
+      });
+    }
+
+    // Step 2: Convert course string to array of IDs
+    const courseIds = courseIdsStr.split(",").map((id) => id.trim());
+
+    // Step 3: Build query dynamically
+    let sql = `SELECT id, name FROM university_course WHERE id IN (${courseIds
+      .map(() => "?")
+      .join(", ")})`;
+    const values = [...courseIds];
+
+    if (courseType) {
+      sql += ` AND type = ?`;
+      values.push(courseType);
+    }
+
+    const [courseRows] = await db_sql.execute(sql, values);
+
+    res.status(200).json({
+      success: true,
+      data: courseRows,
+      message: "Courses for university",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all Grading System from the database
+ * @route GET /api/sql/dropdown/grading_system
+ * @success {object} 200 - All Grading Systems
+ * @error {object} 500 - Database query failed
+ */
+export const getGradingSystem = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `grading_system` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All Grading Systems",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error); // 👈 Add this
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all Course Type from the database
+ * @route GET /api/sql/dropdown/course_type
+ * @success {object} 200 - All Course Type
+ * @error {object} 500 - Database query failed
+ */
+export const getCourseType = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `course_type` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All Course Type",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error); // 👈 Add this
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
