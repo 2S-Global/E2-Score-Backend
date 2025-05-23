@@ -179,13 +179,42 @@ export const getUserDetails = async (req, res) => {
 export const getcandidateskills = async (req, res) => {
   try {
     const userId = req.userId;
+
+    // 1. Fetch user skill string from MongoDB
     const candidate = await personalDetails.findOne({ user: userId });
 
-    if (!candidate) {
-      return res.status(404).json({ message: "User data not found" });
+    if (!candidate || !candidate.skills) {
+      return res.status(404).json({ message: "User skills not found" });
     }
-    res.status(200).json(candidate.skills);
+
+    // 2. Convert "32046,5332,31680" -> [32046, 5332, 31680]
+    const skillIds = candidate.skills
+      .split(",")
+      .map((id) => parseInt(id.trim()))
+      .filter((id) => !isNaN(id)); // remove invalid entries
+
+    if (skillIds.length === 0) {
+      return res.status(200).json([]); // return empty array if no valid IDs
+    }
+
+    // 3. Generate placeholders (?, ?, ?) dynamically
+    const placeholders = skillIds.map(() => "?").join(", ");
+
+    // 4. Query SQL for matching skills
+    const [rows] = await db_sql.execute(
+      `SELECT Skill FROM key_skills WHERE id IN (${placeholders})`,
+      skillIds
+    );
+
+    // 5. Extract skill names
+    const skillNames = rows.map((row) => row.Skill);
+
+    // 6. Respond
+    res.status(200).json(skillNames);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching candidate skills:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
