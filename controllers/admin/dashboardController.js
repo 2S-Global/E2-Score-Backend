@@ -4,49 +4,34 @@ import UserVerification from "../../models/userVerificationModel.js";
 import mongoose from "mongoose";
 import CompanyPackage from "../../models/companyPackageModel.js";
 
+
 export const getTotal = async (req, res) => {
   try {
     const [
-      totalUsers,
-      totalActiveVerification,
-      totalPendingVerifications,
-      totalTransactionAmountAgg
+      totalCompany,
+      totalInstitution,
+      totalCandidate
     ] = await Promise.all([
-      User.countDocuments({ role: 1,is_del:false }), // Users with role_id = 1
-      UserVerification.countDocuments({ all_verified: 1 }), // Fully verified users
-   UserVerification.countDocuments({ all_verified: { $in: [0, null] } }), // Pending verification users
-      Transaction.aggregate([ // Sum of all transaction amounts
-        {
-          $group: {
-            _id: null, // No need for _id
-            total: { $sum: "$amount" } // Sum the 'amount' field
-          }
-        },
-        {
-          $project: {
-            _id: 0, // Remove _id field
-            total: 1 // Keep the 'total' field
-          }
-        }
-      ])
+      User.countDocuments({ role: 2,is_del:false }), // Users with role_id = 1
+      User.countDocuments({ role: 3,is_del:false }), // Fully verified users
+      User.countDocuments({ role: 1,is_del:false }), // Pending verification users
     ]);
 
-   // const totalTransactionAmount = totalTransactionAmountAgg[0]?.total || 0; // Safely access the result
-
-    const totalTransactionAmount = parseFloat((totalTransactionAmountAgg[0]?.total || 0).toFixed(2));
+    const TotalPayment = '0.00';
 
 
     res.status(200).json({
       success: true,
-      totalUsers,
-      totalActiveVerification,
-      totalPendingVerifications,
-      totalTransactionAmount
+      totalCompany,
+      totalInstitution,
+      totalCandidate,
+      TotalPayment
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 
 export const getMonthlyUserVerifications = async (req, res) => {
