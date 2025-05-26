@@ -12,6 +12,7 @@ import {
   getCourseType,
   getEducationBoardById,
   getAllMediumOfEducation,
+  getCollegeNameById,
 } from "../../controllers/sql/dropdownController.js";
 
 const DropdownRouterouter = express.Router();
@@ -50,4 +51,7 @@ DropdownRouterouter.get("/state_wise_board", getEducationBoardById);
 
 //Medium Of Education
 DropdownRouterouter.get("/medium_of_education", getAllMediumOfEducation);
+
+//Get College Name by University Id
+DropdownRouterouter.get("/college_name", getCollegeNameById);
 export default DropdownRouterouter;

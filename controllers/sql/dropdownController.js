@@ -362,3 +362,36 @@ export const getAllMediumOfEducation = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+/**
+ * @description Get College Name by University Id from the database
+ * @route GET /api/sql/dropdown/college_name?university_id=6
+ * @success {object} 200 - College Name based on University Id
+ * @error {object} 500 - Database query failed
+ */
+export const getCollegeNameById = async (req, res) => {
+  try {
+    const universityId = req.query.university_id;
+
+    const [rows] = await db_sql.execute(
+      "SELECT id,name FROM university_college WHERE university_id = ? AND is_del = 0 AND is_active = 1;",
+      [universityId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "College Name not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "College Name based on University Id",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
