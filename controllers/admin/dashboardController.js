@@ -270,6 +270,16 @@ export const getMonthlyCandidateDetails = async (req, res) => {
   }
 };
 
+
+/**
+ * @route POST /api/dashboard/getMonthlyInstitutionsDetails
+ * @summary getting the totals of all institution users along with month
+ * @description This endpoint gives totals of all registered institution along with month for admin authenticated user. It used in graph
+ * @security BearerAuth
+ * @returns {object} 200 - Data Fetched successfully!
+ * @returns {object} 500 - Error fetching Data
+ */
+
 export const getMonthlyInstitutionsDetails = async (req, res) => {
   try {
     const now = new Date();
@@ -403,6 +413,15 @@ const user_id = new mongoose.Types.ObjectId(req.userId);
   }
 };
 
+
+/**
+ * @route POST /api/dashboard/getMonthlyUserDetails
+ * @summary getting the totals of all  users along with month
+ * @description This endpoint gives totals of all users along with month for admin authenticated user. It used in graph
+ * @security BearerAuth
+ * @returns {object} 200 - Data Fetched successfully!
+ * @returns {object} 500 - Error fetching Data
+ */
 
 
 
