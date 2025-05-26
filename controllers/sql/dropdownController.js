@@ -292,11 +292,9 @@ export const getGradingSystem = async (req, res) => {
       "SELECT id, name FROM `grading_system` WHERE is_del = 0 AND is_active = 1;"
     );
 
-    const gradingRows = rows.map((row) => row.name);
-
     res.status(200).json({
       success: true,
-      data: gradingRows,
+      data: rows,
       message: "All Grading Systems",
     });
   } catch (error) {
