@@ -200,55 +200,79 @@ export const getUniversityByState = async (req, res) => {
 // getUniversityCourse
 export const getCourseByUniversity = async (req, res) => {
   try {
-    const universityId = req.query.university_id;
-    const courseType = req.query.course_type;
+    const { state_id, university_id, college_name, course_type } = req.query;
 
-    if (!universityId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing university_id in query." });
+    console.log("Finding course depending on four different parameters");
+    console.log(state_id);
+    console.log(university_id);
+    console.log(college_name);
+    console.log(course_type);
+
+    if (!state_id || !university_id || !college_name) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Missing one or more required query parameters: state_id, university_id, college_name.",
+      });
     }
 
-    // Step 1: Fetch course IDs string from university_college
-    const [collegeRows] = await db_sql.execute(
-      "SELECT courses FROM university_college WHERE id = ? AND is_del = 0 AND is_active = 1;",
-      [universityId]
+    // Step 1: Check university and state match
+    const [universityRows] = await db_sql.execute(
+      "SELECT id FROM university_univercity WHERE id = ? AND state_id = ?",
+      [university_id, state_id]
     );
 
+    if (universityRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "University not found for given state.",
+      });
+    }
+
+    // Step 2: Fetch college by name and university
+    const [collegeRows] = await db_sql.execute(
+      "SELECT courses FROM university_college WHERE university_id = ? AND name = ? AND is_del = 0 AND is_active = 1",
+      [university_id, college_name]
+    );
+
+    console.log(collegeRows);
+
     if (collegeRows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "University college not found." });
+      return res.status(404).json({
+        success: false,
+        message: "College not found under the given university.",
+      });
     }
 
     const courseIdsStr = collegeRows[0].courses;
     if (!courseIdsStr) {
       return res.status(404).json({
         success: false,
-        message: "No courses found for this university.",
+        message: "No courses listed for this college.",
       });
     }
 
-    // Step 2: Convert course string to array of IDs
     const courseIds = courseIdsStr.split(",").map((id) => id.trim());
 
-    // Step 3: Build query dynamically
+    // Step 3: Query university_course table
     let sql = `SELECT id, name FROM university_course WHERE id IN (${courseIds
       .map(() => "?")
       .join(", ")})`;
     const values = [...courseIds];
 
-    if (courseType) {
+    if (course_type) {
       sql += ` AND type = ?`;
-      values.push(courseType);
+      values.push(course_type);
     }
 
     const [courseRows] = await db_sql.execute(sql, values);
 
+    const courseNames = courseRows.map((row) => row.name);
+
     res.status(200).json({
       success: true,
-      data: courseRows,
-      message: "Courses for university",
+      data: courseNames,
+      message: "Courses based on provided filters",
     });
   } catch (error) {
     console.error("MySQL error →", error);
