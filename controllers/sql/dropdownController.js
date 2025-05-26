@@ -144,7 +144,7 @@ export const getEducationLevel = async (req, res) => {
 export const getAllState = async (req, res) => {
   try {
     const [rows] = await db_sql.execute(
-      "SELECT id, name FROM `university_state` WHERE is_del = 0 AND is_active = 1;"
+      "SELECT id, name FROM `university_state` WHERE is_del = 0 AND is_active = 1 ORDER BY name ASC;"
     );
 
     res.status(200).json({
@@ -298,6 +298,67 @@ export const getCourseType = async (req, res) => {
     });
   } catch (error) {
     console.error("MySQL error →", error); // 👈 Add this
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all State Wise Board from the database
+ * @route GET /api/sql/dropdown/state_wise_board?state_id=6
+ * @success {object} 200 - State Wise Education Board
+ * @error {object} 500 - Database query failed
+ */
+export const getEducationBoardById = async (req, res) => {
+  try {
+    const boardId = req.query.state_id;
+
+    console.log(boardId);
+    console.log("State Wise Board is running");
+
+    const [rows] = await db_sql.execute(
+      "SELECT id, board_name FROM education_boards WHERE state_region_id = ? OR state_region_id = 0",
+      [boardId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Education Board not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Education Board details",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all Medium Of Education from the database
+ * @route GET /api/sql/dropdown/medium_of_education
+ * @success {object} 200 - All Medium
+ * @error {object} 500 - Database query failed
+ */
+export const getAllMediumOfEducation = async (req, res) => {
+  try {
+    console.log("Get All Medium Of education");
+
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `medium_of_education` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All Medium Of Education",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
