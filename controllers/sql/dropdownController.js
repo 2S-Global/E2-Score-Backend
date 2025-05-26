@@ -384,10 +384,10 @@ export const getCollegeNameById = async (req, res) => {
         message: "College Name not found",
       });
     }
-
+    const collegeNames = rows.map((row) => row.name);
     res.status(200).json({
       success: true,
-      data: rows,
+      data: collegeNames,
       message: "College Name based on University Id",
     });
   } catch (error) {
