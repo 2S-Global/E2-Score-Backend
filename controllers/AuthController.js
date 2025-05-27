@@ -101,6 +101,12 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    if (user.is_active === false || user.is_del === true) {
+      return res.status(401).json({
+        message: "Your account is deactivated or deleted. Please contact support.",
+      });
+    }
+
     // If password is hashed, compare using bcrypt
     const isMatch = await bcrypt.compare(password, user.password);
 
