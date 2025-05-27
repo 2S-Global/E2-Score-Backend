@@ -3,6 +3,9 @@ import { v2 as cloudinary } from "cloudinary";
 import PersonalDetails from "../../models/personalDetails.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import db_sql from "../../config/sqldb.js";
+import UserEducation from "../../models/userEducationModel.js";
+import axios from "axios";
+import FormData from "form-data";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -306,6 +309,162 @@ export const addKeySkills = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Upload a file to an external server using Axios and FormData.
+ *
+ * @param {Express.Multer.File} file - The file to upload
+ * @returns {Promise<string | null>} The file path if successful, or null if not
+ */
+export const uploadFileToExternalServer = async (file) => {
+  const form = new FormData();
+  form.append("file", file.buffer, {
+    filename: file.originalname,
+    contentType: file.mimetype,
+  });
+
+  try {
+    const response = await axios.post(
+      "https://a2zcart.uk/e2score/fileupload/upload.php",
+      form,
+      { headers: form.getHeaders() }
+    );
+
+    // console.log("Full response:", response);
+    console.log("Response data:", response.data);
+    console.log(response.data?.file_path);
+
+    return response.data?.file_path;
+  } catch (error) {
+    console.error("Error during file upload:", error.message);
+    if (error.response) {
+      console.error("Error response from server:", error.response.data);
+    }
+    return null;
+  }
+};
+// Add User Education
+/**
+ * @route POST /api/useraction/submit-education
+ * @summary Submit or update the user's education details
+ * @description This endpoint allows the authenticated user to submit or update their education details.
+ *              It handles both primary and non-primary education levels and uploads transcript and certificate files if provided.
+ * @security BearerAuth
+ * @param {object} req.body - Education details
+ * @param {string} req.body.level - Education level ID
+ * @param {string} req.body.state - State of education
+ * @param {string} [req.body.board] - Board of education (optional)
+ * @param {string} req.body.year_of_passing - Year of passing
+ * @param {string} req.body.medium - Medium of education
+ * @param {string} req.body.marks - Marks obtained
+ * @param {string} [req.body.university] - University name (for non-primary education)
+ * @param {string} [req.body.instituteName] - Institute name (for non-primary education)
+ * @param {string} [req.body.course_name] - Course name (for non-primary education)
+ * @param {string} [req.body.course_type] - Course type (for non-primary education)
+ * @param {number} [req.body.start_year] - Start year (for non-primary education)
+ * @param {number} [req.body.end_year] - End year (for non-primary education)
+ * @param {string} [req.body.grading_system] - Grading system (for non-primary education)
+ * @param {boolean} [req.body.isPrimary] - Indicates if the education is primary
+ * @param {Express.Multer.File} [req.files.transcript] - Transcript file (optional)
+ * @param {Express.Multer.File} [req.files.certificate] - Certificate file (optional)
+ * @returns {object} 201 - Education saved/updated successfully
+ * @returns {object} 500 - Error saving User Education
+ */
+export const submitUserEducation = async (req, res) => {
+  try {
+    const data = req.body;
+    const user = req.userId;
+    const levelId = data.level;
+
+    const transcript = req.files?.transcript?.[0];
+    const certificate = req.files?.certificate?.[0];
+
+    let transcriptUrl = null;
+    let certificateUrl = null;
+
+    // Upload transcript file if available
+    if (transcript) {
+      transcriptUrl = await uploadFileToExternalServer(transcript);
+    }
+
+    // Upload certificate file if available
+    if (certificate) {
+      certificateUrl = await uploadFileToExternalServer(certificate);
+    }
+
+    let savedRecord;
+
+    if (levelId === "1" || levelId === "2") {
+      const educationData = {
+        userId: user,
+        level: levelId,
+        state: data.state,
+        board: data.board || null,
+        year_of_passing: data.year_of_passing,
+        medium_of_education: data.medium,
+        marks: data.marks,
+        transcript_data: transcriptUrl || null,
+        certificate_data: certificateUrl || null,
+        isPrimary: data.isPrimary || false,
+        isDel: false,
+      };
+
+      // Update if already exists
+      const existing = await UserEducation.findOne({
+        userId: user,
+        level: levelId,
+        isDel: false,
+      });
+
+      if (existing) {
+        savedRecord = await UserEducation.findByIdAndUpdate(
+          existing._id,
+          educationData,
+          { new: true }
+        );
+      } else {
+        const newRecord = new UserEducation(educationData);
+        savedRecord = await newRecord.save();
+      }
+    } else {
+      const educationData = {
+        userId: user,
+        level: levelId,
+        state: data.state,
+        universityName: data.university,
+        instituteName: data.instituteName,
+        courseName: data.course_name,
+        courseType: data.course_type,
+        duration: {
+          from: Number(data.start_year),
+          to: Number(data.end_year),
+        },
+        gradingSystem: data.grading_system,
+        marks: data.marks,
+        transcript_data: data.transcript_data || null,
+        certificate_data: data.certificate_data || null,
+        isPrimary: data.isPrimary || false,
+        isDel: false,
+      };
+
+      // Always create new record
+      const newRecord = new UserEducation(educationData);
+      savedRecord = await newRecord.save();
+    }
+
+    res.status(201).json({
+      message: `Education ${
+        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+      } successfully`,
+      data: savedRecord,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error saving User Education",
       error: error.message,
     });
   }

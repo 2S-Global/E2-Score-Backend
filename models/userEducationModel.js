@@ -7,23 +7,32 @@ const userEducationSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    // level: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "EducationStandard",
+    // },
+
+    // Added Extra
     level: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "EducationStandard",
+      type: String,
+      required: true,
     },
     state: {
- type:String
+      type: String,
     },
 
     year_of_passing: {
       type: String,
     },
+    // medium_of_education: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "MediumOfEducation",
+    // },
     medium_of_education: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "MediumOfEducation",
+      type: String,
     },
     board: {
-     type:String
+      type: String,
     },
     transcript_data: {
       type: String, // Fixed typo
@@ -52,16 +61,17 @@ const userEducationSchema = new mongoose.Schema(
     duration: {
       from: {
         type: Number,
-  
       },
       to: {
         type: Number,
-    
       },
     },
+    // gradingSystem: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref:"UserGrading"
+    // },
     gradingSystem: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref:"UserGrading"
+      type: String,
     },
     marks: {
       type: mongoose.Schema.Types.Mixed,

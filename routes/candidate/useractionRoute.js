@@ -9,6 +9,7 @@ import {
   updateUserDetails,
   addProfileSummary,
   addKeySkills,
+  submitUserEducation,
 } from "../../controllers/candidate/useractionController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -43,4 +44,13 @@ userRouter.post("/profilesummary", userAuth, upload.none(), addProfileSummary);
 // Update Key Skills
 userRouter.post("/keyskills", userAuth, upload.none(), addKeySkills);
 
+userRouter.post(
+  "/usereducation",
+  userAuth,
+  upload.fields([
+    { name: "transcript", maxCount: 1 },
+    { name: "certificate", maxCount: 1 },
+  ]),
+  submitUserEducation
+);
 export default userRouter;
