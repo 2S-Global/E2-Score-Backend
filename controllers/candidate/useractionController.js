@@ -445,8 +445,8 @@ export const submitUserEducation = async (req, res) => {
         },
         gradingSystem: data.grading_system,
         marks: data.marks,
-        transcript_data: data.transcript_data || null,
-        certificate_data: data.certificate_data || null,
+        transcript_data: transcriptUrl || null,
+        certificate_data: certificateUrl || null,
         isPrimary: data.isPrimary || false,
         isDel: false,
       };
