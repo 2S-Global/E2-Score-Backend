@@ -231,115 +231,79 @@ export const getcandidateskills = async (req, res) => {
 export const getUserEducation = async (req, res) => {
   try {
     const user = req.userId;
+
+    // 1. Get education records
     const educationRecords = await UserEducation.find({
       userId: user,
       isDel: false,
-    }).sort({ isPrimary: -1 });
+    })
+      .sort({ isPrimary: -1 })
+      .lean(); // return plain objects for better performance
 
-    if (!educationRecords) {
+    if (!educationRecords || educationRecords.length === 0) {
       return res.status(404).json({ message: "User education data not found" });
     }
-    const responseData = [];
 
-    for (const record of educationRecords) {
-      const edu = record.toObject();
+    // 2. Preload lookup tables in parallel
+    const [
+      [levelRows],
+      [stateRows],
+      [universityRows],
+      [instituteRows],
+      [courseRows],
+      [courseTypeRows],
+      [gradingSystemRows],
+      [mediumRows],
+      [boardRows],
+    ] = await Promise.all([
+      db_sql.execute("SELECT id, level FROM education_level"),
+      db_sql.execute("SELECT id, name FROM university_state"),
+      db_sql.execute("SELECT id, name FROM university_univercity"),
+      db_sql.execute("SELECT id, name FROM university_college"),
+      db_sql.execute("SELECT id, name FROM university_course"),
+      db_sql.execute("SELECT id, name FROM course_type"),
+      db_sql.execute("SELECT id, name FROM grading_system"),
+      db_sql.execute("SELECT id, name FROM medium_of_education"),
+      db_sql.execute("SELECT id, board_name FROM education_boards"),
+    ]);
 
-      const level_id = record.level;
-      edu.level_id = level_id;
-      const state_id = record.state;
-      const universityId = record.universityName;
-      const institute_id = record.instituteName;
-      const course_id = record.courseName;
-      const course_type_id = record.courseType;
-      const grading_system_id = record.gradingSystem;
+    // 3. Convert to lookup maps
+    const makeMap = (rows, nameKey = "name") =>
+      Object.fromEntries(rows.map((row) => [row.id, row[nameKey]]));
 
-      const medium_of_education_id = record.medium_of_education;
-      const board_id = record.board;
+    const maps = {
+      level: makeMap(levelRows, "level"),
+      state: makeMap(stateRows),
+      university: makeMap(universityRows),
+      institute: makeMap(instituteRows),
+      course: makeMap(courseRows),
+      courseType: makeMap(courseTypeRows),
+      gradingSystem: makeMap(gradingSystemRows),
+      medium: makeMap(mediumRows),
+      board: makeMap(boardRows, "board_name"),
+    };
 
-      if (level_id) {
-        const [levelRows] = await db_sql.execute(
-          "SELECT level FROM education_level WHERE id = ?",
-          [level_id]
-        );
-        if (levelRows.length > 0) {
-          edu.level = levelRows[0].level;
-        }
-      }
-      if (state_id) {
-        const [stateRows] = await db_sql.execute(
-          "SELECT name FROM university_state WHERE id = ?",
-          [state_id]
-        );
-        if (stateRows.length > 0) {
-          edu.state = stateRows[0].name;
-        }
-      }
-      if (universityId) {
-        const [universityRows] = await db_sql.execute(
-          "SELECT name FROM university_univercity WHERE id = ?",
-          [universityId]
-        );
-        if (universityRows.length > 0) {
-          edu.universityName = universityRows[0].name;
-        }
-      }
-      if (institute_id) {
-        const [instituteRows] = await db_sql.execute(
-          "SELECT name FROM university_college WHERE id = ?",
-          [institute_id]
-        );
-        if (instituteRows.length > 0) {
-          edu.instituteName = instituteRows[0].name;
-        }
-      }
-      if (course_id) {
-        const [courseRows] = await db_sql.execute(
-          "SELECT name FROM university_course WHERE id = ?",
-          [course_id]
-        );
-        if (courseRows.length > 0) {
-          edu.courseName = courseRows[0].name;
-        }
-      }
-      if (course_type_id) {
-        const [courseTypeRows] = await db_sql.execute(
-          "SELECT name FROM course_type WHERE id = ?",
-          [course_type_id]
-        );
-        if (courseTypeRows.length > 0) {
-          edu.courseType = courseTypeRows[0].name;
-        }
-      }
-      if (grading_system_id) {
-        const [gradingSystemRows] = await db_sql.execute(
-          "SELECT name FROM grading_system WHERE id = ?",
-          [grading_system_id]
-        );
-        if (gradingSystemRows.length > 0) {
-          edu.gradingSystem = gradingSystemRows[0].name;
-        }
-      }
-      if (medium_of_education_id) {
-        const [mediumRows] = await db_sql.execute(
-          "SELECT name FROM medium_of_education WHERE id = ?",
-          [medium_of_education_id]
-        );
-        if (mediumRows.length > 0) {
-          edu.medium_of_education = mediumRows[0].name;
-        }
-      }
-      if (board_id) {
-        const [boardRows] = await db_sql.execute(
-          "SELECT board_name FROM education_boards WHERE id = ?",
-          [board_id]
-        );
-        if (boardRows.length > 0) {
-          edu.board = boardRows[0].board_name;
-        }
-      }
+    // 4. Transform records
+    const responseData = educationRecords.map((record) => {
+      const edu = { ...record }; // make a copy
+      edu.level_id = record.level;
 
-      responseData.push(edu);
-    }
+      edu.level = maps.level[record.level] || record.level;
+      edu.state = maps.state[record.state] || record.state;
+      edu.universityName =
+        maps.university[record.universityName] || record.universityName;
+      edu.instituteName =
+        maps.institute[record.instituteName] || record.instituteName;
+      edu.courseName = maps.course[record.courseName] || record.courseName;
+      edu.courseType = maps.courseType[record.courseType] || record.courseType;
+      edu.gradingSystem =
+        maps.gradingSystem[record.gradingSystem] || record.gradingSystem;
+      edu.medium_of_education =
+        maps.medium[record.medium_of_education] || record.medium_of_education;
+      edu.board = maps.board[record.board] || record.board;
+
+      return edu;
+    });
 
     res.status(200).json({
       message: "User education data fetched successfully",
