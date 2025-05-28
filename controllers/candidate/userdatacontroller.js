@@ -238,13 +238,12 @@ export const getUserEducation = async (req, res) => {
       isDel: false,
     })
       .sort({ isPrimary: -1 })
-      .lean(); // return plain objects for better performance
+      .lean();
 
     if (!educationRecords || educationRecords.length === 0) {
       return res.status(404).json({ message: "User education data not found" });
     }
 
-    // 2. Preload lookup tables in parallel
     const [
       [levelRows],
       [stateRows],
@@ -267,7 +266,6 @@ export const getUserEducation = async (req, res) => {
       db_sql.execute("SELECT id, board_name FROM education_boards"),
     ]);
 
-    // 3. Convert to lookup maps
     const makeMap = (rows, nameKey = "name") =>
       Object.fromEntries(rows.map((row) => [row.id, row[nameKey]]));
 
@@ -285,9 +283,8 @@ export const getUserEducation = async (req, res) => {
 
     // 4. Transform records
     const responseData = educationRecords.map((record) => {
-      const edu = { ...record }; // make a copy
+      const edu = { ...record };
       edu.level_id = record.level;
-
       edu.level = maps.level[record.level] || record.level;
       edu.state = maps.state[record.state] || record.state;
       edu.universityName =
