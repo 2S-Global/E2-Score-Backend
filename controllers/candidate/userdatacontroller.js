@@ -2,6 +2,7 @@ import User from "../../models/userModel.js";
 import personalDetails from "../../models/personalDetails.js";
 import candidateDetails from "../../models/CandidateDetailsModel.js";
 import db_sql from "../../config/sqldb.js";
+import UserEducation from "../../models/userEducationModel.js";
 /**
  * @function getUser
  *  @route GET /api/userdata/userdata
@@ -216,5 +217,128 @@ export const getcandidateskills = async (req, res) => {
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
+  }
+};
+
+/**
+ * @description Get the education details of a user by user_id
+ * @route GET /api/userdata/usereducation
+ * @access protected
+ * @returns {object} 200 - Array of education records
+ * @returns {object} 404 - User data not found
+ * @returns {object} 500 - Error fetching education records
+ */
+export const getUserEducation = async (req, res) => {
+  try {
+    const user = req.userId;
+    const educationRecords = await UserEducation.find({
+      userId: user,
+      isDel: false,
+    }).sort({ level: 1 });
+
+    if (!educationRecords) {
+      return res.status(404).json({ message: "User education data not found" });
+    }
+    for (const record of educationRecords) {
+      const level_id = record.level;
+      const state_id = record.state;
+      const universityId = record.universityName;
+      const institute_id = record.instituteName;
+      const course_id = record.courseName;
+      const course_type_id = record.courseType;
+      const grading_system_id = record.gradingSystem;
+
+      const medium_of_education_id = record.medium_of_education;
+      const board_id = record.board;
+
+      if (level_id) {
+        const [levelRows] = await db_sql.execute(
+          "SELECT level FROM education_level WHERE id = ?",
+          [level_id]
+        );
+        if (levelRows.length > 0) {
+          record.level = levelRows[0].level;
+        }
+      }
+      if (state_id) {
+        const [stateRows] = await db_sql.execute(
+          "SELECT name FROM university_state WHERE id = ?",
+          [state_id]
+        );
+        if (stateRows.length > 0) {
+          record.state = stateRows[0].name;
+        }
+      }
+      if (universityId) {
+        const [universityRows] = await db_sql.execute(
+          "SELECT name FROM university_univercity WHERE id = ?",
+          [universityId]
+        );
+        if (universityRows.length > 0) {
+          record.universityName = universityRows[0].name;
+        }
+      }
+      if (institute_id) {
+        const [instituteRows] = await db_sql.execute(
+          "SELECT name FROM university_college WHERE id = ?",
+          [institute_id]
+        );
+        if (instituteRows.length > 0) {
+          record.instituteName = instituteRows[0].name;
+        }
+      }
+      if (course_id) {
+        const [courseRows] = await db_sql.execute(
+          "SELECT name FROM university_course WHERE id = ?",
+          [course_id]
+        );
+        if (courseRows.length > 0) {
+          record.courseName = courseRows[0].name;
+        }
+      }
+      if (course_type_id) {
+        const [courseTypeRows] = await db_sql.execute(
+          "SELECT name FROM course_type WHERE id = ?",
+          [course_type_id]
+        );
+        if (courseTypeRows.length > 0) {
+          record.courseType = courseTypeRows[0].name;
+        }
+      }
+      if (grading_system_id) {
+        const [gradingSystemRows] = await db_sql.execute(
+          "SELECT name FROM grading_system WHERE id = ?",
+          [grading_system_id]
+        );
+        if (gradingSystemRows.length > 0) {
+          record.gradingSystem = gradingSystemRows[0].name;
+        }
+      }
+      if (medium_of_education_id) {
+        const [mediumRows] = await db_sql.execute(
+          "SELECT name FROM medium_of_education WHERE id = ?",
+          [medium_of_education_id]
+        );
+        if (mediumRows.length > 0) {
+          record.medium_of_education = mediumRows[0].name;
+        }
+      }
+      if (board_id) {
+        const [boardRows] = await db_sql.execute(
+          "SELECT board_name FROM education_boards WHERE id = ?",
+          [board_id]
+        );
+        if (boardRows.length > 0) {
+          record.board = boardRows[0].board_name;
+        }
+      }
+    }
+
+    res.status(200).json({
+      message: "User education data fetched successfully",
+      test: educationRecords,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
