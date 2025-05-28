@@ -239,8 +239,13 @@ export const getUserEducation = async (req, res) => {
     if (!educationRecords) {
       return res.status(404).json({ message: "User education data not found" });
     }
+    const responseData = [];
+
     for (const record of educationRecords) {
+      const edu = record.toObject();
+
       const level_id = record.level;
+      edu.level_id = level_id;
       const state_id = record.state;
       const universityId = record.universityName;
       const institute_id = record.instituteName;
@@ -257,7 +262,7 @@ export const getUserEducation = async (req, res) => {
           [level_id]
         );
         if (levelRows.length > 0) {
-          record.level = levelRows[0].level;
+          edu.level = levelRows[0].level;
         }
       }
       if (state_id) {
@@ -266,7 +271,7 @@ export const getUserEducation = async (req, res) => {
           [state_id]
         );
         if (stateRows.length > 0) {
-          record.state = stateRows[0].name;
+          edu.state = stateRows[0].name;
         }
       }
       if (universityId) {
@@ -275,7 +280,7 @@ export const getUserEducation = async (req, res) => {
           [universityId]
         );
         if (universityRows.length > 0) {
-          record.universityName = universityRows[0].name;
+          edu.universityName = universityRows[0].name;
         }
       }
       if (institute_id) {
@@ -284,7 +289,7 @@ export const getUserEducation = async (req, res) => {
           [institute_id]
         );
         if (instituteRows.length > 0) {
-          record.instituteName = instituteRows[0].name;
+          edu.instituteName = instituteRows[0].name;
         }
       }
       if (course_id) {
@@ -293,7 +298,7 @@ export const getUserEducation = async (req, res) => {
           [course_id]
         );
         if (courseRows.length > 0) {
-          record.courseName = courseRows[0].name;
+          edu.courseName = courseRows[0].name;
         }
       }
       if (course_type_id) {
@@ -302,7 +307,7 @@ export const getUserEducation = async (req, res) => {
           [course_type_id]
         );
         if (courseTypeRows.length > 0) {
-          record.courseType = courseTypeRows[0].name;
+          edu.courseType = courseTypeRows[0].name;
         }
       }
       if (grading_system_id) {
@@ -311,7 +316,7 @@ export const getUserEducation = async (req, res) => {
           [grading_system_id]
         );
         if (gradingSystemRows.length > 0) {
-          record.gradingSystem = gradingSystemRows[0].name;
+          edu.gradingSystem = gradingSystemRows[0].name;
         }
       }
       if (medium_of_education_id) {
@@ -320,7 +325,7 @@ export const getUserEducation = async (req, res) => {
           [medium_of_education_id]
         );
         if (mediumRows.length > 0) {
-          record.medium_of_education = mediumRows[0].name;
+          edu.medium_of_education = mediumRows[0].name;
         }
       }
       if (board_id) {
@@ -329,14 +334,16 @@ export const getUserEducation = async (req, res) => {
           [board_id]
         );
         if (boardRows.length > 0) {
-          record.board = boardRows[0].board_name;
+          edu.board = boardRows[0].board_name;
         }
       }
+
+      responseData.push(edu);
     }
 
     res.status(200).json({
       message: "User education data fetched successfully",
-      test: educationRecords,
+      data: responseData,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
