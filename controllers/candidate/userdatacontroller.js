@@ -234,7 +234,7 @@ export const getUserEducation = async (req, res) => {
     const educationRecords = await UserEducation.find({
       userId: user,
       isDel: false,
-    }).sort({ level: 1 });
+    }).sort({ isPrimary: -1 });
 
     if (!educationRecords) {
       return res.status(404).json({ message: "User education data not found" });
