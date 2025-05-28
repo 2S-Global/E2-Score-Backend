@@ -436,7 +436,7 @@ export const submitUserEducation = async (req, res) => {
         level: levelId,
         state: data.state,
         universityName: data.university,
-        instituteName: data.instituteName,
+        instituteName: data.institute_name,
         courseName: data.course_name,
         courseType: data.course_type,
         duration: {
