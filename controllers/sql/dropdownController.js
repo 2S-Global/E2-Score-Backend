@@ -192,13 +192,17 @@ export const getUniversityByState = async (req, res) => {
 };
 
 /**
- * @description Get all Course By University from the database
- * @route GET http://localhost:8080/api/sql/dropdown/university_course?university_id=4&course_type=UG
- * @success {object} 200 - Courses for university
- * @error {object} 500 - Database query failede
+ * @description Retrieve courses offered by a specific university, filtered by state, college, and course type.
+ * @route GET /api/sql/dropdown/university_course
+ * @param {string} req.query.state_id - The ID of the state where the university is located.
+ * @param {string} req.query.university_id - The name of the university.
+ * @param {string} req.query.college_name - The name of the college within the university.
+ * @param {string} req.query.course_type - The type of course to filter by.
+ * @returns {object} 200 - An array of course names that match the filters.
+ * @returns {object} 400 - If the course_type parameter is missing or empty.
+ * @returns {object} 404 - If no courses are found matching the given criteria.
+ * @returns {object} 500 - If there is an error executing the database query.
  */
-
-// getUniversityCourse
 export const getCourseByUniversity = async (req, res) => {
   try {
     const { state_id, university_id, college_name, course_type } = req.query;

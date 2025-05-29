@@ -409,7 +409,7 @@ export const submitUserEducation = async (req, res) => {
         marks: data.marks,
         transcript_data: transcriptUrl || null,
         certificate_data: certificateUrl || null,
-        isPrimary: data.isPrimary || false,
+        isPrimary: data.is_primary || false,
         isDel: false,
       };
 
@@ -447,7 +447,7 @@ export const submitUserEducation = async (req, res) => {
         marks: data.marks,
         transcript_data: transcriptUrl || null,
         certificate_data: certificateUrl || null,
-        isPrimary: data.isPrimary || false,
+        isPrimary: data.is_primary || false,
         isDel: false,
       };
 
