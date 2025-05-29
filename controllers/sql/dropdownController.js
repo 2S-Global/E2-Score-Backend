@@ -356,9 +356,11 @@ export const getEducationBoardById = async (req, res) => {
       });
     }
 
+    const boardNames = rows.map((row) => row.board_name);
+
     res.status(200).json({
       success: true,
-      data: rows,
+      data: boardNames,
       message: "Education Board details",
     });
   } catch (error) {
