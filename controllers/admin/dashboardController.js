@@ -284,7 +284,7 @@ export const getMonthlyInstitutionsDetails = async (req, res) => {
   try {
     const now = new Date();
     const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(now.getMonth() - 5); // Last 6 months incl. current
+    sixMonthsAgo.setMonth(now.getMonth() - 11); // Last 6 months incl. current
 
     const monthlyData = await User.aggregate([
       {
@@ -320,7 +320,7 @@ export const getMonthlyInstitutionsDetails = async (req, res) => {
       "July", "August", "September", "October", "November", "December"
     ];
 
-    for (let i = 5; i >= 0; i--) {
+    for (let i = 11; i >= 0; i--) {
       const date = new Date();
       date.setMonth(now.getMonth() - i);
 
