@@ -89,7 +89,7 @@ export const getMonthlyCompanyDetails = async (req, res) => {
       "July", "August", "September", "October", "November", "December"
     ];
 
-    for (let i = 5; i >= 0; i--) {
+    for (let i = 11; i >= 0; i--) {
       const date = new Date();
       date.setMonth(now.getMonth() - i);
 
