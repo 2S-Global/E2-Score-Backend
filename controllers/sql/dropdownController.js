@@ -178,10 +178,11 @@ export const getUniversityByState = async (req, res) => {
       "SELECT id, name FROM `university_univercity` WHERE state_id = ? AND is_del = 0 AND is_active = 1;",
       [stateId]
     );
+    const universityNames = rows.map((row) => row.name);
 
     res.status(200).json({
       success: true,
-      data: rows,
+      data: universityNames,
       message: `Universities in state ID ${stateId}`,
     });
   } catch (error) {
