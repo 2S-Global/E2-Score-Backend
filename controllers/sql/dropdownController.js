@@ -389,27 +389,69 @@ export const getAllMediumOfEducation = async (req, res) => {
 };
 
 /**
- * @description Get College Name by University Id from the database
- * @route GET /api/sql/dropdown/college_name?university_id=6
+ * @description Get all College Name based on University Id from the database
+ * @route GET api/sql/dropdown/college_name?university_id=SBS34545%20College&state_id=32
  * @success {object} 200 - College Name based on University Id
  * @error {object} 500 - Database query failed
  */
 export const getCollegeNameById = async (req, res) => {
   try {
-    const universityId = req.query.university_id;
+    const university_name = req.query.university_id;
+    const university_state = req.query.state_id;
 
-    const [rows] = await db_sql.execute(
-      "SELECT id,name FROM university_college WHERE university_id = ? AND is_del = 0 AND is_active = 1;",
-      [universityId]
+    if (!university_name || university_name.trim() === "") {
+      return res
+        .status(400)
+        .json({ success: false, message: "university_name is required" });
+    }
+
+    if (!university_state) {
+      return res
+        .status(400)
+        .json({ success: false, message: "state_id is required" });
+    }
+
+    const [existingUniversity] = await db_sql.execute(
+      "SELECT id FROM university_univercity WHERE name = ? AND state_id = ? AND is_del = 0 AND is_active = 1",
+      [university_name.trim(), university_state]
     );
 
-    if (rows.length === 0) {
+    let universityId;
+    let collegeRows = [];
+
+    if (existingUniversity.length > 0) {
+      universityId = existingUniversity[0].id;
+
+      [collegeRows] = await db_sql.execute(
+        "SELECT id,name FROM university_college WHERE university_id = ? AND is_del = 0 AND is_active = 1;",
+        [universityId]
+      );
+
+      if (collegeRows.length === 0) {
+        [collegeRows] = await db_sql.execute(
+          "SELECT id, name FROM university_college WHERE is_del = 0 AND is_active = 1 LIMIT 50"
+        );
+      }
+    } else {
+      const [insertResult] = await db_sql.execute(
+        "INSERT INTO university_univercity (name, state_id, is_active, is_del, flag) VALUES (?, ?, 1, 0, 1)",
+        [university_name.trim(), university_state]
+      );
+
+      universityId = insertResult.insertId;
+      [collegeRows] = await db_sql.execute(
+        "SELECT id, name FROM university_college WHERE is_del = 0 AND is_active = 1 LIMIT 50"
+      );
+    }
+
+    if (collegeRows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "College Name not found",
       });
     }
-    const collegeNames = rows.map((row) => row.name);
+    const collegeNames = collegeRows.map((row) => row.name);
+
     res.status(200).json({
       success: true,
       data: collegeNames,
