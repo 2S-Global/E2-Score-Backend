@@ -347,6 +347,42 @@ export const uploadFileToExternalServer = async (file) => {
     return null;
   }
 };
+
+/**
+ * Finds the ID of a row with the given value in the specified column
+ * (case-insensitive) and table. If not found, inserts a new row with that
+ * value and returns the new ID.
+ *
+ * @param {string} tableName The name of the table to search in
+ * @param {string} columnName The name of the column to search by
+ * @param {string} value The value to search for
+ * @returns {Promise<number | null>} The ID of the matching row, or null if no
+ *     match was found and no new row was inserted (e.g. if the value is empty)
+ */
+
+async function getOrInsertId(tableName, columnName, value) {
+  if (!value || typeof value !== "string") {
+    return null;
+  }
+  const trimmedValue = value.trim();
+  if (!trimmedValue) {
+    return null;
+  }
+  const [existingRows] = await db_sql.execute(
+    `SELECT id FROM ${tableName} WHERE ${columnName} = ? AND is_del = 0 AND is_active = 1`,
+    [value.trim()]
+  );
+  if (existingRows.length > 0) {
+    return existingRows[0].id;
+  }
+  // If not found, insert new row
+  const [insertResult] = await db_sql.execute(
+    `INSERT INTO ${tableName} (${columnName}, is_active, is_del, flag) VALUES (?, 0, 0, 1)`,
+    [trimmedValue]
+  );
+  return insertResult.insertId;
+}
+
 // Add User Education
 /**
  * @route POST /api/useraction/submit-education
@@ -379,31 +415,30 @@ export const submitUserEducation = async (req, res) => {
     const data = req.body;
     const user = req.userId;
     const levelId = data.level;
-
     const transcript = req.files?.transcript?.[0];
     const certificate = req.files?.certificate?.[0];
-
     let transcriptUrl = null;
     let certificateUrl = null;
-
     // Upload transcript file if available
     if (transcript) {
       transcriptUrl = await uploadFileToExternalServer(transcript);
     }
-
     // Upload certificate file if available
     if (certificate) {
       certificateUrl = await uploadFileToExternalServer(certificate);
     }
-
     let savedRecord;
-
     if (levelId === "1" || levelId === "2") {
+      const boardId = await getOrInsertId(
+        "education_boards",
+        "board_name",
+        data.board
+      );
       const educationData = {
         userId: user,
         level: levelId,
         state: data.state,
-        board: data.board || null,
+        board: boardId || null,
         year_of_passing: data.year_of_passing,
         medium_of_education: data.medium,
         marks: data.marks,
@@ -412,14 +447,12 @@ export const submitUserEducation = async (req, res) => {
         isPrimary: data.is_primary || false,
         isDel: false,
       };
-
       // Update if already exists
       const existing = await UserEducation.findOne({
         userId: user,
         level: levelId,
         isDel: false,
       });
-
       if (existing) {
         savedRecord = await UserEducation.findByIdAndUpdate(
           existing._id,
@@ -431,13 +464,28 @@ export const submitUserEducation = async (req, res) => {
         savedRecord = await newRecord.save();
       }
     } else {
+      const universityId = await getOrInsertId(
+        "university_univercity",
+        "name",
+        data.university
+      );
+      const instituteId = await getOrInsertId(
+        "university_college",
+        "name",
+        data.institute_name
+      );
+      const courseId = await getOrInsertId(
+        "university_course",
+        "name",
+        data.course_name
+      );
       const educationData = {
         userId: user,
         level: levelId,
         state: data.state,
-        universityName: data.university,
-        instituteName: data.institute_name,
-        courseName: data.course_name,
+        universityName: universityId,
+        instituteName: instituteId,
+        courseName: courseId,
         courseType: data.course_type,
         duration: {
           from: Number(data.start_year),
@@ -450,12 +498,10 @@ export const submitUserEducation = async (req, res) => {
         isPrimary: data.is_primary || false,
         isDel: false,
       };
-
       // Always create new record
       const newRecord = new UserEducation(educationData);
       savedRecord = await newRecord.save();
     }
-
     res.status(201).json({
       message: `Education ${
         levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
