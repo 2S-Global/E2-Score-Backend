@@ -203,72 +203,72 @@ export const getCourseByUniversity = async (req, res) => {
   try {
     const { state_id, university_id, college_name, course_type } = req.query;
 
-    console.log("Finding course depending on four different parameters");
-    console.log(state_id);
-    console.log(university_id);
-    console.log(college_name);
-    console.log(course_type);
-
-    if (!state_id || !university_id || !college_name) {
+    if (!course_type || course_type.trim() === "") {
       return res.status(400).json({
         success: false,
-        message:
-          "Missing one or more required query parameters: state_id, university_id, college_name.",
+        message: "course_type is required",
       });
     }
 
-    // Step 1: Check university and state match
-    const [universityRows] = await db_sql.execute(
-      "SELECT id FROM university_univercity WHERE id = ? AND state_id = ?",
-      [university_id, state_id]
-    );
+    let courseIds = [];
 
-    if (universityRows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "University not found for given state.",
-      });
+    const allFiltersProvided =
+      state_id && university_id && college_name && course_type;
+
+    if (allFiltersProvided) {
+      const [universityIdResult] = await db_sql.execute(
+        "SELECT id FROM university_univercity WHERE name = ? AND is_del = 0 AND is_active = 1",
+        [university_id.trim()]
+      );
+
+      if (universityIdResult.length > 0) {
+        const universityId = universityIdResult[0].id;
+
+        const [universityRows] = await db_sql.execute(
+          "SELECT id FROM university_univercity WHERE id = ? AND state_id = ? AND is_del = 0 AND is_active = 1",
+          [universityId, state_id]
+        );
+
+        if (universityRows.length > 0) {
+          const [collegeRows] = await db_sql.execute(
+            "SELECT courses FROM university_college WHERE university_id = ? AND name = ? AND is_del = 0 AND is_active = 1",
+            [universityId, college_name.trim()]
+          );
+
+          if (collegeRows.length > 0 && collegeRows[0].courses) {
+            courseIds = collegeRows[0].courses
+              .split(",")
+              .map((id) => id.trim())
+              .filter(Boolean);
+          }
+        }
+      }
     }
 
-    // Step 2: Fetch college by name and university
-    const [collegeRows] = await db_sql.execute(
-      "SELECT courses FROM university_college WHERE university_id = ? AND name = ? AND is_del = 0 AND is_active = 1",
-      [university_id, college_name]
-    );
+    // Build course query
+    let sql = "";
+    let values = [];
 
-    console.log(collegeRows);
-
-    if (collegeRows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "College not found under the given university.",
-      });
-    }
-
-    const courseIdsStr = collegeRows[0].courses;
-    if (!courseIdsStr) {
-      return res.status(404).json({
-        success: false,
-        message: "No courses listed for this college.",
-      });
-    }
-
-    const courseIds = courseIdsStr.split(",").map((id) => id.trim());
-
-    // Step 3: Query university_course table
-    let sql = `SELECT id, name FROM university_course WHERE id IN (${courseIds
-      .map(() => "?")
-      .join(", ")})`;
-    const values = [...courseIds];
-
-    if (course_type) {
-      sql += ` AND type = ?`;
-      values.push(course_type);
+    if (courseIds.length > 0) {
+      // Filter by specific course IDs and course_type
+      sql = `SELECT id, name FROM university_course WHERE id IN (${courseIds
+        .map(() => "?")
+        .join(",")}) AND type = ?`;
+      values = [...courseIds, course_type];
+    } else {
+      sql = `SELECT id, name FROM university_course WHERE type = ? LIMIT 50`;
+      values = [course_type];
     }
 
     const [courseRows] = await db_sql.execute(sql, values);
-
     const courseNames = courseRows.map((row) => row.name);
+
+    if (courseNames.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No courses found for the given criteria.",
+      });
+    }
 
     res.status(200).json({
       success: true,
