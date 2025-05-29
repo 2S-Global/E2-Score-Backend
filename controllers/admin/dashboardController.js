@@ -53,7 +53,7 @@ export const getMonthlyCompanyDetails = async (req, res) => {
   try {
     const now = new Date();
     const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(now.getMonth() - 5); // Last 6 months incl. current
+    sixMonthsAgo.setMonth(now.getMonth() - 11); // Last 6 months incl. current
 
     const monthlyData = await User.aggregate([
       {
