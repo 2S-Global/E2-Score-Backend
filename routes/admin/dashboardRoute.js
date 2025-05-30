@@ -31,8 +31,8 @@ const upload = multer({ storage: storage });
 
 
 userRouter.get("/getTotal",userAuth,adminMiddleware,getTotal);
-userRouter.get("/getMonthlyCompanyDetails",getMonthlyCompanyDetails);
-userRouter.get("/getMonthlyInstitutionsDetails",getMonthlyInstitutionsDetails);
+userRouter.get("/getMonthlyCompanyDetails",userAuth,adminMiddleware,getMonthlyCompanyDetails);
+userRouter.get("/getMonthlyInstitutionsDetails",userAuth,adminMiddleware,getMonthlyInstitutionsDetails);
 userRouter.get("/getMonthlyCandidateDetails",getMonthlyCandidateDetails);
 userRouter.get("/getMonthlyUserDetails",getMonthlyUserDetails);
 
