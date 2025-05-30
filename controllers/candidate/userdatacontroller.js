@@ -310,3 +310,39 @@ export const getUserEducation = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getUserLevelDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const userEducations = await UserEducation.find({
+      userId,
+      isDel: false,
+    });
+    const levels = userEducations.map((e) => e.level?.toString());
+    const hasLevel1 = levels.includes("1");
+    const hasLevel2 = levels.includes("2");
+    let query =
+      "SELECT id, level, duration, type FROM education_level WHERE is_del = 0 AND is_active = 1";
+    const conditions = [];
+    if (hasLevel1 && hasLevel2) {
+      conditions.push("id NOT IN (1, 2)");
+    } else if (hasLevel1) {
+      conditions.push("id != 1");
+    } else if (hasLevel2) {
+      conditions.push("id != 2");
+    }
+    if (conditions.length > 0) {
+      query += ` AND ${conditions.join(" AND ")}`;
+    }
+    const [rows] = await db_sql.execute(query);
+    return res.status(200).json({
+      message: "Fetched education level data",
+      data: rows,
+    });
+  } catch (error) {
+    console.error("Error fetching user education:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
