@@ -392,7 +392,7 @@ export const getEditUserData = async (req, res) => {
 
     // Helper to fetch name from SQL
     const fetchNameById = async (table, field, id) => {
-      const query = `SELECT ${field} AS name FROM ${table} WHERE id = ? AND is_del = 0 AND is_active = 1`;
+      const query = `SELECT ${field} AS name FROM ${table} WHERE id = ? `;
       const [rows] = await db_sql.execute(query, [id]);
       return rows.length > 0 ? rows[0].name : "";
     };
