@@ -112,8 +112,8 @@ for (let i = 11; i >= 0; i--) {
 
 
     for (let i = 11; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(now.getMonth() - i);
+const date = new Date(now.getFullYear(), now.getMonth() - i, 1); // Safe and immutable
+
 
       const year = date.getFullYear();
       const month = date.getMonth() + 1; // 1-based month
