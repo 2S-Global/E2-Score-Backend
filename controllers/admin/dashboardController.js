@@ -306,15 +306,15 @@ export const getMonthlyCandidateDetails = async (req, res) => {
 export const getMonthlyInstitutionsDetails = async (req, res) => {
   try {
     const now = new Date();
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(now.getMonth() - 11); // Last 6 months incl. current
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(now.getMonth() - 11); // Last 12 months including current
 
     const monthlyData = await User.aggregate([
       {
         $match: {
           role: 3,
           is_del: false,
-          createdAt: { $gte: sixMonthsAgo }
+          createdAt: { $gte: twelveMonthsAgo }
         }
       },
       {
@@ -336,29 +336,44 @@ export const getMonthlyInstitutionsDetails = async (req, res) => {
       }
     ]);
 
-    // Generate last 6 months with default 0
-    const result = [];
+    // Step 2: Convert to a Map for quick access
+    const dataMap = new Map();
+    monthlyData.forEach(item => {
+      dataMap.set(`${item.year}-${item.month}`, item.total);
+    });
+
     const monthNames = [
       "", "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
     ];
 
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(now.getMonth() - i);
+    const result = [];
 
+    // Step 3: Calculate total sum
+    let totalSum = 0;
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const total = dataMap.get(`${year}-${month}`) || 0;
+      totalSum += total;
+    }
+
+    // Step 4: Final result array with percentages
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
 
-      const match = monthlyData.find(
-        (item) => item.year === year && item.month === month
-      );
+      const total = dataMap.get(`${year}-${month}`) || 0;
+      const percentage = totalSum ? (total / totalSum) * 100 : 0;
 
       result.push({
         year,
         month,
         monthName: monthNames[month],
-        total: match ? match.total : 0
+        total,
+        percentage: +percentage.toFixed(2)
       });
     }
 
@@ -367,6 +382,7 @@ export const getMonthlyInstitutionsDetails = async (req, res) => {
       data: result
     });
   } catch (error) {
+    console.error("Error in getMonthlyInstitutionsDetails:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
