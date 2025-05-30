@@ -229,7 +229,7 @@ export const getMonthlyCandidateDetails = async (req, res) => {
   try {
     const now = new Date();
     const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(now.getMonth() - 5); // Last 6 months incl. current
+    sixMonthsAgo.setMonth(now.getMonth() - 5); // Last 6 months including current
 
     const monthlyData = await User.aggregate([
       {
@@ -258,29 +258,33 @@ export const getMonthlyCandidateDetails = async (req, res) => {
       }
     ]);
 
-    // Generate last 6 months with default 0
-    const result = [];
+    // Step 2: Convert results to map for quick access
+    const dataMap = new Map();
+    monthlyData.forEach(item => {
+      dataMap.set(`${item.year}-${item.month}`, item.total);
+    });
+
     const monthNames = [
       "", "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
     ];
 
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(now.getMonth() - i);
+    const result = [];
 
+
+    // Step 3: Final result for last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
 
-      const match = monthlyData.find(
-        (item) => item.year === year && item.month === month
-      );
+      const total = dataMap.get(`${year}-${month}`) || 0;
 
       result.push({
         year,
         month,
         monthName: monthNames[month],
-        total: match ? match.total : 0
+        total
       });
     }
 
@@ -289,6 +293,7 @@ export const getMonthlyCandidateDetails = async (req, res) => {
       data: result
     });
   } catch (error) {
+    console.error("Error in getMonthlyCandidateDetails:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
