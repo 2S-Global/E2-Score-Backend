@@ -517,3 +517,118 @@ export const submitUserEducation = async (req, res) => {
     });
   }
 };
+
+export const updateUserEducation = async (req, res) => {
+  try {
+    const data = req.body;
+    const user = req.userId;
+    const levelId = data.level;
+    const transcript = req.files?.transcript?.[0];
+    const certificate = req.files?.certificate?.[0];
+    let transcriptUrl = null;
+    let certificateUrl = null;
+
+    const edit_id = req.body._id;
+
+    console.log("edit_id", edit_id);
+
+    return;
+
+    // Upload transcript file if available
+    if (transcript) {
+      transcriptUrl = await uploadFileToExternalServer(transcript);
+    }
+    // Upload certificate file if available
+    if (certificate) {
+      certificateUrl = await uploadFileToExternalServer(certificate);
+    }
+    let savedRecord;
+    if (levelId === "1" || levelId === "2") {
+      const boardId = await getOrInsertId(
+        "education_boards",
+        "board_name",
+        data.board
+      );
+      const educationData = {
+        userId: user,
+        level: levelId,
+        state: data.state,
+        board: boardId || null,
+        year_of_passing: data.year_of_passing,
+        medium_of_education: data.medium,
+        marks: data.marks,
+        eng_marks: data.eng_marks,
+        math_marks: data.math_marks,
+        transcript_data: transcriptUrl || null,
+        certificate_data: certificateUrl || null,
+        isPrimary: data.is_primary || false,
+        isDel: false,
+      };
+      // Update if already exists
+      const existing = await UserEducation.findOne({
+        userId: user,
+        level: levelId,
+        isDel: false,
+      });
+      if (existing) {
+        savedRecord = await UserEducation.findByIdAndUpdate(
+          existing._id,
+          educationData,
+          { new: true }
+        );
+      } else {
+        const newRecord = new UserEducation(educationData);
+        savedRecord = await newRecord.save();
+      }
+    } else {
+      const universityId = await getOrInsertId(
+        "university_univercity",
+        "name",
+        data.university
+      );
+      const instituteId = await getOrInsertId(
+        "university_college",
+        "name",
+        data.institute_name
+      );
+      const courseId = await getOrInsertId(
+        "university_course",
+        "name",
+        data.course_name
+      );
+      const educationData = {
+        userId: user,
+        level: levelId,
+        state: data.state,
+        universityName: universityId,
+        instituteName: instituteId,
+        courseName: courseId,
+        courseType: data.course_type,
+        duration: {
+          from: Number(data.start_year),
+          to: Number(data.end_year),
+        },
+        gradingSystem: data.grading_system,
+        marks: data.marks,
+        transcript_data: transcriptUrl || null,
+        certificate_data: certificateUrl || null,
+        isPrimary: data.is_primary || false,
+        isDel: false,
+      };
+      // Always create new record
+      const newRecord = new UserEducation(educationData);
+      savedRecord = await newRecord.save();
+    }
+    res.status(201).json({
+      message: `Education ${
+        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+      } successfully`,
+      data: savedRecord,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error saving User Education",
+      error: error.message,
+    });
+  }
+};
