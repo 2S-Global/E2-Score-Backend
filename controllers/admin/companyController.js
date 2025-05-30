@@ -6,10 +6,6 @@ import mongoose from "mongoose";
 
 import nodemailer from "nodemailer";
 
-
-
-
-
 export const changePassword = async (req, res) => {
   try {
     const userId = req.userId;
@@ -22,6 +18,8 @@ export const changePassword = async (req, res) => {
       entityName = "Institute";
     } else if (role === 2) {
       entityName = "Company";
+    } else if (role === 0) {
+      entityName = "admin";
     }
 
     if (!oldPassword?.trim() || !newPassword?.trim()) {
@@ -69,11 +67,11 @@ export const changePassword = async (req, res) => {
 
 // Register a new user
 export const registerCompanyUser = async (req, res) => {
+  let entityName = "Company";
   try {
     const {
       name,
       email,
-      password,
       transaction_fee,
       transaction_gst,
       allowed_verifications,
@@ -84,19 +82,24 @@ export const registerCompanyUser = async (req, res) => {
       discount_percent,
       role,
     } = req.body;
-  //  const role = 1;
+
+    // Generate a 6-digit random password
+    const password = Math.floor(100000 + Math.random() * 900000).toString();
+
+    //  const role = 1;
     const self_registered = 0;
     // Validate required fields
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Name, email, password" });
     }
 
-
-        let entityName = "Company";
+    
     if (role === 3) {
       entityName = "Institute";
     } else if (role === 2) {
       entityName = "Company";
+    } else if (role === 1) {
+      entityName = "Candidate";
     }
 
     // Check if user already exists
@@ -149,7 +152,7 @@ export const registerCompanyUser = async (req, res) => {
       from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
       to: email,
       subject:
-        "Access Credentials for QuikChek - Fast & Accurate KYC Verification Platform",
+        "Access Credentials for E2Score - Fast & Accurate KYC Verification Platform",
       html: `
       <div style="text-align: center; margin-bottom: 20px;">
     <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
@@ -204,7 +207,7 @@ export const registerCompanyUser = async (req, res) => {
       `,
     };
 
-   // await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -344,7 +347,7 @@ export const RegisterFrontEnd = async (req, res) => {
       `,
     };
 
-  //  await transporter.sendMail(mailOptions);
+     await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -379,12 +382,11 @@ export const editUser = async (req, res) => {
 
     let entityName = "Company";
     if (role === 3) {
-    entityName = "Institute";
+      entityName = "Institute";
     } else if (role === 2) {
-    entityName = "Company";
-    }
-    else if (role === 1) {
-    entityName = "Candidate";
+      entityName = "Company";
+    } else if (role === 1) {
+      entityName = "Candidate";
     }
 
     // Check if user already exists
@@ -470,7 +472,7 @@ export const editUser = async (req, res) => {
         `,
       };
 
-   //   await transporter.sendMail(mailOptions);
+      //   await transporter.sendMail(mailOptions);
     }
 
     res.status(200).json({
@@ -598,7 +600,7 @@ export const sendAccessEmail = async (req, res) => {
       `,
     };
 
-  //  await transporter.sendMail(mailOptions);
+    //  await transporter.sendMail(mailOptions);
 
     res
       .status(200)
@@ -674,7 +676,7 @@ export const forgotPassword = async (req, res) => {
           `,
     };
 
-  //  await transporter.sendMail(mailOptions);
+    //  await transporter.sendMail(mailOptions);
 
     res.status(200).json({ message: "New password sent to your email" });
   } catch (error) {
@@ -777,14 +779,13 @@ export const listCompanies = async (req, res) => {
 
     const { role } = req.body;
 
-        let entityName = "Company";
+    let entityName = "Company";
     if (role === 3) {
-    entityName = "Institute";
+      entityName = "Institute";
     } else if (role === 2) {
-    entityName = "Company";
-    }
-    else if (role === 1) {
-    entityName = "Candidate";
+      entityName = "Company";
+    } else if (role === 1) {
+      entityName = "Candidate";
     }
 
     const companies = await User.find({
@@ -798,7 +799,7 @@ export const listCompanies = async (req, res) => {
     }
 
     // Get order counts grouped by employer_id
-   /* const orderCounts = await UserVerification.aggregate([
+    /* const orderCounts = await UserVerification.aggregate([
       { $match: { is_del: false } },
       { $group: { _id: "$employer_id", orderCount: { $sum: 1 } } },
     ]); */
@@ -808,7 +809,7 @@ export const listCompanies = async (req, res) => {
     /*orderCounts.forEach(({ _id, orderCount }) => {
       orderMap[_id.toString()] = orderCount;
     }); */
- 
+
     // Attach order count to each company
     const companiesWithOrderCount = companies.map((company) => {
       const companyId = company._id.toString();
@@ -935,12 +936,11 @@ export const deleteCompany = async (req, res) => {
 
     let entityName = "Company";
     if (role === 3) {
-    entityName = "Institute";
+      entityName = "Institute";
     } else if (role === 2) {
-    entityName = "Company";
-    }
-    else if (role === 1) {
-    entityName = "Candidate";
+      entityName = "Company";
+    } else if (role === 1) {
+      entityName = "Candidate";
     }
 
     // Validate and convert companyId to ObjectId
@@ -989,12 +989,9 @@ export const toggleCompanyStatus = async (req, res) => {
       entityName = "Institute";
     } else if (role === 2) {
       entityName = "Company";
+    } else if (role === 1) {
+      entityName = "Candidate";
     }
-    else if (role === 1) {
-    entityName = "Candidate";
-    }
-
-    
 
     if (!mongoose.Types.ObjectId.isValid(companyId)) {
       return res
