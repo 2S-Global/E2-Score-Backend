@@ -95,7 +95,22 @@ export const getMonthlyCompanyDetails = async (req, res) => {
       "July", "August", "September", "October", "November", "December"
     ];
 
+
+    let totalSum = 0;
+for (let i = 11; i >= 0; i--) {
+  const date = new Date();
+  date.setMonth(now.getMonth() - i);
+
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+
+  const total = dataMap.get(`${year}-${month}`) || 0;
+  totalSum += total;
+}
+
     const result = [];
+
+
     for (let i = 11; i >= 0; i--) {
       const date = new Date();
       date.setMonth(now.getMonth() - i);
@@ -104,12 +119,14 @@ export const getMonthlyCompanyDetails = async (req, res) => {
       const month = date.getMonth() + 1; // 1-based month
 
       const total = dataMap.get(`${year}-${month}`) || 0;
+     const percentage = totalSum ? (total / totalSum) * 100 : 0;
 
       result.push({
         year,
         month,
         monthName: monthNames[month],
-        total
+        total,
+        percentage:+percentage.toFixed(2)
       });
     }
 
