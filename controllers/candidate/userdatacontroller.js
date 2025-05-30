@@ -311,6 +311,13 @@ export const getUserEducation = async (req, res) => {
   }
 };
 
+/**
+ * @description Get education level details for a user
+ * @route GET /api/userdata/level-details
+ * @access protected
+ * @returns {object} 200 - Education level data
+ * @returns {object} 500 - Server error
+ */
 export const getUserLevelDetails = async (req, res) => {
   try {
     const userId = req.userId;
@@ -338,6 +345,84 @@ export const getUserLevelDetails = async (req, res) => {
     return res.status(200).json({
       message: "Fetched education level data",
       data: rows,
+    });
+  } catch (error) {
+    console.error("Error fetching user education:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+/**
+ * @description Fetch education data for edit based on dataId
+ * @route GET /api/userdata/edit-user-data
+ * @access protected
+ * @param {string} dataId - Id of the education data to be edited
+ * @returns {object} 200 - Education data
+ * @returns {object} 400 - Missing dataId in query parameters
+ * @returns {object} 404 - No education data found for this user.
+ * @returns {object} 500 - Server error
+ */
+export const getEditUserData = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const dataId = req.query.dataId;
+
+    if (!dataId) {
+      return res
+        .status(400)
+        .json({ message: "Missing collectionId in query parameters" });
+    }
+    const userEducation = await UserEducation.findOne({
+      userId,
+      _id: dataId,
+      isDel: false,
+    });
+
+    if (!userEducation) {
+      return res
+        .status(404)
+        .json({ message: "No education data found for this user." });
+    }
+
+    const responseData = { ...userEducation._doc };
+    const { level, board, universityName, courseName, instituteName } =
+      userEducation;
+
+    // Helper to fetch name from SQL
+    const fetchNameById = async (table, field, id) => {
+      const query = `SELECT ${field} AS name FROM ${table} WHERE id = ? AND is_del = 0 AND is_active = 1`;
+      const [rows] = await db_sql.execute(query, [id]);
+      return rows.length > 0 ? rows[0].name : "";
+    };
+
+    if (level === "1" || level === "2") {
+      responseData.board = board
+        ? await fetchNameById("education_boards", "board_name", board)
+        : "";
+    } else {
+      const queries = [
+        universityName
+          ? fetchNameById("university_univercity", "name", universityName)
+          : Promise.resolve(""),
+        courseName
+          ? fetchNameById("university_course", "name", courseName)
+          : Promise.resolve(""),
+        instituteName
+          ? fetchNameById("university_college", "name", instituteName)
+          : Promise.resolve(""),
+      ];
+
+      const [uniName, course, institute] = await Promise.all(queries);
+      responseData.universityName = uniName;
+      responseData.courseName = course;
+      responseData.instituteName = institute;
+    }
+
+    return res.status(200).json({
+      message: "Fetched education level data",
+      data: responseData,
     });
   } catch (error) {
     console.error("Error fetching user education:", error);
