@@ -107,7 +107,7 @@ export const registerCompanyUser = async (req, res) => {
       email,
       is_del: false,
       is_active: true,
-    });
+    }).lean();
     if (existingUser) {
       return res.status(400).json({ message: `${entityName} already exists` });
     }
