@@ -442,6 +442,8 @@ export const submitUserEducation = async (req, res) => {
         year_of_passing: data.year_of_passing,
         medium_of_education: data.medium,
         marks: data.marks,
+        eng_marks: data.eng_marks,
+        math_marks: data.math_marks,
         transcript_data: transcriptUrl || null,
         certificate_data: certificateUrl || null,
         isPrimary: data.is_primary || false,

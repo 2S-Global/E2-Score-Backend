@@ -440,7 +440,7 @@ export const getCollegeNameById = async (req, res) => {
       }
     } else {
       const [insertResult] = await db_sql.execute(
-        "INSERT INTO university_univercity (name, state_id, is_active, is_del, flag) VALUES (?, ?, 1, 0, 1)",
+        "INSERT INTO university_univercity (name, state_id, is_active, is_del, flag) VALUES (?, ?, 0, 0, 1)",
         [university_name.trim(), university_state]
       );
 

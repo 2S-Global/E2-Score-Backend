@@ -41,7 +41,13 @@ const userEducationSchema = new mongoose.Schema(
       type: String, // Fixed typo
     },
     marks: {
-      type: String, // Ensure marks is stored properly
+      type: String,
+    },
+    eng_marks: {
+      type: String,
+    },
+    math_marks: {
+      type: String,
     },
     universityName: {
       type: String,
