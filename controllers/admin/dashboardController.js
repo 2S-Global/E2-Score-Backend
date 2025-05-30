@@ -52,15 +52,16 @@ export const getTotal = async (req, res) => {
 export const getMonthlyCompanyDetails = async (req, res) => {
   try {
     const now = new Date();
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(now.getMonth() - 11); // Last 6 months incl. current
+    const startDate = new Date();
+    startDate.setMonth(now.getMonth() - 11); // Last 12 months including current
 
+    // Step 1: Aggregate monthly user data
     const monthlyData = await User.aggregate([
       {
         $match: {
           role: 2,
           is_del: false,
-          createdAt: { $gte: sixMonthsAgo }
+          createdAt: { $gte: startDate }
         }
       },
       {
@@ -82,29 +83,33 @@ export const getMonthlyCompanyDetails = async (req, res) => {
       }
     ]);
 
-    // Generate last 6 months with default 0
-    const result = [];
+    // Step 2: Convert data to a Map for faster lookup
+    const dataMap = new Map();
+    monthlyData.forEach(item => {
+      dataMap.set(`${item.year}-${item.month}`, item.total);
+    });
+
+    // Step 3: Generate result for last 12 months
     const monthNames = [
       "", "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
     ];
 
+    const result = [];
     for (let i = 11; i >= 0; i--) {
       const date = new Date();
       date.setMonth(now.getMonth() - i);
 
       const year = date.getFullYear();
-      const month = date.getMonth() + 1;
+      const month = date.getMonth() + 1; // 1-based month
 
-      const match = monthlyData.find(
-        (item) => item.year === year && item.month === month
-      );
+      const total = dataMap.get(`${year}-${month}`) || 0;
 
       result.push({
         year,
         month,
         monthName: monthNames[month],
-        total: match ? match.total : 0
+        total
       });
     }
 
@@ -113,9 +118,11 @@ export const getMonthlyCompanyDetails = async (req, res) => {
       data: result
     });
   } catch (error) {
+    console.error("Error in getMonthlyCompanyDetails:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 /**
  * @route POST /api/dashboard/getMonthlyRegistered
