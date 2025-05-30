@@ -518,6 +518,30 @@ export const submitUserEducation = async (req, res) => {
   }
 };
 
+/**
+ * @description Update an existing education record
+ * @route PUT /api/userdata/usereducation
+ * @access protected
+ * @param {string} req.body._id - Education record id
+ * @param {string} req.body.level - Education level (1/2/3)
+ * @param {string} req.body.state - State of education
+ * @param {string} [req.body.board] - Board of education (optional)
+ * @param {string} req.body.year_of_passing - Year of passing
+ * @param {string} req.body.medium - Medium of education
+ * @param {string} req.body.marks - Marks obtained
+ * @param {string} [req.body.university] - University name (for non-primary education)
+ * @param {string} [req.body.instituteName] - Institute name (for non-primary education)
+ * @param {string} [req.body.course_name] - Course name (for non-primary education)
+ * @param {string} [req.body.course_type] - Course type (for non-primary education)
+ * @param {number} [req.body.start_year] - Start year (for non-primary education)
+ * @param {number} [req.body.end_year] - End year (for non-primary education)
+ * @param {string} [req.body.grading_system] - Grading system (for non-primary education)
+ * @param {boolean} [req.body.isPrimary] - Indicates if the education is primary
+ * @param {Express.Multer.File} [req.files.transcript] - Transcript file (optional)
+ * @param {Express.Multer.File} [req.files.certificate] - Certificate file (optional)
+ * @returns {object} 201 - Education saved/updated successfully
+ * @returns {object} 500 - Error saving User Education
+ */
 export const updateUserEducation = async (req, res) => {
   try {
     const data = req.body;
@@ -525,30 +549,34 @@ export const updateUserEducation = async (req, res) => {
     const levelId = data.level;
     const transcript = req.files?.transcript?.[0];
     const certificate = req.files?.certificate?.[0];
-    let transcriptUrl = null;
-    let certificateUrl = null;
-
     const edit_id = req.body._id;
-
-    console.log("edit_id", edit_id);
-
-    return;
-
-    // Upload transcript file if available
-    if (transcript) {
-      transcriptUrl = await uploadFileToExternalServer(transcript);
+    if (!edit_id) {
+      return res.status(400).json({ message: "Education id is required." });
     }
-    // Upload certificate file if available
-    if (certificate) {
-      certificateUrl = await uploadFileToExternalServer(certificate);
+    const existingRecord = await UserEducation.findOne({
+      _id: edit_id,
+      userId: user,
+    });
+    if (!existingRecord) {
+      return res
+        .status(404)
+        .json({ message: "Education record not found or not authorized." });
     }
+    // Upload only if file is present, otherwise keep existing values
+    const transcriptUrl = transcript
+      ? await uploadFileToExternalServer(transcript)
+      : existingRecord.transcript_data;
+    const certificateUrl = certificate
+      ? await uploadFileToExternalServer(certificate)
+      : existingRecord.certificate_data;
     let savedRecord;
-    if (levelId === "1" || levelId === "2") {
+    if (levelId == "1" || levelId == "2") {
       const boardId = await getOrInsertId(
         "education_boards",
         "board_name",
         data.board
       );
+
       const educationData = {
         userId: user,
         level: levelId,
@@ -559,27 +587,17 @@ export const updateUserEducation = async (req, res) => {
         marks: data.marks,
         eng_marks: data.eng_marks,
         math_marks: data.math_marks,
-        transcript_data: transcriptUrl || null,
-        certificate_data: certificateUrl || null,
+        transcript_data: transcriptUrl,
+        certificate_data: certificateUrl,
         isPrimary: data.is_primary || false,
         isDel: false,
       };
-      // Update if already exists
-      const existing = await UserEducation.findOne({
-        userId: user,
-        level: levelId,
-        isDel: false,
-      });
-      if (existing) {
-        savedRecord = await UserEducation.findByIdAndUpdate(
-          existing._id,
-          educationData,
-          { new: true }
-        );
-      } else {
-        const newRecord = new UserEducation(educationData);
-        savedRecord = await newRecord.save();
-      }
+
+      savedRecord = await UserEducation.findByIdAndUpdate(
+        edit_id,
+        educationData,
+        { new: true }
+      );
     } else {
       const universityId = await getOrInsertId(
         "university_univercity",
@@ -596,6 +614,7 @@ export const updateUserEducation = async (req, res) => {
         "name",
         data.course_name
       );
+
       const educationData = {
         userId: user,
         level: levelId,
@@ -615,10 +634,13 @@ export const updateUserEducation = async (req, res) => {
         isPrimary: data.is_primary || false,
         isDel: false,
       };
-      // Always create new record
-      const newRecord = new UserEducation(educationData);
-      savedRecord = await newRecord.save();
+      savedRecord = await UserEducation.findByIdAndUpdate(
+        edit_id,
+        educationData,
+        { new: true }
+      );
     }
+
     res.status(201).json({
       message: `Education ${
         levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
