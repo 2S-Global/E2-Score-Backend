@@ -98,8 +98,7 @@ export const getMonthlyCompanyDetails = async (req, res) => {
 
     let totalSum = 0;
 for (let i = 11; i >= 0; i--) {
-  const date = new Date();
-  date.setMonth(now.getMonth() - i);
+const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
 
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
