@@ -82,7 +82,6 @@ export const getSkill = async (req, res) => {
  */
 export const getMatchingSkill = async (req, res) => {
   const { skill_name } = req.query;
-  console.log(skill_name);
 
   if (!skill_name || skill_name.trim() === "") {
     return res.status(400).json({
@@ -341,9 +340,6 @@ export const getEducationBoardById = async (req, res) => {
   try {
     const boardId = req.query.state_id;
 
-    console.log(boardId);
-    console.log("State Wise Board is running");
-
     const [rows] = await db_sql.execute(
       "SELECT id, board_name FROM education_boards WHERE state_region_id = ? OR state_region_id = 0",
       [boardId]
@@ -377,8 +373,6 @@ export const getEducationBoardById = async (req, res) => {
  */
 export const getAllMediumOfEducation = async (req, res) => {
   try {
-    console.log("Get All Medium Of education");
-
     const [rows] = await db_sql.execute(
       "SELECT id, name FROM `medium_of_education` WHERE is_del = 0 AND is_active = 1;"
     );

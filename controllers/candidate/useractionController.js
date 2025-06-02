@@ -116,7 +116,7 @@ export const addResumeHeadline = async (req, res) => {
       { resumeHeadline: resumeHeadline },
       { new: true, upsert: true }
     );
-    console.log(updated);
+
     res.status(201).json({
       success: true,
       message: "Resume Headline Saved successfully!",
@@ -210,9 +210,6 @@ export const addProfileSummary = async (req, res) => {
     const { profileSummary } = req.body;
     const user = req.userId;
 
-    console.log("User Id generated from mongoDB");
-    console.log(user);
-
     if (!user || !profileSummary) {
       return res.status(400).json({ message: "Profile Summary is required." });
     }
@@ -223,7 +220,7 @@ export const addProfileSummary = async (req, res) => {
       { profileSummary: profileSummary },
       { new: true }
     );
-    console.log(updated);
+
     res.status(201).json({
       success: true,
       message: "Profile Summary Saved successfully!",
@@ -333,10 +330,6 @@ export const uploadFileToExternalServer = async (file) => {
       form,
       { headers: form.getHeaders() }
     );
-
-    // console.log("Full response:", response);
-    console.log("Response data:", response.data);
-    console.log(response.data?.file_path);
 
     return response.data?.file_path;
   } catch (error) {
@@ -650,6 +643,56 @@ export const updateUserEducation = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Error saving User Education",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Soft delete an education record by user ID and education record ID
+ * @route DELETE /api/useraction/delete-user-education
+ * @access protected
+ * @param {string} _id - Education record ID (required)
+ * @returns {object} 200 - Education record deleted successfully
+ * @returns {object} 400 - Missing _id in query parameters
+ * @returns {object} 404 - Education record not found or already deleted
+ * @returns {object} 500 - Server error
+ */
+
+export const deleteUserEducation = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const educationId = req.query._id;
+
+    if (!educationId) {
+      return res.status(400).json({
+        message: "Missing _id (education record ID) in query parameters",
+      });
+    }
+
+    const educationRecord = await UserEducation.findOne({
+      _id: educationId,
+      userId: userId,
+      isDel: false,
+    });
+
+    if (!educationRecord) {
+      return res.status(404).json({
+        message: "Education record not found or already deleted.",
+      });
+    }
+
+    // Soft delete: mark as deleted
+    educationRecord.isDel = true;
+    await educationRecord.save();
+
+    return res.status(200).json({
+      message: "Education record deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Error deleting user education:", error);
+    return res.status(500).json({
+      message: "Server error",
       error: error.message,
     });
   }

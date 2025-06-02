@@ -420,9 +420,14 @@ export const getEditUserData = async (req, res) => {
       responseData.instituteName = institute;
     }
 
+    const levelType = level
+      ? await fetchNameById("education_level", "type", level)
+      : "";
+
     return res.status(200).json({
       message: "Fetched education level data",
       data: responseData,
+      levelType,
     });
   } catch (error) {
     console.error("Error fetching user education:", error);

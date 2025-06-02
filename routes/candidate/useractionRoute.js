@@ -11,6 +11,7 @@ import {
   addKeySkills,
   submitUserEducation,
   updateUserEducation,
+  deleteUserEducation,
 } from "../../controllers/candidate/useractionController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -64,4 +65,12 @@ userRouter.put(
   ]),
   updateUserEducation
 );
+
+userRouter.delete(
+  "/delete_user_data",
+  userAuth,
+  upload.none(),
+  deleteUserEducation
+);
+
 export default userRouter;
