@@ -283,13 +283,13 @@ export const getCourseByUniversity = async (req, res) => {
         data: courseNames,
         message: "Courses based on provided filters",
       });
+    } else {
+      res.status(200).json({
+        success: true,
+        data: courseNames,
+        message: "Courses based on provided filters",
+      });
     }
-
-    res.status(200).json({
-      success: true,
-      data: courseNames,
-      message: "Courses based on provided filters",
-    });
   } catch (error) {
     console.error("MySQL error →", error);
     res.status(500).json({ success: false, message: "Database query failed" });
