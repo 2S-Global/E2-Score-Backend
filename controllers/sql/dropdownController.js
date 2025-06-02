@@ -251,6 +251,7 @@ export const getCourseByUniversity = async (req, res) => {
     // Build course query
     let sql = "";
     let values = [];
+    let sql_na = "";
 
     if (courseIds.length > 0) {
       // Filter by specific course IDs and course_type
