@@ -33,7 +33,7 @@ import DropdownRouterouter from "./routes/sql/DropdownRoute.js";
 import userRouter from "./routes/candidate/useractionRoute.js";
 import userdataRouter from "./routes/candidate/userdataRoute.js";
 import dashboardRoute from "./routes/admin/dashboardRoute.js";
-
+import userPersonalRouter from "./routes/candidate/userPersonalRoute.js";
 // Routes
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
@@ -50,9 +50,10 @@ app.use("/api/pdf", pdfRouter);
 //dropdown routes
 app.use("/api/sql/dropdown", DropdownRouterouter);
 
-//user routes
+//candidate routes
 app.use("/api/useraction", userRouter);
 app.use("/api/userdata", userdataRouter);
+app.use("/api/candidate/personal", userPersonalRouter);
 // Start server
 
 // Admin Routes
