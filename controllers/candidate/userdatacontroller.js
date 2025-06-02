@@ -222,7 +222,7 @@ export const getcandidateskills = async (req, res) => {
 
 /**
  * @description Get the education details of a user by user_id
- * @route GET /api/userdata/usereducation
+ * @route GET /api/userdata/get_user_education
  * @access protected
  * @returns {object} 200 - Array of education records
  * @returns {object} 404 - User data not found
@@ -237,7 +237,7 @@ export const getUserEducation = async (req, res) => {
       userId: user,
       isDel: false,
     })
-      .sort({ isPrimary: -1 })
+      .sort({ level: -1 })
       .lean();
 
     if (!educationRecords || educationRecords.length === 0) {
@@ -313,7 +313,7 @@ export const getUserEducation = async (req, res) => {
 
 /**
  * @description Get education level details for a user
- * @route GET /api/userdata/level-details
+ * @route GET /api/userdata/get_user_level
  * @access protected
  * @returns {object} 200 - Education level data
  * @returns {object} 500 - Server error
@@ -356,7 +356,7 @@ export const getUserLevelDetails = async (req, res) => {
 
 /**
  * @description Fetch education data for edit based on dataId
- * @route GET /api/userdata/edit-user-data
+ * @route GET /api/userdata/get_edit_user_data
  * @access protected
  * @param {string} dataId - Id of the education data to be edited
  * @returns {object} 200 - Education data
