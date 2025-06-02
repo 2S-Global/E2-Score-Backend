@@ -74,7 +74,7 @@ export const getSkill = async (req, res) => {
 
 /**
  * @description Search for matching skills based on the query parameter skill_name
- * @route GET /api/sql/dropdown/searchSkill?skill_name=:skill_name
+ * @route GET /api/sql/dropdown/matching_Skill?skill_name=:skill_name
  * @param {string} skill_name - The string to search for in the skills table
  * @success {object} 200 - Matching skills
  * @error {object} 400 - skill_name query parameter is required
@@ -477,6 +477,98 @@ export const getCollegeNameById = async (req, res) => {
       success: true,
       data: collegeNames,
       message: "College Name based on University Id",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all more information from the database
+ * @route GET /api/sql/dropdown/more_information
+ * @success {object} 200 - All more information
+ * @error {object} 500 - Database query failed
+ */
+export const getMoreInformation = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `more_information` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "More Information",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all marital statuses from the database
+ * @route GET /api/sql/dropdown/marital_status
+ * @success {object} 200 - All marital statuses
+ * @error {object} 500 - Database query failed
+ */
+export const getMaritalStatus = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, status FROM `marital_status` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Martital Status Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all categories from the database
+ * @route GET /api/sql/dropdown/category_details
+ * @success {object} 200 - All categories
+ * @error {object} 500 - Database query failed
+ */
+export const getCategoryDetails = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, category_name FROM `category` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Category Details Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all Visa Type from the database
+ * @route GET /api/sql/dropdown/visa_type
+ * @success {object} 200 - All Visa Types
+ * @error {object} 500 - Database query failed
+ */
+export const getVisaType = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, visa_name FROM `visa_type` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Visa Type Fetched Successfully",
     });
   } catch (error) {
     console.error("MySQL error →", error);

@@ -13,6 +13,10 @@ import {
   getEducationBoardById,
   getAllMediumOfEducation,
   getCollegeNameById,
+  getMoreInformation,
+  getMaritalStatus,
+  getCategoryDetails,
+  getVisaType,
 } from "../../controllers/sql/dropdownController.js";
 
 const DropdownRouterouter = express.Router();
@@ -54,4 +58,16 @@ DropdownRouterouter.get("/medium_of_education", getAllMediumOfEducation);
 
 //Get College Name by University Id
 DropdownRouterouter.get("/college_name", getCollegeNameById);
+
+//Get More Information
+DropdownRouterouter.get("/more_information", getMoreInformation);
+
+//Get Marital Status
+DropdownRouterouter.get("/marital_status", getMaritalStatus);
+
+//Get Category
+DropdownRouterouter.get("/category_details", getCategoryDetails);
+
+//Get Visa Type
+DropdownRouterouter.get("/visa_type", getVisaType);
 export default DropdownRouterouter;
