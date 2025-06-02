@@ -205,16 +205,7 @@ export const getUniversityByState = async (req, res) => {
 export const getCourseByUniversity = async (req, res) => {
   try {
     const { state_id, university_id, college_name, course_type } = req.query;
-
-    /*  if (!course_type || course_type.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "course_type is required",
-      });
-    } */
-
     let courseIds = [];
-
     const allFiltersProvided =
       state_id && university_id && college_name && course_type;
 
@@ -248,51 +239,69 @@ export const getCourseByUniversity = async (req, res) => {
       }
     }
 
-    // Build course query
-    let sql = "";
-    let values = [];
-    let sql_na = "";
+    let courseQuery = "";
+    let queryValues = [];
 
     if (courseIds.length > 0) {
-      // Filter by specific course IDs and course_type
-      sql = `SELECT id, name FROM university_course WHERE id IN (${courseIds
-        .map(() => "?")
-        .join(",")}) AND type = ? AND is_del = 0 AND is_active = 1 LIMIT 50`;
-      values = [...courseIds, course_type];
+      // Filtered query
+      courseQuery = `
+        SELECT id, name 
+        FROM university_course 
+        WHERE id IN (${courseIds.map(() => "?").join(",")})
+        AND type = ?
+        AND is_del = 0
+        AND is_active = 1
+        LIMIT 50
+      `;
+      queryValues = [...courseIds, course_type];
     } else {
-      sql = `SELECT id, name FROM university_course WHERE type = ? AND is_del = 0 AND is_active = 1 LIMIT 50`;
-      values = [course_type];
+      // Fallback query (filter only by course_type)
+      courseQuery = `
+        SELECT id, name 
+        FROM university_course 
+        WHERE type = ?
+        AND is_del = 0
+        AND is_active = 1
+        LIMIT 50
+      `;
+      queryValues = [course_type];
     }
 
-    const [courseRows] = await db_sql.execute(sql, values);
-    const courseNames = courseRows.map((row) => row.name);
+    const [courseRows] = await db_sql.execute(courseQuery, queryValues);
 
-    if (courseNames.length === 0) {
-      sql_na = `SELECT id, name FROM university_course WHERE  is_del = 0 AND is_active = 1 LIMIT 50`;
-      const [naCourseRows] = await db_sql.execute(sql_na);
-      const courseNames = naCourseRows.map((row) => row.name);
-      if (courseNames.length === 0) {
+    let finalCourseNames = courseRows.map((row) => row.name);
+
+    // If no course found, get fallback list (NA)
+    if (finalCourseNames.length === 0) {
+      const [naCourseRows] = await db_sql.execute(`
+        SELECT id, name 
+        FROM university_course 
+        WHERE is_del = 0 
+        AND is_active = 1 
+        LIMIT 50
+      `);
+
+      finalCourseNames = naCourseRows.map((row) => row.name);
+
+      if (finalCourseNames.length === 0) {
         return res.status(404).json({
           success: false,
-          message: "No courses found IN the database",
+          message: "No courses found in the database",
         });
       }
-
-      res.status(200).json({
-        success: true,
-        data: courseNames,
-        message: "Courses based on provided filters",
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        data: courseNames,
-        message: "Courses based on provided filters",
-      });
     }
+
+    // Single response
+    return res.status(200).json({
+      success: true,
+      data: finalCourseNames,
+      message: "Courses based on provided filters",
+    });
   } catch (error) {
     console.error("MySQL error →", error);
-    res.status(500).json({ success: false, message: "Database query failed" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Database query failed" });
   }
 };
 
