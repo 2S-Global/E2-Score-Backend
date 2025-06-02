@@ -206,12 +206,12 @@ export const getCourseByUniversity = async (req, res) => {
   try {
     const { state_id, university_id, college_name, course_type } = req.query;
 
-    if (!course_type || course_type.trim() === "") {
+    /*  if (!course_type || course_type.trim() === "") {
       return res.status(400).json({
         success: false,
         message: "course_type is required",
       });
-    }
+    } */
 
     let courseIds = [];
 
@@ -256,10 +256,10 @@ export const getCourseByUniversity = async (req, res) => {
       // Filter by specific course IDs and course_type
       sql = `SELECT id, name FROM university_course WHERE id IN (${courseIds
         .map(() => "?")
-        .join(",")}) AND type = ?`;
+        .join(",")}) AND type = ? AND is_del = 0 AND is_active = 1 LIMIT 50`;
       values = [...courseIds, course_type];
     } else {
-      sql = `SELECT id, name FROM university_course WHERE type = ? LIMIT 50`;
+      sql = `SELECT id, name FROM university_course WHERE type = ? AND is_del = 0 AND is_active = 1 LIMIT 50`;
       values = [course_type];
     }
 
@@ -267,9 +267,20 @@ export const getCourseByUniversity = async (req, res) => {
     const courseNames = courseRows.map((row) => row.name);
 
     if (courseNames.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No courses found for the given criteria.",
+      sql_na = `SELECT id, name FROM university_course WHERE  is_del = 0 AND is_active = 1 LIMIT 50`;
+      const [naCourseRows] = await db_sql.execute(sql_na);
+      const courseNames = naCourseRows.map((row) => row.name);
+      if (courseNames.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "No courses found IN the database",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        data: courseNames,
+        message: "Courses based on provided filters",
       });
     }
 
