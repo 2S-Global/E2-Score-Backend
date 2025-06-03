@@ -211,7 +211,7 @@ export const registerCompanyUser = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: `${entityName} registered and logged in successfully!`,
+      message: `${entityName} registered successfully!`,
       /* token, */
     });
   } catch (error) {
