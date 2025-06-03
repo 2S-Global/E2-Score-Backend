@@ -620,3 +620,26 @@ export const getCareerBreakReason = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+/**
+ * @description Get all languages from the database
+ * @route GET /api/sql/dropdown/language
+ * @success {object} 200 - All languages
+ * @error {object} 500 - Database query failed
+ */
+export const getLanguage = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `languages` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Languages Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
