@@ -643,3 +643,26 @@ export const getLanguage = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+/**
+ * @description Get all language proficiency from the database
+ * @route GET /api/sql/dropdown/language_proficiency
+ * @success {object} 200 - All language proficiency
+ * @error {object} 500 - Database query failed
+ */
+export const getLanguageProficiency = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `language_proficiency` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Language Proficiency Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
