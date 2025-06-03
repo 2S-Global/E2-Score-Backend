@@ -17,6 +17,8 @@ import {
   getMaritalStatus,
   getCategoryDetails,
   getVisaType,
+  getDisabilityType,
+  getCareerBreakReason,
 } from "../../controllers/sql/dropdownController.js";
 
 const DropdownRouterouter = express.Router();
@@ -70,4 +72,10 @@ DropdownRouterouter.get("/category_details", getCategoryDetails);
 
 //Get Visa Type
 DropdownRouterouter.get("/visa_type", getVisaType);
+
+//Get Disability Type
+DropdownRouterouter.get("/disability_type", getDisabilityType);
+
+//Get Career Break Reason
+DropdownRouterouter.get("/career_break_reason", getCareerBreakReason);
 export default DropdownRouterouter;

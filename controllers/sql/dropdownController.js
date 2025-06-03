@@ -575,3 +575,48 @@ export const getVisaType = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+/**
+ * @description Get all Disability Type from the database
+ * @route GET /api/sql/dropdown/disability_type
+ * @success {object} 200 - All Disability Types
+ * @error {object} 500 - Database query failed
+ */
+export const getDisabilityType = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `disability_type` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Disability Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all Career Break Reasons from the database
+ * @route GET /api/sql/dropdown/career_break_reason
+ * @success {object} 200 - Career Break Reasons
+ * @error {object} 500 - Database query failed
+ */
+export const getCareerBreakReason = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `career_break_reason` WHERE is_del = 0 AND is_active = 1;"
+    );
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Career Break Reason Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
