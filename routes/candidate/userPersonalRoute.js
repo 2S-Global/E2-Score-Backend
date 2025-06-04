@@ -4,6 +4,7 @@ import multer from "multer";
 import {
   test,
   submitPersonalDetails,
+  getPersonalDetails,
 } from "../../controllers/candidate/userPersonalController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -23,5 +24,7 @@ userPersonalRouter.post(
   upload.none(),
   submitPersonalDetails
 );
+// Get Personal Details Data
+userPersonalRouter.get("/get_personal_details", userAuth, getPersonalDetails);
 
 export default userPersonalRouter;

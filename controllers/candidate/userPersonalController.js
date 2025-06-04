@@ -12,7 +12,7 @@ export const test = async (req, res) => {
 
 /**
  * @description Save the candidate's personal details
- * @route POST/api/user/personalDetails/submit_personal_details
+ * @route POST /api/candidate/personal/submit_personal_details
  * @security BearerAuth
  * @param {object} req.body - Personal details to save
  * @param {string} req.body.gender - User's gender
@@ -107,5 +107,64 @@ export const submitPersonalDetails = async (req, res) => {
   } catch (error) {
     console.error("Error in submitPersonalDetails:", error);
     res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @description Retrieve the personal details of the authenticated user.
+ * @route GET /api/candidate/personal/get_personal_details
+ * @access protected
+ * @param {Object} req - Express request object containing userId.
+ * @param {Object} res - Express response object.
+ * @returns {Object} 200 - Returns user's personal details.
+ * @returns {Object} 404 - Personal details not found for this user.
+ * @returns {Object} 500 - Server error while fetching personal details.
+ */
+export const getPersonalDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const user = await User.findById(userId).select("gender");
+    const candidate = await candidateDetails
+      .findOne({ userId })
+      .select("dob hometown");
+    const personal = await personalDetails.findOne({ user: userId });
+
+    if (!user || !candidate || !personal) {
+      return res
+        .status(404)
+        .json({ message: "Personal details not found for this user." });
+    }
+
+    const result = {
+      gender: user.gender,
+      dob: candidate.dob,
+      hometown: candidate.hometown,
+      category: personal.category,
+      career_break: personal.careerBreak ? "Yes" : "No",
+      currently_on_career_break: personal.currentlyOnCareerBreak,
+      career_break_start_month: personal.startMonth,
+      career_break_start_year: personal.startYear,
+      career_break_end_month: personal.endMonth,
+      career_break_end_year: personal.endYear,
+      career_break_reason: personal.reason,
+      differently_abled: personal.differntllyAble ? "Yes" : "No",
+      disability_type: personal.disability_type,
+      disability_description: personal.other_disability_type,
+      workplace_assistance: personal.workplace_assistance,
+      usa_visa_type: personal.usaPermit,
+      work_permit_other_countries: personal.workPermitOther,
+      permanent_address: personal.permanentAddress,
+      pincode: personal.pincode,
+      languages: personal.languageProficiency || [],
+      marital_status: personal.maritialStatus,
+      more_info: personal.additionalInformation,
+    };
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in getPersonalDetails:", error);
+    res
+      .status(500)
+      .json({ message: "Server error while fetching personal details" });
   }
 };
