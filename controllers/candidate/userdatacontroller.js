@@ -329,9 +329,7 @@ export const getUserLevelDetails = async (req, res) => {
     let query = `SELECT id, level, duration, type FROM education_level WHERE is_del = 0 AND is_active = 1`;
 
     if (levels.length > 0) {
-      const excludedLevels = levels.filter((lvl) =>
-        ["1", "2", "3"].includes(lvl)
-      );
+      const excludedLevels = levels.filter((lvl) => ["1", "2"].includes(lvl));
 
       if (excludedLevels.length > 0) {
         const placeholders = excludedLevels.map(() => "?").join(", ");

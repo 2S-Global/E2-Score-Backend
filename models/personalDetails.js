@@ -46,19 +46,56 @@ const personalSchema = new mongoose.Schema(
     differntllyAble: {
       type: Boolean,
     },
+    disability_type: {
+      type: Number,
+    },
+    other_disability_type: {
+      type: String,
+    },
+    workplace_assistance: {
+      type: String,
+    },
+
     careerBreak: {
       type: Boolean,
     },
-    usaPermit: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "WorkPermitUSA",
+
+    currentlyOnCareerBreak: {
+      type: Boolean,
+      default: false,
     },
-    workPermitOther: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "WorkPermitOther",
-      },
-    ],
+    startMonth: {
+      type: String,
+    },
+    startYear: {
+      type: String,
+    },
+    endMonth: {
+      type: String,
+    },
+    endYear: {
+      type: String,
+    },
+    reason: {
+      type: Number,
+    },
+    // usaPermit: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "WorkPermitUSA",
+    // },
+    usaPermit: {
+      type: String,
+    },
+    // workPermitOther: [
+    //   {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: "WorkPermitOther",
+    //   },
+    // ],
+    workPermitOther: {
+      type: [String],
+    },
+    // workPermitOther: [Number],
     permanentAddress: {
       type: String,
     },
@@ -82,19 +119,17 @@ const personalSchema = new mongoose.Schema(
         proficiency: {
           type: String,
         },
-        skills: {
-          read: {
-            type: Boolean,
-            default: false,
-          },
-          write: {
-            type: Boolean,
-            default: false,
-          },
-          speak: {
-            type: Boolean,
-            default: false,
-          },
+        read: {
+          type: Boolean,
+          default: false,
+        },
+        write: {
+          type: Boolean,
+          default: false,
+        },
+        speak: {
+          type: Boolean,
+          default: false,
         },
       },
     ],

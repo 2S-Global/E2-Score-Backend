@@ -1,8 +1,111 @@
+import User from "../../models/userModel.js";
+import personalDetails from "../../models/personalDetails.js";
+import candidateDetails from "../../models/CandidateDetailsModel.js";
 export const test = async (req, res) => {
   try {
     res.status(200).json({ message: "Test route is working!" });
   } catch (error) {
     console.error("Error in test route:", error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+/**
+ * @description Save the candidate's personal details
+ * @route POST/api/user/personalDetails/submit_personal_details
+ * @security BearerAuth
+ * @param {object} req.body - Personal details to save
+ * @param {string} req.body.gender - User's gender
+ * @param {date} req.body.dob - Date of birth
+ * @param {string} req.body.hometown - Hometown
+ * @param {string} req.body.category - Category
+ * @param {boolean|string} req.body.career_break - Whether the user is currently on career break
+ * @param {boolean|string} req.body.currently_on_career_break - Whether the user is currently on career break
+ * @param {string|number} req.body.career_break_start_month - Month of the career break start date
+ * @param {string|number} req.body.career_break_start_year - Year of the career break start date
+ * @param {string|number} req.body.career_break_end_month - Month of the career break end date
+ * @param {string|number} req.body.career_break_end_year - Year of the career break end date
+ * @param {string} req.body.career_break_reason - Reason for the career break
+ * @param {boolean|string} req.body.differently_abled - Whether the user is differently abled
+ * @param {string} req.body.disability_type - Type of disability
+ * @param {string} req.body.disability_description - Description of the disability
+ * @param {string} req.body.workplace_assistance - Type of workplace assistance required
+ * @param {string} req.body.usa_visa_type - Type of USA work permit
+ * @param {string} req.body.work_permit_other_countries - Other countries with work permit
+ * @param {string} req.body.permanent_address - Permanent address
+ * @param {string} req.body.pincode - Pincode
+ * @param {object[]} req.body.languages - Languages spoken with proficiency level
+ * @param {string} req.body.marital_status - Marital status
+ * @param {string} req.body.more_info - Additional information
+ * @returns {object} 200 - Personal details saved successfully
+ * @returns {object} 400 - Validation error
+ * @returns {object} 500 - Error saving personal details
+ */
+export const submitPersonalDetails = async (req, res) => {
+  try {
+    const data = req.body;
+    const userId = req.userId;
+
+    if (data.gender !== undefined) {
+      await User.findByIdAndUpdate(userId, { gender: data.gender });
+    }
+
+    if (!data.dob) {
+      return res
+        .status(400)
+        .json({ message: "Date of birth (dob) is required." });
+    }
+
+    const candidateUpdate = {
+      dob: data.dob,
+    };
+    if (data.hometown) {
+      candidateUpdate.hometown = data.hometown;
+    }
+    await candidateDetails.findOneAndUpdate(
+      { userId: userId },
+      { $set: candidateUpdate },
+      { upsert: true, new: true }
+    );
+    const personalPayload = {
+      user: userId,
+      category: String(data.category),
+      careerBreak:
+        data.career_break === "Yes" || data.currently_on_career_break === true,
+      currentlyOnCareerBreak: data.currently_on_career_break || false,
+      startMonth: data.career_break_start_month || "",
+      startYear: data.career_break_start_year || "",
+      endMonth: data.career_break_end_month || "",
+      endYear: data.career_break_end_year || "",
+      reason: data.career_break_reason || null,
+      differntllyAble: data.differently_abled === "Yes",
+      disability_type: data.disability_type || null,
+      other_disability_type: data.disability_description || "",
+      workplace_assistance: data.workplace_assistance || "",
+      usaPermit: data.usa_visa_type,
+      workPermitOther: data.work_permit_other_countries,
+      permanentAddress: data.permanent_address,
+      pincode: data.pincode,
+      languageProficiency: (data.languages || []).map((lang) => ({
+        language: lang.language,
+        proficiency: lang.proficiency,
+        read: lang.read || false,
+        write: lang.write || false,
+        speak: lang.speak || false,
+      })),
+      maritialStatus: String(data.marital_status),
+      additionalInformation: data.more_info,
+    };
+
+    await personalDetails.findOneAndUpdate(
+      { user: userId },
+      { $set: personalPayload },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({ message: "Personal details saved successfully" });
+  } catch (error) {
+    console.error("Error in submitPersonalDetails:", error);
+    res.status(500).json({ message: error.message });
   }
 };
