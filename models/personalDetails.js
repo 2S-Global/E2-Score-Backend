@@ -38,7 +38,7 @@ const personalSchema = new mongoose.Schema(
       type: [String],
     },
     maritialStatus: {
-      type: [String],
+      type: Number,
     },
     category: {
       type: String,

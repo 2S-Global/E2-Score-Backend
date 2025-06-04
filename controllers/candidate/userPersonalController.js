@@ -93,7 +93,7 @@ export const submitPersonalDetails = async (req, res) => {
         write: lang.write || false,
         speak: lang.speak || false,
       })),
-      maritialStatus: String(data.marital_status),
+      maritialStatus: data.marital_status,
       additionalInformation: data.more_info,
     };
 
