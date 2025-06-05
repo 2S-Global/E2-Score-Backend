@@ -117,10 +117,8 @@ export const formatUserData = (result) => {
     endYear,
     current
   ) => {
-    if (status !== "Yes") return "No";
-
     return {
-      careerBreak: "Yes",
+      careerBreak: status,
       careerBreakReason: reason || "",
       careerBreakStartMonth: startMonth || "",
       careerBreakStartYear: startYear || "",
@@ -149,6 +147,7 @@ export const formatUserData = (result) => {
     result.career_break_end_year,
     result.currently_on_career_break
   );
+  console.log(careerBreakData);
 
   return {
     gender: result.gender || "",
