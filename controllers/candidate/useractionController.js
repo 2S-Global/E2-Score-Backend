@@ -251,7 +251,6 @@ export const addProfileSummary = async (req, res) => {
     if (!user || !profileSummary) {
       return res.status(400).json({ message: "Profile Summary is required." });
     }
-    console.log(profileSummary);
 
     // Update the user's profile with the new picture URL
     const updated = await PersonalDetails.findOneAndUpdate(
