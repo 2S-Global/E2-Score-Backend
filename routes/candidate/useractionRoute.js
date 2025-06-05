@@ -12,6 +12,7 @@ import {
   submitUserEducation,
   updateUserEducation,
   deleteUserEducation,
+  deleteProfileSummary,
 } from "../../controllers/candidate/useractionController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -73,4 +74,11 @@ userRouter.delete(
   deleteUserEducation
 );
 
+// Delete profile summary
+userRouter.delete(
+  "/delete_profile_summary",
+  userAuth,
+  upload.none(),
+  deleteProfileSummary
+);
 export default userRouter;

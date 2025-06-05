@@ -128,7 +128,45 @@ export const addResumeHeadline = async (req, res) => {
   }
 };
 
-//update user Details
+/**
+ * @description Delete the profile summary of the authenticated user.
+ * @route DELETE /api/useraction/delete_profile_summary
+ * @access protected
+ * @param {Object} req - Express request object containing userId
+ * @param {Object} res - Express response object
+ * @returns {Object} 200 - Profile summary deleted successfully
+ * @returns {Object} 404 - No personal details found for this user
+ * @returns {Object} 500 - Server error while deleting profile summary
+ */
+export const deleteProfileSummary = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const personal = await PersonalDetails.findOne({ user: userId });
+
+    if (!personal) {
+      return res.status(404).json({
+        message: "No personal details found for this user.",
+      });
+    }
+
+    // Unset the profileSummary field (soft delete)
+    await PersonalDetails.updateOne(
+      { user: userId },
+      { $unset: { profileSummary: "" } }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile Summary deleted successfully.",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error while deleting profile summary",
+      error: error.message,
+    });
+  }
+};
 
 /**
  * @route POST /api/useraction/update-user-details
@@ -213,12 +251,13 @@ export const addProfileSummary = async (req, res) => {
     if (!user || !profileSummary) {
       return res.status(400).json({ message: "Profile Summary is required." });
     }
+    console.log(profileSummary);
 
     // Update the user's profile with the new picture URL
     const updated = await PersonalDetails.findOneAndUpdate(
       { user: user },
       { profileSummary: profileSummary },
-      { new: true }
+      { new: true, upsert: true }
     );
 
     res.status(201).json({
