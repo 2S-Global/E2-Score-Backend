@@ -6,7 +6,7 @@ import {
   submitPersonalDetails,
   getPersonalDetails,
 } from "../../controllers/candidate/userPersonalController.js";
-
+import { getPersonalDetailsWithName } from "../../controllers/candidate/backuppersonal.js";
 import userAuth from "../../middleware/authMiddleware.js";
 // Initialize router
 const userPersonalRouter = express.Router();
@@ -26,5 +26,12 @@ userPersonalRouter.post(
 );
 // Get Personal Details Data
 userPersonalRouter.get("/get_personal_details", userAuth, getPersonalDetails);
+
+//Get Personal Details data with name
+userPersonalRouter.get(
+  "/get_personal_details_with_name",
+  userAuth,
+  getPersonalDetailsWithName
+);
 
 export default userPersonalRouter;

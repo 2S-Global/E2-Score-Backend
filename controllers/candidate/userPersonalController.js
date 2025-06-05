@@ -45,11 +45,9 @@ export const submitPersonalDetails = async (req, res) => {
   try {
     const data = req.body;
     const userId = req.userId;
-
     if (data.gender !== undefined) {
       await User.findByIdAndUpdate(userId, { gender: data.gender });
     }
-
     if (!data.dob) {
       return res
         .status(400)
@@ -67,18 +65,17 @@ export const submitPersonalDetails = async (req, res) => {
       { $set: candidateUpdate },
       { upsert: true, new: true }
     );
+
     const personalPayload = {
-      user: userId,
       category: String(data.category),
-      careerBreak:
-        data.career_break === "Yes" || data.currently_on_career_break === true,
+      careerBreak: data.career_break ? data.career_break : "",
       currentlyOnCareerBreak: data.currently_on_career_break || false,
       startMonth: data.career_break_start_month || "",
       startYear: data.career_break_start_year || "",
       endMonth: data.career_break_end_month || "",
       endYear: data.career_break_end_year || "",
       reason: data.career_break_reason || null,
-      differntllyAble: data.differently_abled === "Yes",
+      differentlyAble: data.differently_abled ? data.differently_abled : "",
       disability_type: data.disability_type || null,
       other_disability_type: data.disability_description || "",
       workplace_assistance: data.workplace_assistance || "",
@@ -93,7 +90,7 @@ export const submitPersonalDetails = async (req, res) => {
         write: lang.write || false,
         speak: lang.speak || false,
       })),
-      maritialStatus: data.marital_status,
+      maritialStatus: String(data.marital_status),
       additionalInformation: data.more_info,
     };
 
@@ -103,7 +100,10 @@ export const submitPersonalDetails = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    res.status(200).json({ message: "Personal details saved successfully" });
+    res.status(200).json({
+      message: "Personal details saved successfully",
+      data: personalPayload,
+    });
   } catch (error) {
     console.error("Error in submitPersonalDetails:", error);
     res.status(500).json({ message: error.message });
@@ -129,35 +129,35 @@ export const getPersonalDetails = async (req, res) => {
       .select("dob hometown");
     const personal = await personalDetails.findOne({ user: userId });
 
-    if (!user || !candidate || !personal) {
+    if (!user && !candidate && !personal) {
       return res
         .status(404)
-        .json({ message: "Personal details not found for this user." });
+        .json({ message: "No personal data found for this user." });
     }
 
     const result = {
-      gender: user.gender,
-      dob: candidate.dob,
-      hometown: candidate.hometown,
-      category: personal.category,
-      career_break: personal.careerBreak ? "Yes" : "No",
-      currently_on_career_break: personal.currentlyOnCareerBreak,
-      career_break_start_month: personal.startMonth,
-      career_break_start_year: personal.startYear,
-      career_break_end_month: personal.endMonth,
-      career_break_end_year: personal.endYear,
-      career_break_reason: personal.reason,
-      differently_abled: personal.differntllyAble ? "Yes" : "No",
-      disability_type: personal.disability_type,
-      disability_description: personal.other_disability_type,
-      workplace_assistance: personal.workplace_assistance,
-      usa_visa_type: personal.usaPermit,
-      work_permit_other_countries: personal.workPermitOther,
-      permanent_address: personal.permanentAddress,
-      pincode: personal.pincode,
-      languages: personal.languageProficiency || [],
-      marital_status: personal.maritialStatus,
-      more_info: personal.additionalInformation,
+      gender: user?.gender || null,
+      dob: candidate?.dob || null,
+      hometown: candidate?.hometown || null,
+      category: personal?.category || null,
+      career_break: personal?.careerBreak ?? "",
+      currently_on_career_break: personal?.currentlyOnCareerBreak ?? null,
+      career_break_start_month: personal?.startMonth || null,
+      career_break_start_year: personal?.startYear || null,
+      career_break_end_month: personal?.endMonth || null,
+      career_break_end_year: personal?.endYear || null,
+      career_break_reason: personal?.reason || null,
+      differently_abled: personal?.differentlyAble ?? "",
+      disability_type: personal?.disability_type || null,
+      disability_description: personal?.other_disability_type || null,
+      workplace_assistance: personal?.workplace_assistance || null,
+      usa_visa_type: personal?.usaPermit || null,
+      work_permit_other_countries: personal?.workPermitOther || [],
+      permanent_address: personal?.permanentAddress || null,
+      pincode: personal?.pincode || null,
+      languages: personal?.languageProficiency || [],
+      marital_status: personal?.maritialStatus || null,
+      more_info: personal?.additionalInformation || [],
     };
 
     res.status(200).json(result);

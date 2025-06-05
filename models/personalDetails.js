@@ -35,16 +35,16 @@ const personalSchema = new mongoose.Schema(
       type: String,
     },
     additionalInformation: {
-      type: [String],
+      type: [Number],
     },
     maritialStatus: {
-      type: Number,
+      type: String,
     },
     category: {
       type: String,
     },
-    differntllyAble: {
-      type: Boolean,
+    differentlyAble: {
+      type: String,
     },
     disability_type: {
       type: Number,
@@ -57,7 +57,7 @@ const personalSchema = new mongoose.Schema(
     },
 
     careerBreak: {
-      type: Boolean,
+      type: String,
     },
 
     currentlyOnCareerBreak: {
