@@ -147,7 +147,7 @@ export const formatUserData = (result) => {
     result.career_break_end_year,
     result.currently_on_career_break
   );
-  console.log(careerBreakData);
+  // console.log(careerBreakData);
 
   return {
     gender: result.gender || "",
