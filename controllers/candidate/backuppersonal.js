@@ -92,7 +92,7 @@ export const getPersonalDetailsWithName = async (req, res) => {
       more_info: moreInfo,
     };
 
-    res.status(200).json({ data: formatUserData(result), raw: result });
+    res.status(200).json({ data: formatUserData(result) /* , raw: result  */ });
   } catch (error) {
     console.error("Error in getPersonalDetailsWithName:", error);
     res

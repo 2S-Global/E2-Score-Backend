@@ -37,6 +37,37 @@ export const getUser = async (req, res) => {
       }
     }
 
+    // Fetch all UserEducation records for the user and get the max level
+    const educations = await UserEducation.find(
+      { userId: user_id },
+      "level isPrimary"
+    ).lean();
+
+    let selectedLevel = null;
+    if (educations.length) {
+      const primaryEdu = educations.find((edu) => edu.isPrimary === true);
+      if (primaryEdu) {
+        selectedLevel = parseInt(primaryEdu.level);
+      } else {
+        selectedLevel = Math.max(
+          ...educations
+            .map((edu) => parseInt(edu.level))
+            .filter((lvl) => !isNaN(lvl))
+        );
+      }
+    }
+
+    let levelName = "";
+    if (selectedLevel !== null) {
+      const [levelResult] = await db_sql.query(
+        "SELECT level FROM education_level WHERE id = ?",
+        [selectedLevel]
+      );
+      if (levelResult?.length) {
+        levelName = levelResult[0].level;
+      }
+    }
+
     // Combine final data
     const responseData = {
       ...user,
@@ -47,6 +78,7 @@ export const getUser = async (req, res) => {
         hometown: personalData.hometown,
       }),
       gender_name,
+      degree: levelName || "",
     };
 
     res.status(200).json(responseData);

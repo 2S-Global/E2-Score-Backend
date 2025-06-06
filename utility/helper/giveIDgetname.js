@@ -150,6 +150,7 @@ export const formatUserData = (result) => {
   // console.log(careerBreakData);
 
   return {
+    usa_visa_type: result.usa_visa_type || "",
     gender: result.gender || "",
     maritalStatus: result.marital_status || "",
     moreinfo: getMoreInfo(result.more_info),
