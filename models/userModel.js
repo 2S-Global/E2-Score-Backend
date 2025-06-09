@@ -19,7 +19,6 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-   
     },
     phone_number: {
       type: String,
@@ -79,6 +78,14 @@ const userSchema = new mongoose.Schema(
       type: Number,
       required: true,
       default: 1,
+    },
+    check_role: {
+      type: Boolean,
+      default: false,
+    },
+    switchedRole: {
+      type: Number,
+      default: null,
     },
   },
   {

@@ -81,6 +81,8 @@ export const registerCompanyUser = async (req, res) => {
       package_id,
       discount_percent,
       role,
+      check_role,
+      switchedRole,
     } = req.body;
 
     // Generate a 6-digit random password
@@ -131,6 +133,8 @@ export const registerCompanyUser = async (req, res) => {
       package_id,
       discount_percent,
       self_registered,
+      check_role: check_role || false,
+      switchedRole: switchedRole || null,
     });
     await newUser.save();
     /* const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
