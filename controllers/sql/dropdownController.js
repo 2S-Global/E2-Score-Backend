@@ -666,3 +666,28 @@ export const getLanguageProficiency = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+// path -   /api/sql/dropdown/social_profile
+
+/**
+ * @description Get all social profiles from the database
+ * @route GET /api/sql/dropdown/social_profile
+ * @success {object} 200 - All social profiles
+ * @error {object} 500 - Database query failed
+ */
+export const getSocialProfile = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `social_profile` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Social Profile Data Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
