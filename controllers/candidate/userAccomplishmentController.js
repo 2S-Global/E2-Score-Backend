@@ -260,17 +260,30 @@ export const addWorkSample = async (req, res) => {
       description,
     } = req.body;
 
+    // Validate required fields
+    if (typeof workTitle !== "string" || workTitle.trim() === "") {
+      return res.status(400).json({
+        message: "Field 'workTitle' is required and cannot be empty.",
+      });
+    }
+
+    if (typeof url !== "string" || url.trim() === "") {
+      return res.status(400).json({
+        message: "Field 'url' is required and cannot be empty.",
+      });
+    }
+
     const newWorkSample = new WorkSample({
       userId,
       workTitle,
       url,
       durationFrom: {
-        year: parseInt(durationFromYear),
-        month: parseInt(durationFromMonth),
+        year: durationFromYear ? parseInt(durationFromYear) : null,
+        month: durationFromMonth ? parseInt(durationFromMonth) : null,
       },
       durationTo: {
-        year: parseInt(durationToYear),
-        month: parseInt(durationToMonth),
+        year: durationToYear ? parseInt(durationToYear) : null,
+        month: durationToMonth ? parseInt(durationToMonth) : null,
       },
       currentlyWorking,
       description,
@@ -395,6 +408,18 @@ export const editWorkSample = async (req, res) => {
       });
     }
 
+    if (typeof workTitle !== "string" || workTitle.trim() === "") {
+      return res.status(400).json({
+        message: "Field 'workTitle' is required and cannot be empty.",
+      });
+    }
+
+    if (typeof url !== "string" || url.trim() === "") {
+      return res.status(400).json({
+        message: "Field 'url' is required and cannot be empty.",
+      });
+    }
+
     // Find the existing document
     const workSample = await WorkSample.findOne({
       _id,
@@ -410,40 +435,34 @@ export const editWorkSample = async (req, res) => {
     }
 
     // Update only the fields provided in the request
-    if (typeof workTitle === "string" && workTitle.trim() !== "") {
-      workSample.workTitle = workTitle.trim();
-    }
-    if (typeof url === "string" && url.trim() !== "") {
-      workSample.url = url.trim();
-    }
-    if (typeof description === "string" && description.trim() !== "") {
-      workSample.description = description.trim();
-    }
-    if (typeof currentlyWorking === "boolean") {
-      workSample.currentlyWorking = currentlyWorking;
+
+    workSample.workTitle = workTitle.trim();
+    workSample.url = url.trim();
+    workSample.description = description.trim();
+
+    if (currentlyWorking === "true") {
+      workSample.currentlyWorking = true;
+    } else if (currentlyWorking === "false") {
+      workSample.currentlyWorking = false;
     }
 
-    if (durationFromYear !== undefined || durationFromMonth !== undefined) {
-      workSample.durationFrom = {
-        year: durationFromYear
-          ? parseInt(durationFromYear)
-          : workSample.durationFrom?.year,
-        month: durationFromMonth
-          ? parseInt(durationFromMonth)
-          : workSample.durationFrom?.month,
-      };
-    }
+    workSample.durationFrom = {
+      year: durationFromYear
+        ? parseInt(durationFromYear)
+        : workSample.durationFrom?.year,
+      month: durationFromMonth
+        ? parseInt(durationFromMonth)
+        : workSample.durationFrom?.month,
+    };
 
-    if (durationToYear !== undefined || durationToMonth !== undefined) {
-      workSample.durationTo = {
-        year: durationToYear
-          ? parseInt(durationToYear)
-          : workSample.durationTo?.year,
-        month: durationToMonth
-          ? parseInt(durationToMonth)
-          : workSample.durationTo?.month,
-      };
-    }
+    workSample.durationTo = {
+      year: durationToYear
+        ? parseInt(durationToYear)
+        : workSample.durationTo?.year,
+      month: durationToMonth
+        ? parseInt(durationToMonth)
+        : workSample.durationTo?.month,
+    };
 
     workSample.updatedAt = new Date();
 
@@ -533,10 +552,25 @@ export const addResearchPublication = async (req, res) => {
   try {
     const { title, url, publishYear, publishMonth, description } = req.body;
 
+    const userId = req.userId;
+
+    //Validate required fields
+    if (
+      !userId ||
+      typeof title !== "string" ||
+      title.trim() === "" ||
+      typeof url !== "string" ||
+      url.trim() === ""
+    ) {
+      return res.status(400).json({
+        message: "Required fields: title and url must be non-empty strings.",
+      });
+    }
+
     const newResearchModel = new UserResearch({
       userId,
-      title,
-      url,
+      title: title.trim(),
+      url: url.trim(),
       publishedOn: {
         year: parseInt(publishYear),
         month: parseInt(publishMonth),
@@ -670,32 +704,16 @@ export const updateResearchPublication = async (req, res) => {
     }
 
     // Update only the fields provided in the request
-    if (typeof title === "string" && title.trim() !== "") {
-      userResearch.title = title.trim();
-    }
-    if (typeof url === "string" && url.trim() !== "") {
-      userResearch.url = url.trim();
-    }
-
-    if (publishYear !== undefined || publishMonth !== undefined) {
-      userResearch.publishedOn = {
-        year: publishYear
-          ? parseInt(publishYear)
-          : userResearch.publishedOn?.year,
-        month: publishMonth
-          ? parseInt(publishMonth)
-          : userResearch.publishedOn?.month,
-      };
-    }
-
-    if (typeof description === "string" && description.trim() !== "") {
-      userResearch.description = description.trim();
-    }
-
+    userResearch.title = title;
+    userResearch.url = url;
+    userResearch.publishedOn = {
+      year: parseInt(publishYear),
+      month: parseInt(publishMonth),
+    };
+    userResearch.description = description;
     userResearch.updatedAt = new Date();
 
     const updatedUserResearch = await userResearch.save();
-
     res.status(200).json({
       success: true,
       message: "Research Publication updated successfully!",
