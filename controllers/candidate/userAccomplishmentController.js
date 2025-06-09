@@ -1,4 +1,5 @@
 import OnlineProfile from "../../models/OnlineProfile.js";
+import db_sql from "../../config/sqldb.js";
 
 /**
  * @description Add a new online profile for the authenticated user
