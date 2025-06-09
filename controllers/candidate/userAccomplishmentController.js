@@ -294,6 +294,7 @@ export const addWorkSample = async (req, res) => {
     res.status(200).json({
       message: "Work sample saved successfully",
       data: newWorkSample,
+      success: true,
     });
   } catch (error) {
     console.error("Error saving work sample:", error.message);
