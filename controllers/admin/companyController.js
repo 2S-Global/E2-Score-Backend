@@ -134,7 +134,8 @@ export const registerCompanyUser = async (req, res) => {
       discount_percent,
       self_registered,
       check_role: check_role || false,
-      switchedRole: switchedRole || null,
+      switchedRole: check_role ? 2 : null,
+
     });
     await newUser.save();
     /* const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
