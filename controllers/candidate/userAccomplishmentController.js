@@ -70,13 +70,45 @@ export const getOnlineProfile = async (req, res) => {
       isDel: false,
     }).sort({ createdAt: -1 });
 
+    // Get unique socialProfile values
+    const socialProfileIds = [
+      ...new Set(
+        profiles.map((p) => parseInt(p.socialProfile)).filter(Boolean)
+      ),
+    ];
+    if (socialProfileIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: profiles,
+      });
+    }
+
+    const placeholders = socialProfileIds.map(() => "?").join(",");
+    const [socialRows] = await db_sql.execute(
+      `SELECT id, name FROM social_profile WHERE id IN (${placeholders}) AND is_del = 0 AND is_active = 1`,
+      socialProfileIds
+    );
+
+    const socialMap = {};
+    socialRows.forEach((row) => {
+      socialMap[row.id] = row.name;
+    });
+
+    const formattedProfiles = profiles.map((profile) => {
+      return {
+        ...profile._doc,
+        socialProfileName: socialMap[parseInt(profile.socialProfile)] || null,
+      };
+    });
+
     res.status(200).json({
       success: true,
-      data: profiles,
+      data: formattedProfiles,
     });
   } catch (error) {
+    console.error("Error in getOnlineProfile:", error.message);
     res.status(500).json({
-      message: "Error saving online profile",
+      message: "Error fetching online profile",
       error: error.message,
     });
   }
