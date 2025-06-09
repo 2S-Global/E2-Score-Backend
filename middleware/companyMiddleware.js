@@ -20,6 +20,14 @@ const Companymid = async (req, res, next) => {
         if (user.role !== 2) {
             return res.status(403).json({ message: 'You are not authorized to access this resource.' });
         }
+
+
+    //         const isCompany =
+    //   user.role === 2 || (user.role === 3 && user.switchedRole === 2);
+ 
+    // if (!isCompany) {
+    //   return res.status(403).json({ message: 'You are not authorized to access this resource.' });
+    // }
         next();
     } catch (error) {
         // Handle any unexpected errors

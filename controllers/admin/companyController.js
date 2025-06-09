@@ -1044,3 +1044,90 @@ export const toggleCompanyStatus = async (req, res) => {
     });
   }
 };
+
+// export const getSwitchedRoleDetails = async (req, res) => {
+//   try {
+//     const userId = req.userId;
+
+//     const user = await User.findById(userId).lean();
+
+//     if (!user || user.is_del) {
+//       return res.status(404).json({
+//         message: "User not found.",
+//         success: false,
+//       });
+//     }
+
+//     if (!user.switchedRole) {
+//       return res.status(400).json({
+//         message: "Switched role not assigned to this user.",
+//         success: false,
+//       });
+//     }
+
+//     // Fetch user info with switchedRole
+//     const switchedUser = await User.findOne({
+//       email: user.email,
+//       role: user.switchedRole,
+//       is_del: false,
+//     }).lean();
+
+//     if (!switchedUser) {
+//       return res.status(404).json({
+//         message: "User with switched role not found.",
+//         success: false,
+//       });
+//     }
+
+//     return res.status(200).json({
+//       message: "Switched role user fetched successfully.",
+//       success: true,
+//       data: switchedUser,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching switched role user:", error);
+//     return res.status(500).json({
+//       message: "An error occurred while fetching switched role data.",
+//       success: false,
+//     });
+//   }
+// };
+
+export const getSwitchedRoleDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+ 
+    const user = await User.findById(userId).lean();
+ 
+    if (!user || user.is_del) {
+      return res.status(404).json({
+        message: "User not found.",
+        success: false,
+      });
+    }
+ 
+    if (!user.check_role) {
+      return res.status(200).json({
+        message: "Switched role not assigned to this user.",
+        check_role:false,
+        success: false,
+      });
+    }
+ 
+ 
+    // Fetch user info with switchedRole
+   
+ 
+    return res.status(200).json({
+      message: "Switched role user fetched successfully.",
+      success: true,
+      check_role: true,
+    });
+  } catch (error) {
+    console.error("Error fetching switched role user:", error);
+    return res.status(500).json({
+      message: "An error occurred while fetching switched role data.",
+      success: false,
+    });
+  }
+};

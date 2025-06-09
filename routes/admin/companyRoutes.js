@@ -14,6 +14,7 @@ import {
   getUserDetailsById,
   listSelfRegisteredCompanies,
   sendAccessEmail,
+  getSwitchedRoleDetails,
 } from "../../controllers/admin/companyController.js";
 // Initialize dotenv to load environment variables
 
@@ -55,5 +56,8 @@ AuthRouter.post("/list-companies", userAuth, adminMiddleware, listCompanies);
 AuthRouter.post("/list-companies-self", userAuth, adminMiddleware, listSelfRegisteredCompanies);
 AuthRouter.post("/delete-companies", userAuth, adminMiddleware, deleteCompany);
 AuthRouter.post( "/togglestatus-companies", userAuth, adminMiddleware, toggleCompanyStatus);
+
+
+AuthRouter.get("/switched-role-user", userAuth, getSwitchedRoleDetails);
 
 export default AuthRouter;
