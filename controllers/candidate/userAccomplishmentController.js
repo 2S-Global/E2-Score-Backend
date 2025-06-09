@@ -1,4 +1,7 @@
 import OnlineProfile from "../../models/OnlineProfile.js";
+import WorkSample from "../../models/WorkSample.js";
+import UserResearch from "../../models/ResearchModel.js";
+import db_sql from "../../config/sqldb.js";
 
 /**
  * @description Add a new online profile for the authenticated user
@@ -12,7 +15,6 @@ import OnlineProfile from "../../models/OnlineProfile.js";
  * @returns {object} 400 - Required fields missing
  * @returns {object} 500 - Error adding online profile
  */
-
 export const addOnlineProfile = async (req, res) => {
   try {
     const { socialProfile, url, description } = req.body;
@@ -70,13 +72,45 @@ export const getOnlineProfile = async (req, res) => {
       isDel: false,
     }).sort({ createdAt: -1 });
 
+    // Get unique socialProfile values
+    const socialProfileIds = [
+      ...new Set(
+        profiles.map((p) => parseInt(p.socialProfile)).filter(Boolean)
+      ),
+    ];
+    if (socialProfileIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: profiles,
+      });
+    }
+
+    const placeholders = socialProfileIds.map(() => "?").join(",");
+    const [socialRows] = await db_sql.execute(
+      `SELECT id, name FROM social_profile WHERE id IN (${placeholders}) AND is_del = 0 AND is_active = 1`,
+      socialProfileIds
+    );
+
+    const socialMap = {};
+    socialRows.forEach((row) => {
+      socialMap[row.id] = row.name;
+    });
+
+    const formattedProfiles = profiles.map((profile) => {
+      return {
+        ...profile._doc,
+        socialProfileName: socialMap[parseInt(profile.socialProfile)] || null,
+      };
+    });
+
     res.status(200).json({
       success: true,
-      data: profiles,
+      data: formattedProfiles,
     });
   } catch (error) {
+    console.error("Error in getOnlineProfile:", error.message);
     res.status(500).json({
-      message: "Error saving online profile",
+      message: "Error fetching online profile",
       error: error.message,
     });
   }
@@ -140,8 +174,6 @@ export const editOnlineProfile = async (req, res) => {
   }
 };
 
-// /api/candidate/accomplishments/delete_online_profile
-
 /**
  * @description Delete an existing online profile for the authenticated user.
  * @route DELETE /api/candidate/accomplishments/delete_online_profile
@@ -189,6 +221,559 @@ export const deleteOnlineProfile = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Error deleting online profile",
+      error: error.message,
+    });
+  }
+};
+
+//     -------------------------Work Samples---------------------------------
+
+/**
+ * @description Add a new work sample to the authenticated user's profile.
+ * @route POST /api/candidate/accomplishments/add_work_samples
+ * @security BearerAuth
+ * @param {object} req.body - Work sample details to add
+ * @param {string} req.body.workTitle.required - Work sample title
+ * @param {string} req.body.url.required - URL of the work sample
+ * @param {string|number} req.body.durationFromYear.required - Year of the work sample start date
+ * @param {string|number} req.body.durationFromMonth.required - Month of the work sample start date
+ * @param {string|number} req.body.durationToYear.required - Year of the work sample end date
+ * @param {string|number} req.body.durationToMonth.required - Month of the work sample end date
+ * @param {boolean|string} req.body.currentlyWorking - Whether the work sample is currently active
+ * @param {string} req.body.description - Optional description of the work sample
+ * @returns {object} 200 - Work sample saved successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 500 - Error saving work sample
+ */
+export const addWorkSample = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const {
+      workTitle,
+      url,
+      durationFromYear,
+      durationFromMonth,
+      durationToYear,
+      durationToMonth,
+      currentlyWorking,
+      description,
+    } = req.body;
+
+    // Validate required fields
+    if (typeof workTitle !== "string" || workTitle.trim() === "") {
+      return res.status(400).json({
+        message: "Field 'workTitle' is required and cannot be empty.",
+      });
+    }
+
+    if (typeof url !== "string" || url.trim() === "") {
+      return res.status(400).json({
+        message: "Field 'url' is required and cannot be empty.",
+      });
+    }
+
+    const newWorkSample = new WorkSample({
+      userId,
+      workTitle,
+      url,
+      durationFrom: {
+        year: durationFromYear ? parseInt(durationFromYear) : null,
+        month: durationFromMonth ? parseInt(durationFromMonth) : null,
+      },
+      durationTo: {
+        year: durationToYear ? parseInt(durationToYear) : null,
+        month: durationToMonth ? parseInt(durationToMonth) : null,
+      },
+      currentlyWorking,
+      description,
+    });
+
+    await newWorkSample.save();
+
+    res.status(200).json({
+      message: "Work sample saved successfully",
+      data: newWorkSample,
+    });
+  } catch (error) {
+    console.error("Error saving work sample:", error.message);
+    res.status(500).json({
+      message: "Error saving work sample",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Get all work samples from the database
+ * @route GET /api/candidate/accomplishments/get_work_samples
+ * @success {object} 200 - All work samples
+ * @error {object} 500 - Database query failed
+ */
+export const getWorkSamples = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({
+        message: "User ID is required.",
+      });
+    }
+
+    const workSamples = await WorkSample.find({
+      userId,
+      isDel: false,
+    }).sort({ createdAt: -1 });
+
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const formattedSamples = workSamples.map((sample) => {
+      return {
+        ...sample._doc,
+        durationFrom: {
+          year: sample.durationFrom.year,
+          month: monthNames[sample.durationFrom.month - 1],
+        },
+        durationTo: {
+          year: sample.durationTo.year,
+          month: monthNames[sample.durationTo.month - 1],
+        },
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedSamples,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error Fetching work samples",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Edit an existing work sample for the authenticated user.
+ * @route PUT /api/candidate/accomplishments/edit_work_samples
+ * @security BearerAuth
+ * @param {object} req.body - Work sample details to edit
+ * @param {string} req.body._id.required - ID of the work sample to edit
+ * @param {string} [req.body.workTitle] - Updated work sample title
+ * @param {string} [req.body.url] - Updated URL of the work sample
+ * @param {string} [req.body.description] - Updated description of the work sample
+ * @param {boolean} [req.body.currentlyWorking] - Updated currently working status
+ * @param {number} [req.body.durationFromYear] - Updated year of the work sample start date
+ * @param {number} [req.body.durationFromMonth] - Updated month of the work sample start date
+ * @param {number} [req.body.durationToYear] - Updated year of the work sample end date
+ * @param {number} [req.body.durationToMonth] - Updated month of the work sample end date
+ * @returns {object} 200 - Work sample updated successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 404 - Work sample not found or already deleted
+ * @returns {object} 500 - Error updating work sample
+ */
+export const editWorkSample = async (req, res) => {
+  try {
+    const {
+      _id,
+      workTitle,
+      url,
+      description,
+      durationFromYear,
+      durationFromMonth,
+      durationToYear,
+      durationToMonth,
+      currentlyWorking,
+    } = req.body;
+
+    const userId = req.userId;
+
+    // Required fields check
+    if (!userId || !_id) {
+      return res.status(400).json({
+        message: "Required fields: _id is missing.",
+      });
+    }
+
+    if (typeof workTitle !== "string" || workTitle.trim() === "") {
+      return res.status(400).json({
+        message: "Field 'workTitle' is required and cannot be empty.",
+      });
+    }
+
+    if (typeof url !== "string" || url.trim() === "") {
+      return res.status(400).json({
+        message: "Field 'url' is required and cannot be empty.",
+      });
+    }
+
+    // Find the existing document
+    const workSample = await WorkSample.findOne({
+      _id,
+      userId,
+      isDel: false,
+    });
+
+    if (!workSample) {
+      return res.status(404).json({
+        success: false,
+        message: "Work sample not found or already deleted.",
+      });
+    }
+
+    // Update only the fields provided in the request
+
+    workSample.workTitle = workTitle.trim();
+    workSample.url = url.trim();
+    workSample.description = description.trim();
+
+    if (currentlyWorking === "true") {
+      workSample.currentlyWorking = true;
+    } else if (currentlyWorking === "false") {
+      workSample.currentlyWorking = false;
+    }
+
+    workSample.durationFrom = {
+      year: durationFromYear
+        ? parseInt(durationFromYear)
+        : workSample.durationFrom?.year,
+      month: durationFromMonth
+        ? parseInt(durationFromMonth)
+        : workSample.durationFrom?.month,
+    };
+
+    workSample.durationTo = {
+      year: durationToYear
+        ? parseInt(durationToYear)
+        : workSample.durationTo?.year,
+      month: durationToMonth
+        ? parseInt(durationToMonth)
+        : workSample.durationTo?.month,
+    };
+
+    workSample.updatedAt = new Date();
+
+    const updatedWorkSample = await workSample.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Work sample updated successfully!",
+      data: updatedWorkSample,
+    });
+  } catch (error) {
+    console.error("Error updating work sample:", error.message);
+    res.status(500).json({
+      message: "Error updating work sample",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Delete an existing work sample for the authenticated user.
+ * @route DELETE /api/candidate/accomplishments/delete_work_sample
+ * @security BearerAuth
+ * @param {object} req.body - Work sample to delete
+ * @param {string} req.body._id.required - ID of the work sample to delete
+ * @returns {object} 200 - Work sample deleted successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 404 - Work sample not found or already deleted
+ * @returns {object} 500 - Error deleting work sample
+ */
+export const deleteWorkSample = async (req, res) => {
+  try {
+    const { _id } = req.body;
+    const userId = req.userId;
+
+    if (!userId || !_id) {
+      return res.status(400).json({
+        message: "Required fields: _id is missing.",
+      });
+    }
+
+    const workSample = await WorkSample.findOne({
+      _id,
+      userId,
+      isDel: false,
+    });
+
+    if (!workSample) {
+      return res.status(404).json({
+        success: false,
+        message: "Work sample not found or already deleted.",
+      });
+    }
+
+    workSample.isDel = true;
+    workSample.updatedAt = new Date();
+
+    await workSample.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Work sample deleted successfully!",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting work sample",
+      error: error.message,
+    });
+  }
+};
+
+// -----------------------------Research Publications----------------------------------------
+
+/**
+ * @description Add a new research publication for the authenticated user.
+ * @route POST /api/candidate/accomplishments/add_research_publication
+ * @param {object} req.body - Research publication details to add
+ * @param {string} req.body.title - Title of the research publication
+ * @param {string} req.body.url - URL of the research publication
+ * @param {number} req.body.publishYear - Year of publication
+ * @param {number} req.body.publishMonth - Month of publication
+ * @param {string} [req.body.description] - Optional description of the research publication
+ * @returns {object} 200 - Research publication saved successfully
+ * @returns {object} 500 - Error saving research publication
+ */
+export const addResearchPublication = async (req, res) => {
+  try {
+    const { title, url, publishYear, publishMonth, description } = req.body;
+
+    const userId = req.userId;
+
+    //Validate required fields
+    if (
+      !userId ||
+      typeof title !== "string" ||
+      title.trim() === "" ||
+      typeof url !== "string" ||
+      url.trim() === ""
+    ) {
+      return res.status(400).json({
+        message: "Required fields: title and url must be non-empty strings.",
+      });
+    }
+
+    const newResearchModel = new UserResearch({
+      userId,
+      title: title.trim(),
+      url: url.trim(),
+      publishedOn: {
+        year: parseInt(publishYear),
+        month: parseInt(publishMonth),
+      },
+      description,
+    });
+
+    await newResearchModel.save();
+
+    res.status(200).json({
+      message: "Research Publication saved successfully",
+      data: newResearchModel,
+    });
+  } catch (error) {
+    console.error("Error saving Research Publication:", error.message);
+    res.status(500).json({
+      message: "Error saving Research Publication",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Fetch all research publications for the authenticated user.
+ * @route GET /api/candidate/accomplishments/get_research_publication
+ * @returns {object} 200 - Research publications found
+ * @returns {object} 400 - User ID is required
+ * @returns {object} 404 - Research Publication not found or already deleted
+ * @returns {object} 500 - Error fetching Research Publication
+ */
+export const getResearchPublication = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({
+        message: "User ID is required.",
+      });
+    }
+
+    const userResearch = await UserResearch.find({
+      userId,
+      isDel: false,
+    }).sort({ createdAt: -1 });
+
+    if (!userResearch) {
+      return res.status(404).json({
+        success: false,
+        message: "Research Publication not found or already deleted.",
+      });
+    }
+
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const formattedSamples = userResearch.map((sample) => {
+      return {
+        ...sample._doc,
+        publishedOn: {
+          year: sample.publishedOn.year,
+          month: monthNames[sample.publishedOn.month - 1],
+        },
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedSamples,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error Fetching Research Publication",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Update an existing research publication for the authenticated user.
+ * @route PUT /api/candidate/accomplishments/update_research_publication
+ * @param {object} req.body - Research publication details to update
+ * @param {string} req.body._id.required - ID of the research publication to update
+ * @param {string} [req.body.title] - Updated title of the research publication
+ * @param {string} [req.body.url] - Updated URL of the research publication
+ * @param {number} [req.body.publishYear] - Updated year of publication
+ * @param {number} [req.body.publishMonth] - Updated month of publication
+ * @param {string} [req.body.description] - Optional updated description of the research publication
+ * @returns {object} 200 - Research publication updated successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 404 - Research publication not found or already deleted
+ * @returns {object} 500 - Error updating research publication
+ */
+export const updateResearchPublication = async (req, res) => {
+  try {
+    const { _id, title, url, publishYear, publishMonth, description } =
+      req.body;
+
+    const userId = req.userId;
+
+    // Required fields check
+    if (!userId || !_id) {
+      return res.status(400).json({
+        message: "Required fields: _id is missing.",
+      });
+    }
+
+    // Find the existing document
+    const userResearch = await UserResearch.findOne({
+      _id,
+      userId,
+      isDel: false,
+    });
+
+    if (!userResearch) {
+      return res.status(404).json({
+        success: false,
+        message: "Research Publication not found or already deleted.",
+      });
+    }
+
+    // Update only the fields provided in the request
+    userResearch.title = title;
+    userResearch.url = url;
+    userResearch.publishedOn = {
+      year: parseInt(publishYear),
+      month: parseInt(publishMonth),
+    };
+    userResearch.description = description;
+    userResearch.updatedAt = new Date();
+
+    const updatedUserResearch = await userResearch.save();
+    res.status(200).json({
+      success: true,
+      message: "Research Publication updated successfully!",
+      data: updatedUserResearch,
+    });
+  } catch (error) {
+    console.error("Error updating Research Publication:", error.message);
+    res.status(500).json({
+      message: "Error updating Research Publication",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Soft delete a research publication by user ID and research publication ID
+ * @route DELETE /api/candidate/accomplishments/delete_research_publication
+ * @access protected
+ * @param {string} _id.required - Research publication ID (required)
+ * @returns {object} 200 - Research publication deleted successfully
+ * @returns {object} 400 - Missing _id in body
+ * @returns {object} 404 - Research publication not found or already deleted
+ * @returns {object} 500 - Server error
+ */
+export const deleteResearchPublication = async (req, res) => {
+  try {
+    const { _id } = req.body;
+    const userId = req.userId;
+
+    if (!userId || !_id) {
+      return res.status(400).json({
+        message: "Required fields: _id is missing.",
+      });
+    }
+
+    const userResearch = await UserResearch.findOne({
+      _id,
+      userId,
+      isDel: false,
+    });
+
+    if (!userResearch) {
+      return res.status(404).json({
+        success: false,
+        message: "Research Publication not found or already deleted.",
+      });
+    }
+
+    userResearch.isDel = true;
+    userResearch.updatedAt = new Date();
+
+    await userResearch.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Research Publication deleted successfully!",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting Research Publication",
       error: error.message,
     });
   }

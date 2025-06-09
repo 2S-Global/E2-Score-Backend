@@ -6,6 +6,14 @@ import {
   getOnlineProfile,
   editOnlineProfile,
   deleteOnlineProfile,
+  addWorkSample,
+  getWorkSamples,
+  editWorkSample,
+  deleteWorkSample,
+  addResearchPublication,
+  getResearchPublication,
+  updateResearchPublication,
+  deleteResearchPublication,
 } from "../../controllers/candidate/userAccomplishmentController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -37,6 +45,60 @@ userAccomplishmentRouter.delete(
   userAuth,
   upload.none(),
   deleteOnlineProfile
+);
+
+//--------------------------Work Samples----------------------------------------
+
+userAccomplishmentRouter.post(
+  "/add_work_samples",
+  userAuth,
+  upload.none(),
+  addWorkSample
+);
+
+userAccomplishmentRouter.get("/get_work_samples", userAuth, getWorkSamples);
+
+userAccomplishmentRouter.put(
+  "/edit_work_samples",
+  userAuth,
+  upload.none(),
+  editWorkSample
+);
+
+userAccomplishmentRouter.delete(
+  "/delete_work_sample",
+  userAuth,
+  upload.none(),
+  deleteWorkSample
+);
+
+//    ------------------Research Publication----------------------
+
+userAccomplishmentRouter.post(
+  "/add_research_publication",
+  userAuth,
+  upload.none(),
+  addResearchPublication
+);
+
+userAccomplishmentRouter.get(
+  "/get_research_publication",
+  userAuth,
+  getResearchPublication
+);
+
+userAccomplishmentRouter.put(
+  "/update_research_publication",
+  userAuth,
+  upload.none(),
+  updateResearchPublication
+);
+
+userAccomplishmentRouter.delete(
+  "/delete_research_publication",
+  userAuth,
+  upload.none(),
+  deleteResearchPublication
 );
 
 export default userAccomplishmentRouter;
