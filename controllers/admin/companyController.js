@@ -81,6 +81,8 @@ export const registerCompanyUser = async (req, res) => {
       package_id,
       discount_percent,
       role,
+      check_role,
+      switchedRole,
     } = req.body;
 
     // Generate a 6-digit random password
@@ -93,7 +95,6 @@ export const registerCompanyUser = async (req, res) => {
       return res.status(400).json({ message: "Name, email, password" });
     }
 
-    
     if (role === 3) {
       entityName = "Institute";
     } else if (role === 2) {
@@ -131,6 +132,8 @@ export const registerCompanyUser = async (req, res) => {
       package_id,
       discount_percent,
       self_registered,
+      check_role: check_role || false,
+      switchedRole: check_role ? 2 : null,
     });
     await newUser.save();
     /* const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
@@ -347,7 +350,7 @@ export const RegisterFrontEnd = async (req, res) => {
       `,
     };
 
-     await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -375,6 +378,7 @@ export const editUser = async (req, res) => {
     package_id,
     discount_percent,
     role,
+    check_role,
   } = req.body;
 
   try {
@@ -426,6 +430,11 @@ export const editUser = async (req, res) => {
     updatedFields.discount_percent = discount_percent;
 
     updatedFields.updatedAt = Date.now(); // ensure updatedAt is modified
+
+    if (check_role !== undefined) {
+      updatedFields.check_role = check_role;
+      updatedFields.switchedRole = check_role ? 2 : null;
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
       id,
