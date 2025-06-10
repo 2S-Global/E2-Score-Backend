@@ -2,6 +2,41 @@ import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
+/**
+ * @function validtoken
+ * @description Validates a user's token by checking if the user exists and is not deleted.
+ * @param {Object} req - Express request object, expects userId attached to it.
+ * @param {Object} res - Express response object used to send back the result.
+ * @returns {void} Sends a JSON response indicating the validity of the token.
+ * @throws {Error} If an error occurs during the token validation process.
+ */
+export const validtoken = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user || user.is_del) {
+      return res.status(404).json({
+        message: "User not found.",
+        success: false,
+        isvalid: false,
+      });
+    }
+    return res.status(200).json({
+      message: "Token is valid.",
+      success: true,
+      isvalid: true,
+    });
+  } catch (error) {
+    console.error("Error while validating token:", error);
+    return res.status(500).json({
+      message: "An error occurred while validating the token.",
+      success: false,
+      isvalid: false,
+    });
+  }
+};
 // Register a new user
 export const registerUser = async (req, res) => {
   try {
@@ -103,7 +138,8 @@ export const loginUser = async (req, res) => {
 
     if (user.is_active === false || user.is_del === true) {
       return res.status(401).json({
-        message: "Your account is deactivated or deleted. Please contact support.",
+        message:
+          "Your account is deactivated or deleted. Please contact support.",
       });
     }
 
