@@ -584,6 +584,7 @@ export const addResearchPublication = async (req, res) => {
     res.status(200).json({
       message: "Research Publication saved successfully",
       data: newResearchModel,
+      success: true,
     });
   } catch (error) {
     console.error("Error saving Research Publication:", error.message);
