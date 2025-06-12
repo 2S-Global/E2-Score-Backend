@@ -8,6 +8,9 @@ export const getColumnValueById = async (table, id, column) => {
     if (!isValidName(table) || !isValidName(column)) {
       throw new Error("Invalid table or column name.");
     }
+    if (!id) {
+      return null;
+    }
 
     // Safely construct query using validated names
     const query = `SELECT \`${column}\` FROM \`${table}\` WHERE id = ? LIMIT 1`;
