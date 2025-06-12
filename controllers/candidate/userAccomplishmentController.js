@@ -1,7 +1,9 @@
 import OnlineProfile from "../../models/OnlineProfile.js";
 import WorkSample from "../../models/WorkSample.js";
 import UserResearch from "../../models/ResearchModel.js";
+import UserPresentation from "../../models/PrensentationModel.js";
 import db_sql from "../../config/sqldb.js";
+import { get } from "mongoose";
 
 /**
  * @description Add a new online profile for the authenticated user
@@ -776,6 +778,177 @@ export const deleteResearchPublication = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Error deleting Research Publication",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Add a new presentation for the authenticated user.
+ * @route POST /api/candidate/accomplishments/add_presentaion
+ * @security BearerAuth
+ * @param {object} req.body - Presentation details to add
+ * @param {string} req.body.title.required - Presentation title
+ * @param {string} req.body.url.required - URL of the presentation
+ * @param {string} req.body.description - Optional description of the presentation
+ * @returns {object} 201 - Presentation added successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 500 - Error adding Presentation
+ */
+export const addpresentaion = async (req, res) => {
+  try {
+    const { title, url, description } = req.body;
+    const userId = req.userId;
+    if (!userId || !title || !url) {
+      return res.status(400).json({
+        message: "Required fields: socialProfile and url.",
+      });
+    }
+    const newpresentation = new UserPresentation({
+      userId,
+      title,
+      url,
+      description,
+    });
+    await newpresentation.save();
+    res.status(201).json({
+      success: true,
+      message: "New Presentation added successfully!",
+      data: newpresentation,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error inserting Presentation",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Update an existing presentation by ID
+ * @route PUT /api/candidate/accomplishments/update_presentaion
+ * @access protected
+ * @param {string} _id.required - Presentation ID (required)
+ * @param {string} title - Presentation title
+ * @param {string} url - URL of the presentation
+ * @param {string} description - Optional description of the presentation
+ * @returns {object} 200 - Presentation updated successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 404 - Presentation not found or already deleted
+ * @returns {object} 500 - Server error
+ */
+export const updatepresentaion = async (req, res) => {
+  try {
+    const { _id, title, url, description } = req.body;
+    const userId = req.userId;
+    // Required fields check
+    if (!userId || !_id) {
+      return res.status(400).json({
+        message: "Required fields: _id is missing.",
+      });
+    }
+    // Find the existing document
+    const userPresentation = await UserPresentation.findOne({
+      _id,
+      userId,
+      isDel: false,
+    });
+
+    if (!userPresentation) {
+      return res.status(404).json({
+        success: false,
+        message: "Presentation not found or already deleted.",
+      });
+    }
+
+    userPresentation.title = title;
+    userPresentation.url = url;
+    userPresentation.description = description;
+    await userPresentation.save();
+    res.status(200).json({
+      success: true,
+      message: "Presentation updated successfully!",
+      data: userPresentation,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating Presentation",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Soft delete a presentation by user ID and presentation ID
+ * @route DELETE /api/candidate/accomplishments/delete_presentaion
+ * @access protected
+ * @param {string} _id.required - Presentation ID (required)
+ * @returns {object} 200 - Presentation deleted successfully
+ * @returns {object} 400 - Missing _id in body
+ * @returns {object} 404 - Presentation not found or already deleted
+ * @returns {object} 500 - Server error
+ */
+export const deletepresentaion = async (req, res) => {
+  try {
+    const { _id } = req.body;
+    const userId = req.userId;
+    // Required fields check
+    if (!userId || !_id) {
+      return res.status(400).json({
+        message: "Required fields: _id is missing.",
+      });
+    }
+    // Find the existing document
+    const userPresentation = await UserPresentation.findOne({
+      _id,
+      userId,
+      isDel: false,
+    });
+
+    if (!userPresentation) {
+      return res.status(404).json({
+        success: false,
+        message: "Presentation not found or already deleted.",
+      });
+    }
+
+    userPresentation.isDel = true;
+
+    await userPresentation.save();
+    res.status(200).json({
+      success: true,
+      message: "Presentation deleted successfully!",
+      data: userPresentation,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting Presentation",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @function getpresetation
+ * @route GET /api/candidate/accomplishments/get_presentaion
+ * @description Fetch all Presentations for a given user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise}
+ *  @access protected
+ */
+export const getpresetation = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const presentations = await UserPresentation.find({ userId, isDel: false });
+    res.status(200).json({
+      success: true,
+      message: "Presentations fetched successfully!",
+      data: presentations,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching Presentations",
       error: error.message,
     });
   }

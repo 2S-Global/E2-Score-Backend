@@ -14,6 +14,10 @@ import {
   getResearchPublication,
   updateResearchPublication,
   deleteResearchPublication,
+  addpresentaion,
+  updatepresentaion,
+  deletepresentaion,
+  getpresetation,
 } from "../../controllers/candidate/userAccomplishmentController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -100,5 +104,29 @@ userAccomplishmentRouter.delete(
   upload.none(),
   deleteResearchPublication
 );
+
+//    --------------------Presentaion-------------------------
+userAccomplishmentRouter.post(
+  "/add_presentaion",
+  userAuth,
+  upload.none(),
+  addpresentaion
+);
+
+userAccomplishmentRouter.put(
+  "/update_presentaion",
+  userAuth,
+  upload.none(),
+  updatepresentaion
+);
+
+userAccomplishmentRouter.delete(
+  "/delete_presentaion",
+  userAuth,
+  upload.none(),
+  deletepresentaion
+);
+
+userAccomplishmentRouter.get("/get_presentaion", userAuth, getpresetation);
 
 export default userAccomplishmentRouter;

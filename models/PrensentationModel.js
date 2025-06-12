@@ -22,7 +22,7 @@ const presentSchema = new mongoose.Schema(
         type: Number,
       },
     },
- 
+
     description: {
       type: String,
     },
