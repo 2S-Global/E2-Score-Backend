@@ -2,8 +2,8 @@ import OnlineProfile from "../../models/OnlineProfile.js";
 import WorkSample from "../../models/WorkSample.js";
 import UserResearch from "../../models/ResearchModel.js";
 import UserPresentation from "../../models/PrensentationModel.js";
+import UserPatent from "../../models/PatentModel.js";
 import db_sql from "../../config/sqldb.js";
-import { get } from "mongoose";
 
 /**
  * @description Add a new online profile for the authenticated user
@@ -782,7 +782,7 @@ export const deleteResearchPublication = async (req, res) => {
     });
   }
 };
-
+// -----------------------------Presentations----------------------------------------
 /**
  * @description Add a new presentation for the authenticated user.
  * @route POST /api/candidate/accomplishments/add_presentaion
@@ -801,7 +801,7 @@ export const addpresentaion = async (req, res) => {
     const userId = req.userId;
     if (!userId || !title || !url) {
       return res.status(400).json({
-        message: "Required fields: socialProfile and url.",
+        message: "Required fields: title and url.",
       });
     }
     const newpresentation = new UserPresentation({
@@ -949,6 +949,219 @@ export const getpresetation = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Error fetching Presentations",
+      error: error.message,
+    });
+  }
+};
+
+// -----------------------------Patents----------------------------------------
+
+/**
+ * @description Add a new patent for the authenticated user.
+ * @route POST /api/candidate/accomplishments/add_patent
+ * @param {object} req.body - Patent details to add
+ * @param {string} req.body.title.required - Title of the patent
+ * @param {string} req.body.url.required - URL of the patent
+ * @param {string} req.body.patent_office - Patent office name
+ * @param {string} req.body.status - Status of the patent
+ * @param {string} req.body.application_number - Application number of the patent
+ * @param {string|number} req.body.issue_year - Year the patent was issued
+ * @param {string|number} req.body.issue_month - Month the patent was issued
+ * @param {string} [req.body.description] - Optional description of the patent
+ * @returns {object} 200 - Patent added successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 500 - Error adding patent
+ */
+export const addpatent = async (req, res) => {
+  try {
+    const {
+      title,
+      url,
+      patent_office,
+      status,
+      application_number,
+      issue_year,
+      issue_month,
+      description,
+    } = req.body;
+    const userId = req.userId;
+
+    if (!userId || !title || !url) {
+      return res.status(400).json({
+        message: "Required fields: title and url.",
+      });
+    }
+
+    const newPatent = new UserPatent({
+      userId,
+      title,
+      url,
+      patent_office,
+      status,
+      application_number,
+      issue_year,
+      issue_month,
+      description,
+    });
+    await newPatent.save();
+    res.status(200).json({
+      success: true,
+      message: "Patent added successfully!",
+      data: newPatent,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error adding Patent",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Soft delete a patent by user ID and patent ID
+ * @route DELETE /api/candidate/accomplishments/delete_patent
+ * @access protected
+ * @param {string} _id.required - Patent ID (required)
+ * @returns {object} 200 - Patent deleted successfully
+ * @returns {object} 400 - Missing _id in body
+ * @returns {object} 404 - Patent not found or already deleted
+ * @returns {object} 500 - Server error
+ */
+export const deletepatent = async (req, res) => {
+  try {
+    const { _id } = req.body;
+    const userId = req.userId;
+    // Required fields check
+    if (!userId || !_id) {
+      return res.status(400).json({
+        message: "Required fields: _id is missing.",
+      });
+    }
+    // Find the existing document
+    const userPatent = await UserPatent.findOne({
+      _id,
+      userId,
+      isDel: false,
+    });
+
+    if (!userPatent) {
+      return res.status(404).json({
+        success: false,
+        message: "Patent not found or already deleted.",
+      });
+    }
+
+    userPatent.isDel = true;
+
+    await userPatent.save();
+    res.status(200).json({
+      success: true,
+      message: "Patent deleted successfully!",
+      data: userPatent,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting Patent",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Update an existing patent for the authenticated user by ID.
+ * @route PUT /api/candidate/accomplishments/update_patent
+ * @param {object} req.body - Patent details to update
+ * @param {string} req.body._id.required - ID of the patent to update
+ * @param {string} [req.body.title] - Updated title of the patent
+ * @param {string} [req.body.url] - Updated URL of the patent
+ * @param {string} [req.body.patent_office] - Updated patent office name
+ * @param {string} [req.body.status] - Updated status of the patent
+ * @param {string} [req.body.application_number] - Updated application number of the patent
+ * @param {string|number} [req.body.issue_year] - Updated year the patent was issued
+ * @param {string|number} [req.body.issue_month] - Updated month the patent was issued
+ * @param {string} [req.body.description] - Optional updated description of the patent
+ * @returns {object} 200 - Patent updated successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 404 - Patent not found or already deleted
+ * @returns {object} 500 - Error updating patent
+ */
+export const updatepatent = async (req, res) => {
+  try {
+    const {
+      _id,
+      title,
+      url,
+      patent_office,
+      status,
+      application_number,
+      issue_year,
+      issue_month,
+      description,
+    } = req.body;
+    const userId = req.userId;
+
+    // Required fields check
+    if (!userId || !_id) {
+      return res.status(400).json({
+        message: "Required fields: _id is missing.",
+      });
+    }
+
+    // Find the existing document
+    const userPatent = await UserPatent.findOne({
+      _id,
+      userId,
+      isDel: false,
+    });
+
+    if (!userPatent) {
+      return res.status(404).json({
+        success: false,
+        message: "Patent not found or already deleted.",
+      });
+    }
+
+    userPatent.title = title;
+    userPatent.url = url;
+    userPatent.patent_office = patent_office;
+    userPatent.status = status;
+    userPatent.application_number = application_number;
+    userPatent.issue_year = issue_year;
+    userPatent.issue_month = issue_month;
+    userPatent.description = description;
+
+    await userPatent.save();
+    res.status(200).json({
+      success: true,
+      message: "Patent updated successfully!",
+      data: userPatent,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating Patent",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description List all patents for the authenticated user.
+ * @route GET /api/candidate/accomplishments/list_patent
+ * @access protected
+ * @returns {object} 200 - List of user's patents
+ * @returns {object} 500 - Error listing patents
+ */
+export const listpatent = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const patents = await UserPatent.find({ userId, isDel: false });
+    res.status(200).json({
+      success: true,
+      data: patents,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error listing Patent",
       error: error.message,
     });
   }

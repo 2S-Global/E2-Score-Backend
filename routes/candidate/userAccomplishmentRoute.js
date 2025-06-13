@@ -18,6 +18,10 @@ import {
   updatepresentaion,
   deletepresentaion,
   getpresetation,
+  addpatent,
+  deletepatent,
+  updatepatent,
+  listpatent,
 } from "../../controllers/candidate/userAccomplishmentController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -128,5 +132,29 @@ userAccomplishmentRouter.delete(
 );
 
 userAccomplishmentRouter.get("/get_presentaion", userAuth, getpresetation);
+
+//    --------------------Patent-----------------------------------------
+userAccomplishmentRouter.post(
+  "/add_patent",
+  userAuth,
+  upload.none(),
+  addpatent
+);
+
+userAccomplishmentRouter.put(
+  "/update_patent",
+  userAuth,
+  upload.none(),
+  updatepatent
+);
+
+userAccomplishmentRouter.delete(
+  "/delete_patent",
+  userAuth,
+  upload.none(),
+  deletepatent
+);
+
+userAccomplishmentRouter.get("/list_patent", userAuth, listpatent);
 
 export default userAccomplishmentRouter;

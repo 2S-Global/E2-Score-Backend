@@ -10,12 +10,29 @@ const PatentSchema = new mongoose.Schema(
     title: {
       type: String,
     },
- 
- 
+    /* added on 13/06/2025 */
+    url: {
+      type: String,
+    },
+    patent_office: {
+      type: String,
+    },
+    status: {
+      type: String,
+    },
+    application_number: {
+      type: String,
+    },
+    issue_year: {
+      type: String,
+    },
+    issue_month: {
+      type: String,
+    },
+    // end of 13/06/2025
     description: {
       type: String,
     },
-
     isDel: {
       type: Boolean,
       default: false,
