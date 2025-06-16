@@ -458,6 +458,16 @@ export const submitUserEducation = async (req, res) => {
     if (certificate) {
       certificateUrl = await uploadFileToExternalServer(certificate);
     }
+    // Convert is_primary to boolean
+    const isPrimary = data.is_primary === "true" || data.is_primary === true;
+
+    // Reset other primary flags if this one is primary
+    if (isPrimary) {
+      await UserEducation.updateMany(
+        { userId: user, isPrimary: true, isDel: false },
+        { $set: { isPrimary: false } }
+      );
+    }
     let savedRecord;
     if (levelId === "1" || levelId === "2") {
       const boardId = await getOrInsertId(
@@ -600,6 +610,17 @@ export const updateUserEducation = async (req, res) => {
     const certificateUrl = certificate
       ? await uploadFileToExternalServer(certificate)
       : existingRecord.certificate_data;
+
+    // Convert is_primary to boolean
+    const isPrimary = data.is_primary === "true" || data.is_primary === true;
+
+    // Reset other primary flags if this one is primary
+    if (isPrimary) {
+      await UserEducation.updateMany(
+        { userId: user, isPrimary: true, isDel: false },
+        { $set: { isPrimary: false } }
+      );
+    }
     let savedRecord;
     if (levelId == "1" || levelId == "2") {
       const boardId = await getOrInsertId(
