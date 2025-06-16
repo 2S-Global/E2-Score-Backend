@@ -350,10 +350,12 @@ export const getWorkSamples = async (req, res) => {
         durationFrom: {
           year: sample.durationFrom.year,
           month: monthNames[sample.durationFrom.month - 1],
+          month_id: sample.durationFrom.month,
         },
         durationTo: {
           year: sample.durationTo.year,
           month: monthNames[sample.durationTo.month - 1],
+          month_id: sample.durationTo.month,
         },
       };
     });
@@ -649,6 +651,7 @@ export const getResearchPublication = async (req, res) => {
         publishedOn: {
           year: sample.publishedOn.year,
           month: monthNames[sample.publishedOn.month - 1],
+          month_id: sample.publishedOn.month,
         },
       };
     });
