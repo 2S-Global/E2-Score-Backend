@@ -1222,6 +1222,7 @@ export const addcertificate = async (req, res) => {
       data: newCertificate,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       message: "Error adding Certificate",
       //  error: error.message,
@@ -1313,7 +1314,8 @@ export const updatecertificate = async (req, res) => {
     userCertificate.validityFromyear = validityFromyear;
     userCertificate.validityFrommonth = validityFrommonth;
     userCertificate.validityToyear = validityToyear;
-    userCertificate.validityTomonth = validityToMonth;
+    /* validityToMonth */
+    userCertificate.validityToMonth = validityToMonth;
     userCertificate.doesNotExpire = doesNotExpire;
 
     await userCertificate.save();

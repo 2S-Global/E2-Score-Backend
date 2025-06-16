@@ -28,7 +28,7 @@ const CertificationSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
-    validityTomonth: {
+    validityToMonth: {
       type: Number,
       default: null,
     },
