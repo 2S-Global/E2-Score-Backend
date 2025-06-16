@@ -3,6 +3,7 @@ import WorkSample from "../../models/WorkSample.js";
 import UserResearch from "../../models/ResearchModel.js";
 import UserPresentation from "../../models/PrensentationModel.js";
 import UserPatent from "../../models/PatentModel.js";
+import UserCertification from "../../models/CertificationModel.js";
 import db_sql from "../../config/sqldb.js";
 
 /**
@@ -1162,6 +1163,216 @@ export const listpatent = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Error listing Patent",
+      error: error.message,
+    });
+  }
+};
+
+// -----------------------------Certificates----------------------------------------
+
+/**
+ * @description Add a new certificate to the authenticated user's profile.
+ * @route POST /api/candidate/accomplishments/add_certificate
+ * @security BearerAuth
+ * @param {object} req.body - Certificate details to add
+ * @param {string} req.body.title.required - Title of the certificate
+ * @param {string} req.body.certificationId.required - Unique ID of the certificate
+ * @param {string} req.body.url.required - URL of the certificate
+ * @param {string|number} req.body.validityFromyear.required - Year of the start date
+ * @param {string|number} req.body.validityFrommonth.required - Month of the start date
+ * @param {string|number} req.body.validityToyear.required - Year of the end date
+ * @param {string|number} req.body.validityToMonth.required - Month of the end date
+ * @param {boolean} req.body.doesNotExpire.required - Whether the certificate does not expire
+ * @returns {object} 200 - Certificate saved successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 404 - Certificate with the same ID already exists
+ * @returns {object} 500 - Error adding Certificate
+ */
+export const addcertificate = async (req, res) => {
+  try {
+    const {
+      title,
+      certificationId,
+      url,
+      validityFromyear,
+      validityFrommonth,
+      validityToyear,
+      validityToMonth,
+      doesNotExpire,
+    } = req.body;
+
+    const userId = req.userId;
+
+    const newCertificate = new UserCertification({
+      userId,
+      title,
+      certificationId,
+      url,
+      validityFromyear,
+      validityFrommonth,
+      validityToyear,
+      validityToMonth,
+      doesNotExpire,
+    });
+
+    await newCertificate.save();
+    res.status(200).json({
+      success: true,
+      message: "Certificate added successfully!",
+      data: newCertificate,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error adding Certificate",
+      //  error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Get all certificates for the authenticated user.
+ * @route GET /api/candidate/accomplishments/list_certificate
+ * @access protected
+ * @returns {object} 200 - List of certificates
+ * @returns {object} 500 - Error listing certificates
+ */
+export const list_certificate = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const certificates = await UserCertification.find({ userId, isDel: false });
+    res.status(200).json({
+      success: true,
+      data: certificates,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error listing Certificate",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Update an existing certificate for the authenticated user.
+ * @route PUT /api/candidate/accomplishments/update_certificate
+ * @param {object} req.body - Certificate details to update
+ * @param {string} req.body._id.required - ID of the certificate to update
+ * @param {string} [req.body.title] - Updated title of the certificate
+ * @param {string} [req.body.certificationId] - Updated certification ID of the certificate
+ * @param {string} [req.body.url] - Updated URL of the certificate
+ * @param {string|number} [req.body.validityFromyear] - Updated year from which the certificate is valid
+ * @param {string|number} [req.body.validityFrommonth] - Updated month from which the certificate is valid
+ * @param {string|number} [req.body.validityToyear] - Updated year until which the certificate is valid
+ * @param {string|number} [req.body.validityTomonth] - Updated month until which the certificate is valid
+ * @param {boolean} [req.body.doesNotExpire] - Updated whether the certificate does not expire
+ * @returns {object} 200 - Certificate updated successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 404 - Certificate not found or already deleted
+ * @returns {object} 500 - Error updating certificate
+ */
+export const updatecertificate = async (req, res) => {
+  try {
+    const {
+      _id,
+      title,
+      certificationId,
+      url,
+      validityFromyear,
+      validityFrommonth,
+      validityToyear,
+      validityToMonth,
+      doesNotExpire,
+    } = req.body;
+
+    const userId = req.userId;
+
+    // Required fields check
+    if (!userId || !_id) {
+      return res.status(400).json({
+        message: "Required fields: _id is missing.",
+      });
+    }
+
+    // Find the existing document
+    const userCertificate = await UserCertification.findOne({
+      _id,
+      userId,
+      isDel: false,
+    });
+
+    if (!userCertificate) {
+      return res.status(404).json({
+        message: "Certificate not found.",
+      });
+    }
+
+    // Update the document
+    userCertificate.title = title;
+    userCertificate.certificationId = certificationId;
+    userCertificate.url = url;
+    userCertificate.validityFromyear = validityFromyear;
+    userCertificate.validityFrommonth = validityFrommonth;
+    userCertificate.validityToyear = validityToyear;
+    userCertificate.validityTomonth = validityToMonth;
+    userCertificate.doesNotExpire = doesNotExpire;
+
+    await userCertificate.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Certificate updated successfully!",
+      data: userCertificate,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating Certificate",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Delete an existing certificate from the authenticated user's profile.
+ * @route DELETE /api/candidate/accomplishments/delete_certificate
+ * @security BearerAuth
+ * @param {object} req.body - Certificate details to delete
+ * @param {string} req.body._id.required - ID of the certificate to delete
+ * @returns {object} 200 - Certificate deleted successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 404 - Certificate not found or already deleted
+ * @returns {object} 500 - Error deleting Certificate
+ */
+export const deleteCertificate = async (req, res) => {
+  try {
+    const { _id } = req.body;
+    const userId = req.userId;
+
+    // Find the existing document
+    const userCertificate = await UserCertification.findOne({
+      _id,
+      userId,
+      isDel: false,
+    });
+
+    if (!userCertificate) {
+      return res.status(404).json({
+        success: false,
+        message: "Certificate not found or already deleted.",
+      });
+    }
+
+    // Soft delete: mark as deleted
+    userCertificate.isDel = true;
+    await userCertificate.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Certificate deleted successfully!",
+      data: userCertificate,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting Certificate",
       error: error.message,
     });
   }

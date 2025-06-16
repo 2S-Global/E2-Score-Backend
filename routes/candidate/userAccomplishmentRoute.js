@@ -22,6 +22,10 @@ import {
   deletepatent,
   updatepatent,
   listpatent,
+  addcertificate,
+  list_certificate,
+  updatecertificate,
+  deleteCertificate,
 } from "../../controllers/candidate/userAccomplishmentController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -156,5 +160,33 @@ userAccomplishmentRouter.delete(
 );
 
 userAccomplishmentRouter.get("/list_patent", userAuth, listpatent);
+
+// -----------------------------Certificates----------------------------------------
+/* 
+/add_certificate
+/list_certificate
+/update_certificate
+/delete_certificate
+*/
+
+userAccomplishmentRouter.post(
+  "/add_certificate",
+  userAuth,
+  upload.none(),
+  addcertificate
+);
+userAccomplishmentRouter.get("/list_certificate", userAuth, list_certificate);
+userAccomplishmentRouter.put(
+  "/update_certificate",
+  userAuth,
+  upload.none(),
+  updatecertificate
+);
+userAccomplishmentRouter.delete(
+  "/delete_certificate",
+  userAuth,
+  upload.none(),
+  deleteCertificate
+);
 
 export default userAccomplishmentRouter;

@@ -7,7 +7,7 @@ const CertificationSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    certificationName: {
+    title: {
       type: String,
     },
     certificationId: {
@@ -16,27 +16,25 @@ const CertificationSchema = new mongoose.Schema(
     url: {
       type: String,
     },
-
-    validityFrom: {
-      year: {
-        type: Number,
-      },
-      month: {
-        type: Number,
-      },
+    validityFromyear: {
+      type: Number,
+      default: null,
     },
-   validityTo: {
-      year: {
-        type: Number,
-      },
-      month: {
-        type: Number,
-      },
+    validityFrommonth: {
+      type: Number,
+      default: null,
     },
-    expired: {
+    validityToyear: {
+      type: Number,
+      default: null,
+    },
+    validityTomonth: {
+      type: Number,
+      default: null,
+    },
+    doesNotExpire: {
       type: Boolean,
     },
-
     isDel: {
       type: Boolean,
       default: false,
@@ -47,6 +45,9 @@ const CertificationSchema = new mongoose.Schema(
   }
 );
 
-const UserCertification = mongoose.model("UserCertification", CertificationSchema);
+const UserCertification = mongoose.model(
+  "UserCertification",
+  CertificationSchema
+);
 
 export default UserCertification;
