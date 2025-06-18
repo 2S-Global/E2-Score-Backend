@@ -691,3 +691,126 @@ export const getSocialProfile = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+// Get Industry
+/**
+ * @description Get all industries from the database
+ * @route GET /api/sql/dropdown/get_industry
+ * @success {object} 200 - All industries
+ * @error {object} 500 - Database query failed
+ */
+export const getIndustry = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, job_industry FROM `industries` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Industries Data Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+// Get Job Departments
+/**
+ * @description Get all Job Departments from the database
+ * @route GET /api/sql/dropdown/get_job_departments?industry_id=4
+ * @success {object} 200 - Job Departments Data
+ * @error {object} 500 - Database query failed
+ */
+export const getJobDepartments = async (req, res) => {
+  try {
+    const industryId = req.query.industry_id;
+
+    if (!industryId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing industry_id in query." });
+    }
+
+    const [rows] = await db_sql.execute(
+      "SELECT id, job_department FROM `departments` WHERE industry_id = ? AND is_del = 0 AND is_active = 1;",
+      [industryId]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Job Departments Data Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+// Get Job Roles
+/**
+ * @description Get all Job Roles from the database
+ * @route GET /api/sql/dropdown/get_job_roles?department_id=4
+ * @success {object} 200 - Job Roles Data
+ * @error {object} 500 - Database query failed
+ */
+export const getJobRoles = async (req, res) => {
+  try {
+    const departmentId = req.query.department_id;
+
+    if (!departmentId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing department_id in query." });
+    }
+
+    const [rows] = await db_sql.execute(
+      "SELECT id, job_role FROM `job_roles` WHERE department_id = ? AND is_del = 0 AND is_active = 1;",
+      [departmentId]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Job Roles Data Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Fetch all cities in India from the database
+ * @route GET /api/sql/dropdown/get_india_cities
+ * @access Public
+ * @returns {object} 200 - An array of city objects, sorted by popularity and name
+ * @returns {object} 500 - Database query failed
+ */
+export const getIndiaCities = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(`
+      SELECT id, city_name , popular_location
+      FROM india_cities
+      WHERE is_del = 0 AND is_active = 1
+      ORDER BY
+      popular_location DESC,
+      CASE
+        WHEN LOWER(city_name) LIKE '%remote%' THEN 1
+        ELSE 0
+      END,
+      city_name ASC
+    `);
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All Indian country",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};

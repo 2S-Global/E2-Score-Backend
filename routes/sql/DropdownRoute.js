@@ -22,6 +22,10 @@ import {
   getLanguage,
   getLanguageProficiency,
   getSocialProfile,
+  getIndustry,
+  getJobDepartments,
+  getJobRoles,
+  getIndiaCities,
 } from "../../controllers/sql/dropdownController.js";
 
 const DropdownRouterouter = express.Router();
@@ -89,4 +93,16 @@ DropdownRouterouter.get("/language_proficiency", getLanguageProficiency);
 
 //Get Social Media Profiles
 DropdownRouterouter.get("/social_profile", getSocialProfile);
+
+//Get Industry
+DropdownRouterouter.get("/get_industry", getIndustry);
+
+//Get Job Department
+DropdownRouterouter.get("/get_job_departments", getJobDepartments);
+
+//Get Job Roles
+DropdownRouterouter.get("/get_job_roles", getJobRoles);
+
+//Get India Cities
+DropdownRouterouter.get("/get_india_cities", getIndiaCities);
 export default DropdownRouterouter;
