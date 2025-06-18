@@ -26,6 +26,7 @@ import {
   getJobDepartments,
   getJobRoles,
   getIndiaCities,
+  getTechSkills,
 } from "../../controllers/sql/dropdownController.js";
 
 const DropdownRouterouter = express.Router();
@@ -105,4 +106,7 @@ DropdownRouterouter.get("/get_job_roles", getJobRoles);
 
 //Get India Cities
 DropdownRouterouter.get("/get_india_cities", getIndiaCities);
+
+//Get Tech Skills
+DropdownRouterouter.get("/get_tech_skills", getTechSkills);
 export default DropdownRouterouter;

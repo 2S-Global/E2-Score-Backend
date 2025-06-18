@@ -814,3 +814,30 @@ export const getIndiaCities = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+/**
+ * @description Get all tech skills from the database
+ * @route GET /api/sql/dropdown/get_tech_skills
+ * @success {object} 200 - All tech skills
+ * @error {object} 500 - Database query failed
+ */
+export const getTechSkills = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT name FROM `tech_skills` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    const allSkills = rows.map(
+      (row) => row.name.charAt(0).toUpperCase() + row.name.slice(1)
+    );
+
+    res.status(200).json({
+      success: true,
+      data: allSkills,
+      message: "Tech Skills Data Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};

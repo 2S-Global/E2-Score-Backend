@@ -25,7 +25,7 @@ import pdfRouter from "./routes/pdfRoutes.js";
 import pacakageRoute from "./routes/admin/pacakageRoute.js";
 import companyPackageRoute from "./routes/admin/companyPackageRoute.js";
 import companyRoutes from "./routes/admin/companyRoutes.js";
-
+import itskillRouter from "./routes/candidate/itskillRoute.js";
 //import form Dropdown routes
 import DropdownRouterouter from "./routes/sql/DropdownRoute.js";
 
@@ -56,7 +56,7 @@ app.use("/api/useraction", userRouter);
 app.use("/api/userdata", userdataRouter);
 app.use("/api/candidate/personal", userPersonalRouter);
 app.use("/api/candidate/accomplishments", userAccomplishmentRouter);
-
+app.use("/api/candidate/itskill", itskillRouter);
 // Start server
 
 // Admin Routes
