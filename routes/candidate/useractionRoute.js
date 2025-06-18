@@ -13,6 +13,8 @@ import {
   updateUserEducation,
   deleteUserEducation,
   deleteProfileSummary,
+  addCareerProfile,
+  getCareerProfile,
 } from "../../controllers/candidate/useractionController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -81,4 +83,16 @@ userRouter.delete(
   upload.none(),
   deleteProfileSummary
 );
+
+// ----------------------Career Profile Route---------------------------------
+
+userRouter.post(
+  "/add_career_profile",
+  userAuth,
+  upload.none(),
+  addCareerProfile
+);
+
+userRouter.get("/get_career_profile", userAuth, getCareerProfile);
+
 export default userRouter;

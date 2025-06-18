@@ -6,6 +6,7 @@ import db_sql from "../../config/sqldb.js";
 import UserEducation from "../../models/userEducationModel.js";
 import axios from "axios";
 import FormData from "form-data";
+import UserCareer from "../../models/CareerModel.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -753,6 +754,214 @@ export const deleteUserEducation = async (req, res) => {
     return res.status(500).json({
       message: "Server error",
       error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Add or update a user's Career Profile
+ * @route POST /api/useraction/add_career_profile
+ * @access protected
+ * @param {string} industry - User's current industry
+ * @param {string} department - User's current department
+ * @param {string} job_role - User's current job role
+ * @param {string} job_type - Desired job type
+ * @param {string} employment_type - Desired employment type
+ * @param {string} work_location - User's preferred work location
+ * @param {string} currency_type - Currency type for expected salary
+ * @param {number} expected_salary - User's expected salary
+ * @param {string} shift - User's preferred shift
+ * @returns {object} 200 - Career profile saved/updated successfully
+ * @returns {object} 400 - Missing required fields or invalid data
+ * @returns {object} 500 - Server error
+ */
+export const addCareerProfile = async (req, res) => {
+  try {
+    const {
+      industry,
+      department,
+      job_role,
+      job_type,
+      employment_type,
+      work_location,
+      currency_type,
+      expected_salary,
+      shift,
+    } = req.body;
+
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User not authenticated" });
+    }
+
+    if (!industry || !department || !job_role) {
+      return res.status(400).json({
+        message: "industry, department, and job_role are required fields",
+        success: false,
+      });
+    }
+
+    const expectedSalary = {
+      currency: currency_type || "",
+      salary: expected_salary || 0,
+    };
+
+    const dataToSave = {
+      CurrentIndustry: industry,
+      CurrentDepartment: department,
+      JobRole: job_role,
+      DesiredJob: job_type,
+      DesiredEmployment: employment_type,
+      location: work_location,
+      expectedSalary,
+      PreferredShift: shift,
+    };
+
+    const existing = await UserCareer.findOne({ userId, isDel: false });
+
+    if (existing) {
+      const updated = await UserCareer.findOneAndUpdate(
+        { userId },
+        dataToSave,
+        { new: true }
+      );
+
+      return res.status(200).json({
+        message: "Career profile updated successfully",
+        data: updated,
+        success: true,
+      });
+    }
+
+    const newCareer = new UserCareer({
+      userId,
+      ...dataToSave,
+    });
+
+    await newCareer.save();
+
+    res.status(200).json({
+      message: "Career profile saved successfully",
+      data: newCareer,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error saving Career Profile:", error.message);
+    res.status(500).json({
+      message: "Error saving Career Profile",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @description Get the career profile of the authenticated user
+ * @route GET /api/useraction/get_career_profile
+ * @access protected
+ * @returns {object} 200 - Career profile details
+ * @returns {object} 400 - User not authenticated
+ * @returns {object} 404 - Career profile not found
+ * @returns {object} 500 - Error fetching Career Profile
+ */
+export const getCareerProfile = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User not authenticated" });
+    }
+
+    const careerProfile = await UserCareer.findOne({
+      userId,
+      isDel: false,
+    }).lean();
+
+    if (!careerProfile) {
+      return res.status(404).json({
+        message: "Career profile not found",
+        success: false,
+      });
+    }
+
+    const {
+      CurrentIndustry,
+      CurrentDepartment,
+      JobRole,
+      DesiredJob,
+      DesiredEmployment,
+      location,
+      expectedSalary,
+      PreferredShift,
+    } = careerProfile;
+
+    // location is already stored as array in MongoDB
+    const locationIds = Array.isArray(location) ? location : [];
+
+    const [industryResult, departmentResult, jobRoleResult, locationResult] =
+      await Promise.all([
+        CurrentIndustry
+          ? db_sql.execute("SELECT job_industry FROM industries WHERE id = ?", [
+              CurrentIndustry,
+            ])
+          : Promise.resolve([[]]),
+        CurrentDepartment
+          ? db_sql.execute(
+              "SELECT job_department FROM departments WHERE id = ?",
+              [CurrentDepartment]
+            )
+          : Promise.resolve([[]]),
+        JobRole
+          ? db_sql.execute("SELECT job_role FROM job_roles WHERE id = ?", [
+              JobRole,
+            ])
+          : Promise.resolve([[]]),
+        locationIds.length > 0
+          ? db_sql.execute(
+              `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
+                .map(() => "?")
+                .join(", ")})`,
+              locationIds
+            )
+          : Promise.resolve([[]]),
+      ]);
+
+    const industryName = industryResult[0][0]?.job_industry || "";
+    const departmentName = departmentResult[0][0]?.job_department || "";
+    const jobRoleName = jobRoleResult[0][0]?.job_role || "";
+    const locationMap = new Map(
+      locationResult[0].map((row) => [row.id, row.city_name])
+    );
+
+    const locationNames = locationIds
+      .map((id) => locationMap.get(id) || "")
+      .join(", ");
+
+    return res.status(200).json({
+      message: "Career profile fetched successfully",
+      success: true,
+      data: {
+        industry: CurrentIndustry || "",
+        industry_name: industryName,
+        department: CurrentDepartment || "",
+        department_name: departmentName,
+        job_role: JobRole || "",
+        job_role_name: jobRoleName,
+        job_type: DesiredJob || "",
+        employment_type: DesiredEmployment || "",
+        work_location: locationIds,
+        work_location_name: locationNames,
+        currency_type: expectedSalary?.currency || "",
+        expected_salary: expectedSalary?.salary || 0,
+        shift: PreferredShift || "",
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching Career Profile:", error.message);
+    return res.status(500).json({
+      message: "Error fetching Career Profile",
+      error: error.message,
+      success: false,
     });
   }
 };

@@ -23,17 +23,18 @@ const CareerSchema = new mongoose.Schema(
     DesiredEmployment: {
       type: String,
     },
-    location: {
+    PreferredShift: {
       type: String,
+    },
+    location: {
+      type: [Number],
     },
     expectedSalary: {
       currency: {
         type: String,
-     
       },
       salary: {
         type: Number,
- 
       },
     },
 
@@ -47,6 +48,6 @@ const CareerSchema = new mongoose.Schema(
   }
 );
 
-const UserResearch = mongoose.model("UserCareer", CareerSchema);
+const UserCareer = mongoose.model("UserCareer", CareerSchema);
 
-export default UserResearch;
+export default UserCareer;
