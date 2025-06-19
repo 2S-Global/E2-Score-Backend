@@ -9,7 +9,7 @@ import {
 } from "../../controllers/candidate/useritskillController.js";
 import userAuth from "../../middleware/authMiddleware.js";
 
-// Initialize router
+// Initialize router ggg
 const itskillRouter = express.Router();
 // Setup multer with memory storage for handling file uploads
 const storage = multer.memoryStorage();
