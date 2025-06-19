@@ -35,6 +35,7 @@ import userdataRouter from "./routes/candidate/userdataRoute.js";
 import dashboardRoute from "./routes/admin/dashboardRoute.js";
 import userPersonalRouter from "./routes/candidate/userPersonalRoute.js";
 import userAccomplishmentRouter from "./routes/candidate/userAccomplishmentRoute.js";
+import projectDetailsRouter from "./routes/candidate/projectDetailsRoute.js";
 // Routes
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
@@ -57,6 +58,7 @@ app.use("/api/userdata", userdataRouter);
 app.use("/api/candidate/personal", userPersonalRouter);
 app.use("/api/candidate/accomplishments", userAccomplishmentRouter);
 app.use("/api/candidate/itskill", itskillRouter);
+app.use("/api/candidate/project", projectDetailsRouter);
 // Start server hello
 
 // Admin Routes test ---chandra
