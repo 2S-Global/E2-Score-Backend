@@ -59,7 +59,7 @@ app.use("/api/candidate/accomplishments", userAccomplishmentRouter);
 app.use("/api/candidate/itskill", itskillRouter);
 // Start server hello
 
-// Admin Routes test
+// Admin Routes test ---chandra
 app.use("/api/pacakageRoute", pacakageRoute);
 app.use("/api/companyPackageRoute", companyPackageRoute);
 app.use("/api/companyRoutes", companyRoutes);
