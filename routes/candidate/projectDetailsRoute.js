@@ -1,14 +1,13 @@
 import express from "express";
 import multer from "multer";
 
-// import {
-//     getProjectTag
-// } from "../../controllers/candidate/useritskillController.js";
-
 import {
-    getProjectTag
+  getProjectTag,
+  addProjectDetails,
+  getProjectDetails,
+  editProjectDetails,
+  deleteProjectDetails,
 } from "../../controllers/candidate/projectDetailsController.js";
-
 
 import userAuth from "../../middleware/authMiddleware.js";
 
@@ -19,11 +18,29 @@ const projectDetailsRouter = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// itskillRouter.post("/additskill", userAuth, upload.none(), additskill);
+projectDetailsRouter.get("/get_project_tag", getProjectTag);
 
-projectDetailsRouter.get("/get_project_tag" , getProjectTag);
+projectDetailsRouter.post(
+  "/add_project_details",
+  userAuth,
+  upload.none(),
+  addProjectDetails
+);
 
-// itskillRouter.put("/edititskill", userAuth, upload.none(), edititskill);
-// itskillRouter.delete("/deleteitskill", userAuth, deleteitskill);
+projectDetailsRouter.put(
+  "/edit_project_details",
+  userAuth,
+  upload.none(),
+  editProjectDetails
+);
+
+projectDetailsRouter.get("/get_project_details", userAuth, getProjectDetails);
+
+projectDetailsRouter.delete(
+  "/delete_project_details",
+  userAuth,
+  upload.none(),
+  deleteProjectDetails
+);
 
 export default projectDetailsRouter;

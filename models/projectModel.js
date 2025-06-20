@@ -51,7 +51,6 @@ const projectSchema = new mongoose.Schema(
   }
 );
 
-const UserProject = mongoose.model("UserProject", projectSchema);
+const ProjectDetails = mongoose.model("ProjectDetails", projectSchema);
 
-export default UserProject;
-
+export default ProjectDetails;
