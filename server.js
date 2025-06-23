@@ -26,6 +26,7 @@ import pacakageRoute from "./routes/admin/pacakageRoute.js";
 import companyPackageRoute from "./routes/admin/companyPackageRoute.js";
 import companyRoutes from "./routes/admin/companyRoutes.js";
 import itskillRouter from "./routes/candidate/itskillRoute.js";
+import projectDetailsRouter from "./routes/candidate/projectDetailsRoute.js";
 //import form Dropdown routes
 import DropdownRouterouter from "./routes/sql/DropdownRoute.js";
 
@@ -35,7 +36,7 @@ import userdataRouter from "./routes/candidate/userdataRoute.js";
 import dashboardRoute from "./routes/admin/dashboardRoute.js";
 import userPersonalRouter from "./routes/candidate/userPersonalRoute.js";
 import userAccomplishmentRouter from "./routes/candidate/userAccomplishmentRoute.js";
-import projectDetailsRouter from "./routes/candidate/projectDetailsRoute.js";
+import resumeFileRouter from "./routes/candidate/resumeFileRoute.js";
 // Routes
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
@@ -59,9 +60,10 @@ app.use("/api/candidate/personal", userPersonalRouter);
 app.use("/api/candidate/accomplishments", userAccomplishmentRouter);
 app.use("/api/candidate/itskill", itskillRouter);
 app.use("/api/candidate/project", projectDetailsRouter);
+app.use("/api/candidate/resumefile", resumeFileRouter);
 // Start server hello
 
-// Admin Routes test ---chandra
+// Admin Routes test ---chandra Sarkar
 app.use("/api/pacakageRoute", pacakageRoute);
 app.use("/api/companyPackageRoute", companyPackageRoute);
 app.use("/api/companyRoutes", companyRoutes);

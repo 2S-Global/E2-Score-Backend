@@ -7,6 +7,7 @@ import UserEducation from "../../models/userEducationModel.js";
 import axios from "axios";
 import FormData from "form-data";
 import UserCareer from "../../models/CareerModel.js";
+import ResumeDetails from "../../models/resumeDetailsModels.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -963,5 +964,54 @@ export const getCareerProfile = async (req, res) => {
       error: error.message,
       success: false,
     });
+  }
+};
+
+
+
+
+// /api/useraction/upload-pdf
+ 
+export const uploadPDF = async (req, res) => {
+  try {
+    const userId = req.userId;
+ 
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+ 
+    if (!req.file) {
+      return res.status(400).json({ message: "No PDF file uploaded." });
+    }
+   
+    const resumeFile = req.file;
+    let resumeFileUrl = null;
+ 
+    if (resumeFile) {
+      resumeFileUrl = await uploadFileToExternalServer(resumeFile);
+    }
+
+    const resumeDetails = await ResumeDetails.findOneAndUpdate(
+      { user: userId },
+      {
+        fileName: resumeFile.originalname,
+        fileUrl: resumeFileUrl
+      },
+      { new: true, upsert: true }
+    );
+ 
+    if (!resumeDetails) {
+      return res.status(404).json({ message: "Resume details not found for this user." });
+    }
+ 
+    return res.status(200).json({
+      success: true,
+      message: "PDF uploaded and resume updated successfully",
+      pdfUrl: resumeDetails
+    });
+ 
+  } catch (error) {
+    console.error("Error uploading PDF:", error);
+    res.status(500).json({ message: "Error uploading PDF", error: error.message });
   }
 };

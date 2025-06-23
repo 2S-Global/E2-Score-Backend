@@ -15,6 +15,7 @@ import {
   deleteProfileSummary,
   addCareerProfile,
   getCareerProfile,
+  uploadPDF
 } from "../../controllers/candidate/useractionController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -94,5 +95,9 @@ userRouter.post(
 );
 
 userRouter.get("/get_career_profile", userAuth, getCareerProfile);
+
+// -----------------------Upload Resume File-----------------------------------------------
+
+userRouter.post("/upload-pdf", userAuth, upload.single("file"), uploadPDF);
 
 export default userRouter;
