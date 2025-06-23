@@ -63,7 +63,7 @@ app.use("/api/candidate/project", projectDetailsRouter);
 app.use("/api/candidate/resumefile", resumeFileRouter);
 // Start server hello
 
-// Admin Routes test ---chandra Sarkar
+// Admin Routes test
 app.use("/api/pacakageRoute", pacakageRoute);
 app.use("/api/companyPackageRoute", companyPackageRoute);
 app.use("/api/companyRoutes", companyRoutes);

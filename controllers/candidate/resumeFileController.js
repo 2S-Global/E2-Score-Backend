@@ -1,55 +1,6 @@
-import User from "../../models/userModel.js";
-import { v2 as cloudinary } from "cloudinary";
-import PersonalDetails from "../../models/personalDetails.js";
-import CandidateDetails from "../../models/CandidateDetailsModel.js";
-import db_sql from "../../config/sqldb.js";
-import UserEducation from "../../models/userEducationModel.js";
 import axios from "axios";
 import FormData from "form-data";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-
-//  /api/candidate/resumefile/add_resume
-export const addResume = async (req, res) => {
-  try {
-    // const { socialProfile, url, description } = req.body;
-    // const userId = req.userId;
-
-    // if (!userId || !socialProfile || !url) {
-    //   return res.status(400).json({
-    //     message: "Required fields: socialProfile and url.",
-    //   });
-    // }
-
-    // const newProfile = new OnlineProfile({
-    //   userId,
-    //   socialProfile,
-    //   url,
-    //   description,
-    // });
-
-    // await newProfile.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Resume inserted successfully!",
-      data: newProfile,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error inserting Resume",
-      error: error.message,
-    });
-  }
-};
-
-
-
+import ResumeDetails from "../../models/resumeDetailsModels.js";
 
 
 /**
@@ -83,9 +34,75 @@ export const uploadFileToExternalServer = async (file) => {
 };
 
 
+/**
+ * @route POST /api/candidate/resumefile/upload-pdf
+ * @summary Add or update Resume Details
+ * @description This endpoint uploads a new Resume Details for the authenticated user.
+ *              It deletes the old Resume Details if it exists and updates the user's Resume Details with the new URL.
+ * @security BearerAuth
+ * @param {text} file.formData.required - file
+ * @returns {object} 200 - PDF uploaded and resume updated successfully!
+ * @returns {object} 400 - Resume details not found for this user.
+ * @returns {object} 500 - Error uploading PDF.
+ */
 
-// /api/candidate/resumefile/add_resume/upload-pdf
 export const uploadPDF = async (req, res) => {
+  try {
+    const userId = req.userId;
+ 
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+ 
+    if (!req.file) {
+      return res.status(400).json({ message: "No PDF file uploaded." });
+    }
+   
+    const resumeFile = req.file;
+    let resumeFileUrl = null;
+ 
+    if (resumeFile) {
+      resumeFileUrl = await uploadFileToExternalServer(resumeFile);
+    }
+
+    const resumeDetails = await ResumeDetails.findOneAndUpdate(
+      { user: userId },
+      {
+        fileName: resumeFile.originalname,
+        fileUrl: resumeFileUrl,
+        isDel: false
+      },
+      { new: true, upsert: true }
+    );
+ 
+    if (!resumeDetails) {
+      return res.status(404).json({ message: "Resume details not found for this user." });
+    }
+ 
+    return res.status(200).json({
+      success: true,
+      message: "PDF uploaded and resume updated successfully",
+      pdfUrl: resumeDetails
+    });
+ 
+  } catch (error) {
+    console.error("Error uploading PDF:", error);
+    res.status(500).json({ message: "Error uploading PDF", error: error.message });
+  }
+};
+
+
+/**
+ * @description Get the Resume Details of the authenticated user
+ * @route GET /api/candidate/resumefile/get_resume_details
+ * @access protected
+ * @returns {object} 200 - Resume details fetched successfully.
+ * @returns {object} 400 - User ID is required.
+ * @returns {object} 404 - No resume found for this user.
+ * @returns {object} 500 - Error fetching resume details
+ */
+
+export const getResumeDetails = async (req, res) => {
   try {
     const userId = req.userId;
 
@@ -93,41 +110,60 @@ export const uploadPDF = async (req, res) => {
       return res.status(400).json({ message: "User ID is required." });
     }
 
-    if (!req.file) {
-      return res.status(400).json({ message: "No PDF file uploaded." });
+    const resumeDetails = await ResumeDetails.findOne({ user: userId, isDel: false });
+
+    if (!resumeDetails) {
+      return res.status(404).json({ message: "No resume found for this user." });
     }
-    
-    const resumeFile = req.file;
-    
-    let resumeFileUrl = null;
-
-    // Upload transcript file if available
-    if (resumeFile) {
-      resumeFileUrl = await uploadFileToExternalServer(resumeFile);
-    }
-
-    // resumeFileName
-    // Update existing personalDetails document
-    const updatedPersonalDetails = await PersonalDetails.findOneAndUpdate(
-      { user: userId },                     
-      { resumeFileName: resumeFileUrl },   
-      { new: true }                      
-    );
-
-
-    if (!updatedPersonalDetails) {
-      return res.status(404).json({ message: "Personal details not found for this user." });
-    }
-
 
     return res.status(200).json({
       success: true,
-      message: "PDF uploaded and resume updated successfully",
-      pdfUrl: resumeFileUrl
+      message: "Resume details fetched successfully.",
+      data: resumeDetails
     });
 
   } catch (error) {
-    console.error("Error uploading PDF:", error);
-    res.status(500).json({ message: "Error uploading PDF", error: error.message });
+    console.error("Error fetching resume details:", error);
+    res.status(500).json({ message: "Error fetching resume details", error: error.message });
+  }
+};
+
+/**
+ * @description Soft delete an Resume Details by user ID.
+ * @route DELETE /api/candidate/resumefile/delete_resume_details
+ * @access protected
+ * @returns {object} 200 - Resume deleted (soft delete) successfully.
+ * @returns {object} 400 - User ID is required.
+ * @returns {object} 404 - No active resume found to delete.
+ * @returns {object} 500 - Error deleting resume
+ */
+
+export const deleteResume = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+
+    const deletedResume = await ResumeDetails.findOneAndUpdate(
+      { user: userId, isDel: false },
+      { isDel: true },
+      { new: true }
+    );
+
+    if (!deletedResume) {
+      return res.status(404).json({ message: "No active resume found to delete." });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Resume deleted (soft delete) successfully.",
+      data: deletedResume
+    });
+
+  } catch (error) {
+    console.error("Error deleting resume:", error);
+    res.status(500).json({ message: "Error deleting resume", error: error.message });
   }
 };

@@ -1,8 +1,7 @@
 import express from "express";
 import multer from "multer";
 
-import {
-  uploadPDF } from "../../controllers/candidate/resumeFileController.js"
+import { uploadPDF, getResumeDetails, deleteResume } from "../../controllers/candidate/resumeFileController.js";
 
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -14,17 +13,11 @@ const resumeFileRouter = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// projectDetailsRouter.get("/get_project_tag" , getProjectTag);
-
-// resumeFileRouter.post("/add_resume", userAuth, upload.none(), addResume);
-
 resumeFileRouter.post("/upload-pdf", userAuth, upload.single("file"), uploadPDF);
 
-// projectDetailsRouter.get("/get_project_details", userAuth, getProjectDetails);
+resumeFileRouter.get("/get_resume_details", userAuth, getResumeDetails);
 
-// projectDetailsRouter.put("/edit_project_details", userAuth, upload.none(), editProjectDetails);
-
-// projectDetailsRouter.delete("/delete_project_details", userAuth, upload.none(), deleteProjectDetails);
+resumeFileRouter.delete("/delete_resume_details", userAuth, upload.none(), deleteResume);
 
 
 export default resumeFileRouter;

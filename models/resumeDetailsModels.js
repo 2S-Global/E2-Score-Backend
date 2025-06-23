@@ -15,6 +15,10 @@ const resumeDetailsSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    isDel: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
