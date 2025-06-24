@@ -123,7 +123,7 @@ export const addEmploymentDetails = async (req, res) => {
       joining_month,
       leaving_year,
       leaving_month,
-      description
+      description,
     } = req.body;
 
     if (!userId) {
@@ -179,7 +179,10 @@ export const addEmploymentDetails = async (req, res) => {
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Error Saving Employment Details", error: error.message });
+      .json({
+        message: "Error Saving Employment Details",
+        error: error.message,
+      });
   }
 };
 
@@ -216,14 +219,14 @@ export const getEmploymentDetails = async (req, res) => {
     }
 
     // Prepare company ID list
-    const companyIds = [...new Set(
-      employmentData
-        .map((emp) => emp.companyName)
-        .filter((id) => !!id)
-    )];
+    const companyIds = [
+      ...new Set(
+        employmentData.map((emp) => emp.companyName).filter((id) => !!id)
+      ),
+    ];
 
     // Create placeholders and query company names from SQL
-    const placeholders = companyIds.map(() => '?').join(',');
+    const placeholders = companyIds.map(() => "?").join(",");
     const [companyRows] = await db_sql.execute(
       `SELECT id, NAME FROM company WHERE id IN (${placeholders})`,
       companyIds
@@ -237,9 +240,19 @@ export const getEmploymentDetails = async (req, res) => {
 
     //Month names map
     const monthNames = [
-      '', // for 1-based index
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      "", // for 1-based index
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     // Format response
@@ -264,7 +277,7 @@ export const getEmploymentDetails = async (req, res) => {
         description: item.jobDescription || "",
         isVerified: item.isVerified,
         jobTypeVerified: item.jobTypeVerified,
-        jobDurationVerified: item.jobDurationVerified
+        jobDurationVerified: item.jobDurationVerified,
       };
     });
 
@@ -273,7 +286,6 @@ export const getEmploymentDetails = async (req, res) => {
       message: "Employment Details fetched successfully.",
       data: formatted,
     });
-
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({
