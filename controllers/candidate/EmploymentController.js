@@ -67,6 +67,29 @@ export const getRandomCompany = async (req, res) => {
 };
 
 /**
+ * @description Get Notice Period from the database
+ * @route GET /api/candidate/employment/get_notice_period
+ * @success {object} 200 - Notice Period Data fetched successfully !
+ * @error {object} 500 - Database query failed
+ */
+export const getNoticePeriod = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id , name FROM `notice_period` WHERE is_del = 0 AND is_active = 1;"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Notice Period Data fetched successfully !",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
  * @description Add Employment Details for the authenticated user
  * @route POST /api/candidate/employment/add_employment
  * @security BearerAuth
@@ -179,7 +202,7 @@ export const getEmploymentDetails = async (req, res) => {
 
     // Fetch employment data
     const employmentData = await Employment.find({
-      userId,
+      user: userId,
       isDel: false,
     })
       .sort({ createdAt: -1 })
@@ -257,5 +280,114 @@ export const getEmploymentDetails = async (req, res) => {
       message: "Error Fetching Employment Details",
       error: error.message,
     });
+  }
+};
+
+/**
+ * @description Update an existing Employment Details for the authenticated user.
+ * @route PUT /api/candidate/employment/edit_employment
+ * @param {object} req.body - Employment Details to update
+ * @param {string} req.body._id.required - ID of the Employment Details to update
+ * @param {boolean} [req.body.currentlyWorking] - Updated Currently Working
+ * @param {string} [req.body.employmenttype] - Updated Employment type
+ * @param {string|number} [req.body.experience_yr] - Updated Total Experience in Year
+ * @param {string|number} [req.body.experience_month] - Updated Total Experience in Month
+ * @param {boolean} [req.body.company_name] - Updated Company name
+ * @param {string} [req.body.job_title] - Updated Job title
+ * @param {string|number} [req.body.joining_year] - Updated Joining Date in year
+ * @param {string|number} [req.body.joining_month] - Updated Joining Date in month
+ * @param {string|number} [req.body.leaving_year] - Updated Leaving Date in year
+ * @param {string|number} [req.body.leaving_month] - Updated Leaving Date in month
+ * @param {string} [req.body.description] - Updated Job profile
+ * @returns {object} 200 - Employment Details updated successfully!
+ * @returns {object} 400 - _id is required for updating employment
+ * @returns {object} 404 - Employment record not found
+ * @returns {object} 500 - Error Saving Employment Details
+ */
+
+export const editEmploymentDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+    const {
+      _id,
+      currentlyWorking,
+      employmenttype,
+      experience_yr,
+      experience_month,
+      company_name,
+      job_title,
+      joining_year,
+      joining_month,
+      leaving_year,
+      leaving_month,
+      description
+    } = req.body;
+
+    if (!_id) {
+      return res.status(400).json({ message: "_id is required for updating employment" });
+    }
+
+    const existingEmployment = await Employment.findOne({ _id, user: userId, isDel: false });
+    if (!existingEmployment) {
+      return res.status(404).json({ message: "Employment record not found" });
+    }
+
+    // Checking Company name exist in database. If not exist then insert that value in database
+    const [companyName] = await db_sql.execute(
+      "SELECT id, NAME FROM company WHERE NAME = ? AND is_del = 0",
+      [company_name.trim()]
+    );
+
+    let companyId;
+    if (companyName.length > 0) {
+      companyId = companyName[0].id;
+    } else {
+      const [insertResult] = await db_sql.execute(
+        "INSERT INTO company (name, is_active, is_del, flag) VALUES (?, 0, 0, 1)",
+        [company_name.trim()]
+      );
+
+      companyId = insertResult.insertId;
+    }
+
+    // Prepare updated fields
+    const updatedFields = {
+      currentEmployment: currentlyWorking,
+      employmentType: employmenttype,
+      totalExperience: {
+        year: experience_yr,
+        month: experience_month,
+      },
+      companyName: companyId,
+      jobTitle: job_title,
+      joiningDate: {
+        year: joining_year,
+        month: joining_month,
+      },
+      leavingDate: {
+        year: leaving_year,
+        month: leaving_month,
+      },
+      jobDescription: description,
+    };
+
+    const updatedEmployment = await Employment.findByIdAndUpdate(
+      _id,
+      updatedFields,
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Employment Details updated successfully!",
+      data: updatedEmployment
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error Saving Employment Details", error: error.message });
   }
 };
