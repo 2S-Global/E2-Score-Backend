@@ -37,6 +37,7 @@ import dashboardRoute from "./routes/admin/dashboardRoute.js";
 import userPersonalRouter from "./routes/candidate/userPersonalRoute.js";
 import userAccomplishmentRouter from "./routes/candidate/userAccomplishmentRoute.js";
 import resumeFileRouter from "./routes/candidate/resumeFileRoute.js";
+import employmentRouter from "./routes/candidate/EmploymentRoute.js";
 // Routes
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
@@ -61,6 +62,7 @@ app.use("/api/candidate/accomplishments", userAccomplishmentRouter);
 app.use("/api/candidate/itskill", itskillRouter);
 app.use("/api/candidate/project", projectDetailsRouter);
 app.use("/api/candidate/resumefile", resumeFileRouter);
+app.use("/api/candidate/employment", employmentRouter);
 // Start server hello
 
 // Admin Routes test
