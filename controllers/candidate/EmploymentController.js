@@ -1,4 +1,5 @@
 import db_sql from "../../config/sqldb.js";
+import Employment from "../../models/Employment.js";
 
 /**
  * @description Search for matching Company based on the query parameter company_name
@@ -62,5 +63,99 @@ export const getRandomCompany = async (req, res) => {
   } catch (error) {
     console.error("MySQL error →", error);
     res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Add Employment Details for the authenticated user
+ * @route POST /api/candidate/employment/add_employment
+ * @security BearerAuth
+ * @param {object} req.body - Employment Details to add
+ * @param {boolean} req.body.currentlyWorking - Current Employment
+ * @param {string} req.body.employmenttype - Employment type
+ * @param {string} req.body.experience_yr - Total Experience in Year
+ * @param {string} req.body.experience_month - Total Experience in Month
+ * @param {string} req.body.company_name - Company name
+ * @param {string} req.body.job_title - Job title
+ * @param {string} req.body.joining_year - Joining Date in year
+ * @param {string} req.body.joining_month - Joining Date in month
+ * @param {string} req.body.leaving_year - Leaving Date in year
+ * @param {string} req.body.leaving_month - Leaving Date in month
+ * @param {string} req.body.description - Job profile
+ * @returns {object} 201 - Employment Details added successfully!
+ * @returns {object} 400 - User ID is required
+ * @returns {object} 500 - Error Saving Employment Details
+ */
+export const addEmploymentDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const {
+      currentlyWorking,
+      employmenttype,
+      experience_yr,
+      experience_month,
+      company_name,
+      job_title,
+      joining_year,
+      joining_month,
+      leaving_year,
+      leaving_month,
+      description
+    } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Checking Company name exist in database. If not exist then insert that value in database
+    const [companyName] = await db_sql.execute(
+      "SELECT id, NAME FROM company WHERE NAME = ? AND is_del = 0",
+      [company_name.trim()]
+    );
+
+    let companyId;
+    if (companyName.length > 0) {
+      companyId = companyName[0].id;
+    } else {
+      const [insertResult] = await db_sql.execute(
+        "INSERT INTO company (name, is_active, is_del, flag) VALUES (?, 0, 0, 1)",
+        [company_name.trim()]
+      );
+
+      companyId = insertResult.insertId;
+    }
+
+    const employment = new Employment({
+      user: userId,
+      currentEmployment: currentlyWorking,
+      employmentType: employmenttype,
+      totalExperience: {
+        year: experience_yr,
+        month: experience_month,
+      },
+      companyName: companyId,
+      jobTitle: job_title,
+      joiningDate: {
+        year: joining_year,
+        month: joining_month,
+      },
+      leavingDate: {
+        year: leaving_year,
+        month: leaving_month,
+      },
+      jobDescription: description,
+    });
+
+    await employment.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Employment Details added successfully!",
+      data: employment,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error Saving Employment Details", error: error.message });
   }
 };

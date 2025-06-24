@@ -13,15 +13,15 @@ const employmentSchema = new mongoose.Schema(
     },
 
     employmentType: {
-      type: Boolean,
+      type: String,
     },
 
     totalExperience: {
-      years: {
+      year: {
         type: Number,
         default: 0,
       },
-      months: {
+      month: {
         type: Number,
         default: 0,
       },
@@ -36,10 +36,24 @@ const employmentSchema = new mongoose.Schema(
     },
 
     joiningDate: {
-      type: Date,
+      year: {
+        type: Number,
+        default: 0,
+      },
+      month: {
+        type: Number,
+        default: 0,
+      }
     },
     leavingDate: {
-      type: Date,
+      year: {
+        type: Number,
+        default: 0,
+      },
+      month: {
+        type: Number,
+        default: 0,
+      },
     },
 
     jobDescription: {
