@@ -38,3 +38,29 @@ export const getMatchingCompany = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+/**
+ * @description Get 50 random company from the database
+ * @route GET /api/candidate/employment/random_company
+ * @success {object} 200 - Random 50 Company
+ * @error {object} 500 - Database query failed
+ */
+export const getRandomCompany = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT NAME FROM `company` WHERE is_del = 0 AND is_active = 1 ORDER BY RAND() LIMIT 50;"
+    );
+
+    // Convert to array of strings
+    const companies = rows.map((row) => row.NAME);
+
+    res.status(200).json({
+      success: true,
+      data: companies,
+      message: "Random 50 Company",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};

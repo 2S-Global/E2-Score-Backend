@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 
-import { getMatchingCompany } from "../../controllers/candidate/EmploymentController.js";
+import { getMatchingCompany, getRandomCompany } from "../../controllers/candidate/EmploymentController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
 
@@ -12,5 +12,6 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 employmentRouter.get("/matching_company", getMatchingCompany);
+employmentRouter.get("/random_company", getRandomCompany);
 
 export default employmentRouter;
