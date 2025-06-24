@@ -64,6 +64,19 @@ const employmentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    jobTypeVerified: {
+      type: Boolean,
+      default: false,
+    },
+    jobDurationVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

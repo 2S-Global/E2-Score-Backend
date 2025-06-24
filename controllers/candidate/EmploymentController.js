@@ -159,3 +159,102 @@ export const addEmploymentDetails = async (req, res) => {
       .json({ message: "Error Saving Employment Details", error: error.message });
   }
 };
+
+/**
+ * @description Fetch all Employment Details for the authenticated user.
+ * @route GET /api/candidate/employment/get_employment
+ * @security BearerAuth
+ * @returns {object} 200 - Employment Details fetched successfully.
+ * @returns {object} 400 - User ID is required
+ * @returns {object} 404 - Employment Details not found or already deleted.
+ * @returns {object} 500 - Error Fetching Employment Details
+ */
+export const getEmploymentDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+
+    // Fetch employment data
+    const employmentData = await Employment.find({
+      userId,
+      isDel: false,
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!employmentData || employmentData.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Employment Details not found or already deleted.",
+      });
+    }
+
+    // Prepare company ID list
+    const companyIds = [...new Set(
+      employmentData
+        .map((emp) => emp.companyName)
+        .filter((id) => !!id)
+    )];
+
+    // Create placeholders and query company names from SQL
+    const placeholders = companyIds.map(() => '?').join(',');
+    const [companyRows] = await db_sql.execute(
+      `SELECT id, NAME FROM company WHERE id IN (${placeholders})`,
+      companyIds
+    );
+
+    // Build map: companyId → name
+    const companyMap = {};
+    companyRows.forEach((row) => {
+      companyMap[row.id] = row.NAME;
+    });
+
+    //Month names map
+    const monthNames = [
+      '', // for 1-based index
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    // Format response
+    const formatted = employmentData.map((item) => {
+      const experienceMonth = item.totalExperience?.month || "";
+      const joiningMonth = item.joiningDate?.month || "";
+      const leavingMonth = item.leavingDate?.month || "";
+
+      return {
+        currentlyWorking: item.currentEmployment || false,
+        employmenttype: item.employmentType || "",
+        experience_yr: item.totalExperience?.year?.toString() || "",
+        experience_month: item.totalExperience?.month?.toString() || "",
+        experience_month_name: experienceMonth ? monthNames[experienceMonth] : "",
+        company_name: companyMap[item.companyName] || "",
+        company_id: item.companyName || "",
+        job_title: item.jobTitle || "",
+        joining_year: item.joiningDate?.year || "",
+        joining_month: joiningMonth,
+        joining_month_name: joiningMonth ? monthNames[joiningMonth] : "",
+        leaving_year: item.leavingDate?.year || "",
+        leaving_month: leavingMonth,
+        leaving_month_name: leavingMonth ? monthNames[leavingMonth] : "",
+        description: item.jobDescription || ""
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Employment Details fetched successfully.",
+      data: formatted,
+    });
+
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({
+      message: "Error Fetching Employment Details",
+      error: error.message,
+    });
+  }
+};
