@@ -124,6 +124,7 @@ export const addEmploymentDetails = async (req, res) => {
       leaving_year,
       leaving_month,
       description,
+      notice_period
     } = req.body;
 
     if (!userId) {
@@ -167,6 +168,7 @@ export const addEmploymentDetails = async (req, res) => {
         month: leaving_month,
       },
       jobDescription: description,
+      NoticePeriod: notice_period
     });
 
     await employment.save();
@@ -238,6 +240,27 @@ export const getEmploymentDetails = async (req, res) => {
       companyMap[row.id] = row.NAME;
     });
 
+    // Get Notice Period Name
+    // Prepare company ID list
+    const noticePeriodIds = [
+      ...new Set(
+        employmentData.map((emp) => emp.NoticePeriod).filter((id) => !!id)
+      ),
+    ];
+
+    // Create placeholders and query company names from SQL
+    const noticePeriodPlaceholders = noticePeriodIds.map(() => "?").join(",");
+    const [noticePeriodRows] = await db_sql.execute(
+      `SELECT id, name FROM notice_period WHERE id IN (${noticePeriodPlaceholders})`,
+      noticePeriodIds
+    );
+
+    // Build map: companyId → name
+    const noticePeriodMap = {};
+    noticePeriodRows.forEach((row) => {
+      noticePeriodMap[row.id] = row.name;
+    });
+
     //Month names map
     const monthNames = [
       "", // for 1-based index
@@ -278,6 +301,8 @@ export const getEmploymentDetails = async (req, res) => {
         isVerified: item.isVerified,
         jobTypeVerified: item.jobTypeVerified,
         jobDurationVerified: item.jobDurationVerified,
+        notice_period: item.NoticePeriod || "",
+        notice_period_name: noticePeriodMap[item.NoticePeriod] || ""
       };
     });
 
@@ -335,7 +360,8 @@ export const editEmploymentDetails = async (req, res) => {
       joining_month,
       leaving_year,
       leaving_month,
-      description
+      description,
+      notice_period
     } = req.body;
 
     if (!_id) {
@@ -384,6 +410,7 @@ export const editEmploymentDetails = async (req, res) => {
         month: leaving_month,
       },
       jobDescription: description,
+      NoticePeriod: notice_period
     };
 
     const updatedEmployment = await Employment.findByIdAndUpdate(

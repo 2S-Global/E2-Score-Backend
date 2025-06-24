@@ -60,6 +60,10 @@ const employmentSchema = new mongoose.Schema(
       type: String,
     },
 
+    NoticePeriod: {
+      type: String
+    },
+
     isDel: {
       type: Boolean,
       default: false,
