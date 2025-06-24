@@ -433,47 +433,47 @@ export const editEmploymentDetails = async (req, res) => {
 };
 
 /**
- * @description Delete an existing certificate from the authenticated user's profile.
- * @route DELETE /api/candidate/accomplishments/delete_certificate
+ * @description Delete an existing Employment Details from the authenticated user's profile.
+ * @route DELETE /api/candidate/employment/delete_employment
  * @security BearerAuth
- * @param {object} req.body - Certificate details to delete
- * @param {string} req.body._id.required - ID of the certificate to delete
- * @returns {object} 200 - Certificate deleted successfully
+ * @param {object} req.body - Employment Details to delete
+ * @param {string} req.body._id.required - ID of the Employment Details to delete
+ * @returns {object} 200 - Employment Details deleted successfully
  * @returns {object} 400 - Required fields missing
- * @returns {object} 404 - Certificate not found or already deleted
- * @returns {object} 500 - Error deleting Certificate
+ * @returns {object} 404 - Employment Details not found or already deleted
+ * @returns {object} 500 - Error deleting Employment Details
  */
-export const deleteCertificate = async (req, res) => {
+export const deleteEmploymentDetails = async (req, res) => {
   try {
     const { _id } = req.body;
     const userId = req.userId;
 
     // Find the existing document
-    const userCertificate = await UserCertification.findOne({
+    const employmentDetails = await Employment.findOne({
       _id,
       userId,
       isDel: false,
     });
 
-    if (!userCertificate) {
+    if (!employmentDetails) {
       return res.status(404).json({
         success: false,
-        message: "Certificate not found or already deleted.",
+        message: "Employment Details not found or already deleted.",
       });
     }
 
     // Soft delete: mark as deleted
-    userCertificate.isDel = true;
-    await userCertificate.save();
+    employmentDetails.isDel = true;
+    await employmentDetails.save();
 
     res.status(200).json({
       success: true,
-      message: "Certificate deleted successfully!",
-      data: userCertificate,
+      message: "Employment Details deleted successfully!",
+      data: employmentDetails,
     });
   } catch (error) {
     res.status(500).json({
-      message: "Error deleting Certificate",
+      message: "Error deleting Employment Details",
       error: error.message,
     });
   }

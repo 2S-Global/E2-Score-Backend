@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 
-import { getMatchingCompany, getRandomCompany, addEmploymentDetails, getEmploymentDetails,editEmploymentDetails, getNoticePeriod } from "../../controllers/candidate/EmploymentController.js";
+import { getMatchingCompany, getRandomCompany, addEmploymentDetails, getEmploymentDetails,editEmploymentDetails, getNoticePeriod, deleteEmploymentDetails } from "../../controllers/candidate/EmploymentController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
 
@@ -17,5 +17,6 @@ employmentRouter.get("/get_notice_period", getNoticePeriod);
 employmentRouter.post("/add_employment", userAuth, upload.none(), addEmploymentDetails);
 employmentRouter.get("/get_employment", userAuth, getEmploymentDetails);
 employmentRouter.put("/edit_employment", userAuth, upload.none(), editEmploymentDetails);
+employmentRouter.delete("/delete_employment", userAuth, upload.none(), deleteEmploymentDetails);
 
 export default employmentRouter;
