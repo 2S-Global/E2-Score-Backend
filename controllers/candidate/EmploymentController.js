@@ -284,6 +284,7 @@ export const getEmploymentDetails = async (req, res) => {
       const leavingMonth = item.leavingDate?.month || "";
 
       return {
+        _id: item._id,
         currentlyWorking: item.currentEmployment || false,
         employmenttype: item.employmentType || "",
         experience_yr: item.totalExperience?.year?.toString() || "",
@@ -428,5 +429,52 @@ export const editEmploymentDetails = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error Saving Employment Details", error: error.message });
+  }
+};
+
+/**
+ * @description Delete an existing certificate from the authenticated user's profile.
+ * @route DELETE /api/candidate/accomplishments/delete_certificate
+ * @security BearerAuth
+ * @param {object} req.body - Certificate details to delete
+ * @param {string} req.body._id.required - ID of the certificate to delete
+ * @returns {object} 200 - Certificate deleted successfully
+ * @returns {object} 400 - Required fields missing
+ * @returns {object} 404 - Certificate not found or already deleted
+ * @returns {object} 500 - Error deleting Certificate
+ */
+export const deleteCertificate = async (req, res) => {
+  try {
+    const { _id } = req.body;
+    const userId = req.userId;
+
+    // Find the existing document
+    const userCertificate = await UserCertification.findOne({
+      _id,
+      userId,
+      isDel: false,
+    });
+
+    if (!userCertificate) {
+      return res.status(404).json({
+        success: false,
+        message: "Certificate not found or already deleted.",
+      });
+    }
+
+    // Soft delete: mark as deleted
+    userCertificate.isDel = true;
+    await userCertificate.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Certificate deleted successfully!",
+      data: userCertificate,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting Certificate",
+      error: error.message,
+    });
   }
 };
