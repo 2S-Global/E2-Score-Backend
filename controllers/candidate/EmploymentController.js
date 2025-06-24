@@ -221,7 +221,6 @@ export const getEmploymentDetails = async (req, res) => {
 
     // Format response
     const formatted = employmentData.map((item) => {
-      const experienceMonth = item.totalExperience?.month || "";
       const joiningMonth = item.joiningDate?.month || "";
       const leavingMonth = item.leavingDate?.month || "";
 
@@ -230,7 +229,6 @@ export const getEmploymentDetails = async (req, res) => {
         employmenttype: item.employmentType || "",
         experience_yr: item.totalExperience?.year?.toString() || "",
         experience_month: item.totalExperience?.month?.toString() || "",
-        experience_month_name: experienceMonth ? monthNames[experienceMonth] : "",
         company_name: companyMap[item.companyName] || "",
         company_id: item.companyName || "",
         job_title: item.jobTitle || "",
@@ -240,7 +238,10 @@ export const getEmploymentDetails = async (req, res) => {
         leaving_year: item.leavingDate?.year || "",
         leaving_month: leavingMonth,
         leaving_month_name: leavingMonth ? monthNames[leavingMonth] : "",
-        description: item.jobDescription || ""
+        description: item.jobDescription || "",
+        isVerified: item.isVerified,
+        jobTypeVerified: item.jobTypeVerified,
+        jobDurationVerified: item.jobDurationVerified
       };
     });
 
