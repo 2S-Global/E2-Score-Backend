@@ -1,5 +1,6 @@
 import db_sql from "../../config/sqldb.js";
 import Employment from "../../models/Employment.js";
+import companylist from "../../models/CompanyListModel.js";
 
 /**
  * @description Search for matching Company based on the query parameter company_name
@@ -9,7 +10,7 @@ import Employment from "../../models/Employment.js";
  * @error {object} 400 - company_name query parameter is required
  * @error {object} 500 - Database query failed
  */
-export const getMatchingCompany = async (req, res) => {
+export const getMatchingCompanyBySql = async (req, res) => {
   const { company_name } = req.query;
 
   if (!company_name || company_name.trim() === "") {
@@ -37,6 +38,45 @@ export const getMatchingCompany = async (req, res) => {
   } catch (error) {
     console.error("MySQL error →", error);
     res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+export const getMatchingCompany = async (req, res) => {
+  const { company_name } = req.query;
+
+  if (!company_name || company_name.trim() === "") {
+    return res.status(400).json({
+      success: false,
+      message: "company_name query parameter is required",
+    });
+  }
+
+  try {
+    const companies = await companylist.find({
+      isDel: false,
+      isActive: true,
+      companyname: { $regex: `^${company_name}`, $options: "i" },
+    })
+      .sort({ companyname: 1 })
+      .limit(50)
+      .select("_id companyname");
+
+    const formattedCompanies = companies.map((c) => ({
+      _id: c._id,
+      name: c.companyname,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: formattedCompanies,
+      message: `Matching companies for "${company_name}"`,
+    });
+  } catch (error) {
+    console.error("MongoDB error →", error);
+    res.status(500).json({
+      success: false,
+      message: "Database query failed",
+    });
   }
 };
 
