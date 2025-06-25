@@ -215,7 +215,7 @@ export const getEmploymentDetails = async (req, res) => {
 
     if (!employmentData || employmentData.length === 0) {
       return res.status(404).json({
-        success: false,
+        success: true,
         message: "Employment Details not found or already deleted.",
       });
     }
