@@ -55,20 +55,16 @@ export const getMatchingCompany = async (req, res) => {
     const companies = await companylist.find({
       isDel: false,
       isActive: true,
-      companyname: { $regex: `^${company_name}`, $options: "i" },
+      companyname: { $regex: `^${company_name}`, $options: "i" }, // prefix + case-insensitive
     })
       .sort({ companyname: 1 })
-      .limit(50)
-      .select("_id companyname");
+      .select("companyname"); 
 
-    const formattedCompanies = companies.map((c) => ({
-      _id: c._id,
-      name: c.companyname,
-    }));
+    const companyNames = companies.map((c) => c.companyname);
 
     res.status(200).json({
       success: true,
-      data: formattedCompanies,
+      data: companyNames,
       message: `Matching companies for "${company_name}"`,
     });
   } catch (error) {
@@ -89,7 +85,7 @@ export const getMatchingCompany = async (req, res) => {
 export const getRandomCompany = async (req, res) => {
   try {
     const [rows] = await db_sql.execute(
-      "SELECT NAME FROM `company` WHERE is_del = 0 AND is_active = 1 ORDER BY RAND() LIMIT 50;"
+      "SELECT NAME FROM `company` WHERE is_del = 0 AND is_active = 1 ORDER BY LIMIT 50;"
     );
 
     // Convert to array of strings
