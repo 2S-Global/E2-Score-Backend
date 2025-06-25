@@ -220,62 +220,38 @@ export const getEmploymentDetails = async (req, res) => {
       });
     }
 
-    // Prepare company ID list
-    const companyIds = [
-      ...new Set(
-        employmentData.map((emp) => emp.companyName).filter((id) => !!id)
-      ),
-    ];
+    // Reusable function to fetch mapping from SQL by ID
+    const fetchSqlMapByIds = async (tableName, idField = "id", nameField = "NAME", ids = []) => {
+      if (!ids.length) return {};
 
-    // Create placeholders and query company names from SQL
-    const placeholders = companyIds.map(() => "?").join(",");
-    const [companyRows] = await db_sql.execute(
-      `SELECT id, NAME FROM company WHERE id IN (${placeholders})`,
-      companyIds
-    );
+      const placeholders = ids.map(() => "?").join(",");
+      const [rows] = await db_sql.execute(
+        `SELECT ${idField}, ${nameField} FROM ${tableName} WHERE ${idField} IN (${placeholders})`,
+        ids
+      );
 
-    // Build map: companyId → name
-    const companyMap = {};
-    companyRows.forEach((row) => {
-      companyMap[row.id] = row.NAME;
-    });
+      const map = {};
+      rows.forEach((row) => {
+        map[row[idField]] = row[nameField];
+      });
 
-    // Get Notice Period Name
-    // Prepare company ID list
-    const noticePeriodIds = [
-      ...new Set(
-        employmentData.map((emp) => emp.NoticePeriod).filter((id) => !!id)
-      ),
-    ];
+      return map;
+    };
 
-    // Create placeholders and query company names from SQL
-    const noticePeriodPlaceholders = noticePeriodIds.map(() => "?").join(",");
-    const [noticePeriodRows] = await db_sql.execute(
-      `SELECT id, name FROM notice_period WHERE id IN (${noticePeriodPlaceholders})`,
-      noticePeriodIds
-    );
+    // Extract unique company & notice period IDs
+    const companyIds = [...new Set(employmentData.map((emp) => emp.companyName).filter(Boolean))];
+    const noticePeriodIds = [...new Set(employmentData.map((emp) => emp.NoticePeriod).filter(Boolean))];
 
-    // Build map: companyId → name
-    const noticePeriodMap = {};
-    noticePeriodRows.forEach((row) => {
-      noticePeriodMap[row.id] = row.name;
-    });
+    // Fetch maps
+    const [companyMap, noticePeriodMap] = await Promise.all([
+      fetchSqlMapByIds("company", "id", "NAME", companyIds),
+      fetchSqlMapByIds("notice_period", "id", "name", noticePeriodIds),
+    ]);
 
-    //Month names map
+    // Month names
     const monthNames = [
-      "", // for 1-based index
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      "", "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
     ];
 
     // Format response
@@ -303,7 +279,7 @@ export const getEmploymentDetails = async (req, res) => {
         jobTypeVerified: item.jobTypeVerified,
         jobDurationVerified: item.jobDurationVerified,
         notice_period: item.NoticePeriod || "",
-        notice_period_name: noticePeriodMap[item.NoticePeriod] || ""
+        notice_period_name: noticePeriodMap[item.NoticePeriod] || "",
       };
     });
 
@@ -320,6 +296,7 @@ export const getEmploymentDetails = async (req, res) => {
     });
   }
 };
+
 
 /**
  * @description Update an existing Employment Details for the authenticated user.
