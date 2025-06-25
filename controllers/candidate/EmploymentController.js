@@ -58,6 +58,7 @@ export const getMatchingCompany = async (req, res) => {
       companyname: { $regex: `^${company_name}`, $options: "i" }, // prefix + case-insensitive
     })
       .sort({ companyname: 1 })
+      .limit(50)
       .select("companyname"); 
 
     const companyNames = companies.map((c) => c.companyname);
@@ -99,6 +100,50 @@ export const getRandomCompany = async (req, res) => {
   } catch (error) {
     console.error("MySQL error →", error);
     res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get All company details from the database
+ * @route GET /api/candidate/employment/all_company_details
+ * @success {object} 200 - Company details
+ * @error {object} 500 - Database query failed
+ */
+export const getAllCompany = async (req, res) => {
+  const { company_name } = req.query;
+
+  if (!company_name || company_name.trim() === "") {
+    return res.status(400).json({
+      success: false,
+      message: "company_name query parameter is required",
+    });
+  }
+
+  try {
+    const companies = await companylist.findOne({
+      isDel: false,
+      isActive: true,
+      companyname: company_name.trim(), // exact match
+    });
+
+    if (companies.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `No company found with the name "${company_name}"`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: companies,
+      message: `Company details for "${company_name}"`,
+    });
+  } catch (error) {
+    console.error("MongoDB error →", error);
+    res.status(500).json({
+      success: false,
+      message: "Database query failed",
+    });
   }
 };
 
