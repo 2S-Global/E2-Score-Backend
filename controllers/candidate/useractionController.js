@@ -202,7 +202,7 @@ export const updateUserDetails = async (req, res) => {
 
     const updatedUser = await User.findByIdAndUpdate(user_id, {
       name: full_name,
-      gender: gender,
+      gender: gender || "",
       updatedAt: new Date(),
     });
 
