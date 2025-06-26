@@ -90,7 +90,7 @@ export const getSkill = async (req, res) => {
  * @error {object} 400 - skill_name query parameter is required
  * @error {object} 500 - Database query failed
  */
-export const getMatchingSkill = async (req, res) => {
+export const getMatchingSkillBySql = async (req, res) => {
   const { skill_name } = req.query;
 
   if (!skill_name || skill_name.trim() === "") {
@@ -120,6 +120,43 @@ export const getMatchingSkill = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+export const getMatchingSkill = async (req, res) => {
+  const { skill_name } = req.query;
+
+  if (!skill_name || skill_name.trim() === "") {
+    return res.status(400).json({
+      success: false,
+      message: "skill_name query parameter is required",
+    });
+  }
+
+  try {
+    const skillsResult = await list_key_skill.find(
+      {
+        is_del: 0,
+        is_active: 1,
+        Skill: { $regex: `^${skill_name}`, $options: "i" }, // case-insensitive "starts with"
+      },
+      "Skill" // project only Skill field
+    )
+      .sort({ Skill: 1 })
+      .limit(50)
+      .lean();
+
+    const skills = skillsResult.map((row) => row.Skill);
+
+    res.status(200).json({
+      success: true,
+      data: skills,
+      message: `Matching skills for "${skill_name}"`,
+    });
+  } catch (error) {
+    console.error("MongoDB error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
 
 /**
  * @description Get all Education Level from the database
