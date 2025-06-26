@@ -4,7 +4,7 @@ import list_gender from "../../models/monogo_query/genderModel.js";
 
 /**
  * @description Get all countries from the database
- * @route GET /api/mongo/dropdown/All_contry
+ * @route GET /api/sql/dropdown/All_contry
  * @success {object} 200 - All countries
  * @error {object} 500 - Database query failed
  */
@@ -30,7 +30,7 @@ export const All_country = async (req, res) => {
 
 /**
  * @description Get all genders from the database
- * @route GET /api/mongo/dropdown/All_gender
+ * @route GET /api/sql/dropdown/All_gender
  * @success {object} 200 - All genders
  * @error {object} 500 - Database query failed
  */
@@ -64,7 +64,7 @@ export const getSkill = async (req, res) => {
     const [rows] = await db_sql.execute(
       "SELECT Skill FROM `key_skills` WHERE is_del = 0 AND is_active = 1 ORDER BY RAND() LIMIT 50;"
     );
-    
+
     // Convert to array of strings
     const skills = rows.map((row) => row.Skill);
 

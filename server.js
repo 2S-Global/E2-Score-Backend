@@ -53,9 +53,9 @@ app.use("/api/usercart", userVerificationCartRoutes);
 app.use("/api/pdf", pdfRouter);
 
 //dropdown routes
-app.use("/api/sql/dropdown", DropdownRouterouter);
+// app.use("/api/sql/dropdown", DropdownRouterouter);
 //Mongo Dropdown Routes
-app.use("/api/mongo/dropdown", MongoDropdownRouter);
+app.use("/api/sql/dropdown", MongoDropdownRouter);
 
 //candidate routes
 app.use("/api/useraction", userRouter);

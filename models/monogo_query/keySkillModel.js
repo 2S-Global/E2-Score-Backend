@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const GenderSchema = new mongoose.Schema(
+const KeySkillSchema = new mongoose.Schema(
   {
     id: {
       type: Number
@@ -19,6 +19,6 @@ const GenderSchema = new mongoose.Schema(
   }
 );
 
-const list_gender = mongoose.model("list_gender", GenderSchema, "list_gender");
+const list_gender = mongoose.model("list_gender", KeySkillSchema, "list_gender");
 
 export default list_gender;
