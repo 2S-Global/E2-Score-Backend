@@ -111,8 +111,9 @@ export const getUser = async (req, res) => {
     // Fetch gender name from SQL
     let gender_name = "";
     if (user.gender) {
+      const genderObjectId = new mongoose.Types.ObjectId(user.gender);
       const genderResult = await list_gender.findOne({
-        _id: user.gender,
+        _id: genderObjectId,
         is_del: 0,
         is_active: 1,
       });
