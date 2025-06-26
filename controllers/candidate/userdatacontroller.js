@@ -5,6 +5,7 @@ import db_sql from "../../config/sqldb.js";
 import UserEducation from "../../models/userEducationModel.js";
 import list_gender from "../../models/monogo_query/genderModel.js";
 import list_education_level from "../../models/monogo_query/educationLevelModel.js";
+import { GetProgress } from "../../utility/helper/getprogress.js";
 /**
  * @function getUser
  *  @route GET /api/userdata/userdata
@@ -97,6 +98,8 @@ export const getUser = async (req, res) => {
     const user_id = req.userId;
     const user = await User.findById(user_id).lean();
 
+    const progress = await GetProgress(user_id);
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -163,6 +166,7 @@ export const getUser = async (req, res) => {
       }),
       gender_name,
       degree: levelName || "",
+      progress,
     };
 
     res.status(200).json(responseData);
