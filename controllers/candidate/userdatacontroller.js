@@ -6,6 +6,7 @@ import UserEducation from "../../models/userEducationModel.js";
 import list_gender from "../../models/monogo_query/genderModel.js";
 import list_education_level from "../../models/monogo_query/educationLevelModel.js";
 import { GetProgress } from "../../utility/helper/getprogress.js";
+import mongoose from "mongoose";
 /**
  * @function getUser
  *  @route GET /api/userdata/userdata
@@ -145,8 +146,9 @@ export const getUser = async (req, res) => {
 
     let levelName = "";
     if (selectedLevel !== null) {
+      const selectedLevelObjectId = new mongoose.Types.ObjectId(selectedLevel);
       const levelResult = await list_education_level.findOne({
-        _id: selectedLevel,
+        _id: selectedLevelObjectId,
         is_del: 0,
         is_active: 1,
       });
