@@ -273,10 +273,10 @@ export const getUserDetails = async (req, res) => {
     const result = {
       name: userData.name || "",
       gender: userData.gender || "",
-      dob: personalData.dob || "",
-      country_id: personalData.country_id || "",
-      currentLocation: personalData.currentLocation || "",
-      hometown: personalData.hometown || "",
+      dob: personalData?.dob || "",
+      country_id: personalData?.country_id || "",
+      currentLocation: personalData?.currentLocation || "",
+      hometown: personalData?.hometown || "",
     };
 
     res.status(200).json(result);
