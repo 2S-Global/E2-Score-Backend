@@ -120,10 +120,10 @@ export const getAllCompany = async (req, res) => {
   }
 
   try {
-    const companies = await companylist.findOne({
+    const companies = await companylist.find({
       isDel: false,
       isActive: true,
-      companyname: company_name.trim(), // exact match
+      companyname: company_name.trim(),
     });
 
     if (companies.length === 0) {

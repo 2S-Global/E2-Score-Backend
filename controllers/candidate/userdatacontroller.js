@@ -3,6 +3,8 @@ import personalDetails from "../../models/personalDetails.js";
 import candidateDetails from "../../models/CandidateDetailsModel.js";
 import db_sql from "../../config/sqldb.js";
 import UserEducation from "../../models/userEducationModel.js";
+import list_gender from "../../models/monogo_query/genderModel.js";
+import list_education_level from "../../models/monogo_query/educationLevelModel.js";
 /**
  * @function getUser
  *  @route GET /api/userdata/userdata
@@ -12,7 +14,7 @@ import UserEducation from "../../models/userEducationModel.js";
  * @returns {Promise}
  *  @access protected
  */
-export const getUser = async (req, res) => {
+export const getUserBySql = async (req, res) => {
   try {
     const user_id = req.userId;
     const user = await User.findById(user_id).lean();
@@ -27,6 +29,7 @@ export const getUser = async (req, res) => {
 
     // Fetch gender name from SQL
     let gender_name = "";
+
     if (user.gender) {
       const [genderResult] = await db_sql.query(
         "SELECT name FROM gender WHERE id = ?",
@@ -65,6 +68,79 @@ export const getUser = async (req, res) => {
       );
       if (levelResult?.length) {
         levelName = levelResult[0].level;
+      }
+    }
+
+    // Combine final data
+    const responseData = {
+      ...user,
+      ...(personalData && {
+        dob: personalData.dob,
+        country_id: personalData.country_id,
+        currentLocation: personalData.currentLocation,
+        hometown: personalData.hometown,
+      }),
+      gender_name,
+      degree: levelName || "",
+    };
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("Error in getUser:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Updated API for mongodb
+export const getUser = async (req, res) => {
+  try {
+    const user_id = req.userId;
+    const user = await User.findById(user_id).lean();
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const personalData = await candidateDetails
+      .findOne({ userId: user_id }, "dob country_id currentLocation hometown")
+      .lean();
+
+    // Fetch gender name from SQL
+    let gender_name = "";
+    if (user.gender) {
+      const genderResult = await list_gender.findOne({ _id: user.gender, is_del: 0, is_active: 1 });
+
+      if (genderResult) {
+        gender_name = genderResult.name;
+      }
+    }
+
+    // Fetch all UserEducation records for the user and get the max level
+    const educations = await UserEducation.find(
+      { userId: user_id, isDel: false },
+      "level isPrimary"
+    ).lean();
+
+    let selectedLevel = null;
+    if (educations.length) {
+      const primaryEdu = educations.find((edu) => edu.isPrimary === true);
+      if (primaryEdu) {
+        selectedLevel = parseInt(primaryEdu.level);
+      } else {
+        selectedLevel = Math.max(
+          ...educations
+            .map((edu) => parseInt(edu.level))
+            .filter((lvl) => !isNaN(lvl))
+        );
+      }
+    }
+
+    let levelName = "";
+    if (selectedLevel !== null) {
+      const levelResult = await list_education_level.findOne({ _id: selectedLevel, is_del: 0, is_active: 1 });
+
+      if (levelResult) {
+        levelName = levelResult.level;
       }
     }
 

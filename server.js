@@ -29,6 +29,7 @@ import itskillRouter from "./routes/candidate/itskillRoute.js";
 import projectDetailsRouter from "./routes/candidate/projectDetailsRoute.js";
 //import form Dropdown routes
 import DropdownRouterouter from "./routes/sql/DropdownRoute.js";
+import MongoDropdownRouter from "./routes/mongo/mongoDropdownRoute.js";
 
 //candidate Routes
 import userRouter from "./routes/candidate/useractionRoute.js";
@@ -53,6 +54,8 @@ app.use("/api/pdf", pdfRouter);
 
 //dropdown routes
 app.use("/api/sql/dropdown", DropdownRouterouter);
+//Mongo Dropdown Routes
+app.use("/api/mongo/dropdown", MongoDropdownRouter);
 
 //candidate routes
 app.use("/api/useraction", userRouter);
