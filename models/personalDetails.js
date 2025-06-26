@@ -138,9 +138,10 @@ const personalSchema = new mongoose.Schema(
         type: String,
       },
     ], */
-    skills: {
-      type: String,
-    },
+    skills: [{
+      type: mongoose.Types.ObjectId,
+      ref: "list_key_skill" // Assuming you have a model for key skills
+    }]
   },
   { timestamps: true }
 );

@@ -8,6 +8,8 @@ import axios from "axios";
 import FormData from "form-data";
 import UserCareer from "../../models/CareerModel.js";
 import ResumeDetails from "../../models/resumeDetailsModels.js";
+import list_key_skill from "../../models/monogo_query/keySkillModel.js";
+import mongoose from "mongoose";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -366,28 +368,34 @@ export const addKeySkills = async (req, res) => {
       });
     }
 
-    const allStrings = skills.every((skill) => typeof skill === "string");
-    if (!allStrings) {
-      return res.status(400).json({
-        message: "All skills must be strings.",
-      });
+    // Case: If skills came as a string from form-data
+    let parsedSkills = skills;
+    if (typeof skills === "string") {
+      try {
+        parsedSkills = JSON.parse(skills);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid skills format." });
+      }
     }
 
-    //Find matching skills in MongoDB
-    const matchedSkills = await KeySkill.find({
-      Skill: { $in: skills },
+    const allStrings = parsedSkills.every((skill) => typeof skill === "string");
+    if (!allStrings) {
+      return res.status(400).json({ message: "All skills must be strings." });
+    }
+
+    // Find matching skills in MongoDB
+    const matchedSkills = await list_key_skill.find({
+      Skill: { $in: parsedSkills },
       is_del: 0,
       is_active: 1,
     }, "_id Skill");
 
-    //Map found skills
     const skillMap = {};
     matchedSkills.forEach((row) => {
       skillMap[row.Skill] = row._id;
     });
 
-    //Identify missing ones
-    const missingSkills = skills.filter((skill) => !skillMap[skill]);
+    const missingSkills = parsedSkills.filter((skill) => !skillMap[skill]);
     if (missingSkills.length > 0) {
       return res.status(400).json({
         success: false,
@@ -396,20 +404,19 @@ export const addKeySkills = async (req, res) => {
       });
     }
 
-    //Final skill ObjectIds
-    const skillIds = skills.map((skill) => skillMap[skill]);
+    const skillObjectIds = parsedSkills.map((skill) => skillMap[skill]);
 
-    //Save/update in PersonalDetails
+    // Save ObjectIds array to skills field
     await PersonalDetails.findOneAndUpdate(
       { user: new mongoose.Types.ObjectId(user) },
-      { skills: skillIds },
+      { skills: skillObjectIds },
       { upsert: true, new: true }
     );
 
     return res.status(201).json({
       success: true,
-      message: "Skill IDs saved successfully!",
-      data: skillIds,
+      message: "Skills saved successfully!",
+      data: skillObjectIds,
     });
   } catch (error) {
     console.error("Error saving skills:", error);
