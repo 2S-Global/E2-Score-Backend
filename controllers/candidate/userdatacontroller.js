@@ -6,6 +6,7 @@ import UserEducation from "../../models/userEducationModel.js";
 import list_gender from "../../models/monogo_query/genderModel.js";
 import list_education_level from "../../models/monogo_query/educationLevelModel.js";
 import { GetProgress } from "../../utility/helper/getprogress.js";
+import list_key_skill from "../../models/monogo_query/keySkillModel.js";
 import mongoose from "mongoose";
 /**
  * @function getUser
@@ -304,42 +305,36 @@ export const getcandidateskills = async (req, res) => {
   try {
     const userId = req.userId;
 
-    // 1. Fetch user skill string from MongoDB
-    const candidate = await personalDetails.findOne({ user: userId });
+    // 1. Fetch candidate details
+    const candidate = await personalDetails.findOne({ user: userId }).lean();
 
-    if (!candidate || !candidate.skills) {
+    if (!candidate || !candidate.skills || !Array.isArray(candidate.skills)) {
       return res.status(404).json({ message: "User skills not found" });
     }
 
-    // 2. Convert "32046,5332,31680" -> [32046, 5332, 31680]
-    const skillIds = candidate.skills
-      .split(",")
-      .map((id) => parseInt(id.trim()))
-      .filter((id) => !isNaN(id)); // remove invalid entries
+    // 2. Remove duplicate ObjectIds (optional)
+    const uniqueSkillIds = [...new Set(candidate.skills.map(id => id.toString()))].map(id => new mongoose.Types.ObjectId(id));
 
-    if (skillIds.length === 0) {
-      return res.status(200).json([]); // return empty array if no valid IDs
+    if (uniqueSkillIds.length === 0) {
+      return res.status(200).json([]); // return empty array
     }
 
-    // 3. Generate placeholders (?, ?, ?) dynamically
-    const placeholders = skillIds.map(() => "?").join(", ");
+    // 3. Query key_skills collection for names
+    const skills = await list_key_skill.find(
+      { _id: { $in: uniqueSkillIds }, is_del: 0, is_active: 1 },
+      { Skill: 1, _id: 0 } // project only Skill field
+    ).lean();
 
-    // 4. Query SQL for matching skills
-    const [rows] = await db_sql.execute(
-      `SELECT Skill FROM key_skills WHERE id IN (${placeholders})`,
-      skillIds
-    );
+    const skillNames = skills.map(skill => skill.Skill);
 
-    // 5. Extract skill names
-    const skillNames = rows.map((row) => row.Skill);
-
-    // 6. Respond
+    // 4. Respond
     res.status(200).json(skillNames);
   } catch (error) {
     console.error("Error fetching candidate skills:", error);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };
 
