@@ -108,7 +108,11 @@ export const getUser = async (req, res) => {
     // Fetch gender name from SQL
     let gender_name = "";
     if (user.gender) {
-      const genderResult = await list_gender.findOne({ _id: user.gender, is_del: 0, is_active: 1 });
+      const genderResult = await list_gender.findOne({
+        _id: user.gender,
+        is_del: 0,
+        is_active: 1,
+      });
 
       if (genderResult) {
         gender_name = genderResult.name;
@@ -137,7 +141,11 @@ export const getUser = async (req, res) => {
 
     let levelName = "";
     if (selectedLevel !== null) {
-      const levelResult = await list_education_level.findOne({ _id: selectedLevel, is_del: 0, is_active: 1 });
+      const levelResult = await list_education_level.findOne({
+        _id: selectedLevel,
+        is_del: 0,
+        is_active: 1,
+      });
 
       if (levelResult) {
         levelName = levelResult.level;
@@ -257,18 +265,18 @@ export const getUserDetails = async (req, res) => {
       "dob country_id currentLocation hometown" // Select only required fields
     );
 
-    if (!userData || !personalData) {
+    if (!userData) {
       return res.status(404).json({ message: "User data not found" });
     }
 
     // Combine and send response
     const result = {
-      name: userData.name,
-      gender: userData.gender,
-      dob: personalData.dob,
-      country_id: personalData.country_id,
-      currentLocation: personalData.currentLocation,
-      hometown: personalData.hometown,
+      name: userData.name || "",
+      gender: userData.gender || "",
+      dob: personalData.dob || "",
+      country_id: personalData.country_id || "",
+      currentLocation: personalData.currentLocation || "",
+      hometown: personalData.hometown || "",
     };
 
     res.status(200).json(result);
