@@ -7,7 +7,7 @@ import personalDetails from "../../models/personalDetails.js";
 import UserEducation from "../../models/userEducationModel.js";
 
 export const GetProgress = async (userId) => {
-  console.log("from helper", userId);
+  // console.log("from helper", userId);
   let progress = 15;
 
   // Parallel DB queries
