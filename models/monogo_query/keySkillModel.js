@@ -19,6 +19,6 @@ const KeySkillSchema = new mongoose.Schema(
   }
 );
 
-const list_gender = mongoose.model("list_gender", KeySkillSchema, "list_gender");
+const list_key_skill = mongoose.model("list_key_skill", KeySkillSchema);
 
-export default list_gender;
+export default list_key_skill;

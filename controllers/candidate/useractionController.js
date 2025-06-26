@@ -284,9 +284,9 @@ export const addProfileSummary = async (req, res) => {
  * @returns {object} 400 - Skills must be a non-empty array of strings..
  * @returns {object} 500 - Error saving skills
  */
-export const addKeySkills = async (req, res) => {
+export const addKeySkillsBySql = async (req, res) => {
   try {
-    const { skills } = req.body; // array of strings
+    const { skills } = req.body;
     const user = req.userId;
 
     if (!user) {
@@ -304,7 +304,7 @@ export const addKeySkills = async (req, res) => {
       return res.status(400).json({ message: "All skills must be strings." });
     }
 
-    // 🔍 Get skill IDs from SQL
+    //Get skill IDs from SQL
     const placeholders = skills.map(() => "?").join(", ");
     const [rows] = await db_sql.execute(
       `SELECT id, Skill FROM key_skills WHERE Skill IN (${placeholders})`,
@@ -316,7 +316,7 @@ export const addKeySkills = async (req, res) => {
       skillMap[row.Skill] = row.id;
     });
 
-    // ❌ Check for missing skills
+    //Check for missing skills
     const missingSkills = skills.filter((skill) => !skillMap[skill]);
     if (missingSkills.length > 0) {
       return res.status(400).json({
@@ -326,12 +326,82 @@ export const addKeySkills = async (req, res) => {
       });
     }
 
-    // ✅ Convert to comma-separated string of IDs
+    //Convert to comma-separated string of IDs
     const skillIds = skills.map((skill) => skillMap[skill]).join(",");
 
-    // 💾 Save in MongoDB
+    //Save in MongoDB
     await PersonalDetails.findOneAndUpdate(
       { user },
+      { skills: skillIds },
+      { upsert: true, new: true }
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Skill IDs saved successfully!",
+      data: skillIds,
+    });
+  } catch (error) {
+    console.error("Error saving skills:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const addKeySkills = async (req, res) => {
+  try {
+    const { skills } = req.body;
+    const user = req.userId;
+
+    if (!user) {
+      return res.status(400).json({ message: "User ID is missing." });
+    }
+
+    if (!Array.isArray(skills) || skills.length === 0) {
+      return res.status(400).json({
+        message: "Skills must be a non-empty array of strings.",
+      });
+    }
+
+    const allStrings = skills.every((skill) => typeof skill === "string");
+    if (!allStrings) {
+      return res.status(400).json({
+        message: "All skills must be strings.",
+      });
+    }
+
+    //Find matching skills in MongoDB
+    const matchedSkills = await KeySkill.find({
+      Skill: { $in: skills },
+      is_del: 0,
+      is_active: 1,
+    }, "_id Skill");
+
+    //Map found skills
+    const skillMap = {};
+    matchedSkills.forEach((row) => {
+      skillMap[row.Skill] = row._id;
+    });
+
+    //Identify missing ones
+    const missingSkills = skills.filter((skill) => !skillMap[skill]);
+    if (missingSkills.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Some skills not found in the database.",
+        missingSkills,
+      });
+    }
+
+    //Final skill ObjectIds
+    const skillIds = skills.map((skill) => skillMap[skill]);
+
+    //Save/update in PersonalDetails
+    await PersonalDetails.findOneAndUpdate(
+      { user: new mongoose.Types.ObjectId(user) },
       { skills: skillIds },
       { upsert: true, new: true }
     );
