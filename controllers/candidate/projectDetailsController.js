@@ -1,6 +1,7 @@
 import db_sql from "../../config/sqldb.js";
 import ProjectDetails from "../../models/projectModel.js";
-
+import list_project_tag from "../../models/monogo_query/project_tagModel.js";
+import mongoose from "mongoose";
 /**
  * @description Get all project tag from the database
  * @route GET /api/candidate/project/get_project_tag
@@ -10,9 +11,11 @@ import ProjectDetails from "../../models/projectModel.js";
 
 export const getProjectTag = async (req, res) => {
   try {
-    const [rows] = await db_sql.execute(
-      "SELECT _id,name FROM `project_tag` WHERE is_del = 0 AND is_active = 1;"
-    );
+    //fetch all project tag
+    const rows = await list_project_tag.find({
+      is_del: 0,
+      is_active: 1,
+    });
 
     res.status(200).json({
       success: true,
@@ -216,34 +219,6 @@ export const getProjectDetails = async (req, res) => {
       });
     }
 
-    // Extract unique tag IDs from `taggedWith`
-    const tagIds = [
-      ...new Set(
-        projectDetails
-          .map((proj) => proj.taggedWith)
-          .filter(Boolean)
-          .flatMap((str) => str.split(",").map((id) => id.trim()))
-          .filter((id) => !isNaN(id))
-      ),
-    ];
-
-    // Prepare placeholders (?, ?, ?) for MySQL
-    const placeholders = tagIds.map(() => "?").join(",");
-
-    // Get tag names from MySQL
-    let tagMap = {};
-    if (tagIds.length > 0) {
-      const [rows] = await db_sql.execute(
-        `SELECT _id, name FROM project_tag WHERE _id IN (${placeholders}) AND is_del = 0 AND is_active = 1`,
-        tagIds
-      );
-
-      rows.forEach((row) => {
-        tagMap[row._id] = row.name;
-      });
-    }
-
-    // Month names
     const monthNames = [
       "January",
       "February",
@@ -259,37 +234,43 @@ export const getProjectDetails = async (req, res) => {
       "December",
     ];
 
-    //  Format response
-    const formattedProjects = projectDetails.map((project) => {
-      const doc = project._doc;
+    const formattedProjects = await Promise.all(
+      projectDetails.map(async (project) => {
+        const doc = project._doc;
+        const taggedWith = doc.taggedWith || "";
 
-      const taggedWith = doc.taggedWith || "";
-      const firstTagId = taggedWith.split(",")[0]?.trim(); // Take first ID
-      const taggedWithName = tagMap[firstTagId] || "";
+        let taggedWithName = null;
+        if (taggedWith && mongoose.Types.ObjectId.isValid(taggedWith)) {
+          const tag = await list_project_tag.findOne({
+            _id: new mongoose.Types.ObjectId(taggedWith),
+          });
+          taggedWithName = tag?.name || null;
+        }
 
-      return {
-        _id: doc._id,
-        userId: doc.userId,
-        title: doc.projectTitle || "",
-        taggedWith: taggedWith,
-        taggedWithName: taggedWithName,
-        client: doc.clientName || "",
-        status: doc.projectStatus || "",
-        description: doc.description || "",
-        workfromyear: doc.workedFrom?.year || null,
-        workfrommonth: doc.workedFrom?.month || null,
-        workfrommonth_name: doc.workedFrom?.month
-          ? monthNames[doc.workedFrom.month - 1]
-          : null,
-        worktoyear: doc.workedTill?.year || null,
-        worktomonth: doc.workedTill?.month || null,
-        worktomonth_name: doc.workedTill?.month
-          ? monthNames[doc.workedTill.month - 1]
-          : null,
-        createdAt: doc.createdAt || null,
-        updatedAt: doc.updatedAt || null,
-      };
-    });
+        return {
+          _id: doc._id,
+          userId: doc.userId,
+          title: doc.projectTitle || "",
+          taggedWith,
+          taggedWithName,
+          client: doc.clientName || "",
+          status: doc.projectStatus || "",
+          description: doc.description || "",
+          workfromyear: doc.workedFrom?.year || null,
+          workfrommonth: doc.workedFrom?.month || null,
+          workfrommonth_name: doc.workedFrom?.month
+            ? monthNames[doc.workedFrom.month - 1]
+            : null,
+          worktoyear: doc.workedTill?.year || null,
+          worktomonth: doc.workedTill?.month || null,
+          worktomonth_name: doc.workedTill?.month
+            ? monthNames[doc.workedTill.month - 1]
+            : null,
+          createdAt: doc.createdAt || null,
+          updatedAt: doc.updatedAt || null,
+        };
+      })
+    );
 
     return res.status(200).json({
       success: true,
@@ -303,7 +284,6 @@ export const getProjectDetails = async (req, res) => {
     });
   }
 };
-
 /**
  * @description Soft delete a project by marking it as deleted for the authenticated user
  * @route DELETE /api/candidate/project/delete_project_details
