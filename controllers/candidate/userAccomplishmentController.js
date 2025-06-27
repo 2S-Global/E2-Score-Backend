@@ -135,12 +135,15 @@ export const getOnlineProfile = async (req, res) => {
       isDel: false,
     }).sort({ createdAt: -1 });
 
+    console.log("Fetched Online Profiles:", profiles);
+
     // Get unique socialProfile values
     const socialProfileIds = [
       ...new Set(
-        profiles.map((p) => parseInt(p.socialProfile)).filter(Boolean)
+        profiles.map((p) => p.socialProfile).filter(Boolean)
       ),
     ];
+
     if (socialProfileIds.length === 0) {
       return res.status(200).json({
         success: true,
@@ -148,15 +151,9 @@ export const getOnlineProfile = async (req, res) => {
       });
     }
 
-    // const placeholders = socialProfileIds.map(() => "?").join(",");
-    // const [socialRows] = await db_sql.execute(
-    //   `SELECT id, name FROM social_profile WHERE id IN (${placeholders}) AND is_del = 0 AND is_active = 1`,
-    //   socialProfileIds
-    // );
-
     // Fetch social profile names using Mongoose
     const socialRows = await list_social_profile.find({
-      id: { $in: socialProfileIds },
+      _id: { $in: socialProfileIds },
       is_del: 0,
       is_active: 1,
     })
@@ -168,21 +165,12 @@ export const getOnlineProfile = async (req, res) => {
       socialMap[row._id] = row.name;
     });
 
-    console.log("Social Map for Online Social Profile:", socialMap);
-
     const formattedProfiles = profiles.map((profile) => {
       return {
         ...profile._doc,
         socialProfileName: socialMap[profile.socialProfile] || null,
       };
     });
-
-    // const formattedProfiles = profiles.map((profile) => ({
-    //   ...profile._doc,
-    //   socialProfileNames: (profile.socialProfile || []).map(
-    //     (id) => socialMap[id] || null
-    //   ),
-    // }));
 
     res.status(200).json({
       success: true,
