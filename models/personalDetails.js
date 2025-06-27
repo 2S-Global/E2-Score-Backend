@@ -48,7 +48,7 @@ const personalSchema = new mongoose.Schema(
       type: String,
     },
     disability_type: {
-      type: Number,
+      type: String,
     },
     other_disability_type: {
       type: String,

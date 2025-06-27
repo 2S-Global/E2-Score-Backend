@@ -11,6 +11,7 @@ import list_language from "../../models/monogo_query/languageModel.js";
 import list_language_proficiency from "../../models/monogo_query/languageProficiencyModel.js";
 import list_tech_skill from "../../models/monogo_query/techSkillModel.js";
 import list_disability_type from "../../models/monogo_query/disabilityType.js";
+import list_education_level from "../../models/monogo_query/educationLevelModel.js";
 /**
  * @description Get all countries from the database
  * @route GET /api/sql/dropdown/All_contry
@@ -184,6 +185,23 @@ export const getEducationLevel = async (req, res) => {
             "SELECT id , level, duration ,type FROM `education_level` WHERE is_del = 0 AND is_active = 1;"
         );
 
+        /*
+        const educationLevelList = await list_education_level
+            .find(
+                { is_del: 0, is_active: 1 },
+                "_id level duration type" // project only `id` and `name`
+            )
+            .lean();
+
+        //Transform _id to id
+        const formattededucationLevelList = educationLevelList.map((items) => ({
+            id: items._id,
+            level: items.level,
+            duration: items.duration,
+            type: items.type || "",
+        }));
+        */
+       
         res.status(200).json({
             success: true,
             data: rows,
