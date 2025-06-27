@@ -7,6 +7,7 @@ import list_marital_status from "../../models/monogo_query/maritalStatusModel.js
 import list_category from "../../models/monogo_query/categoryModel.js";
 import list_career_break_reason from "../../models/monogo_query/careerBreakReasonModel.js";
 import list_visa_type from "../../models/monogo_query/visaTypeModel.js";
+import list_language from "../../models/monogo_query/languageModel.js";
 
 /**
  * @description Get all countries from the database
@@ -546,7 +547,7 @@ export const getMoreInformation = async (req, res) => {
     try {
         const infoList = await list_more_information.find(
             { is_del: 0, is_active: 1 },
-            "id name" // project only `id` and `name`
+            "_id name" // project only `id` and `name`
         ).lean();
 
         // Transform _id to id
@@ -688,7 +689,6 @@ export const getDisabilityType = async (req, res) => {
  */
 export const getCareerBreakReason = async (req, res) => {
     try {
-        // list_category
         // list_career_break_reason
         const breakList = await list_career_break_reason.find(
             { is_del: 0, is_active: 1 },
@@ -720,13 +720,20 @@ export const getCareerBreakReason = async (req, res) => {
  */
 export const getLanguage = async (req, res) => {
     try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `languages` WHERE is_del = 0 AND is_active = 1;"
-        );
+        const languageList = await list_language.find(
+            { is_del: 0, is_active: 1 },
+            "_id name" // project only `id` and `name`
+        ).lean();
+
+        //Transform _id to id
+        const formattedLanguageList = languageList.map((items) => ({
+            id: items._id,
+            name: items.name
+        }));
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedLanguageList,
             message: "Languages Fetched Successfully",
         });
     } catch (error) {
