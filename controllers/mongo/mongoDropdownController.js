@@ -9,6 +9,7 @@ import list_career_break_reason from "../../models/monogo_query/careerBreakReaso
 import list_visa_type from "../../models/monogo_query/visaTypeModel.js";
 import list_language from "../../models/monogo_query/languageModel.js";
 import list_language_proficiency from "../../models/monogo_query/languageProficiencyModel.js";
+import list_disability_type from "../../models/monogo_query/disabilityType.js";
 
 /**
  * @description Get all countries from the database
@@ -667,13 +668,20 @@ export const getVisaType = async (req, res) => {
  */
 export const getDisabilityType = async (req, res) => {
     try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `disability_type` WHERE is_del = 0 AND is_active = 1;"
-        );
+        const disabilityTypeList = await list_disability_type.find(
+            { is_del: 0, is_active: 1 },
+            "_id name"
+        ).lean();
+
+        //Transform _id to id
+        const formattedDisabilityTypeList = disabilityTypeList.map((items) => ({
+            id: items._id,
+            name: items.name
+        }));
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedDisabilityTypeList,
             message: "Disability Fetched Successfully",
         });
     } catch (error) {
