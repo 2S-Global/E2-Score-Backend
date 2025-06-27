@@ -81,7 +81,7 @@ const personalSchema = new mongoose.Schema(
       type: String,
     },
     reason: {
-      type: Number,
+      type: String,
     },
     // usaPermit: {
     //   type: mongoose.Schema.Types.ObjectId,
