@@ -8,6 +8,7 @@ import list_category from "../../models/monogo_query/categoryModel.js";
 import list_career_break_reason from "../../models/monogo_query/careerBreakReasonModel.js";
 import list_visa_type from "../../models/monogo_query/visaTypeModel.js";
 import list_language from "../../models/monogo_query/languageModel.js";
+import list_language_proficiency from "../../models/monogo_query/languageProficiencyModel.js";
 
 /**
  * @description Get all countries from the database
@@ -750,13 +751,20 @@ export const getLanguage = async (req, res) => {
  */
 export const getLanguageProficiency = async (req, res) => {
     try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `language_proficiency` WHERE is_del = 0 AND is_active = 1;"
-        );
+        const proficiencyList = await list_language_proficiency.find(
+            { is_del: 0, is_active: 1 },
+            "_id name" // project only `id` and `name`
+        ).lean();
+
+        //Transform _id to id
+        const formattedProficiencyList = proficiencyList.map((items) => ({
+            id: items._id,
+            name: items.name
+        }));
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedProficiencyList,
             message: "Language Proficiency Fetched Successfully",
         });
     } catch (error) {
