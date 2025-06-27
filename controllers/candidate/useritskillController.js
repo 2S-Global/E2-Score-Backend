@@ -1,43 +1,50 @@
 import Itskill from "../../models/itskillModel.js";
-import db_sql from "../../config/sqldb.js";
+import getTechSkills from "../../models/monogo_query/techSkillModel.js";
 
+import mongoose from "mongoose";
 export const getOrInsertId = async (value) => {
   try {
-    // 1. Check if value exists
-    const [selectResult] = await db_sql.execute(
-      `SELECT id FROM tech_skills WHERE LOWER(name) = ? LIMIT 1`,
-      [value]
-    );
+    // 1. Normalize input (optional)
+    const trimmedValue = value.trim();
 
-    if (selectResult.length > 0) {
-      return selectResult[0].id;
+    // 2. Check if skill already exists
+    const existingSkill = await getTechSkills.findOne({ name: trimmedValue });
+
+    if (existingSkill) {
+      return existingSkill._id;
     }
 
-    // 2. Insert new value if not found, with default flags
-    const [insertResult] = await db_sql.execute(
-      `INSERT INTO tech_skills (name, is_del, is_active, flag) VALUES (?, 0, 0, 1)`,
-      [value]
-    );
+    // 3. If not found, insert new skill
+    const newSkill = await getTechSkills.create({
+      name: trimmedValue,
+      is_del: 0,
+      is_active: 0,
+      flag: 1,
+    });
 
-    return insertResult.insertId;
+    return newSkill._id;
   } catch (error) {
-    console.error("DB Error in getOrInsertId →", error);
+    console.error("DB Error in getOrInsertId →", error.message);
     throw error;
   }
 };
 
 export const giveIDgetname = async (value) => {
   try {
-    const [rows] = await db_sql.execute(
-      `SELECT name FROM tech_skills WHERE id = ? LIMIT 1`,
-      [value]
-    );
-    if (rows.length === 0) return "Unknown Skill";
+    if (!value || !mongoose.Types.ObjectId.isValid(value)) {
+      return "Unknown Skill";
+    }
 
-    const name = rows[0].name;
+    const skill = await getTechSkills.findById(
+      new mongoose.Types.ObjectId(value)
+    );
+
+    if (!skill) return "Unknown Skill";
+
+    const name = skill.name || "Unknown Skill";
     return name.charAt(0).toUpperCase() + name.slice(1);
   } catch (error) {
-    console.error("DB Error in giveIDgetname →", error);
+    console.error("DB Error in giveIDgetname →", error.message);
     throw error;
   }
 };
