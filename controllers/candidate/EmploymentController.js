@@ -107,6 +107,25 @@ export const getRandomCompany = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+export const getRandomCompanysql = async (req, res) => {
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT NAME FROM `company` WHERE is_del = 0 AND is_active = 1 ORDER BY LIMIT 50;"
+    );
+
+    // Convert to array of strings
+    const companies = rows.map((row) => row.NAME);
+
+    res.status(200).json({
+      success: true,
+      data: companies,
+      message: "Random 50 Company",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
 
 /**
  * @description Get All company details from the database
