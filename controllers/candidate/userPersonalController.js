@@ -91,7 +91,9 @@ export const submitPersonalDetails = async (req, res) => {
         speak: lang.speak || false,
       })),
       maritialStatus: String(data.marital_status),
-      additionalInformation: data.more_info,
+      additionalInformation: (data.more_info || []).filter(
+        (id) => id && id !== "null" && id !== ""
+      ),
     };
 
     await personalDetails.findOneAndUpdate(
