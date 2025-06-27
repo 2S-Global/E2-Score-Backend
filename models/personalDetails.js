@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import moreInformation from "../models/monogo_query/moreInformationModel.js"; // Assuming you have a MoreInformation model
 
 const personalSchema = new mongoose.Schema(
   {
@@ -34,9 +35,12 @@ const personalSchema = new mongoose.Schema(
     resumeFileName: {
       type: String,
     },
-    additionalInformation: {
-      type: [Number],
-    },
+    additionalInformation: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "moreInformation",
+      },
+    ],
     maritialStatus: {
       type: String,
     },
