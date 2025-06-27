@@ -11,6 +11,7 @@ import list_language from "../../models/monogo_query/languageModel.js";
 import list_language_proficiency from "../../models/monogo_query/languageProficiencyModel.js";
 import list_tech_skill from "../../models/monogo_query/techSkillModel.js";
 import list_disability_type from "../../models/monogo_query/disabilityType.js";
+import list_social_profile from "../../models/monogo_query/socialProfileModel.js";
 import list_education_level from "../../models/monogo_query/educationLevelModel.js";
 /**
  * @description Get all countries from the database
@@ -201,7 +202,7 @@ export const getEducationLevel = async (req, res) => {
             type: items.type || "",
         }));
         */
-       
+
         res.status(200).json({
             success: true,
             data: rows,
@@ -832,13 +833,22 @@ export const getLanguageProficiency = async (req, res) => {
  */
 export const getSocialProfile = async (req, res) => {
     try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `social_profile` WHERE is_del = 0 AND is_active = 1;"
-        );
+        const socialProfileList = await list_social_profile
+            .find(
+                { is_del: 0, is_active: 1 },
+                "_id name"
+            )
+            .lean();
+
+        //Transform _id to id
+        const formattedSocialProfileList = socialProfileList.map((items) => ({
+            id: items._id,
+            name: items.name,
+        }));
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedSocialProfileList,
             message: "Social Profile Data Fetched Successfully",
         });
     } catch (error) {
