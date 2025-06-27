@@ -52,14 +52,15 @@ export const getMatchingCompany = async (req, res) => {
   }
 
   try {
-    const companies = await companylist.find({
-      isDel: false,
-      isActive: true,
-      companyname: { $regex: `^${company_name}`, $options: "i" }, // prefix + case-insensitive
-    })
+    const companies = await companylist
+      .find({
+        isDel: false,
+        isActive: true,
+        companyname: { $regex: `^${company_name}`, $options: "i" }, // prefix + case-insensitive
+      })
       .sort({ companyname: 1 })
       .limit(50)
-      .select("companyname"); 
+      .select("companyname");
 
     const companyNames = companies.map((c) => c.companyname);
 
@@ -85,12 +86,16 @@ export const getMatchingCompany = async (req, res) => {
  */
 export const getRandomCompany = async (req, res) => {
   try {
-    const [rows] = await db_sql.execute(
-      "SELECT NAME FROM `company` WHERE is_del = 0 AND is_active = 1 ORDER BY LIMIT 50;"
-    );
+    const rows = await companylist
+      .find({
+        isDel: false,
+        isActive: true,
+      })
+      .sort({ companyname: 1 })
+      .limit(50);
 
     // Convert to array of strings
-    const companies = rows.map((row) => row.NAME);
+    const companies = rows.map((row) => row.companyname);
 
     res.status(200).json({
       success: true,
@@ -205,7 +210,7 @@ export const addEmploymentDetails = async (req, res) => {
       leaving_year,
       leaving_month,
       description,
-      notice_period
+      notice_period,
     } = req.body;
 
     if (!userId) {
@@ -249,7 +254,7 @@ export const addEmploymentDetails = async (req, res) => {
         month: leaving_month,
       },
       jobDescription: description,
-      NoticePeriod: notice_period
+      NoticePeriod: notice_period,
     });
 
     await employment.save();
@@ -260,12 +265,10 @@ export const addEmploymentDetails = async (req, res) => {
       data: employment,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error Saving Employment Details",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error Saving Employment Details",
+      error: error.message,
+    });
   }
 };
 
@@ -302,7 +305,12 @@ export const getEmploymentDetails = async (req, res) => {
     }
 
     // Reusable function to fetch mapping from SQL by ID
-    const fetchSqlMapByIds = async (tableName, idField = "id", nameField = "NAME", ids = []) => {
+    const fetchSqlMapByIds = async (
+      tableName,
+      idField = "id",
+      nameField = "NAME",
+      ids = []
+    ) => {
       if (!ids.length) return {};
 
       const placeholders = ids.map(() => "?").join(",");
@@ -320,8 +328,12 @@ export const getEmploymentDetails = async (req, res) => {
     };
 
     // Extract unique company & notice period IDs
-    const companyIds = [...new Set(employmentData.map((emp) => emp.companyName).filter(Boolean))];
-    const noticePeriodIds = [...new Set(employmentData.map((emp) => emp.NoticePeriod).filter(Boolean))];
+    const companyIds = [
+      ...new Set(employmentData.map((emp) => emp.companyName).filter(Boolean)),
+    ];
+    const noticePeriodIds = [
+      ...new Set(employmentData.map((emp) => emp.NoticePeriod).filter(Boolean)),
+    ];
 
     // Fetch maps
     const [companyMap, noticePeriodMap] = await Promise.all([
@@ -331,8 +343,19 @@ export const getEmploymentDetails = async (req, res) => {
 
     // Month names
     const monthNames = [
-      "", "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December",
+      "",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     // Format response
@@ -378,7 +401,6 @@ export const getEmploymentDetails = async (req, res) => {
   }
 };
 
-
 /**
  * @description Update an existing Employment Details for the authenticated user.
  * @route PUT /api/candidate/employment/edit_employment
@@ -420,14 +442,20 @@ export const editEmploymentDetails = async (req, res) => {
       leaving_year,
       leaving_month,
       description,
-      notice_period
+      notice_period,
     } = req.body;
 
     if (!_id) {
-      return res.status(400).json({ message: "_id is required for updating employment" });
+      return res
+        .status(400)
+        .json({ message: "_id is required for updating employment" });
     }
 
-    const existingEmployment = await Employment.findOne({ _id, user: userId, isDel: false });
+    const existingEmployment = await Employment.findOne({
+      _id,
+      user: userId,
+      isDel: false,
+    });
     if (!existingEmployment) {
       return res.status(404).json({ message: "Employment record not found" });
     }
@@ -469,7 +497,7 @@ export const editEmploymentDetails = async (req, res) => {
         month: leaving_month,
       },
       jobDescription: description,
-      NoticePeriod: notice_period
+      NoticePeriod: notice_period,
     };
 
     const updatedEmployment = await Employment.findByIdAndUpdate(
@@ -481,12 +509,13 @@ export const editEmploymentDetails = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Employment Details updated successfully!",
-      data: updatedEmployment
+      data: updatedEmployment,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error Saving Employment Details", error: error.message });
+    res.status(500).json({
+      message: "Error Saving Employment Details",
+      error: error.message,
+    });
   }
 };
 
