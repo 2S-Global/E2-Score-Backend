@@ -35,12 +35,9 @@ const personalSchema = new mongoose.Schema(
     resumeFileName: {
       type: String,
     },
-    additionalInformation: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "moreInformation",
-      },
-    ],
+    additionalInformation: {
+      type: [String]
+    },
     maritialStatus: {
       type: String,
     },
