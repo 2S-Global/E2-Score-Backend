@@ -9,8 +9,7 @@ import list_career_break_reason from "../../models/monogo_query/careerBreakReaso
 import list_visa_type from "../../models/monogo_query/visaTypeModel.js";
 import list_language from "../../models/monogo_query/languageModel.js";
 import list_language_proficiency from "../../models/monogo_query/languageProficiencyModel.js";
-import list_disability_type from "../../models/monogo_query/disabilityType.js";
-
+import list_tech_skill from "../../models/monogo_query/techSkillModel.js";
 /**
  * @description Get all countries from the database
  * @route GET /api/sql/dropdown/All_contry
@@ -18,23 +17,26 @@ import list_disability_type from "../../models/monogo_query/disabilityType.js";
  * @error {object} 500 - Database query failed
  */
 export const All_country = async (req, res) => {
-    try {
-        const countries = await list_tbl_countrie.find({ is_del: 0, is_active: 1 }, { _id: 1, name: 1 });
+  try {
+    const countries = await list_tbl_countrie.find(
+      { is_del: 0, is_active: 1 },
+      { _id: 1, name: 1 }
+    );
 
-        // Transform _id to id
-        const formattedCountries = countries.map((country) => ({
-            id: country._id,
-            name: country.name,
-        }));
+    // Transform _id to id
+    const formattedCountries = countries.map((country) => ({
+      id: country._id,
+      name: country.name,
+    }));
 
-        res.status(200).json({
-            success: true,
-            data: formattedCountries,
-            message: "All country",
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: formattedCountries,
+      message: "All country",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -44,22 +46,25 @@ export const All_country = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const All_gender = async (req, res) => {
-    try {
-        const gender = await list_gender.find({ is_del: 0, is_active: 1 }, { _id: 1, name: 1 });
+  try {
+    const gender = await list_gender.find(
+      { is_del: 0, is_active: 1 },
+      { _id: 1, name: 1 }
+    );
 
-        const formattedGender = gender.map((genders) => ({
-            id: genders._id,
-            name: genders.name,
-        }));
+    const formattedGender = gender.map((genders) => ({
+      id: genders._id,
+      name: genders.name,
+    }));
 
-        res.status(200).json({
-            success: true,
-            data: formattedGender,
-            message: "All Gender",
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: formattedGender,
+      message: "All Gender",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -69,25 +74,25 @@ export const All_gender = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getSkill = async (req, res) => {
-    try {
-        const skillsResult = await list_key_skill.aggregate([
-            { $match: { is_del: 0, is_active: 1 } },
-            { $sample: { size: 50 } },
-            { $project: { _id: 0, Skill: 1 } },
-        ]);
+  try {
+    const skillsResult = await list_key_skill.aggregate([
+      { $match: { is_del: 0, is_active: 1 } },
+      { $sample: { size: 50 } },
+      { $project: { _id: 0, Skill: 1 } },
+    ]);
 
-        // Convert to array of strings
-        const skills = skillsResult.map((item) => item.Skill);
+    // Convert to array of strings
+    const skills = skillsResult.map((item) => item.Skill);
 
-        res.status(200).json({
-            success: true,
-            data: skills,
-            message: "Random 50 Skills",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: skills,
+      message: "Random 50 Skills",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -99,72 +104,72 @@ export const getSkill = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getMatchingSkillBySql = async (req, res) => {
-    const { skill_name } = req.query;
+  const { skill_name } = req.query;
 
-    if (!skill_name || skill_name.trim() === "") {
-        return res.status(400).json({
-            success: false,
-            message: "skill_name query parameter is required",
-        });
-    }
+  if (!skill_name || skill_name.trim() === "") {
+    return res.status(400).json({
+      success: false,
+      message: "skill_name query parameter is required",
+    });
+  }
 
-    try {
-        const [rows] = await db_sql.execute(
-            `SELECT Skill FROM key_skills 
+  try {
+    const [rows] = await db_sql.execute(
+      `SELECT Skill FROM key_skills 
        WHERE is_del = 0 AND is_active = 1 AND Skill LIKE ? 
        ORDER BY Skill LIMIT 50;`,
-            [`${skill_name}%`]
-        );
+      [`${skill_name}%`]
+    );
 
-        const skills = rows.map((row) => row.Skill);
+    const skills = rows.map((row) => row.Skill);
 
-        res.status(200).json({
-            success: true,
-            data: skills,
-            message: `Matching skills for "${skill_name}"`,
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: skills,
+      message: `Matching skills for "${skill_name}"`,
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 export const getMatchingSkill = async (req, res) => {
-    const { skill_name } = req.query;
+  const { skill_name } = req.query;
 
-    if (!skill_name || skill_name.trim() === "") {
-        return res.status(400).json({
-            success: false,
-            message: "skill_name query parameter is required",
-        });
-    }
+  if (!skill_name || skill_name.trim() === "") {
+    return res.status(400).json({
+      success: false,
+      message: "skill_name query parameter is required",
+    });
+  }
 
-    try {
-        const skillsResult = await list_key_skill.find(
-            {
-                is_del: 0,
-                is_active: 1,
-                Skill: { $regex: `^${skill_name}`, $options: "i" }, // case-insensitive "starts with"
-            },
-            "Skill" // project only Skill field
-        )
-            .sort({ Skill: 1 })
-            .limit(50)
-            .lean();
+  try {
+    const skillsResult = await list_key_skill
+      .find(
+        {
+          is_del: 0,
+          is_active: 1,
+          Skill: { $regex: `^${skill_name}`, $options: "i" }, // case-insensitive "starts with"
+        },
+        "Skill" // project only Skill field
+      )
+      .sort({ Skill: 1 })
+      .limit(50)
+      .lean();
 
-        const skills = skillsResult.map((row) => row.Skill);
+    const skills = skillsResult.map((row) => row.Skill);
 
-        res.status(200).json({
-            success: true,
-            data: skills,
-            message: `Matching skills for "${skill_name}"`,
-        });
-    } catch (error) {
-        console.error("MongoDB error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: skills,
+      message: `Matching skills for "${skill_name}"`,
+    });
+  } catch (error) {
+    console.error("MongoDB error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
-
 
 /**
  * @description Get all Education Level from the database
@@ -173,20 +178,20 @@ export const getMatchingSkill = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getEducationLevel = async (req, res) => {
-    try {
-        const [rows] = await db_sql.execute(
-            "SELECT id , level, duration ,type FROM `education_level` WHERE is_del = 0 AND is_active = 1;"
-        );
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id , level, duration ,type FROM `education_level` WHERE is_del = 0 AND is_active = 1;"
+    );
 
-        res.status(200).json({
-            success: true,
-            data: rows,
-            message: "All Education Level",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error); // 👈 Add this
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All Education Level",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error); // 👈 Add this
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -196,20 +201,20 @@ export const getEducationLevel = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getAllState = async (req, res) => {
-    try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `university_state` WHERE is_del = 0 AND is_active = 1 ORDER BY name ASC;"
-        );
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `university_state` WHERE is_del = 0 AND is_active = 1 ORDER BY name ASC;"
+    );
 
-        res.status(200).json({
-            success: true,
-            data: rows,
-            message: "All University States",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error); // 👈 Add this
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All University States",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error); // 👈 Add this
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -219,30 +224,30 @@ export const getAllState = async (req, res) => {
  * @error {object} 500 - Database query failede
  */
 export const getUniversityByState = async (req, res) => {
-    try {
-        const stateId = req.query.state_id;
+  try {
+    const stateId = req.query.state_id;
 
-        if (!stateId) {
-            return res
-                .status(400)
-                .json({ success: false, message: "Missing state_id in query." });
-        }
-
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `university_univercity` WHERE state_id = ? AND is_del = 0 AND is_active = 1;",
-            [stateId]
-        );
-        const universityNames = rows.map((row) => row.name);
-
-        res.status(200).json({
-            success: true,
-            data: universityNames,
-            message: `Universities in state ID ${stateId}`,
-        });
-    } catch (error) {
-        console.error("MySQL error →", error); // 👈 Add this
-        res.status(500).json({ success: false, message: "Database query failed" });
+    if (!stateId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing state_id in query." });
     }
+
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `university_univercity` WHERE state_id = ? AND is_del = 0 AND is_active = 1;",
+      [stateId]
+    );
+    const universityNames = rows.map((row) => row.name);
+
+    res.status(200).json({
+      success: true,
+      data: universityNames,
+      message: `Universities in state ID ${stateId}`,
+    });
+  } catch (error) {
+    console.error("MySQL error →", error); // 👈 Add this
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -258,48 +263,48 @@ export const getUniversityByState = async (req, res) => {
  * @returns {object} 500 - If there is an error executing the database query.
  */
 export const getCourseByUniversity = async (req, res) => {
-    try {
-        const { state_id, university_id, college_name, course_type } = req.query;
-        let courseIds = [];
-        const allFiltersProvided =
-            state_id && university_id && college_name && course_type;
+  try {
+    const { state_id, university_id, college_name, course_type } = req.query;
+    let courseIds = [];
+    const allFiltersProvided =
+      state_id && university_id && college_name && course_type;
 
-        if (allFiltersProvided) {
-            const [universityIdResult] = await db_sql.execute(
-                "SELECT id FROM university_univercity WHERE name = ? AND is_del = 0 AND is_active = 1",
-                [university_id.trim()]
-            );
+    if (allFiltersProvided) {
+      const [universityIdResult] = await db_sql.execute(
+        "SELECT id FROM university_univercity WHERE name = ? AND is_del = 0 AND is_active = 1",
+        [university_id.trim()]
+      );
 
-            if (universityIdResult.length > 0) {
-                const universityId = universityIdResult[0].id;
+      if (universityIdResult.length > 0) {
+        const universityId = universityIdResult[0].id;
 
-                const [universityRows] = await db_sql.execute(
-                    "SELECT id FROM university_univercity WHERE id = ? AND state_id = ? AND is_del = 0 AND is_active = 1",
-                    [universityId, state_id]
-                );
+        const [universityRows] = await db_sql.execute(
+          "SELECT id FROM university_univercity WHERE id = ? AND state_id = ? AND is_del = 0 AND is_active = 1",
+          [universityId, state_id]
+        );
 
-                if (universityRows.length > 0) {
-                    const [collegeRows] = await db_sql.execute(
-                        "SELECT courses FROM university_college WHERE university_id = ? AND name = ? AND is_del = 0 AND is_active = 1",
-                        [universityId, college_name.trim()]
-                    );
+        if (universityRows.length > 0) {
+          const [collegeRows] = await db_sql.execute(
+            "SELECT courses FROM university_college WHERE university_id = ? AND name = ? AND is_del = 0 AND is_active = 1",
+            [universityId, college_name.trim()]
+          );
 
-                    if (collegeRows.length > 0 && collegeRows[0].courses) {
-                        courseIds = collegeRows[0].courses
-                            .split(",")
-                            .map((id) => id.trim())
-                            .filter(Boolean);
-                    }
-                }
-            }
+          if (collegeRows.length > 0 && collegeRows[0].courses) {
+            courseIds = collegeRows[0].courses
+              .split(",")
+              .map((id) => id.trim())
+              .filter(Boolean);
+          }
         }
+      }
+    }
 
-        let courseQuery = "";
-        let queryValues = [];
+    let courseQuery = "";
+    let queryValues = [];
 
-        if (courseIds.length > 0) {
-            // Filtered query
-            courseQuery = `
+    if (courseIds.length > 0) {
+      // Filtered query
+      courseQuery = `
         SELECT id, name 
         FROM university_course 
         WHERE id IN (${courseIds.map(() => "?").join(",")})
@@ -308,10 +313,10 @@ export const getCourseByUniversity = async (req, res) => {
         AND is_active = 1
         LIMIT 50
       `;
-            queryValues = [...courseIds, course_type];
-        } else {
-            // Fallback query (filter only by course_type)
-            courseQuery = `
+      queryValues = [...courseIds, course_type];
+    } else {
+      // Fallback query (filter only by course_type)
+      courseQuery = `
         SELECT id, name 
         FROM university_course 
         WHERE type = ?
@@ -319,16 +324,16 @@ export const getCourseByUniversity = async (req, res) => {
         AND is_active = 1
         LIMIT 50
       `;
-            queryValues = [course_type];
-        }
+      queryValues = [course_type];
+    }
 
-        const [courseRows] = await db_sql.execute(courseQuery, queryValues);
+    const [courseRows] = await db_sql.execute(courseQuery, queryValues);
 
-        let finalCourseNames = courseRows.map((row) => row.name);
+    let finalCourseNames = courseRows.map((row) => row.name);
 
-        // If no course found, get fallback list (NA)
-        if (finalCourseNames.length === 0) {
-            const [naCourseRows] = await db_sql.execute(`
+    // If no course found, get fallback list (NA)
+    if (finalCourseNames.length === 0) {
+      const [naCourseRows] = await db_sql.execute(`
         SELECT id, name 
         FROM university_course 
         WHERE is_del = 0 
@@ -336,28 +341,28 @@ export const getCourseByUniversity = async (req, res) => {
         LIMIT 50
       `);
 
-            finalCourseNames = naCourseRows.map((row) => row.name);
+      finalCourseNames = naCourseRows.map((row) => row.name);
 
-            if (finalCourseNames.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "No courses found in the database",
-                });
-            }
-        }
-
-        // Single response
-        return res.status(200).json({
-            success: true,
-            data: finalCourseNames,
-            message: "Courses based on provided filters",
+      if (finalCourseNames.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "No courses found in the database",
         });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        return res
-            .status(500)
-            .json({ success: false, message: "Database query failed" });
+      }
     }
+
+    // Single response
+    return res.status(200).json({
+      success: true,
+      data: finalCourseNames,
+      message: "Courses based on provided filters",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -367,20 +372,20 @@ export const getCourseByUniversity = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getGradingSystem = async (req, res) => {
-    try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `grading_system` WHERE is_del = 0 AND is_active = 1;"
-        );
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `grading_system` WHERE is_del = 0 AND is_active = 1;"
+    );
 
-        res.status(200).json({
-            success: true,
-            data: rows,
-            message: "All Grading Systems",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error); // 👈 Add this
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All Grading Systems",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error); // 👈 Add this
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -390,20 +395,20 @@ export const getGradingSystem = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getCourseType = async (req, res) => {
-    try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `course_type` WHERE is_del = 0 AND is_active = 1;"
-        );
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `course_type` WHERE is_del = 0 AND is_active = 1;"
+    );
 
-        res.status(200).json({
-            success: true,
-            data: rows,
-            message: "All Course Type",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error); // 👈 Add this
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All Course Type",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error); // 👈 Add this
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -413,32 +418,32 @@ export const getCourseType = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getEducationBoardById = async (req, res) => {
-    try {
-        const boardId = req.query.state_id;
+  try {
+    const boardId = req.query.state_id;
 
-        const [rows] = await db_sql.execute(
-            "SELECT id, board_name FROM education_boards WHERE state_region_id = ? OR state_region_id = 0",
-            [boardId]
-        );
+    const [rows] = await db_sql.execute(
+      "SELECT id, board_name FROM education_boards WHERE state_region_id = ? OR state_region_id = 0",
+      [boardId]
+    );
 
-        if (rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Education Board not found",
-            });
-        }
-
-        const boardNames = rows.map((row) => row.board_name);
-
-        res.status(200).json({
-            success: true,
-            data: boardNames,
-            message: "Education Board details",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Education Board not found",
+      });
     }
+
+    const boardNames = rows.map((row) => row.board_name);
+
+    res.status(200).json({
+      success: true,
+      data: boardNames,
+      message: "Education Board details",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -448,20 +453,20 @@ export const getEducationBoardById = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getAllMediumOfEducation = async (req, res) => {
-    try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `medium_of_education` WHERE is_del = 0 AND is_active = 1;"
-        );
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `medium_of_education` WHERE is_del = 0 AND is_active = 1;"
+    );
 
-        res.status(200).json({
-            success: true,
-            data: rows,
-            message: "All Medium Of Education",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All Medium Of Education",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -471,72 +476,72 @@ export const getAllMediumOfEducation = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getCollegeNameById = async (req, res) => {
-    try {
-        const university_name = req.query.university_id;
-        const university_state = req.query.state_id;
+  try {
+    const university_name = req.query.university_id;
+    const university_state = req.query.state_id;
 
-        if (!university_name || university_name.trim() === "") {
-            return res
-                .status(400)
-                .json({ success: false, message: "university_name is required" });
-        }
-
-        if (!university_state) {
-            return res
-                .status(400)
-                .json({ success: false, message: "state_id is required" });
-        }
-
-        const [existingUniversity] = await db_sql.execute(
-            "SELECT id FROM university_univercity WHERE name = ? AND state_id = ? AND is_del = 0 AND is_active = 1",
-            [university_name.trim(), university_state]
-        );
-
-        let universityId;
-        let collegeRows = [];
-
-        if (existingUniversity.length > 0) {
-            universityId = existingUniversity[0].id;
-
-            [collegeRows] = await db_sql.execute(
-                "SELECT id,name FROM university_college WHERE university_id = ? AND is_del = 0 AND is_active = 1;",
-                [universityId]
-            );
-
-            if (collegeRows.length === 0) {
-                [collegeRows] = await db_sql.execute(
-                    "SELECT id, name FROM university_college WHERE is_del = 0 AND is_active = 1 LIMIT 50"
-                );
-            }
-        } else {
-            const [insertResult] = await db_sql.execute(
-                "INSERT INTO university_univercity (name, state_id, is_active, is_del, flag) VALUES (?, ?, 0, 0, 1)",
-                [university_name.trim(), university_state]
-            );
-
-            universityId = insertResult.insertId;
-            [collegeRows] = await db_sql.execute(
-                "SELECT id, name FROM university_college WHERE is_del = 0 AND is_active = 1 LIMIT 50"
-            );
-        }
-
-        if (collegeRows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "College Name not found",
-            });
-        }
-        const collegeNames = collegeRows.map((row) => row.name);
-
-        res.status(200).json({
-            success: true,
-            data: collegeNames,
-            message: "College Name based on University Id",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
+    if (!university_name || university_name.trim() === "") {
+      return res
+        .status(400)
+        .json({ success: false, message: "university_name is required" });
     }
+
+    if (!university_state) {
+      return res
+        .status(400)
+        .json({ success: false, message: "state_id is required" });
+    }
+
+    const [existingUniversity] = await db_sql.execute(
+      "SELECT id FROM university_univercity WHERE name = ? AND state_id = ? AND is_del = 0 AND is_active = 1",
+      [university_name.trim(), university_state]
+    );
+
+    let universityId;
+    let collegeRows = [];
+
+    if (existingUniversity.length > 0) {
+      universityId = existingUniversity[0].id;
+
+      [collegeRows] = await db_sql.execute(
+        "SELECT id,name FROM university_college WHERE university_id = ? AND is_del = 0 AND is_active = 1;",
+        [universityId]
+      );
+
+      if (collegeRows.length === 0) {
+        [collegeRows] = await db_sql.execute(
+          "SELECT id, name FROM university_college WHERE is_del = 0 AND is_active = 1 LIMIT 50"
+        );
+      }
+    } else {
+      const [insertResult] = await db_sql.execute(
+        "INSERT INTO university_univercity (name, state_id, is_active, is_del, flag) VALUES (?, ?, 0, 0, 1)",
+        [university_name.trim(), university_state]
+      );
+
+      universityId = insertResult.insertId;
+      [collegeRows] = await db_sql.execute(
+        "SELECT id, name FROM university_college WHERE is_del = 0 AND is_active = 1 LIMIT 50"
+      );
+    }
+
+    if (collegeRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "College Name not found",
+      });
+    }
+    const collegeNames = collegeRows.map((row) => row.name);
+
+    res.status(200).json({
+      success: true,
+      data: collegeNames,
+      message: "College Name based on University Id",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -546,27 +551,29 @@ export const getCollegeNameById = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getMoreInformation = async (req, res) => {
-    try {
-        const infoList = await list_more_information.find(
-            { is_del: 0, is_active: 1 },
-            "_id name" // project only `id` and `name`
-        ).lean();
+  try {
+    const infoList = await list_more_information
+      .find(
+        { is_del: 0, is_active: 1 },
+        "_id name" // project only `id` and `name`
+      )
+      .lean();
 
-        // Transform _id to id
-        const formattedInfoList = infoList.map((items) => ({
-            id: items._id,
-            name: items.name,
-        }));
+    // Transform _id to id
+    const formattedInfoList = infoList.map((items) => ({
+      id: items._id,
+      name: items.name,
+    }));
 
-        res.status(200).json({
-            success: true,
-            data: formattedInfoList,
-            message: "More Information",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: formattedInfoList,
+      message: "More Information",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -576,27 +583,29 @@ export const getMoreInformation = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getMaritalStatus = async (req, res) => {
-    try {
-        const maritalStatusList = await list_marital_status.find(
-            { is_del: 0, is_active: 1 },
-            "_id status" // project only `id` and `name`
-        ).lean();
+  try {
+    const maritalStatusList = await list_marital_status
+      .find(
+        { is_del: 0, is_active: 1 },
+        "_id status" // project only `id` and `name`
+      )
+      .lean();
 
-        //Transform _id to id
-        const formattedMaritalStatusList = maritalStatusList.map((items) => ({
-            id: items._id,
-            status: items.status
-        }));
+    //Transform _id to id
+    const formattedMaritalStatusList = maritalStatusList.map((items) => ({
+      id: items._id,
+      status: items.status,
+    }));
 
-        res.status(200).json({
-            success: true,
-            data: formattedMaritalStatusList,
-            message: "Martital Status Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: formattedMaritalStatusList,
+      message: "Martital Status Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -606,28 +615,30 @@ export const getMaritalStatus = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getCategoryDetails = async (req, res) => {
-    try {
-        // list_category
-        const categoryList = await list_category.find(
-            { is_del: 0, is_active: 1 },
-            "_id category_name" // project only `id` and `name`
-        ).lean();
+  try {
+    // list_category
+    const categoryList = await list_category
+      .find(
+        { is_del: 0, is_active: 1 },
+        "_id category_name" // project only `id` and `name`
+      )
+      .lean();
 
-        //Transform _id to id
-        const formattedCategoryList = categoryList.map((items) => ({
-            id: items._id,
-            category_name: items.category_name
-        }));
+    //Transform _id to id
+    const formattedCategoryList = categoryList.map((items) => ({
+      id: items._id,
+      category_name: items.category_name,
+    }));
 
-        res.status(200).json({
-            success: true,
-            data: formattedCategoryList,
-            message: "Category Details Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: formattedCategoryList,
+      message: "Category Details Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -637,27 +648,29 @@ export const getCategoryDetails = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getVisaType = async (req, res) => {
-    try {
-        const visaTypeList = await list_visa_type.find(
-            { is_del: 0, is_active: 1 },
-            "_id visa_name" // project only `id` and `name`
-        ).lean();
+  try {
+    const visaTypeList = await list_visa_type
+      .find(
+        { is_del: 0, is_active: 1 },
+        "_id visa_name" // project only `id` and `name`
+      )
+      .lean();
 
-        //Transform _id to id
-        const formattedVisaTypeList = visaTypeList.map((items) => ({
-            id: items._id,
-            visa_name: items.visa_name
-        }));
+    //Transform _id to id
+    const formattedVisaTypeList = visaTypeList.map((items) => ({
+      id: items._id,
+      visa_name: items.visa_name,
+    }));
 
-        res.status(200).json({
-            success: true,
-            data: formattedVisaTypeList,
-            message: "Visa Type Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: formattedVisaTypeList,
+      message: "Visa Type Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -667,27 +680,20 @@ export const getVisaType = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getDisabilityType = async (req, res) => {
-    try {
-        const disabilityTypeList = await list_disability_type.find(
-            { is_del: 0, is_active: 1 },
-            "_id name"
-        ).lean();
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `disability_type` WHERE is_del = 0 AND is_active = 1;"
+    );
 
-        //Transform _id to id
-        const formattedDisabilityTypeList = disabilityTypeList.map((items) => ({
-            id: items._id,
-            name: items.name
-        }));
-
-        res.status(200).json({
-            success: true,
-            data: formattedDisabilityTypeList,
-            message: "Disability Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Disability Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -697,28 +703,30 @@ export const getDisabilityType = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getCareerBreakReason = async (req, res) => {
-    try {
-        // list_career_break_reason
-        const breakList = await list_career_break_reason.find(
-            { is_del: 0, is_active: 1 },
-            "_id name" // project only `id` and `name`
-        ).lean();
+  try {
+    // list_career_break_reason
+    const breakList = await list_career_break_reason
+      .find(
+        { is_del: 0, is_active: 1 },
+        "_id name" // project only `id` and `name`
+      )
+      .lean();
 
-        //Transform _id to id
-        const formattedBreakList = breakList.map((items) => ({
-            id: items._id,
-            name: items.name
-        }));
+    //Transform _id to id
+    const formattedBreakList = breakList.map((items) => ({
+      id: items._id,
+      name: items.name,
+    }));
 
-        res.status(200).json({
-            success: true,
-            data: formattedBreakList,
-            message: "Career Break Reason Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: formattedBreakList,
+      message: "Career Break Reason Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -728,27 +736,29 @@ export const getCareerBreakReason = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getLanguage = async (req, res) => {
-    try {
-        const languageList = await list_language.find(
-            { is_del: 0, is_active: 1 },
-            "_id name" // project only `id` and `name`
-        ).lean();
+  try {
+    const languageList = await list_language
+      .find(
+        { is_del: 0, is_active: 1 },
+        "_id name" // project only `id` and `name`
+      )
+      .lean();
 
-        //Transform _id to id
-        const formattedLanguageList = languageList.map((items) => ({
-            id: items._id,
-            name: items.name
-        }));
+    //Transform _id to id
+    const formattedLanguageList = languageList.map((items) => ({
+      id: items._id,
+      name: items.name,
+    }));
 
-        res.status(200).json({
-            success: true,
-            data: formattedLanguageList,
-            message: "Languages Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: formattedLanguageList,
+      message: "Languages Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -758,27 +768,29 @@ export const getLanguage = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getLanguageProficiency = async (req, res) => {
-    try {
-        const proficiencyList = await list_language_proficiency.find(
-            { is_del: 0, is_active: 1 },
-            "_id name" // project only `id` and `name`
-        ).lean();
+  try {
+    const proficiencyList = await list_language_proficiency
+      .find(
+        { is_del: 0, is_active: 1 },
+        "_id name" // project only `id` and `name`
+      )
+      .lean();
 
-        //Transform _id to id
-        const formattedProficiencyList = proficiencyList.map((items) => ({
-            id: items._id,
-            name: items.name
-        }));
+    //Transform _id to id
+    const formattedProficiencyList = proficiencyList.map((items) => ({
+      id: items._id,
+      name: items.name,
+    }));
 
-        res.status(200).json({
-            success: true,
-            data: formattedProficiencyList,
-            message: "Language Proficiency Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: formattedProficiencyList,
+      message: "Language Proficiency Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 // path -   /api/sql/dropdown/social_profile
@@ -790,20 +802,20 @@ export const getLanguageProficiency = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getSocialProfile = async (req, res) => {
-    try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `social_profile` WHERE is_del = 0 AND is_active = 1;"
-        );
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, name FROM `social_profile` WHERE is_del = 0 AND is_active = 1;"
+    );
 
-        res.status(200).json({
-            success: true,
-            data: rows,
-            message: "Social Profile Data Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Social Profile Data Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 // Get Industry
@@ -814,20 +826,20 @@ export const getSocialProfile = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getIndustry = async (req, res) => {
-    try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, job_industry FROM `industries` WHERE is_del = 0 AND is_active = 1;"
-        );
+  try {
+    const [rows] = await db_sql.execute(
+      "SELECT id, job_industry FROM `industries` WHERE is_del = 0 AND is_active = 1;"
+    );
 
-        res.status(200).json({
-            success: true,
-            data: rows,
-            message: "Industries Data Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Industries Data Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 // Get Job Departments
@@ -838,29 +850,29 @@ export const getIndustry = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getJobDepartments = async (req, res) => {
-    try {
-        const industryId = req.query.industry_id;
+  try {
+    const industryId = req.query.industry_id;
 
-        if (!industryId) {
-            return res
-                .status(400)
-                .json({ success: false, message: "Missing industry_id in query." });
-        }
-
-        const [rows] = await db_sql.execute(
-            "SELECT id, job_department FROM `departments` WHERE industry_id = ? AND is_del = 0 AND is_active = 1;",
-            [industryId]
-        );
-
-        res.status(200).json({
-            success: true,
-            data: rows,
-            message: "Job Departments Data Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
+    if (!industryId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing industry_id in query." });
     }
+
+    const [rows] = await db_sql.execute(
+      "SELECT id, job_department FROM `departments` WHERE industry_id = ? AND is_del = 0 AND is_active = 1;",
+      [industryId]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Job Departments Data Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 // Get Job Roles
@@ -871,29 +883,29 @@ export const getJobDepartments = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getJobRoles = async (req, res) => {
-    try {
-        const departmentId = req.query.department_id;
+  try {
+    const departmentId = req.query.department_id;
 
-        if (!departmentId) {
-            return res
-                .status(400)
-                .json({ success: false, message: "Missing department_id in query." });
-        }
-
-        const [rows] = await db_sql.execute(
-            "SELECT id, job_role FROM `job_roles` WHERE department_id = ? AND is_del = 0 AND is_active = 1;",
-            [departmentId]
-        );
-
-        res.status(200).json({
-            success: true,
-            data: rows,
-            message: "Job Roles Data Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
+    if (!departmentId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing department_id in query." });
     }
+
+    const [rows] = await db_sql.execute(
+      "SELECT id, job_role FROM `job_roles` WHERE department_id = ? AND is_del = 0 AND is_active = 1;",
+      [departmentId]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "Job Roles Data Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -904,8 +916,8 @@ export const getJobRoles = async (req, res) => {
  * @returns {object} 500 - Database query failed
  */
 export const getIndiaCities = async (req, res) => {
-    try {
-        const [rows] = await db_sql.execute(`
+  try {
+    const [rows] = await db_sql.execute(`
       SELECT id, city_name , popular_location
       FROM india_cities
       WHERE is_del = 0 AND is_active = 1
@@ -918,15 +930,15 @@ export const getIndiaCities = async (req, res) => {
       city_name ASC
     `);
 
-        res.status(200).json({
-            success: true,
-            data: rows,
-            message: "All Indian country",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: rows,
+      message: "All Indian country",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };
 
 /**
@@ -936,22 +948,23 @@ export const getIndiaCities = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getTechSkills = async (req, res) => {
-    try {
-        const [rows] = await db_sql.execute(
-            "SELECT name FROM `tech_skills` WHERE is_del = 0 AND is_active = 1;"
-        );
+  try {
+    /* const [rows] = await db_sql.execute(
+      "SELECT name FROM `tech_skills` WHERE is_del = 0 AND is_active = 1;"
+    ); */
+    const rows = await list_tech_skill.find({ is_del: 0, is_active: 1 });
 
-        const allSkills = rows.map(
-            (row) => row.name.charAt(0).toUpperCase() + row.name.slice(1)
-        );
+    const allSkills = rows.map(
+      (row) => row.name.charAt(0).toUpperCase() + row.name.slice(1)
+    );
 
-        res.status(200).json({
-            success: true,
-            data: allSkills,
-            message: "Tech Skills Data Fetched Successfully",
-        });
-    } catch (error) {
-        console.error("MySQL error →", error);
-        res.status(500).json({ success: false, message: "Database query failed" });
-    }
+    res.status(200).json({
+      success: true,
+      data: allSkills,
+      message: "Tech Skills Data Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
 };

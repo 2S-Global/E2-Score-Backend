@@ -8,7 +8,7 @@ import {
   formatLanguageDetails,
   getMoreInfoNames,
   formatUserData,
-} from "../../utility/helper/giveIDgetname.js";
+} from "../../utility/helper/mongogiveIDgetname.js";
 
 const getMonthName = (monthNumber) => {
   const monthIndex = parseInt(monthNumber, 10) - 1;
