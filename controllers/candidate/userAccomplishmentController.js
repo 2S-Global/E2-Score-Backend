@@ -135,8 +135,6 @@ export const getOnlineProfile = async (req, res) => {
       isDel: false,
     }).sort({ createdAt: -1 });
 
-    console.log("Fetched Online Profiles:", profiles);
-
     // Get unique socialProfile values
     const socialProfileIds = [
       ...new Set(
