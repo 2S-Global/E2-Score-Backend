@@ -56,15 +56,23 @@ export const getPersonalDetailsWithName = async (req, res) => {
       languages,
       career_break_reason,
     ] = await Promise.all([
-      getColumnValueById("gender", user.gender, "name"),
-      getColumnValueById("category", personal.category, "category_name"),
-      getColumnValueById("disability_type", personal.disability_type, "name"),
-      getColumnValueById("visa_type", personal.usaPermit, "visa_name"),
+      getColumnValueById("list_gender", user.gender, "name"),
+      getColumnValueById("list_category", personal.category, "category_name"),
+      getColumnValueById(
+        "list_disability_type",
+        personal.disability_type,
+        "name"
+      ),
+      getColumnValueById("list_visa_type", personal.usaPermit, "visa_name"),
       getCountryNamesByIds(personal.workPermitOther),
-      getColumnValueById("marital_status", personal.maritialStatus, "status"),
+      getColumnValueById(
+        "list_marital_status",
+        personal.maritialStatus,
+        "status"
+      ),
       getMoreInfoNames(personal.additionalInformation || []),
       formatLanguageDetails(personal.languageProficiency || []),
-      getColumnValueById("career_break_reason", personal.reason, "name"),
+      getColumnValueById("list_career_break_reason", personal.reason, "name"),
     ]);
 
     const result = {
