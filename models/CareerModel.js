@@ -27,7 +27,7 @@ const CareerSchema = new mongoose.Schema(
       type: String,
     },
     location: {
-      type: [Number],
+      type: [String],
     },
     expectedSalary: {
       currency: {
