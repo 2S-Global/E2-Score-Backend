@@ -13,6 +13,10 @@ import list_tech_skill from "../../models/monogo_query/techSkillModel.js";
 import list_disability_type from "../../models/monogo_query/disabilityType.js";
 import list_social_profile from "../../models/monogo_query/socialProfileModel.js";
 import list_education_level from "../../models/monogo_query/educationLevelModel.js";
+import list_industries from "../../models/monogo_query/industryModel.js";
+import list_department from "../../models/monogo_query/departmentsModel.js";
+import list_job_role from "../../models/monogo_query/jobRolesModel.js";
+import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
 /**
  * @description Get all countries from the database
  * @route GET /api/sql/dropdown/All_contry
@@ -866,13 +870,22 @@ export const getSocialProfile = async (req, res) => {
  */
 export const getIndustry = async (req, res) => {
     try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, job_industry FROM `industries` WHERE is_del = 0 AND is_active = 1;"
-        );
+        const industryList = await list_industries
+            .find(
+                { is_del: 0, is_active: 1 },
+                "id job_industry"
+            )
+            .lean();
+
+        const formattedIndustryList = industryList.map((items) => ({
+            id: items.id,
+            job_industry: items.job_industry,
+        }));
+
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedIndustryList,
             message: "Industries Data Fetched Successfully",
         });
     } catch (error) {
@@ -898,14 +911,27 @@ export const getJobDepartments = async (req, res) => {
                 .json({ success: false, message: "Missing industry_id in query." });
         }
 
-        const [rows] = await db_sql.execute(
-            "SELECT id, job_department FROM `departments` WHERE industry_id = ? AND is_del = 0 AND is_active = 1;",
-            [industryId]
-        );
+        // const [rows] = await db_sql.execute(
+        //     "SELECT id, job_department FROM `departments` WHERE industry_id = ? AND is_del = 0 AND is_active = 1;",
+        //     [industryId]
+        // );
+
+        const jobDepartment = await list_department.find({
+            industry_id: industryId,
+            is_del: 0,
+            is_active: 1,
+        })
+            .select("id job_department")
+            .lean();
+
+        const formattedJobDepartment = jobDepartment.map((items) => ({
+            id: items.id,
+            job_department: items.job_department,
+        }));
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedJobDepartment,
             message: "Job Departments Data Fetched Successfully",
         });
     } catch (error) {
@@ -923,6 +949,8 @@ export const getJobDepartments = async (req, res) => {
  */
 export const getJobRoles = async (req, res) => {
     try {
+
+        // list_job_role
         const departmentId = req.query.department_id;
 
         if (!departmentId) {
@@ -931,14 +959,28 @@ export const getJobRoles = async (req, res) => {
                 .json({ success: false, message: "Missing department_id in query." });
         }
 
-        const [rows] = await db_sql.execute(
-            "SELECT id, job_role FROM `job_roles` WHERE department_id = ? AND is_del = 0 AND is_active = 1;",
-            [departmentId]
-        );
+        // const [rows] = await db_sql.execute(
+        //     "SELECT id, job_role FROM `job_roles` WHERE department_id = ? AND is_del = 0 AND is_active = 1;",
+        //     [departmentId]
+        // );
+
+        const departmentList = await list_job_role.find({
+            department_id: departmentId,
+            is_del: 0,
+            is_active: 1,
+        })
+            .select("_id job_role")
+            .lean();
+
+
+        const formattedDepartmentList = departmentList.map((items) => ({
+            id: items._id,
+            job_role: items.job_role,
+        }));
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedDepartmentList,
             message: "Job Roles Data Fetched Successfully",
         });
     } catch (error) {
@@ -956,26 +998,53 @@ export const getJobRoles = async (req, res) => {
  */
 export const getIndiaCities = async (req, res) => {
     try {
-        const [rows] = await db_sql.execute(`
-      SELECT id, city_name , popular_location
-      FROM india_cities
-      WHERE is_del = 0 AND is_active = 1
-      ORDER BY
-      popular_location DESC,
-      CASE
-        WHEN LOWER(city_name) LIKE '%remote%' THEN 1
-        ELSE 0
-      END,
-      city_name ASC
-    `);
+        const cities = await list_india_cities.aggregate([
+            {
+                $match: {
+                    is_del: 0,
+                    is_active: 1,
+                },
+            },
+            {
+                $addFields: {
+                    remote_priority: {
+                        $cond: [
+                            { $regexMatch: { input: { $toLower: "$city_name" }, regex: "remote" } },
+                            1,
+                            0
+                        ]
+                    }
+                },
+            },
+            {
+                $sort: {
+                    popular_location: -1,
+                    remote_priority: 1,  
+                    city_name: 1
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    city_name: 1,
+                    popular_location: 1
+                },
+            }
+        ]);
+
+        const formattedCities = cities.map((items) => ({
+            id: items._id,
+            city_name: items.city_name,
+            popular_location: items.popular_location
+        }));
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedCities,
             message: "All Indian country",
         });
     } catch (error) {
-        console.error("MySQL error →", error);
+        console.error("MongoDB error →", error);
         res.status(500).json({ success: false, message: "Database query failed" });
     }
 };

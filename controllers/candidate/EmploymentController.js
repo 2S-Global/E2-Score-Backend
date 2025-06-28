@@ -216,7 +216,7 @@ export const getNoticePeriod = async (req, res) => {
  * @returns {object} 400 - User ID is required
  * @returns {object} 500 - Error Saving Employment Details
  */
-export const addEmploymentDetails = async (req, res) => {
+export const addEmploymentDetailsBySql = async (req, res) => {
   try {
     const userId = req.userId;
     const {
@@ -254,6 +254,84 @@ export const addEmploymentDetails = async (req, res) => {
       );
 
       companyId = insertResult.insertId;
+    }
+
+    const employment = new Employment({
+      user: userId,
+      currentEmployment: currentlyWorking,
+      employmentType: employmenttype,
+      totalExperience: {
+        year: experience_yr,
+        month: experience_month,
+      },
+      companyName: companyId,
+      jobTitle: job_title,
+      joiningDate: {
+        year: joining_year,
+        month: joining_month,
+      },
+      leavingDate: {
+        year: leaving_year,
+        month: leaving_month,
+      },
+      jobDescription: description,
+      NoticePeriod: notice_period,
+    });
+
+    await employment.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Employment Details added successfully!",
+      data: employment,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error Saving Employment Details",
+      error: error.message,
+    });
+  }
+};
+
+export const addEmploymentDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const {
+      currentlyWorking,
+      employmenttype,
+      experience_yr,
+      experience_month,
+      company_name,
+      job_title,
+      joining_year,
+      joining_month,
+      leaving_year,
+      leaving_month,
+      description,
+      notice_period,
+    } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const existingCompany = await companylist.findOne({
+      name: company_name.trim(),
+      is_del: false,
+    }).select("_id companyname");
+
+    let companyId;
+    if (existingCompany) {
+      companyId = existingCompany._id;
+    } else {
+      const newCompany = new companylist({
+        name: company_name.trim(),
+        is_active: false,
+        is_del: false,
+        flag: 1,
+      });
+      const savedCompany = await newCompany.save();
+      companyId = savedCompany._id;
     }
 
     const employment = new Employment({
