@@ -316,8 +316,8 @@ export const addEmploymentDetails = async (req, res) => {
     }
 
     const existingCompany = await companylist.findOne({
-      name: company_name.trim(),
-      is_del: false,
+      companyname: company_name.trim(),
+      isDel: false,
     }).select("_id companyname");
 
     let companyId;
@@ -325,9 +325,9 @@ export const addEmploymentDetails = async (req, res) => {
       companyId = existingCompany._id;
     } else {
       const newCompany = new companylist({
-        name: company_name.trim(),
-        is_active: false,
-        is_del: false,
+        companyname: company_name.trim(),
+        isActive: false,
+        isDel: false,
         flag: 1,
       });
       const savedCompany = await newCompany.save();
@@ -380,7 +380,7 @@ export const addEmploymentDetails = async (req, res) => {
  * @returns {object} 404 - Employment Details not found or already deleted.
  * @returns {object} 500 - Error Fetching Employment Details
  */
-export const getEmploymentDetails = async (req, res) => {
+export const getEmploymentDetailsBySql = async (req, res) => {
   try {
     const userId = req.userId;
 
@@ -439,6 +439,109 @@ export const getEmploymentDetails = async (req, res) => {
       fetchSqlMapByIds("company", "id", "NAME", companyIds),
       fetchSqlMapByIds("notice_period", "id", "name", noticePeriodIds),
     ]);
+
+    // Month names
+    const monthNames = [
+      "",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    // Format response
+    const formatted = employmentData.map((item) => {
+      const joiningMonth = item.joiningDate?.month || "";
+      const leavingMonth = item.leavingDate?.month || "";
+
+      return {
+        _id: item._id,
+        currentlyWorking: item.currentEmployment || false,
+        employmenttype: item.employmentType || "",
+        experience_yr: item.totalExperience?.year?.toString() || "",
+        experience_month: item.totalExperience?.month?.toString() || "",
+        company_name: companyMap[item.companyName] || "",
+        company_id: item.companyName || "",
+        job_title: item.jobTitle || "",
+        joining_year: item.joiningDate?.year || "",
+        joining_month: joiningMonth,
+        joining_month_name: joiningMonth ? monthNames[joiningMonth] : "",
+        leaving_year: item.leavingDate?.year || "",
+        leaving_month: leavingMonth,
+        leaving_month_name: leavingMonth ? monthNames[leavingMonth] : "",
+        description: item.jobDescription || "",
+        isVerified: item.isVerified,
+        jobTypeVerified: item.jobTypeVerified,
+        jobDurationVerified: item.jobDurationVerified,
+        notice_period: item.NoticePeriod || "",
+        notice_period_name: noticePeriodMap[item.NoticePeriod] || "",
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Employment Details fetched successfully.",
+      data: formatted,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({
+      message: "Error Fetching Employment Details",
+      error: error.message,
+    });
+  }
+};
+
+export const getEmploymentDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+
+    // Fetch employment data
+    const employmentData = await Employment.find({
+      user: userId,
+      isDel: false,
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!employmentData || employmentData.length === 0) {
+      return res.status(404).json({
+        success: true,
+        message: "Employment Details not found or already deleted.",
+      });
+    }
+
+    const companyIds = [
+      ...new Set(employmentData.map((emp) => emp.companyName?.toString()).filter(Boolean)),
+    ];
+    const noticePeriodIds = [
+      ...new Set(employmentData.map((emp) => emp.NoticePeriod?.toString()).filter(Boolean)),
+    ];
+
+    // Fetch companies
+    const companies = await companylist.find({
+      _id: { $in: companyIds },
+    }).select("_id companyname").lean();
+
+    const noticePeriods = await list_notice.find({
+      _id: { $in: noticePeriodIds },
+    }).select("_id name").lean();
+
+     // Map data by id for quick lookup
+    const companyMap = Object.fromEntries(companies.map((c) => [c._id.toString(), c.companyname]));
+    const noticePeriodMap = Object.fromEntries(noticePeriods.map((n) => [n._id.toString(), n.name]));
 
     // Month names
     const monthNames = [

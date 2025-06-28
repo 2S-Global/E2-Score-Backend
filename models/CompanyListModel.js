@@ -33,6 +33,11 @@ const CompanyListSchema = new mongoose.Schema(
       default: true,
       required: true
     },
+    flag: {
+      type: Number,
+      default: 0,
+      required: true
+    }
   },
   {
     timestamps: true,
