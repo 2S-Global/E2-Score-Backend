@@ -1,6 +1,7 @@
 import db_sql from "../../config/sqldb.js";
 import Employment from "../../models/Employment.js";
 import companylist from "../../models/CompanyListModel.js";
+import list_notice from "../../models/monogo_query/noticeModel.js";
 
 /**
  * @description Search for matching Company based on the query parameter company_name
@@ -179,9 +180,10 @@ export const getAllCompany = async (req, res) => {
  */
 export const getNoticePeriod = async (req, res) => {
   try {
-    const [rows] = await db_sql.execute(
+    /* const [rows] = await db_sql.execute(
       "SELECT id , name FROM `notice_period` WHERE is_del = 0 AND is_active = 1;"
-    );
+    ); */
+    const rows = await list_notice.find({ is_del: 0, is_active: 1 });
 
     res.status(200).json({
       success: true,
