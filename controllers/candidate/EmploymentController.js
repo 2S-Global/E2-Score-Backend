@@ -536,12 +536,12 @@ export const getEmploymentDetails = async (req, res) => {
     }).select("_id companyname").lean();
 
     const noticePeriods = await list_notice.find({
-      _id: { $in: noticePeriodIds },
+      id: { $in: noticePeriodIds },
     }).select("id name").lean();
 
      // Map data by id for quick lookup
     const companyMap = Object.fromEntries(companies.map((c) => [c._id.toString(), c.companyname]));
-    const noticePeriodMap = Object.fromEntries(noticePeriods.map((n) => [n._id.toString(), n.name]));
+    const noticePeriodMap = Object.fromEntries(noticePeriods.map((n) => [n.id.toString(), n.name]));
 
     // Month names
     const monthNames = [
