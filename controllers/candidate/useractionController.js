@@ -10,6 +10,10 @@ import UserCareer from "../../models/CareerModel.js";
 import ResumeDetails from "../../models/resumeDetailsModels.js";
 import list_key_skill from "../../models/monogo_query/keySkillModel.js";
 import mongoose from "mongoose";
+import list_industries from "../../models/monogo_query/industryModel.js";
+import list_department from "../../models/monogo_query/departmentsModel.js";
+import list_job_role from "../../models/monogo_query/jobRolesModel.js";
+import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -625,9 +629,8 @@ export const submitUserEducation = async (req, res) => {
       savedRecord = await newRecord.save();
     }
     res.status(201).json({
-      message: `Education ${
-        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-      } successfully`,
+      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+        } successfully`,
       data: savedRecord,
     });
   } catch (error) {
@@ -773,9 +776,8 @@ export const updateUserEducation = async (req, res) => {
     }
 
     res.status(201).json({
-      message: `Education ${
-        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-      } successfully`,
+      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+        } successfully`,
       data: savedRecord,
     });
   } catch (error) {
@@ -942,7 +944,7 @@ export const addCareerProfile = async (req, res) => {
  * @returns {object} 404 - Career profile not found
  * @returns {object} 500 - Error fetching Career Profile
  */
-export const getCareerProfile = async (req, res) => {
+export const getCareerProfileBySql = async (req, res) => {
   try {
     const userId = req.userId;
 
@@ -980,27 +982,27 @@ export const getCareerProfile = async (req, res) => {
       await Promise.all([
         CurrentIndustry
           ? db_sql.execute("SELECT job_industry FROM industries WHERE id = ?", [
-              CurrentIndustry,
-            ])
+            CurrentIndustry,
+          ])
           : Promise.resolve([[]]),
         CurrentDepartment
           ? db_sql.execute(
-              "SELECT job_department FROM departments WHERE id = ?",
-              [CurrentDepartment]
-            )
+            "SELECT job_department FROM departments WHERE id = ?",
+            [CurrentDepartment]
+          )
           : Promise.resolve([[]]),
         JobRole
           ? db_sql.execute("SELECT job_role FROM job_roles WHERE id = ?", [
-              JobRole,
-            ])
+            JobRole,
+          ])
           : Promise.resolve([[]]),
         locationIds.length > 0
           ? db_sql.execute(
-              `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
-                .map(() => "?")
-                .join(", ")})`,
-              locationIds
-            )
+            `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
+              .map(() => "?")
+              .join(", ")})`,
+            locationIds
+          )
           : Promise.resolve([[]]),
       ]);
 
@@ -1025,6 +1027,89 @@ export const getCareerProfile = async (req, res) => {
         department_name: departmentName,
         job_role: JobRole || "",
         job_role_name: jobRoleName,
+        job_type: DesiredJob || "",
+        employment_type: DesiredEmployment || "",
+        work_location: locationIds,
+        work_location_name: locationNames,
+        currency_type: expectedSalary?.currency || "",
+        expected_salary: expectedSalary?.salary || 0,
+        shift: PreferredShift || "",
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching Career Profile:", error.message);
+    return res.status(500).json({
+      message: "Error fetching Career Profile",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+
+export const getCareerProfile = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User not authenticated" });
+    }
+
+    const careerProfile = await UserCareer.findOne({
+      userId,
+      isDel: false,
+    }).lean();
+
+    if (!careerProfile) {
+      return res.status(404).json({
+        message: "Career profile not found",
+        success: false,
+      });
+    }
+
+    const {
+      CurrentIndustry,
+      CurrentDepartment,
+      JobRole,
+      DesiredJob,
+      DesiredEmployment,
+      location,
+      expectedSalary,
+      PreferredShift,
+    } = careerProfile;
+
+    const locationIds = Array.isArray(location) ? location : [];
+
+    //list_industries
+
+    const [industryDoc, departmentDoc, jobRoleDoc, cityDocs] =
+      await Promise.all([
+        CurrentIndustry
+          ? list_industries.findOne({ id: CurrentIndustry }).select("job_industry").lean()
+          : null,
+        CurrentDepartment
+          ? list_department.findOne({id: CurrentDepartment}).select("job_department").lean()
+          : null,
+        JobRole
+          ? list_job_role.findById(JobRole).select("job_role").lean()
+          : null,
+        locationIds.length > 0
+          ? list_india_cities.find({ _id: { $in: locationIds } }).select("city_name").lean()
+          : [],
+      ]);
+
+    const locationNames = cityDocs.map((city) => city.city_name).join(", ");
+
+    return res.status(200).json({
+      message: "Career profile fetched successfully",
+      success: true,
+      data: {
+        industry: CurrentIndustry || "",
+        industry_name: industryDoc?.job_industry || "",
+        department: CurrentDepartment || "",
+        department_name: departmentDoc?.job_department || "",
+        job_role: JobRole || "",
+        job_role_name: jobRoleDoc?.job_role || "",
         job_type: DesiredJob || "",
         employment_type: DesiredEmployment || "",
         work_location: locationIds,
