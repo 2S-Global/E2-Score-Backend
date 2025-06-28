@@ -537,7 +537,7 @@ export const getEmploymentDetails = async (req, res) => {
 
     const noticePeriods = await list_notice.find({
       _id: { $in: noticePeriodIds },
-    }).select("_id name").lean();
+    }).select("id name").lean();
 
      // Map data by id for quick lookup
     const companyMap = Object.fromEntries(companies.map((c) => [c._id.toString(), c.companyname]));
