@@ -134,7 +134,8 @@ export const formatUserData = (result) => {
     if (!dob) return "";
     const date = new Date(dob);
     const options = { day: "2-digit", month: "short", year: "numeric" };
-    return date.toLocaleDateString("en-GB", options); // e.g., "13 Oct 2001"
+    // return date.toLocaleDateString("en-GB", options); // e.g., "13 Oct 2001"
+    return dob;
   };
 
   const getMoreInfo = (moreInfoArray) => {
