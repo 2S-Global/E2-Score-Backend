@@ -17,6 +17,14 @@ import list_industries from "../../models/monogo_query/industryModel.js";
 import list_department from "../../models/monogo_query/departmentsModel.js";
 import list_job_role from "../../models/monogo_query/jobRolesModel.js";
 import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
+import list_university_state from "../../models/monogo_query/universityStateModel.js";
+import list_university_univercities from "../../models/monogo_query/universityUniversityModel.js";
+import list_university_colleges from "../../models/monogo_query/universityCollegesModel.js";
+import list_university_course from "../../models/monogo_query/universityCourseModel.js";
+import list_medium_of_education from "../../models/monogo_query/mediumOfEducationModel.js";
+import list_education_boards from "../../models/monogo_query/educationBoardModel.js";
+import list_course_type from "../../models/monogo_query/courseTypeModel.js";
+import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
 /**
  * @description Get all countries from the database
  * @route GET /api/sql/dropdown/All_contry
@@ -184,59 +192,68 @@ export const getMatchingSkill = async (req, res) => {
  * @success {object} 200 - All Education Level
  * @error {object} 500 - Database query failed
  */
+
 export const getEducationLevel = async (req, res) => {
     try {
-        const [rows] = await db_sql.execute(
-            "SELECT id , level, duration ,type FROM `education_level` WHERE is_del = 0 AND is_active = 1;"
-        );
+        // const [rows] = await db_sql.execute(
+        //     "SELECT id , level, duration ,type FROM `education_level` WHERE is_del = 0 AND is_active = 1;"
+        // );
 
-        /*
         const educationLevelList = await list_education_level
             .find(
                 { is_del: 0, is_active: 1 },
-                "_id level duration type" // project only `id` and `name`
+                "id level duration type" // project only `id` and `name`
             )
             .lean();
 
         //Transform _id to id
         const formattededucationLevelList = educationLevelList.map((items) => ({
-            id: items._id,
+            id: items.id,
             level: items.level,
             duration: items.duration,
             type: items.type || "",
         }));
-        */
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattededucationLevelList,
             message: "All Education Level",
         });
     } catch (error) {
-        console.error("MySQL error →", error); // 👈 Add this
+        console.error("MySQL error →", error);
         res.status(500).json({ success: false, message: "Database query failed" });
     }
 };
 
 /**
- * @description Get all University State from the database
+ * @description Get all University State from the s
  * @route GET /api/sql/dropdown/all_university_state
  * @success {object} 200 - All University States
  * @error {object} 500 - Database query failed
  */
 export const getAllState = async (req, res) => {
     try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `university_state` WHERE is_del = 0 AND is_active = 1 ORDER BY name ASC;"
-        );
+        const stateList = await list_university_state
+            .find(
+                { is_del: 0, is_active: 1 },
+                { id: 1, name: 1 }
+            )
+            .sort({ name: 1 })
+            .lean();
+
+        //Transform _id to id
+        const formattedStateList = stateList.map((items) => ({
+            id: items.id,
+            name: items.name
+        }));
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedStateList,
             message: "All University States",
         });
     } catch (error) {
-        console.error("MySQL error →", error); // 👈 Add this
+        console.error("MySQL error →", error);
         res.status(500).json({ success: false, message: "Database query failed" });
     }
 };
@@ -257,11 +274,12 @@ export const getUniversityByState = async (req, res) => {
                 .json({ success: false, message: "Missing state_id in query." });
         }
 
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `university_univercity` WHERE state_id = ? AND is_del = 0 AND is_active = 1;",
-            [stateId]
-        );
-        const universityNames = rows.map((row) => row.name);
+        const universities = await list_university_univercities.find(
+            { state_id: stateId, is_del: 0, is_active: 1 },
+            { name: 1, _id: 0 }
+        ).lean();
+
+        const universityNames = universities.map((u) => u.name);
 
         res.status(200).json({
             success: true,
@@ -269,7 +287,7 @@ export const getUniversityByState = async (req, res) => {
             message: `Universities in state ID ${stateId}`,
         });
     } catch (error) {
-        console.error("MySQL error →", error); // 👈 Add this
+        console.error("MySQL error →", error);
         res.status(500).json({ success: false, message: "Database query failed" });
     }
 };
@@ -290,83 +308,79 @@ export const getCourseByUniversity = async (req, res) => {
     try {
         const { state_id, university_id, college_name, course_type } = req.query;
         let courseIds = [];
+        let finalCourseNames = [];
         const allFiltersProvided =
             state_id && university_id && college_name && course_type;
 
         if (allFiltersProvided) {
-            const [universityIdResult] = await db_sql.execute(
-                "SELECT id FROM university_univercity WHERE name = ? AND is_del = 0 AND is_active = 1",
-                [university_id.trim()]
-            );
 
-            if (universityIdResult.length > 0) {
-                const universityId = universityIdResult[0].id;
+            const universityIdResult = await list_university_univercities.findOne(
+                { name: university_id.trim(), is_del: 0, is_active: 1 },
+                { id: 1 }
+            ).lean();
 
-                const [universityRows] = await db_sql.execute(
-                    "SELECT id FROM university_univercity WHERE id = ? AND state_id = ? AND is_del = 0 AND is_active = 1",
-                    [universityId, state_id]
-                );
+            if (universityIdResult) {
+                const universityRows = await list_university_univercities.findOne(
+                    {
+                        id: universityIdResult.id,
+                        state_id: state_id,
+                        is_del: 0,
+                        is_active: 1,
+                    },
+                    { id: 1 }
+                ).lean();
 
-                if (universityRows.length > 0) {
-                    const [collegeRows] = await db_sql.execute(
-                        "SELECT courses FROM university_college WHERE university_id = ? AND name = ? AND is_del = 0 AND is_active = 1",
-                        [universityId, college_name.trim()]
-                    );
+                if (universityRows) {
+                    const collegeRows = await list_university_colleges.findOne(
+                        {
+                            university_id: universityRows.id,
+                            name: college_name.trim(),
+                            is_del: 0,
+                            is_active: 1,
+                        },
+                        { courses: 1 }
+                    ).lean();
 
-                    if (collegeRows.length > 0 && collegeRows[0].courses) {
-                        courseIds = collegeRows[0].courses
+                    if (collegeRows?.courses) {
+                        courseIds = collegeRows.courses
                             .split(",")
                             .map((id) => id.trim())
                             .filter(Boolean);
+
+                        courseIds = [...new Set(courseIds)];
                     }
                 }
             }
         }
+        let filter = {
+            is_del: 0,
+            is_active: 1,
+            type: course_type,
+        };
 
-        let courseQuery = "";
-        let queryValues = [];
-
+        // Case 1: If courseIds are provided
         if (courseIds.length > 0) {
-            // Filtered query
-            courseQuery = `
-        SELECT id, name 
-        FROM university_course 
-        WHERE id IN (${courseIds.map(() => "?").join(",")})
-        AND type = ?
-        AND is_del = 0
-        AND is_active = 1
-        LIMIT 50
-      `;
-            queryValues = [...courseIds, course_type];
-        } else {
-            // Fallback query (filter only by course_type)
-            courseQuery = `
-        SELECT id, name 
-        FROM university_course 
-        WHERE type = ?
-        AND is_del = 0
-        AND is_active = 1
-        LIMIT 50
-      `;
-            queryValues = [course_type];
+            filter.id = { $in: courseIds }; 
         }
 
-        const [courseRows] = await db_sql.execute(courseQuery, queryValues);
+        // Query with filter
+        const courseDocs = await list_university_course.find(filter, { id: 1, name: 1, _id: 0 })
+            .limit(50)
+            .lean();
+        finalCourseNames = courseDocs.map((doc) => doc.name);
 
-        let finalCourseNames = courseRows.map((row) => row.name);
-
-        // If no course found, get fallback list (NA)
+        // Step 2: If no courses found, fallback to default course list
         if (finalCourseNames.length === 0) {
-            const [naCourseRows] = await db_sql.execute(`
-        SELECT id, name 
-        FROM university_course 
-        WHERE is_del = 0 
-        AND is_active = 1 
-        LIMIT 50
-      `);
+            const fallbackCourses = await list_university_course.find(
+                { is_del: 0, is_active: 1 },
+                { id: 1, name: 1, _id: 0 }
+            )
+                .limit(50)
+                .lean();
 
-            finalCourseNames = naCourseRows.map((row) => row.name);
+            finalCourseNames = fallbackCourses.map((doc) => doc.name);
 
+            // If still no courses, return 404
             if (finalCourseNames.length === 0) {
                 return res.status(404).json({
                     success: false,
@@ -374,7 +388,6 @@ export const getCourseByUniversity = async (req, res) => {
                 });
             }
         }
-
         // Single response
         return res.status(200).json({
             success: true,
@@ -382,7 +395,6 @@ export const getCourseByUniversity = async (req, res) => {
             message: "Courses based on provided filters",
         });
     } catch (error) {
-        console.error("MySQL error →", error);
         return res
             .status(500)
             .json({ success: false, message: "Database query failed" });
@@ -397,17 +409,29 @@ export const getCourseByUniversity = async (req, res) => {
  */
 export const getGradingSystem = async (req, res) => {
     try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `grading_system` WHERE is_del = 0 AND is_active = 1;"
-        );
+        // const [rows] = await db_sql.execute(
+        //     "SELECT id, name FROM `grading_system` WHERE is_del = 0 AND is_active = 1;"
+        // );
+
+        const gradingSystem = await list_grading_system
+            .find(
+                { is_del: 0, is_active: 1 },
+                "id name"
+            )
+            .lean();
+
+        // Transform _id to id
+        const formattedGradingSystem = gradingSystem.map((items) => ({
+            id: items.id,
+            name: items.name,
+        }));
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedGradingSystem,
             message: "All Grading Systems",
         });
     } catch (error) {
-        console.error("MySQL error →", error); // 👈 Add this
         res.status(500).json({ success: false, message: "Database query failed" });
     }
 };
@@ -420,17 +444,24 @@ export const getGradingSystem = async (req, res) => {
  */
 export const getCourseType = async (req, res) => {
     try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `course_type` WHERE is_del = 0 AND is_active = 1;"
-        );
+        const courseType = await list_course_type
+            .find(
+                { is_del: 0, is_active: 1 },
+                "id name"
+            )
+            .lean();
+
+        const formattedCourseType = courseType.map((items) => ({
+            id: items.id,
+            name: items.name,
+        }));
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedCourseType,
             message: "All Course Type",
         });
     } catch (error) {
-        console.error("MySQL error →", error); // 👈 Add this
         res.status(500).json({ success: false, message: "Database query failed" });
     }
 };
@@ -445,19 +476,24 @@ export const getEducationBoardById = async (req, res) => {
     try {
         const boardId = req.query.state_id;
 
-        const [rows] = await db_sql.execute(
-            "SELECT id, board_name FROM education_boards WHERE state_region_id = ? OR state_region_id = 0",
-            [boardId]
-        );
+        const boards = await list_education_boards.find(
+            {
+                $or: [
+                    { state_region_id: boardId },
+                    { state_region_id: 0 },
+                ],
+            },
+            { id: 1, board_name: 1, _id: 0 }
+        ).lean();
 
-        if (rows.length === 0) {
+        if (boards.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: "Education Board not found",
             });
         }
 
-        const boardNames = rows.map((row) => row.board_name);
+        const boardNames = boards.map((board) => board.board_name);
 
         res.status(200).json({
             success: true,
@@ -465,7 +501,6 @@ export const getEducationBoardById = async (req, res) => {
             message: "Education Board details",
         });
     } catch (error) {
-        console.error("MySQL error →", error);
         res.status(500).json({ success: false, message: "Database query failed" });
     }
 };
@@ -478,13 +513,21 @@ export const getEducationBoardById = async (req, res) => {
  */
 export const getAllMediumOfEducation = async (req, res) => {
     try {
-        const [rows] = await db_sql.execute(
-            "SELECT id, name FROM `medium_of_education` WHERE is_del = 0 AND is_active = 1;"
-        );
+        const educationMedium = await list_medium_of_education
+            .find(
+                { is_del: 0, is_active: 1 },
+                "id name"
+            )
+            .lean();
+
+        const formattedEducationMedium = educationMedium.map((items) => ({
+            id: items.id,
+            name: items.name,
+        }));
 
         res.status(200).json({
             success: true,
-            data: rows,
+            data: formattedEducationMedium,
             message: "All Medium Of Education",
         });
     } catch (error) {
@@ -504,7 +547,7 @@ export const getCollegeNameById = async (req, res) => {
         const university_name = req.query.university_id;
         const university_state = req.query.state_id;
 
-        if (!university_name || university_name.trim() === "") {
+        if (!university_name || university_name === "") {
             return res
                 .status(400)
                 .json({ success: false, message: "university_name is required" });
@@ -516,46 +559,64 @@ export const getCollegeNameById = async (req, res) => {
                 .json({ success: false, message: "state_id is required" });
         }
 
-        const [existingUniversity] = await db_sql.execute(
-            "SELECT id FROM university_univercity WHERE name = ? AND state_id = ? AND is_del = 0 AND is_active = 1",
-            [university_name.trim(), university_state]
-        );
+        let existingUniversity = await list_university_univercities.findOne({
+            name: university_name,
+            state_id: university_state,
+            is_del: 0,
+        }).lean();
 
         let universityId;
-        let collegeRows = [];
+        let collegeDocs = [];
 
-        if (existingUniversity.length > 0) {
-            universityId = existingUniversity[0].id;
+        if (existingUniversity) {
+            universityId = existingUniversity.id;
 
-            [collegeRows] = await db_sql.execute(
-                "SELECT id,name FROM university_college WHERE university_id = ? AND is_del = 0 AND is_active = 1;",
-                [universityId]
-            );
+            collegeDocs = await list_university_colleges.find(
+                {
+                    university_id: universityId,
+                    is_del: 0,
+                    is_active: 1,
+                },
+                { id: 1, name: 1, _id: 0 }
+            ).lean();
 
-            if (collegeRows.length === 0) {
-                [collegeRows] = await db_sql.execute(
-                    "SELECT id, name FROM university_college WHERE is_del = 0 AND is_active = 1 LIMIT 50"
-                );
+            if (collegeDocs.length === 0) {
+                collegeDocs = await list_university_colleges.find(
+                    { is_del: 0, is_active: 1 },
+                    { id: 1, name: 1, _id: 0 }
+                ).limit(50).lean();
             }
-        } else {
-            const [insertResult] = await db_sql.execute(
-                "INSERT INTO university_univercity (name, state_id, is_active, is_del, flag) VALUES (?, ?, 0, 0, 1)",
-                [university_name.trim(), university_state]
-            );
 
-            universityId = insertResult.insertId;
-            [collegeRows] = await db_sql.execute(
-                "SELECT id, name FROM university_college WHERE is_del = 0 AND is_active = 1 LIMIT 50"
-            );
+        } else {
+            const lastDoc = await list_university_univercities.findOne({}).sort({ id: -1 }).lean();
+            const lastInsertedId = lastDoc?.id || 0;
+
+            const newUniversity = new list_university_univercities({
+                id: lastInsertedId + 1,
+                name: university_name,
+                state_id: university_state,
+                is_active: 0,
+                is_del: 0,
+                flag: 1,
+            });
+
+            const savedUniversity = await newUniversity.save();
+            universityId = savedUniversity.id;
+
+            // Step 5: Fallback college list
+            collegeDocs = await list_university_colleges.find(
+                { is_del: 0, is_active: 1 },
+                { id: 1, name: 1, _id: 0 }
+            ).limit(50).lean();
         }
 
-        if (collegeRows.length === 0) {
+        if (collegeDocs.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: "College Name not found",
             });
         }
-        const collegeNames = collegeRows.map((row) => row.name);
+        const collegeNames = collegeDocs.map((row) => row.name);
 
         res.status(200).json({
             success: true,
@@ -579,7 +640,7 @@ export const getMoreInformation = async (req, res) => {
         const infoList = await list_more_information
             .find(
                 { is_del: 0, is_active: 1 },
-                "_id name" // project only `id` and `name`
+                "_id name"
             )
             .lean();
 
@@ -611,7 +672,7 @@ export const getMaritalStatus = async (req, res) => {
         const maritalStatusList = await list_marital_status
             .find(
                 { is_del: 0, is_active: 1 },
-                "_id status" // project only `id` and `name`
+                "_id status"
             )
             .lean();
 
@@ -1019,7 +1080,7 @@ export const getIndiaCities = async (req, res) => {
             {
                 $sort: {
                     popular_location: -1,
-                    remote_priority: 1,  
+                    remote_priority: 1,
                     city_name: 1
                 },
             },
