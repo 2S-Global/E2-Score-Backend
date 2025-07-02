@@ -4,9 +4,17 @@ import candidateDetails from "../../models/CandidateDetailsModel.js";
 import db_sql from "../../config/sqldb.js";
 import UserEducation from "../../models/userEducationModel.js";
 import list_gender from "../../models/monogo_query/genderModel.js";
-import list_education_level from "../../models/monogo_query/educationLevelModel.js";
 import { GetProgress } from "../../utility/helper/getprogress.js";
 import list_key_skill from "../../models/monogo_query/keySkillModel.js";
+import list_education_level from "../../models/monogo_query/educationLevelModel.js";
+import list_university_state from "../../models/monogo_query/universityStateModel.js";
+import list_university_univercities from "../../models/monogo_query/universityUniversityModel.js";
+import list_university_colleges from "../../models/monogo_query/universityCollegesModel.js";
+import list_university_course from "../../models/monogo_query/universityCourseModel.js";
+import list_course_type from "../../models/monogo_query/courseTypeModel.js";
+import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
+import list_medium_of_education from "../../models/monogo_query/mediumOfEducationModel.js";
+import list_education_boards from "../../models/monogo_query/educationBoardModel.js";
 import mongoose from "mongoose";
 /**
  * @function getUser
@@ -346,7 +354,7 @@ export const getcandidateskills = async (req, res) => {
  * @returns {object} 404 - User data not found
  * @returns {object} 500 - Error fetching education records
  */
-export const getUserEducation = async (req, res) => {
+export const getUserEducationBySql = async (req, res) => {
   try {
     const user = req.userId;
 
@@ -382,6 +390,113 @@ export const getUserEducation = async (req, res) => {
       db_sql.execute("SELECT id, name FROM grading_system"),
       db_sql.execute("SELECT id, name FROM medium_of_education"),
       db_sql.execute("SELECT id, board_name FROM education_boards"),
+    ]);
+
+    const makeMap = (rows, nameKey = "name") =>
+      Object.fromEntries(rows.map((row) => [row.id, row[nameKey]]));
+
+    const maps = {
+      level: makeMap(levelRows, "level"),
+      state: makeMap(stateRows),
+      university: makeMap(universityRows),
+      institute: makeMap(instituteRows),
+      course: makeMap(courseRows),
+      courseType: makeMap(courseTypeRows),
+      gradingSystem: makeMap(gradingSystemRows),
+      medium: makeMap(mediumRows),
+      board: makeMap(boardRows, "board_name"),
+    };
+
+    // 4. Transform records
+    const responseData = educationRecords.map((record) => {
+      const edu = { ...record };
+      edu.level_id = record.level;
+      edu.level = maps.level[record.level] || record.level;
+      edu.state = maps.state[record.state] || record.state;
+      edu.universityName =
+        maps.university[record.universityName] || record.universityName;
+      edu.instituteName =
+        maps.institute[record.instituteName] || record.instituteName;
+      edu.courseName = maps.course[record.courseName] || record.courseName;
+      edu.courseType = maps.courseType[record.courseType] || record.courseType;
+      edu.gradingSystem =
+        maps.gradingSystem[record.gradingSystem] || record.gradingSystem;
+      edu.medium_of_education =
+        maps.medium[record.medium_of_education] || record.medium_of_education;
+      edu.board = maps.board[record.board] || record.board;
+
+      return edu;
+    });
+
+    res.status(200).json({
+      message: "User education data fetched successfully",
+      data: responseData,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getUserEducation = async (req, res) => {
+  try {
+    const user = req.userId;
+
+    // 1. Get education records
+    const educationRecords = await UserEducation.find({
+      userId: user,
+      isDel: false,
+    })
+      .sort({ level: -1 })
+      .lean();
+
+    if (!educationRecords || educationRecords.length === 0) {
+      return res.status(404).json({ message: "User education data not found" });
+    }
+
+    /*
+    const [
+      [levelRows],
+      [stateRows],
+      [universityRows],
+      [instituteRows],
+      [courseRows],
+      [courseTypeRows],
+      [gradingSystemRows],
+      [mediumRows],
+      [boardRows],
+    ] = await Promise.all([
+      db_sql.execute("SELECT id, level FROM education_level"),
+      db_sql.execute("SELECT id, name FROM university_state"),
+      db_sql.execute("SELECT id, name FROM university_univercity"),
+      db_sql.execute("SELECT id, name FROM university_college"),
+      db_sql.execute("SELECT id, name FROM university_course"),
+      db_sql.execute("SELECT id, name FROM course_type"),
+      db_sql.execute("SELECT id, name FROM grading_system"),
+      db_sql.execute("SELECT id, name FROM medium_of_education"),
+      db_sql.execute("SELECT id, board_name FROM education_boards"),
+    ]);  */
+
+
+    const [
+      levelRows,
+      stateRows,
+      universityRows,
+      instituteRows,
+      courseRows,
+      courseTypeRows,
+      gradingSystemRows,
+      mediumRows,
+      boardRows,
+    ] = await Promise.all([
+      list_education_level.find({}, { id: 1, level: 1, _id: 0 }).lean(),
+      list_university_state.find({}, { id: 1, name: 1, _id: 0 }).lean(),
+      list_university_univercities.find({}, { id: 1, name: 1, _id: 0 }).lean(),
+      list_university_colleges.find({}, { id: 1, name: 1, _id: 0 }).lean(),
+      list_university_course.find({}, { id: 1, name: 1, _id: 0 }).lean(),
+      list_course_type.find({}, { id: 1, name: 1, _id: 0 }).lean(),
+      list_grading_system.find({}, { id: 1, name: 1, _id: 0 }).lean(),
+      list_medium_of_education.find({}, { id: 1, name: 1, _id: 0 }).lean(),
+      list_education_boards.find({}, { id: 1, board_name: 1, _id: 0 }).lean(),
     ]);
 
     const makeMap = (rows, nameKey = "name") =>

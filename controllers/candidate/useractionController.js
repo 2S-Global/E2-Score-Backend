@@ -14,6 +14,10 @@ import list_industries from "../../models/monogo_query/industryModel.js";
 import list_department from "../../models/monogo_query/departmentsModel.js";
 import list_job_role from "../../models/monogo_query/jobRolesModel.js";
 import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
+import list_university_univercities from "../../models/monogo_query/universityUniversityModel.js";
+import list_education_boards from "../../models/monogo_query/educationBoardModel.js";
+import list_university_colleges from "../../models/monogo_query/universityCollegesModel.js";
+import list_university_course from "../../models/monogo_query/universityCourseModel.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -474,7 +478,7 @@ export const uploadFileToExternalServer = async (file) => {
  *     match was found and no new row was inserted (e.g. if the value is empty)
  */
 
-async function getOrInsertId(tableName, columnName, value) {
+async function getOrInsertIdBySql(tableName, columnName, value) {
   if (!value || typeof value !== "string") {
     return null;
   }
@@ -497,9 +501,45 @@ async function getOrInsertId(tableName, columnName, value) {
   return insertResult.insertId;
 }
 
+async function getOrInsertId(model, fieldName, value) {
+  if (!value || typeof value !== "string") {
+    return null;
+  }
+
+  const trimmedValue = value.trim();
+  if (!trimmedValue) {
+    return null;
+  }
+
+  const filter = {
+    [fieldName]: trimmedValue,
+    is_del: 0,
+    is_active: 1,
+  };
+
+  const existingDoc = await model.findOne(filter, { id: 1 }).lean();
+  if (existingDoc) {
+    return existingDoc.id;
+  }
+
+  const lastDoc = await model.findOne({}).sort({ id: -1 }).lean();
+  const lastInsertedId = lastDoc?.id || 0;
+
+  const newDoc = new model({
+    id: lastInsertedId + 1,
+    [fieldName]: trimmedValue,
+    is_active: 0,
+    is_del: 0,
+    flag: 1,
+  });
+
+  const savedDoc = await newDoc.save();
+  return savedDoc.id;
+}
+
 // Add User Education
 /**
- * @route POST /api/useraction/submit-education
+ * @route POST /api/useraction/usereducation
  * @summary Submit or update the user's education details
  * @description This endpoint allows the authenticated user to submit or update their education details.
  *              It handles both primary and non-primary education levels and uploads transcript and certificate files if provided.
@@ -533,6 +573,7 @@ export const submitUserEducation = async (req, res) => {
     const certificate = req.files?.certificate?.[0];
     let transcriptUrl = null;
     let certificateUrl = null;
+
     // Upload transcript file if available
     if (transcript) {
       transcriptUrl = await uploadFileToExternalServer(transcript);
@@ -553,11 +594,8 @@ export const submitUserEducation = async (req, res) => {
     }
     let savedRecord;
     if (levelId === "1" || levelId === "2") {
-      const boardId = await getOrInsertId(
-        "education_boards",
-        "board_name",
-        data.board
-      );
+      const boardId = await getOrInsertId(list_education_boards, "board_name", data.board);
+
       const educationData = {
         userId: user,
         level: levelId,
@@ -590,21 +628,12 @@ export const submitUserEducation = async (req, res) => {
         savedRecord = await newRecord.save();
       }
     } else {
-      const universityId = await getOrInsertId(
-        "university_univercity",
-        "name",
-        data.university
-      );
-      const instituteId = await getOrInsertId(
-        "university_college",
-        "name",
-        data.institute_name
-      );
-      const courseId = await getOrInsertId(
-        "university_course",
-        "name",
-        data.course_name
-      );
+      const [universityId, instituteId, courseId] = await Promise.all([
+        getOrInsertId(list_university_univercities, "name", data.university),
+        getOrInsertId(list_university_colleges, "name", data.institute_name),
+        getOrInsertId(list_university_course, "name", data.course_name),
+      ]);
+
       const educationData = {
         userId: user,
         level: levelId,
@@ -705,11 +734,14 @@ export const updateUserEducation = async (req, res) => {
     }
     let savedRecord;
     if (levelId == "1" || levelId == "2") {
-      const boardId = await getOrInsertId(
-        "education_boards",
-        "board_name",
-        data.board
-      );
+
+      // const boardId = await getOrInsertId(
+      //   "education_boards",
+      //   "board_name",
+      //   data.board
+      // );
+
+      const boardId = await getOrInsertId(list_education_boards, "board_name", data.board);
 
       const educationData = {
         userId: user,
@@ -733,6 +765,7 @@ export const updateUserEducation = async (req, res) => {
         { new: true }
       );
     } else {
+      /*
       const universityId = await getOrInsertId(
         "university_univercity",
         "name",
@@ -747,7 +780,31 @@ export const updateUserEducation = async (req, res) => {
         "university_course",
         "name",
         data.course_name
+      );  */
+
+      /*
+      const universityId = await getOrInsertId(
+        "list_university_univercities",
+        "name",
+        data.university
       );
+
+      const instituteId = await getOrInsertId(
+        "list_university_colleges",
+        "name",
+        data.institute_name
+      );
+      const courseId = await getOrInsertId(
+        "list_university_course",
+        "name",
+        data.course_name
+      );  */
+
+      const [universityId, instituteId, courseId] = await Promise.all([
+        getOrInsertId("list_university_univercities", "name", data.university),
+        getOrInsertId("list_university_colleges", "name", data.institute_name),
+        getOrInsertId("list_university_course", "name", data.course_name),
+      ]);
 
       const educationData = {
         userId: user,
@@ -1088,7 +1145,7 @@ export const getCareerProfile = async (req, res) => {
           ? list_industries.findOne({ id: CurrentIndustry }).select("job_industry").lean()
           : null,
         CurrentDepartment
-          ? list_department.findOne({id: CurrentDepartment}).select("job_department").lean()
+          ? list_department.findOne({ id: CurrentDepartment }).select("job_department").lean()
           : null,
         JobRole
           ? list_job_role.findById(JobRole).select("job_role").lean()
