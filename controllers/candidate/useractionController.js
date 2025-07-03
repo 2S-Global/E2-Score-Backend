@@ -801,9 +801,9 @@ export const updateUserEducation = async (req, res) => {
       );  */
 
       const [universityId, instituteId, courseId] = await Promise.all([
-        getOrInsertId("list_university_univercities", "name", data.university),
-        getOrInsertId("list_university_colleges", "name", data.institute_name),
-        getOrInsertId("list_university_course", "name", data.course_name),
+        getOrInsertId(list_university_univercities, "name", data.university),
+        getOrInsertId(list_university_colleges, "name", data.institute_name),
+        getOrInsertId(list_university_course, "name", data.course_name),
       ]);
 
       const educationData = {
