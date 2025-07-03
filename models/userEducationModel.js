@@ -34,6 +34,9 @@ const userEducationSchema = new mongoose.Schema(
     board: {
       type: String,
     },
+    schoolName: {
+      type: String,
+    },
     transcript_data: {
       type: String, // Fixed typo
     },
@@ -96,6 +99,6 @@ const userEducationSchema = new mongoose.Schema(
   }
 );
 
-const UserEducation = mongoose.model("UserEducation", userEducationSchema);
+const usereducation = mongoose.model("usereducation", userEducationSchema);
 
-export default UserEducation;
+export default usereducation;

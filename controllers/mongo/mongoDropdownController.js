@@ -25,6 +25,7 @@ import list_medium_of_education from "../../models/monogo_query/mediumOfEducatio
 import list_education_boards from "../../models/monogo_query/educationBoardModel.js";
 import list_course_type from "../../models/monogo_query/courseTypeModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
+import list_school_list from "../../models/monogo_query/schoolListModel.js";
 /**
  * @description Get all countries from the database
  * @route GET /api/sql/dropdown/All_contry
@@ -360,7 +361,7 @@ export const getCourseByUniversity = async (req, res) => {
 
         // Case 1: If courseIds are provided
         if (courseIds.length > 0) {
-            filter.id = { $in: courseIds }; 
+            filter.id = { $in: courseIds };
         }
 
         // Query with filter
@@ -1131,6 +1132,30 @@ export const getTechSkills = async (req, res) => {
             success: true,
             data: allSkills,
             message: "Tech Skills Data Fetched Successfully",
+        });
+    } catch (error) {
+        console.error("MySQL error →", error);
+        res.status(500).json({ success: false, message: "Database query failed" });
+    }
+};
+
+/**
+ * @description Get all School from the database
+ * @route GET /api/sql/dropdown/get_school_lists
+ * @success {object} 200 - All School Lists
+ * @error {object} 500 - Database query failed
+ */
+export const getAllSchoolLists = async (req, res) => {
+    try {
+        
+        const schoolLists = await list_school_list.find({ is_del: 0, is_active: 1 }, { id: 1, school_name: 1, _id: 0 }).lean();
+
+        const formattedSchoolLists = schoolLists.map((item) => item.school_name);
+
+        res.status(200).json({
+            success: true,
+            data: formattedSchoolLists,
+            message: "All School List data Fetched Successfully",
         });
     } catch (error) {
         console.error("MySQL error →", error);

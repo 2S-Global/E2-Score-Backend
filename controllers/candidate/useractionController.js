@@ -18,6 +18,7 @@ import list_university_univercities from "../../models/monogo_query/universityUn
 import list_education_boards from "../../models/monogo_query/educationBoardModel.js";
 import list_university_colleges from "../../models/monogo_query/universityCollegesModel.js";
 import list_university_course from "../../models/monogo_query/universityCourseModel.js";
+import list_school_list from "../../models/monogo_query/schoolListModel.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -595,12 +596,14 @@ export const submitUserEducation = async (req, res) => {
     let savedRecord;
     if (levelId === "1" || levelId === "2") {
       const boardId = await getOrInsertId(list_education_boards, "board_name", data.board);
+      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name);
 
       const educationData = {
         userId: user,
         level: levelId,
         state: data.state,
         board: boardId || null,
+        schoolName: schoolId || null,
         year_of_passing: data.year_of_passing,
         medium_of_education: data.medium,
         marks: data.marks,
@@ -742,12 +745,14 @@ export const updateUserEducation = async (req, res) => {
       // );
 
       const boardId = await getOrInsertId(list_education_boards, "board_name", data.board);
+      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name);
 
       const educationData = {
         userId: user,
         level: levelId,
         state: data.state,
         board: boardId || null,
+        schoolName: schoolId || null,
         year_of_passing: data.year_of_passing,
         medium_of_education: data.medium,
         marks: data.marks,

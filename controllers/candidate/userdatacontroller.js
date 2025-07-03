@@ -2,7 +2,8 @@ import User from "../../models/userModel.js";
 import personalDetails from "../../models/personalDetails.js";
 import candidateDetails from "../../models/CandidateDetailsModel.js";
 import db_sql from "../../config/sqldb.js";
-import UserEducation from "../../models/userEducationModel.js";
+// import UserEducation from "../../models/userEducationModel.js";
+import usereducation from "../../models/userEducationModel.js";
 import list_gender from "../../models/monogo_query/genderModel.js";
 import { GetProgress } from "../../utility/helper/getprogress.js";
 import list_key_skill from "../../models/monogo_query/keySkillModel.js";
@@ -15,6 +16,7 @@ import list_course_type from "../../models/monogo_query/courseTypeModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
 import list_medium_of_education from "../../models/monogo_query/mediumOfEducationModel.js";
 import list_education_boards from "../../models/monogo_query/educationBoardModel.js";
+import list_school_list from "../../models/monogo_query/schoolListModel.js";
 import mongoose from "mongoose";
 /**
  * @function getUser
@@ -354,6 +356,8 @@ export const getcandidateskills = async (req, res) => {
  * @returns {object} 404 - User data not found
  * @returns {object} 500 - Error fetching education records
  */
+
+/*
 export const getUserEducationBySql = async (req, res) => {
   try {
     const user = req.userId;
@@ -365,6 +369,8 @@ export const getUserEducationBySql = async (req, res) => {
     })
       .sort({ level: -1 })
       .lean();
+
+      console.log("Education Records:", educationRecords);
 
     if (!educationRecords || educationRecords.length === 0) {
       return res.status(404).json({ message: "User education data not found" });
@@ -435,9 +441,11 @@ export const getUserEducationBySql = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
+};  */
 
-export const getUserEducation = async (req, res) => {
+
+
+export const getUserEducationByMongoHello = async (req, res) => {
   try {
     const user = req.userId;
 
@@ -541,6 +549,128 @@ export const getUserEducation = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const getUserEducation = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const educationRecords = await usereducation.find({
+      userId,
+      isDel: false,
+    })
+      .sort({ level: -1 })
+      .lean();
+
+    console.log("Education Records:", educationRecords);
+
+    if (!educationRecords?.length) {
+      return res.status(404).json({ message: "No education data found." });
+    }
+
+    // Get all unique values used in the records
+    const getUniqueValues = (key) => [
+      ...new Set(educationRecords.map((rec) => rec[key]).filter(Boolean)),
+    ];
+
+    const levelIds = getUniqueValues("level");
+    const stateIds = getUniqueValues("state");
+    const universityIds = getUniqueValues("universityName");
+    const instituteIds = getUniqueValues("instituteName");
+    const courseIds = getUniqueValues("courseName");
+    const courseTypeIds = getUniqueValues("courseType");
+    const gradingSystemIds = getUniqueValues("gradingSystem");
+    const mediumIds = getUniqueValues("medium_of_education");
+    const boardIds = getUniqueValues("board");
+    const schoolIds = getUniqueValues("schoolName");
+
+    const [
+      levels,
+      states,
+      universities,
+      institutes,
+      courses,
+      courseTypes,
+      gradingSystems,
+      mediums,
+      boards,
+      schools
+    ] = await Promise.all([
+      levelIds.length
+        ? list_education_level.find({ id: { $in: levelIds } }, { id: 1, level: 1, _id: 0 }).lean()
+        : [],
+      stateIds.length
+        ? list_university_state.find({ id: { $in: stateIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        : [],
+      universityIds.length
+        ? list_university_univercities.find({ id: { $in: universityIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        : [],
+      instituteIds.length
+        ? list_university_colleges.find({ id: { $in: instituteIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        : [],
+      courseIds.length
+        ? list_university_course.find({ id: { $in: courseIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        : [],
+      courseTypeIds.length
+        ? list_course_type.find({ id: { $in: courseTypeIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        : [],
+      gradingSystemIds.length
+        ? list_grading_system.find({ id: { $in: gradingSystemIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        : [],
+      mediumIds.length
+        ? list_medium_of_education.find({ id: { $in: mediumIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        : [],
+      boardIds.length
+        ? list_education_boards.find({ id: { $in: boardIds } }, { id: 1, board_name: 1, _id: 0 }).lean()
+        : [],
+      schoolIds.length
+        ? list_school_list.find({ id: { $in: schoolIds } }, { id: 1, school_name: 1, _id: 0 }).lean()
+        : [],
+    ]);
+
+    const createMap = (list, valueKey = "name") => {
+      return list.reduce((acc, item) => {
+        acc[item.id] = item[valueKey];
+        return acc;
+      }, {});
+    };
+
+    const maps = {
+      level: createMap(levels, "level"),
+      state: createMap(states),
+      university: createMap(universities),
+      institute: createMap(institutes),
+      course: createMap(courses),
+      courseType: createMap(courseTypes),
+      gradingSystem: createMap(gradingSystems),
+      medium: createMap(mediums),
+      board: createMap(boards, "board_name"),
+      school_name: createMap(schools, "school_name"),
+    };
+
+    const responseData = educationRecords.map(record => ({
+      ...record,
+      level_id: record.level,
+      level: maps.level[record.level] || record.level,
+      state: maps.state[record.state] || record.state,
+      universityName: maps.university[record.universityName] || record.universityName,
+      instituteName: maps.institute[record.instituteName] || record.instituteName,
+      courseName: maps.course[record.courseName] || record.courseName,
+      courseType: maps.courseType[record.courseType] || record.courseType,
+      gradingSystem: maps.gradingSystem[record.gradingSystem] || record.gradingSystem,
+      medium_of_education: maps.medium[record.medium_of_education] || record.medium_of_education,
+      board: maps.board[record.board] || record.board,
+      school_name: maps.school_name[record.school_name] || record.school_name,
+    }));
+
+    res.status(200).json({
+      message: "User education data fetched successfully",
+      data: responseData,
+    });
+  } catch (error) {
+    console.error("Error in getUserEducation:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 

@@ -27,6 +27,7 @@ import {
   getJobRoles,
   getIndiaCities,
   getTechSkills,
+  getAllSchoolLists
 } from "../../controllers/mongo/mongoDropdownController.js";
 
 const MongoDropdownRouter = express.Router();
@@ -109,5 +110,8 @@ MongoDropdownRouter.get("/get_india_cities", getIndiaCities);
 
 //Get Tech Skills
 MongoDropdownRouter.get("/get_tech_skills", getTechSkills);
+
+//Get All School List
+MongoDropdownRouter.get("/get_school_lists", getAllSchoolLists);
 
 export default MongoDropdownRouter;
