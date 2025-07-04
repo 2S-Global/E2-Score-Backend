@@ -135,7 +135,7 @@ export const getUser = async (req, res) => {
     }
 
     // Fetch all UserEducation records for the user and get the max level
-    const educations = await UserEducation.find(
+    const educations = await usereducation.find(
       { userId: user_id, isDel: false },
       "level isPrimary"
     ).lean();
