@@ -605,7 +605,7 @@ export const submitUserEducation = async (req, res) => {
     let savedRecord;
     if (levelId === "1" || levelId === "2") {
       const boardId = await getOrInsertId(list_education_boards, "board_name", data.board);
-      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name, board, boardId);
+      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name, "board", boardId);
 
       const educationData = {
         userId: user,
