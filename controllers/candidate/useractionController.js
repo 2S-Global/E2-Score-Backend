@@ -514,11 +514,11 @@ async function getOrInsertId(model, fieldName, value, additionalFieldName = null
 
   const filter = {
     [fieldName]: trimmedValue,
-    is_del: 0,
-    is_active: 1,
+    is_del: 0
   };
 
   const existingDoc = await model.findOne(filter, { id: 1 }).lean();
+
   if (existingDoc) {
     return existingDoc.id;
   }
@@ -605,7 +605,7 @@ export const submitUserEducation = async (req, res) => {
     let savedRecord;
     if (levelId === "1" || levelId === "2") {
       const boardId = await getOrInsertId(list_education_boards, "board_name", data.board);
-      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name, "board", boardId);
+      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name, "board_id", boardId);
 
       const educationData = {
         userId: user,
@@ -754,7 +754,8 @@ export const updateUserEducation = async (req, res) => {
       // );
 
       const boardId = await getOrInsertId(list_education_boards, "board_name", data.board);
-      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name);
+      // const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name);
+      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name, "board_id", boardId);
 
       const educationData = {
         userId: user,
