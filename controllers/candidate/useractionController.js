@@ -502,7 +502,7 @@ async function getOrInsertIdBySql(tableName, columnName, value) {
   return insertResult.insertId;
 }
 
-async function getOrInsertId(model, fieldName, value) {
+async function getOrInsertId(model, fieldName, value, additionalFieldName = null, additionalFieldValue = null) {
   if (!value || typeof value !== "string") {
     return null;
   }
@@ -526,19 +526,28 @@ async function getOrInsertId(model, fieldName, value) {
   const lastDoc = await model.findOne({}).sort({ id: -1 }).lean();
   const lastInsertedId = lastDoc?.id || 0;
 
-  const newDoc = new model({
+  const docData = {
     id: lastInsertedId + 1,
     [fieldName]: trimmedValue,
     is_active: 0,
     is_del: 0,
     flag: 1,
-  });
+  };
 
+  if (
+    additionalFieldName &&
+    additionalFieldValue !== undefined &&
+    additionalFieldValue !== null &&
+    additionalFieldValue !== ""
+  ) {
+    docData[additionalFieldName] = additionalFieldValue;
+  }
+
+  const newDoc = new model(docData);
   const savedDoc = await newDoc.save();
   return savedDoc.id;
 }
 
-// Add User Education
 /**
  * @route POST /api/useraction/usereducation
  * @summary Submit or update the user's education details
@@ -596,7 +605,7 @@ export const submitUserEducation = async (req, res) => {
     let savedRecord;
     if (levelId === "1" || levelId === "2") {
       const boardId = await getOrInsertId(list_education_boards, "board_name", data.board);
-      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name);
+      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name, board, boardId);
 
       const educationData = {
         userId: user,
