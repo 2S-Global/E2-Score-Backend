@@ -455,7 +455,7 @@ export const getUserEducation = async (req, res) => {
     const gradingSystemIds = getUniqueValues("gradingSystem");
     const mediumIds = getUniqueValues("medium_of_education");
     const boardIds = getUniqueValues("board");
-    const schoolIds = getUniqueValues("schoolName");
+    const schoolIds = getUniqueValues("school_name");
 
     const [
       levels,
