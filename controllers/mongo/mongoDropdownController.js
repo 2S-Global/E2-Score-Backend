@@ -1147,8 +1147,15 @@ export const getTechSkills = async (req, res) => {
  */
 export const getAllSchoolLists = async (req, res) => {
     try {
+        const boardId = req.query.board_id;
+
+        if (!boardId) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Missing board_id in query." });
+        }
         
-        const schoolLists = await list_school_list.find({ is_del: 0, is_active: 1 }, { id: 1, school_name: 1, _id: 0 }).lean();
+        const schoolLists = await list_school_list.find({ board_id: boardId, is_del: 0, is_active: 1 }, { id: 1, school_name: 1, _id: 0 }).lean();
 
         const formattedSchoolLists = schoolLists.map((item) => item.school_name);
 

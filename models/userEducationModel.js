@@ -34,14 +34,14 @@ const userEducationSchema = new mongoose.Schema(
     board: {
       type: String,
     },
-    schoolName: {
+    school_name: {
       type: String,
     },
     transcript_data: {
-      type: String, // Fixed typo
+      type: String,
     },
     certificate_data: {
-      type: String, // Fixed typo
+      type: String,
     },
     marks: {
       type: String,
