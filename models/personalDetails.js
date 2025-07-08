@@ -142,7 +142,11 @@ const personalSchema = new mongoose.Schema(
     skills: [{
       type: mongoose.Types.ObjectId,
       ref: "list_key_skill" // Assuming you have a model for key skills
-    }]
+    }],
+    have_usa_visa: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

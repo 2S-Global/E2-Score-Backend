@@ -94,6 +94,7 @@ export const submitPersonalDetails = async (req, res) => {
       additionalInformation: (data.more_info || []).filter(
         (id) => id && id !== "null" && id !== ""
       ),
+      have_usa_visa: data.have_usa_visa || false
     };
 
     await personalDetails.findOneAndUpdate(
@@ -160,6 +161,7 @@ export const getPersonalDetails = async (req, res) => {
       languages: personal?.languageProficiency || [],
       marital_status: personal?.maritialStatus || null,
       more_info: personal?.additionalInformation || [],
+      have_usa_visa: personal?.have_usa_visa || false
     };
 
     res.status(200).json(result);
