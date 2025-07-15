@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 30%;
+      background-color: #2c2c2c;
+      color: #fff;
+      padding: 20px;
+      box-sizing: border-box;
+      /* height: 100vh; */
+    }
+
+    .sidebar h3 {
+      border-bottom: 1px solid #444;
+      padding-bottom: 5px;
+    }
+
+    .main {
+      width: 70%;
+      padding: 30px;
+      box-sizing: border-box;
+      color: #000;
+      text-align: justify
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #555;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .experience-item {
+      margin-bottom: 15px;
+    }
+
+    .experience-item h4 {
+      margin: 0;
+    }
+
+    .experience-item small {
+      color: #888;
+    }
+
+    a {
+      color: #00aaff;
+      word-break: break-all;
+    }
+
+    .career-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 40px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar">
+
+    <% if (user.profilePicture) { %>
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="<%= user.profilePicture %>" alt="Profile Picture"
+          style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 3px solid #fff;" />
+      </div>
+      <% } %>
+
+
+
+        <h3>Contact Info</h3>
+        <p>
+          <%= user.email %>
+        </p>
+        <p>
+          Phone No: <%= user.phone_number%>
+        </p>
+        <% if (user.linkedin) { %>
+          <p><a href="<%= user.linkedin %>">(LinkedIn)</a></p>
+          <% } %>
+
+            <% if (userDetails.skillsResolved?.length) { %>
+              <h3>Top Skills</h3>
+              <ul>
+                <% userDetails.skillsResolved.forEach(skill=> { %>
+                  <li>
+                    <%= skill %>
+                  </li>
+                  <% }) %>
+              </ul>
+              <% } %>
+
+                <h3>Online Profiles</h3>
+                <ul>
+                  <% onlineProfiles?.forEach(profile=> { %>
+                    <li>
+                      <strong>
+                        <%= profile.name %>
+                      </strong><br />
+                      <a href="<%= profile.url %>">
+                        <%= profile.url %>
+                      </a>
+                    </li>
+                    <% }) %>
+                </ul>
+
+                <h3>Work Samples</h3>
+                <ul>
+                  <% workSamples?.forEach(sample=> { %>
+                    <li>
+                      <strong>
+                        <%= sample.workTitle %>
+                      </strong><br />
+                      <a href="<%= sample.url %>">
+                        <%= sample.url %>
+                      </a><br />
+                      <% const months=[ "January" , "February" , "March" , "April" , "May" , "June" , "July" , "August"
+                        , "September" , "October" , "November" , "December" ]; const
+                        fromMonth=months[sample.durationFrom?.month - 1] || "Unknown" ; const
+                        fromYear=sample.durationFrom?.year || "Unknown" ; const toMonth=sample.currentlyWorking
+                        ? "Present" : months[sample.durationTo?.month - 1] || "Unknown" ; const
+                        toYear=sample.currentlyWorking ? "" : sample.durationTo?.year || "Unknown" ; %>
+                        Duration: <%= fromMonth %>
+                          <%= fromYear %> - <%= toMonth %>
+                              <%= toYear %>
+                    </li>
+                    <% }) %>
+                </ul>
+
+                <h3>Research Publications</h3>
+                <ul>
+                  <% researchPublications?.forEach(sample=> {
+                    const hasDate = sample.publishedOn?.month && sample.publishedOn?.year;
+                    const month = String(sample.publishedOn?.month || "").padStart(2, "0");
+                    const year = sample.publishedOn?.year || "";
+                    %>
+                    <li>
+                      <strong>
+                        <%= sample.title || "Untitled" %>
+                      </strong><br />
+                      <% if (sample.url) { %>
+                        <a href="<%= sample.url %>">
+                          <%= sample.url %>
+                        </a><br />
+                        <% } %>
+                          <% if (hasDate) { %>
+                            Published: <%= month %>/<%= year %>
+                                <% } %>
+                                  <% if (sample.description) { %>
+                                    <p>
+                                      <%= sample.description %>
+                                    </p>
+                                    <% } %>
+                    </li>
+                    <% }) %>
+                </ul>
+
+                <h3>Presentations</h3>
+                <ul>
+                  <% userPresentations?.forEach(presentation=> {
+                    %>
+                    <li>
+                      <strong>
+                        <%= presentation.title || "Untitled Presentation" %>
+                      </strong><br />
+                      <% if (presentation.url) { %>
+                        <a href="<%= presentation.url %>" target="_blank" rel="noopener noreferrer">
+                          <%= presentation.url %>
+                        </a><br />
+                        <% } %>
+                          <% if (presentation.description) { %>
+                            <p>
+                              <%= presentation.description %>
+                            </p>
+                            <% } %>
+                    </li>
+                    <% }) %>
+                </ul>
+
+                <h3>Patents</h3>
+                <ul>
+                  <% userPatents?.forEach(patent=> {
+                    const hasIssueDate = patent.issue_month && patent.issue_year;
+                    const month = String(patent.issue_month).padStart(2, '0');
+                    const year = patent.issue_year;
+                    %>
+                    <li>
+                      <strong>
+                        <%= patent.title || "Untitled Patent" %>
+                      </strong><br />
+                      <% if (patent.url) { %>
+                        <a href="<%= patent.url %>" target="_blank" rel="noopener noreferrer">
+                          <%= patent.url %>
+                        </a><br />
+                        <% } %>
+
+                          <% if (patent.patent_office) { %>
+                            Patent Office: <%= patent.patent_office %><br />
+                              <% } %>
+
+                                <% if (patent.status) { %>
+                                  Status: <%= patent.status %><br />
+                                    <% } %>
+
+                                      <% if (patent.application_number) { %>
+                                        Application No: <%= patent.application_number %><br />
+                                          <% } %>
+
+                                            <% if (hasIssueDate) { %>
+                                              Issued On: <%= month %>/<%= year %><br />
+                                                  <% } %>
+
+                                                    <% if (patent.description) { %>
+                                                      <p>
+                                                        <%= patent.description %>
+                                                      </p>
+                                                      <% } %>
+                    </li>
+                    <% }) %>
+                </ul>
+
+
+                <h3>Certifications</h3>
+                <ul>
+                  <% userCertifications?.forEach(cert=> {
+                    const monthNames = [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                    ];
+                    const fromMonth = cert.validityFrommonth ? monthNames[cert.validityFrommonth - 1] : null;
+                    const fromYear = cert.validityFromyear;
+                    const toMonth = cert.validityToMonth ? monthNames[cert.validityToMonth - 1] : null;
+                    const toYear = cert.validityToyear;
+                    %>
+                    <li>
+                      <strong>
+                        <%= cert.title || "Untitled Certification" %>
+                      </strong><br />
+                      <% if (cert.url) { %>
+                        <a href="<%= cert.url %>" target="_blank" rel="noopener noreferrer">
+                          <%= cert.url %>
+                        </a><br />
+                        <% } %>
+                          <% if (fromMonth && fromYear) { %>
+                            Valid from: <%= fromMonth %>
+                              <%= fromYear %>.
+                                <% } %>
+                                  <% if (cert.doesNotExpire) { %>
+                                    Does not expire.
+                                    <% } else if (toMonth && toYear) { %>
+                                      Valid till: <%= toMonth %>
+                                        <%= toYear %>.
+                                          <% } %>
+                    </li>
+                    <% }) %>
+                </ul>
+
+  </div>
+
+  <div class="main">
+    <h1>
+      <%= user.name %>
+    </h1>
+    <div class="subtitle">
+      <%= userDetails.resumeHeadline %><br><br>
+        <strong><%= candidateDetails.currentLocation %></strong>
+    </div>
+
+    <div class="section">
+      <h2>Summary</h2>
+      <p>
+        <%= userDetails.profileSummary %>
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>Career Profile</h2>
+      <div class="career-grid">
+        <div><strong>Current Industry</strong><br>
+          <%= preferenceDetails[0].industryName %>
+        </div>
+        <div><strong>Department</strong><br>
+          <%= preferenceDetails[0].departmentName %>
+        </div>
+
+        <div><strong>Job Role</strong><br>
+          <%= preferenceDetails[0].jobRoleName %>
+        </div>
+        <div><strong>Desired Job Type</strong><br>
+          <%= preferenceDetails[0].DesiredJob %>
+        </div>
+
+        <div><strong>Desired Employment Type</strong><br>
+          <%= preferenceDetails[0].DesiredEmployment %>
+        </div>
+        <div><strong>Preferred Shift</strong><br>
+          <%= preferenceDetails[0].PreferredShift %>
+        </div>
+
+        <div><strong>Preferred Work Location</strong><br>
+          <%= preferenceDetails[0].preferredLocations %>
+        </div>
+        <div><strong>Expected Salary</strong><br>₹<%= preferenceDetails[0].expectedSalary.salary.toLocaleString('en-IN')
+            %>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Personal Details</h2>
+      <div class="personal-details" style="display: flex; flex-wrap: wrap; gap: 30px;">
+
+        <div style="flex: 1 1 45%;">
+          <strong>Personal</strong><br>
+          Female, <%= userPersonalDetails.maritalStatusName %>,<br>
+            <%= userPersonalDetails.additionalInformationNames.join(', ') %>
+    </div>
+
+    <div style="flex: 1 1 45%;">
+      <strong>Career Break</strong><br>
+      <% if (userPersonalDetails.currentlyOnCareerBreak) { %>
+              Yes – <%= userPersonalDetails.reasonName %><br>
+                From:
+                <%= new Date(2000, userPersonalDetails.startMonth - 1).toLocaleString('default', { month: 'long' }) %>
+                  <%= userPersonalDetails.startYear %><br>
+                    <% if (userPersonalDetails.endMonth && userPersonalDetails.endYear) { %>
+                      To:
+                      <%= new Date(2000, userPersonalDetails.endMonth - 1).toLocaleString('default', { month: 'long' })
+                        %>
+                        <%= userPersonalDetails.endYear %>
+                          <% } else { %>
+                            To: Present
+                            <% } %>
+                              <% } else { %>
+                                No
+                                <% } %>
+        </div>
+
+        <div style="flex: 1 1 45%;">
+          <strong>Date of Birth</strong><br>
+          24 Nov 1945
+        </div>
+
+        <div style="flex: 1 1 45%;">
+          <strong>Category</strong><br>
+          <%= userPersonalDetails.categoryName %>
+        </div>
+
+        <div style="flex: 1 1 45%;">
+          <strong>Work Permit</strong><br>
+          <%= userPersonalDetails.usaPermitName %><br>
+            <%= userPersonalDetails.workPermitOtherNames.join(', ') %>
+    </div>
+
+    <div style="flex: 1 1 45%;">
+      <strong>Address</strong><br>
+      <%= userPersonalDetails.permanentAddress %>, <%= userPersonalDetails.pincode %>
+    </div>
+
+    <div style="flex: 1 1 100%;">
+      <strong>Differently Abled</strong><br>
+      Yes, <%= userPersonalDetails.disabilityTypeName %>, <%= userPersonalDetails.workplace_assistance %>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+    <div class="section">
+      <h2>Experience</h2>
+      <% employment.forEach(job=> { %>
+        <div class="experience-item">
+          <h4>
+            <%= job.jobTitle %> — <%= job.companyName %>
+          </h4>
+          <small>
+            <% if (job.joiningDate?.month && job.joiningDate?.year) { %>
+              <%= job.joiningDate.month %>/<%= job.joiningDate.year %>
+                  <% } else { %>
+                    Start Date Unknown
+                    <% } %>
+                      -
+                      <% if (job.currentEmployment) { %>
+                        Present
+                        <% } else if (job.leavingDate?.month && job.leavingDate?.year) { %>
+                          <%= job.leavingDate.month %>/<%= job.leavingDate.year %>
+                              <% } else { %>
+                                End Date Unknown
+                                <% } %>
+          </small>
+
+          <% if (job.jobDescription) { %>
+            <p>
+              <%= job.jobDescription %>
+            </p>
+            <% } %>
+        </div>
+        <% }) %>
+    </div>
+
+    <!-- Education Section -->
+
+    <div class="section">
+      <h2>Education</h2>
+      <% education.forEach(edu=> { %>
+        <div class="education-item">
+          <% if (edu.type==="higher" ) { %>
+            <h4>
+              <%= edu.level %>
+            </h4>
+            <h4>
+              <%= edu.courseName %>
+            </h4>
+            <p>
+              <%= edu.instituteName %>
+            </p>
+            <p>
+              <%= edu.universityName %>
+            </p>
+            <p>
+              <%= edu.from %> - <%= edu.to %> | <%= edu.courseType %>
+            </p>
+            <% } else { %>
+              <h4>
+                <%= edu.level %>
+              </h4>
+              <p>
+                <%= edu.board %>
+              </p>
+              <p>
+                <%= edu.year_of_passing %>
+              </p>
+              <% } %>
+        </div>
+        <% }) %>
+    </div>
+
+    <!-- IT SKILLS Section -->
+
+    <div class="section">
+      <h2>IT Skills</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background-color: #f0f0f0;">
+            <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Skill</th>
+            <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Version</th>
+            <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Last Used</th>
+            <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Experience</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% itSkills?.forEach(skill=> { %>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ccc;">
+                <%= skill.skillName %>
+              </td>
+              <td style="padding: 8px; border: 1px solid #ccc;">
+                <%= skill.version %>
+              </td>
+              <td style="padding: 8px; border: 1px solid #ccc;">
+                <%= skill.lastUsed %>
+              </td>
+              <td style="padding: 8px; border: 1px solid #ccc;">
+                <%= skill.experienceyear %> yr <%= skill.experiencemonth %> mo
+              </td>
+            </tr>
+            <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Projects Section -->
+
+    <div class="section">
+      <h2>Projects</h2>
+      <% if (projectDetails?.length) { const monthNames=[ "January" , "February" , "March" , "April" , "May" , "June"
+        , "July" , "August" , "September" , "October" , "November" , "December" ]; // Sort latest first (optional) const
+        sortedProjects=[...projectDetails].sort((a, b)=> {
+        const aDate = new Date(a.workedFrom?.year, a.workedFrom?.month || 0);
+        const bDate = new Date(b.workedFrom?.year, b.workedFrom?.month || 0);
+        return bDate - aDate;
+        });
+
+        sortedProjects.forEach(project => {
+        const fromMonth = project.workedFrom?.month ? monthNames[project.workedFrom.month - 1] : "Unknown";
+        const fromYear = project.workedFrom?.year || "Unknown";
+
+        const toMonth = project.workedTill?.month ? monthNames[project.workedTill.month - 1] : null;
+        const toYear = project.workedTill?.year;
+
+        const duration = toMonth && toYear
+        ? `${fromMonth} ${fromYear} to ${toMonth} ${toYear}`
+        : `${fromMonth} ${fromYear} to Present`;
+        %>
+
+        <div style="margin-bottom: 20px;">
+          <strong>
+            <%= project.projectTitle %>
+          </strong><br />
+          <small><strong>Duration:</strong>
+            <%= duration %>
+          </small>
+          <p style="margin-top: 5px;">
+            <%= project.description %>
+          </p>
+        </div>
+
+        <% }) } else { %>
+          <p>No project details available.</p>
+          <% } %>
+    </div>
+
+    <!-- Add sections for education, projects, etc. -->
+  </div>
+</body>
+
+</html>
