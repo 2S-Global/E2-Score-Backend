@@ -25,6 +25,11 @@
       padding-bottom: 5px;
     }
 
+    .border-content {
+      border-bottom: 1px solid #444;
+      padding-bottom: 5px;
+    }
+
     .main {
       width: 70%;
       padding: 30px;
@@ -45,6 +50,10 @@
 
     .section {
       margin-bottom: 20px;
+    }
+
+    .education-item h4{
+      margin: 0;
     }
 
     .experience-item {
@@ -108,13 +117,13 @@
               <% } %>
 
                 <h3>Online Profiles</h3>
-                <ul>
+                <ul style="margin: 0px 0px 5px 10px; padding: 0;">
                   <% onlineProfiles?.forEach(profile=> { %>
-                    <li>
+                    <li style="margin: 0px 0px 7px 15px; padding: 0;">
                       <strong>
                         <%= profile.name %>
                       </strong><br />
-                      <a href="<%= profile.url %>">
+                      <a style="margin: 5px 0px 0px 0px; padding: 0; display: block;" href="<%= profile.url %>">
                         <%= profile.url %>
                       </a>
                     </li>
@@ -122,13 +131,13 @@
                 </ul>
 
                 <h3>Work Samples</h3>
-                <ul>
+                <ul style="margin: 0px 0px 5px 10px; padding: 0;">
                   <% workSamples?.forEach(sample=> { %>
-                    <li>
+                    <li style="margin: 0px 0px 7px 15px; padding: 0;">
                       <strong>
                         <%= sample.workTitle %>
                       </strong><br />
-                      <a href="<%= sample.url %>">
+                      <a style="margin: 5px 0px 0px 0px; padding: 0; display: block;" href="<%= sample.url %>">
                         <%= sample.url %>
                       </a><br />
                       <% const months=[ "January" , "February" , "March" , "April" , "May" , "June" , "July" , "August"
@@ -145,18 +154,18 @@
                 </ul>
 
                 <h3>Research Publications</h3>
-                <ul>
+                <ul style="margin: 0px 0px 5px 10px; padding: 0;">
                   <% researchPublications?.forEach(sample=> {
                     const hasDate = sample.publishedOn?.month && sample.publishedOn?.year;
                     const month = String(sample.publishedOn?.month || "").padStart(2, "0");
                     const year = sample.publishedOn?.year || "";
                     %>
-                    <li>
-                      <strong>
+                    <li style="margin-top: 20px;">
+                      <strong style="margin-top: 10px;">
                         <%= sample.title || "Untitled" %>
                       </strong><br />
                       <% if (sample.url) { %>
-                        <a href="<%= sample.url %>">
+                        <a style="margin-top: 7px; margin-bottom: 0px;  display: block;" href="<%= sample.url %>">
                           <%= sample.url %>
                         </a><br />
                         <% } %>
@@ -164,7 +173,7 @@
                             Published: <%= month %>/<%= year %>
                                 <% } %>
                                   <% if (sample.description) { %>
-                                    <p>
+                                    <p style="margin: 5px 0px">
                                       <%= sample.description %>
                                     </p>
                                     <% } %>
@@ -173,20 +182,20 @@
                 </ul>
 
                 <h3>Presentations</h3>
-                <ul>
+                <ul style="margin: 0px 0px 5px 10px; padding: 0;">
                   <% userPresentations?.forEach(presentation=> {
                     %>
-                    <li>
+                    <li style="margin: 0px 0px 7px 15px; padding: 0;">
                       <strong>
                         <%= presentation.title || "Untitled Presentation" %>
                       </strong><br />
                       <% if (presentation.url) { %>
-                        <a href="<%= presentation.url %>" target="_blank" rel="noopener noreferrer">
+                        <a style="margin: 8px 0px 0px 0px; padding: 0; display: block;" href="<%= presentation.url %>" target="_blank" rel="noopener noreferrer">
                           <%= presentation.url %>
                         </a><br />
                         <% } %>
                           <% if (presentation.description) { %>
-                            <p>
+                            <p style="margin-top: 0px">
                               <%= presentation.description %>
                             </p>
                             <% } %>
@@ -195,18 +204,18 @@
                 </ul>
 
                 <h3>Patents</h3>
-                <ul>
+                <ul style="margin: 0px 0px 5px 10px; padding: 0;">
                   <% userPatents?.forEach(patent=> {
                     const hasIssueDate = patent.issue_month && patent.issue_year;
                     const month = String(patent.issue_month).padStart(2, '0');
                     const year = patent.issue_year;
                     %>
-                    <li>
+                    <li style="margin: 0px 0px 7px 15px; padding: 0;">
                       <strong>
                         <%= patent.title || "Untitled Patent" %>
                       </strong><br />
                       <% if (patent.url) { %>
-                        <a href="<%= patent.url %>" target="_blank" rel="noopener noreferrer">
+                        <a style="margin: 8px 0px 0px 0px; padding: 0; display: block;" href="<%= patent.url %>" target="_blank" rel="noopener noreferrer">
                           <%= patent.url %>
                         </a><br />
                         <% } %>
@@ -238,7 +247,7 @@
 
 
                 <h3>Certifications</h3>
-                <ul>
+                <ul style="margin: 0px 0px 20px 10px; padding: 0;">
                   <% userCertifications?.forEach(cert=> {
                     const monthNames = [
                     "January", "February", "March", "April", "May", "June",
@@ -249,12 +258,12 @@
                     const toMonth = cert.validityToMonth ? monthNames[cert.validityToMonth - 1] : null;
                     const toYear = cert.validityToyear;
                     %>
-                    <li>
+                    <li style="margin: 7px 0px 7px 10px; padding: 0;">
                       <strong>
                         <%= cert.title || "Untitled Certification" %>
                       </strong><br />
                       <% if (cert.url) { %>
-                        <a href="<%= cert.url %>" target="_blank" rel="noopener noreferrer">
+                        <a style="margin-top: 8px; padding: 0; display: block;" href="<%= cert.url %>" target="_blank" rel="noopener noreferrer">
                           <%= cert.url %>
                         </a><br />
                         <% } %>
@@ -284,14 +293,14 @@
     </div>
 
     <div class="section">
-      <h2>Summary</h2>
+      <h2 class="border-content">Summary</h2>
       <p>
         <%= userDetails.profileSummary %>
       </p>
     </div>
 
     <div class="section">
-      <h2>Career Profile</h2>
+      <h2 class="border-content">Career Profile</h2>
       <div class="career-grid">
         <div><strong>Current Industry</strong><br>
           <%= preferenceDetails[0].industryName %>
@@ -324,7 +333,7 @@
     </div>
 
     <div class="section">
-      <h2>Personal Details</h2>
+      <h2 class="border-content">Personal Details</h2>
       <div class="personal-details" style="display: flex; flex-wrap: wrap; gap: 30px;">
 
         <div style="flex: 1 1 45%;">
@@ -389,7 +398,7 @@
 
 
     <div class="section">
-      <h2>Experience</h2>
+      <h2 class="border-content">Experience</h2>
       <% employment.forEach(job=> { %>
         <div class="experience-item">
           <h4>
@@ -423,33 +432,33 @@
     <!-- Education Section -->
 
     <div class="section">
-      <h2>Education</h2>
+      <h2 class="border-content">Education</h2>
       <% education.forEach(edu=> { %>
-        <div class="education-item">
+        <div class="">
           <% if (edu.type==="higher" ) { %>
-            <h4>
-              <%= edu.level %>
+            <h4 style="margin: 18px 0px 12px 0px; padding: 0; font-size: 17px;">
+              <strong><%= edu.level %></strong>
             </h4>
-            <h4>
+            <h4 style="margin: 0px 0px 7px 0px; padding: 0;">
               <%= edu.courseName %>
             </h4>
-            <p>
+            <p style="margin: 0px 0px 7px 0px; padding: 0;">
               <%= edu.instituteName %>
             </p>
-            <p>
+            <p style="margin: 0px 0px 7px 0px; padding: 0;">
               <%= edu.universityName %>
             </p>
-            <p>
+            <p style="margin: 0px 0px 7px 0px; padding: 0;">
               <%= edu.from %> - <%= edu.to %> | <%= edu.courseType %>
             </p>
             <% } else { %>
-              <h4>
-                <%= edu.level %>
+              <h4 style="margin: 18px 0px 12px 0px; padding: 0; font-size: 17px;">
+                <strong><%= edu.level %></strong>
               </h4>
-              <p>
+              <p style="margin: 0px 0px 7px 0px; padding: 0;">
                 <%= edu.board %>
               </p>
-              <p>
+              <p style="margin: 0px 0px 7px 0px; padding: 0;">
                 <%= edu.year_of_passing %>
               </p>
               <% } %>
@@ -460,7 +469,7 @@
     <!-- IT SKILLS Section -->
 
     <div class="section">
-      <h2>IT Skills</h2>
+      <h2 class="border-content">IT Skills</h2>
       <table style="width: 100%; border-collapse: collapse;">
         <thead>
           <tr style="background-color: #f0f0f0;">
@@ -494,7 +503,7 @@
     <!-- Projects Section -->
 
     <div class="section">
-      <h2>Projects</h2>
+      <h2 class="border-content">Projects</h2>
       <% if (projectDetails?.length) { const monthNames=[ "January" , "February" , "March" , "April" , "May" , "June"
         , "July" , "August" , "September" , "October" , "November" , "December" ]; // Sort latest first (optional) const
         sortedProjects=[...projectDetails].sort((a, b)=> {
