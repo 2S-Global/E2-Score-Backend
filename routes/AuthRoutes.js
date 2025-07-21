@@ -8,6 +8,7 @@ import {
   registerCompany,
   forgotPassword,
   validtoken,
+  registerInstitute,
 } from "../controllers/AuthController.js"; // Adjust the path according to your project structure
 // Initialize dotenv to load environment variables
 dotenv.config();
@@ -30,6 +31,8 @@ AuthRouter.post("/register", upload.none(), registerUser);
 AuthRouter.post("/login", upload.none(), loginUser);
 // Register company
 AuthRouter.post("/company-register", upload.none(), registerCompany);
+// Register institute
+AuthRouter.post("/institute-register", upload.none(), registerInstitute);
 
 AuthRouter.post("/forgotpass", upload.none(), forgotPassword);
 
