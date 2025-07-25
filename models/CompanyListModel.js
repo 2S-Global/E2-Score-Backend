@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 
 const CompanyListSchema = new mongoose.Schema(
   {
+    cinnumber: {
+      type: String,
+    },
     companyname: {
       type: String,
     },
@@ -26,27 +29,24 @@ const CompanyListSchema = new mongoose.Schema(
     isDel: {
       type: Boolean,
       default: false,
-      required: true
+      required: true,
     },
     isActive: {
       type: Boolean,
       default: true,
-      required: true
+      required: true,
     },
     flag: {
       type: Number,
       default: 0,
-      required: true
-    }
+      required: true,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-const companylist = mongoose.model(
-  "companylists",
-  CompanyListSchema
-);
+const companylist = mongoose.model("companylists", CompanyListSchema);
 
 export default companylist;

@@ -40,6 +40,10 @@ import userAccomplishmentRouter from "./routes/candidate/userAccomplishmentRoute
 import resumeFileRouter from "./routes/candidate/resumeFileRoute.js";
 import employmentRouter from "./routes/candidate/EmploymentRoute.js";
 import resumeMakingRouter from "./routes/candidate/resumeMakingRoute.js";
+
+//company Routes
+import CompanyProfileRouter from "./routes/company/CompanyProfileRoute.js";
+
 // Routes
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
@@ -75,6 +79,9 @@ app.use("/api/pacakageRoute", pacakageRoute);
 app.use("/api/companyPackageRoute", companyPackageRoute);
 app.use("/api/companyRoutes", companyRoutes);
 app.use("/api/dashboard", dashboardRoute);
+
+//company routes
+app.use("/api/companyprofile", CompanyProfileRouter);
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
