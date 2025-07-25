@@ -15,13 +15,14 @@ export const SearchCompanybyCin = async (req, res) => {
     const company = await companylist.findOne({ cinnumber: cin });
     if (!company) {
       return res.status(404).json({
-        message: "Company not found",
+        message:
+          "Company not found . Please check your CIN number or Enter Details Manually",
         success: false,
       });
     }
     return res.status(200).json({
       success: true,
-      message: "Company found",
+      message: "Company Details found",
       data: company,
     });
   } catch (error) {
