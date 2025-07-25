@@ -6,7 +6,7 @@ export const SearchCompanybyCin = async (req, res) => {
 
   if (!cin) {
     return res.status(400).json({
-      message: "CIN number is required",
+      message: "CIN number is required . ",
       success: false,
     });
   }
@@ -16,13 +16,13 @@ export const SearchCompanybyCin = async (req, res) => {
     if (!company) {
       return res.status(404).json({
         message:
-          "Company not found . Please check your CIN number or Enter Details Manually",
+          "Company not found . Please check your CIN number or Enter Details Manually . ",
         success: false,
       });
     }
     return res.status(200).json({
       success: true,
-      message: "Company Details found",
+      message: "Company Details found. ",
       data: company,
     });
   } catch (error) {
