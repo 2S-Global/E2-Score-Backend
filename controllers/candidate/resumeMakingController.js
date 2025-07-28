@@ -37,6 +37,8 @@ import list_career_break_reason from "../../models/monogo_query/careerBreakReaso
 import list_marital_status from "../../models/monogo_query/maritalStatusModel.js";
 import list_visa_type from "../../models/monogo_query/visaTypeModel.js";
 import list_more_information from "../../models/monogo_query/moreInformationModel.js";
+import list_gender from "../../models/monogo_query/genderModel.js";
+import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
 
 const getUniqueIds = (arr, field) => [...new Set(arr.map(e => e[field]).filter(Boolean))];
 
@@ -79,6 +81,9 @@ export const getResume = async (req, res) => {
       UserCareer.find({ userId, isDel: false }).lean(),
     ]);
 
+    console.log("Project Details:", userProjects);
+
+
     const userDetails = userDetailsArr[0] || {};
     const candidateDetails = candidateDetailsArr[0] || {};
 
@@ -88,6 +93,7 @@ export const getResume = async (req, res) => {
     const boardIds = getUniqueIds(educationRaw, 'board');
     const levelIds = getUniqueIds(educationRaw, 'level');
     const courseTypeIds = getUniqueIds(educationRaw, 'courseType');
+    const gradingSystemIds = getUniqueIds(educationRaw, 'gradingSystem');
     // For Employments
     const companyIds = getUniqueIds(employmentsRaw, 'companyName');
     // For Online Profiles
@@ -103,13 +109,14 @@ export const getResume = async (req, res) => {
 
     const userPref = careerProfile[0];
 
-    const [universities, institutes, courses, boards, levels, courseTypes, companies, socialProfiles, skills, itSkillNameList, taggedWithNames, currentIndustry, currentDepartment, jobRole, locations, languageName, proficiencyName, workPermitOtherName, categoryName, disabilityTypeName, breakReasonName, maritalStatusName, usaPermitName, addiInfoName] = await Promise.all([
+    const [universities, institutes, courses, boards, levels, courseTypes, gradingSystemName, companies, socialProfiles, skills, itSkillNameList, taggedWithNames, currentIndustry, currentDepartment, jobRole, locations, languageName, proficiencyName, workPermitOtherName, categoryName, disabilityTypeName, breakReasonName, maritalStatusName, usaPermitName, addiInfoName, userGender] = await Promise.all([
       list_university_univercities.find({ id: { $in: universityIds } }).lean(),
       list_university_colleges.find({ id: { $in: instituteIds } }).lean(),
       list_university_course.find({ id: { $in: courseIds } }).lean(),
       list_education_boards.find({ id: { $in: boardIds } }).lean(),
       list_education_levels.find({ id: { $in: levelIds } }).lean(),
       list_course_type.find({ id: { $in: courseTypeIds } }).lean(),
+      list_grading_system.find({ id: { $in: gradingSystemIds } }).lean(),
       //For Employments
       companylist.find({ _id: { $in: companyIds } }).lean(),
       // For Online Profiles
@@ -146,7 +153,12 @@ export const getResume = async (req, res) => {
       list_visa_type.findById(userDetails.usaPermit).select("visa_name").lean(),
       // Get all Additional Information Name
       list_more_information.find({ _id: { $in: userDetails.additionalInformation } }).select("name").lean(),
+      // Get Gender name from id
+      list_gender.findById(user.gender).select("name").lean(),
     ]);
+
+    user.gender_name = userGender.name;
+
     const locationNames = locations.map((city) => city.city_name).join(", ");
 
     const universityMap = createMap(universities);
@@ -154,6 +166,7 @@ export const getResume = async (req, res) => {
     const courseMap = createMap(courses);
     const boardMap = createMap(boards, 'id', 'board_name');
     const levelMap = createMap(levels, 'id', 'level');
+    const gradingSystemMap = createMap(gradingSystemName, 'id', 'name');
 
     const courseTypeMap = createMap(courseTypes);
     // For Employment
@@ -179,23 +192,31 @@ export const getResume = async (req, res) => {
       if (level === '1' || level === '2') {
         return {
           type: 'school',
-          level: levelMap[edu.level] || 'Unknown Level',
+          levelId: level,
+          levelName: levelMap[edu.level] || 'Unknown Level',
           board: boardMap[edu.board] || 'Unknown Board',
           year_of_passing: edu.year_of_passing,
+          marks: edu.marks || 'Not Provided',
         };
       } else {
         return {
           type: 'higher',
-          level: levelMap[edu.level] || 'Unknown Level',
+          levelId: level,
+          levelName: levelMap[edu.level] || 'Unknown Level',
           courseName: courseMap[edu.courseName] || 'Unknown Degree',
           instituteName: instituteMap[edu.instituteName] || 'Unknown Institute',
           universityName: universityMap[edu.universityName] || 'Unknown University',
           from: edu.duration?.from,
           to: edu.duration?.to,
           courseType: courseTypeMap[edu.courseType] || 'Unknown Course Type',
+          marks: edu.marks || 'Not Provided',
+          gradingId: edu.gradingSystem || 'Not Provided',
+          gradingName: gradingSystemMap[edu.gradingSystem] || 'Not Provided',
         };
       }
     });
+
+    console.log("Education Data:", education);
 
     // Modify Employments result
     const employment = employmentsRaw.map(job => ({
@@ -232,6 +253,11 @@ export const getResume = async (req, res) => {
       jobRoleName: jobRole?.job_role || "Unknown Role",
       preferredLocations: locationNames
     }));
+
+
+    console.log("Here is my Employments Details:", employment);
+
+
 
     // Modify user Personal Details
     const userPersonalDetails = {
