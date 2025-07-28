@@ -254,11 +254,6 @@ export const getResume = async (req, res) => {
       preferredLocations: locationNames
     }));
 
-
-    console.log("Here is my Employments Details:", employment);
-
-
-
     // Modify user Personal Details
     const userPersonalDetails = {
       ...userDetails,
@@ -277,6 +272,8 @@ export const getResume = async (req, res) => {
         id => addiInfoNameWithMap[id] || ''
       )
     };
+
+    console.log("Here is my Personal Details:", userPersonalDetails);
 
     const pdfBuffer = await generateResumePDF({
       user,
