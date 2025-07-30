@@ -75,7 +75,19 @@ export const getSocial = async (req, res) => {
         .json({ success: false, message: "Social not found" });
     }
 
-    return res.status(200).json({ success: true, data: social });
+    return res.status(200).json({
+      success: true,
+      data: {
+        facebook: social.facebook || "",
+        twitter: social.twitter || "",
+        linkedin: social.linkedin || "",
+        instagram: social.instagram || "",
+        youtube: social.youtube || "",
+        telegram: social.telegram || "",
+        discord: social.discord || "",
+        github: social.github || "",
+      },
+    });
   } catch (error) {
     console.error("Error getting social:", error);
     return res.status(500).json({
