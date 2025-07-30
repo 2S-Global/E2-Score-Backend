@@ -16,6 +16,11 @@ import {
   GetContactPerson,
 } from "../../controllers/company/ContactPersonControllers.js";
 
+import {
+  addOrUpdateSocial,
+  getSocial,
+} from "../../controllers/company/CompanySocialControllers.js";
+
 // Middleware
 import userAuth from "../../middleware/authMiddleware.js";
 import Companymid from "../../middleware/companyMiddleware.js";
@@ -96,5 +101,19 @@ CompanyProfileRouter.get(
   Companymid,
   GetContactPerson
 );
+
+// ================= SOCIAL ROUTES =================
+
+// Add or Update Social
+CompanyProfileRouter.post(
+  "/add_or_update_social",
+  upload.none(),
+  userAuth,
+  Companymid,
+  addOrUpdateSocial
+);
+
+// Get Social
+CompanyProfileRouter.get("/get_social", userAuth, Companymid, getSocial);
 
 export default CompanyProfileRouter;

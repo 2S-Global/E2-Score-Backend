@@ -66,6 +66,14 @@ export const GetContactPerson = async (req, res) => {
     const contactperson = await ContactpersonDetails.findOne({
       userId: req.userId,
     });
+
+    if (!contactperson) {
+      return res.status(404).json({
+        success: false,
+        message: "Contact person details not found",
+      });
+    }
+
     return res.status(200).json({
       success: true,
       data: {
