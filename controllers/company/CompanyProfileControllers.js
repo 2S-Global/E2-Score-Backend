@@ -1,4 +1,3 @@
-import { v2 as cloudinary } from "cloudinary";
 import companylist from "../../models/CompanyListModel.js";
 import CompanyDetails from "../../models/company_Models/companydetails.js";
 import User from "../../models/userModel.js";
