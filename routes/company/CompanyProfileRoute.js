@@ -125,22 +125,12 @@ CompanyProfileRouter.get("/get_social", userAuth, Companymid, getSocial);
 // ================= Branch ROUTES =================
 
 // Get Conunty
-CompanyProfileRouter.get("/get_conunty", userAuth, Companymid, getConunty);
+CompanyProfileRouter.get("/get_conunty", getConunty);
 
 // Get State By Conunty
-CompanyProfileRouter.get(
-  "/get_state_by_conunty/:id",
-  userAuth,
-  Companymid,
-  getStateByConunty
-);
+CompanyProfileRouter.get("/get_state_by_conunty/:id", getStateByConunty);
 
 // Get City By State
-CompanyProfileRouter.get(
-  "/get_city_by_state/:id",
-  userAuth,
-  Companymid,
-  getCityByState
-);
+CompanyProfileRouter.get("/get_city_by_state/:id", getCityByState);
 
 export default CompanyProfileRouter;
