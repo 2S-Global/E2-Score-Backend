@@ -25,6 +25,10 @@ import {
   getConunty,
   getStateByConunty,
   getCityByState,
+  addBranch,
+  editBranch,
+  deleteBranch,
+  getBranches,
 } from "../../controllers/company/CompanyBranchControllers.js";
 
 // Middleware
@@ -132,5 +136,35 @@ CompanyProfileRouter.get("/get_state_by_conunty/:id", getStateByConunty);
 
 // Get City By State
 CompanyProfileRouter.get("/get_city_by_state/:id", getCityByState);
+
+//ADD BRANCH
+CompanyProfileRouter.post(
+  "/add_branch",
+  upload.none(),
+  userAuth,
+  Companymid,
+  addBranch
+);
+
+//EDIT BRANCH
+CompanyProfileRouter.post(
+  "/edit_branch",
+  upload.none(),
+  userAuth,
+  Companymid,
+  editBranch
+);
+
+//DELETE BRANCH
+CompanyProfileRouter.delete(
+  "/delete_branch",
+  upload.none(),
+  userAuth,
+  Companymid,
+  deleteBranch
+);
+
+//GET BRANCHES
+CompanyProfileRouter.get("/get_branches", userAuth, Companymid, getBranches);
 
 export default CompanyProfileRouter;

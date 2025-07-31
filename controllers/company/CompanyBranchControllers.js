@@ -1,6 +1,9 @@
 import ListConunty from "../../models/company_Models/ListConunty.js";
 import ListState from "../../models/company_Models/ListState.js";
 import ListCity from "../../models/company_Models/ListCity.js";
+import CompanyBranch from "../../models/company_Models/CompanyBranch.js";
+import User from "../../models/userModel.js";
+
 // Get Conunty
 
 export const getConunty = async (req, res) => {
@@ -86,5 +89,214 @@ export const getCityByState = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+//add branch
+
+export const addBranch = async (req, res) => {
+  try {
+    const { name, country, state, city, address, phone, email } = req.body;
+    const userId = req.userId;
+
+    // Validate required fields
+    if (!userId || !name || !address || !phone || !email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
+    }
+
+    // Validate email format
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email format" });
+    }
+
+    // Check if user exists
+    const user = await User.findOne({ _id: userId, is_del: false });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Prevent duplicate branch
+    const existingBranch = await CompanyBranch.findOne({
+      userId,
+      name,
+      is_del: false,
+    });
+    if (existingBranch) {
+      return res.status(409).json({
+        success: false,
+        message: "Branch with this name already exists",
+      });
+    }
+
+    // Create branch
+    const branch = new CompanyBranch({
+      name,
+      country,
+      state,
+      city,
+      address,
+      phone,
+      email,
+      userId,
+    });
+
+    await branch.save();
+    res.status(201).json({
+      success: true,
+      data: branch,
+      message: "Branch added successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const editBranch = async (req, res) => {
+  try {
+    const { name, country, state, city, address, phone, email, id } = req.body;
+    const userId = req.userId;
+
+    if (!userId || !id || !name || !address || !phone || !email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
+    }
+
+    // Validate email format
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email format" });
+    }
+
+    // Check if user exists
+    const user = await User.findOne({ _id: userId, is_del: false });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Find branch
+    const branch = await CompanyBranch.findOne({
+      _id: id,
+      is_del: false,
+      userId,
+    });
+    if (!branch) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Branch not found" });
+    }
+
+    // Prevent duplicate branch
+    const existingBranch = await CompanyBranch.findOne({
+      userId,
+      name,
+      is_del: false,
+      _id: { $ne: id },
+    });
+    if (existingBranch) {
+      return res.status(409).json({
+        success: false,
+        message: "Branch with this name already exists",
+      });
+    }
+
+    // Update branch fields
+    Object.assign(branch, {
+      name,
+      country,
+      state,
+      city,
+      address,
+      phone,
+      email,
+    });
+    await branch.save();
+
+    res.status(200).json({
+      success: true,
+      data: branch,
+      message: "Branch updated successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const deleteBranch = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const userId = req.userId;
+    if (!userId || !id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
+    }
+
+    // Check if user exists
+    const user = await User.findOne({ _id: userId, is_del: false });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Find branch
+    const branch = await CompanyBranch.findOne({
+      _id: id,
+      is_del: false,
+      userId,
+    });
+    if (!branch) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Branch not found" });
+    }
+
+    // Delete branch
+    branch.is_del = true;
+    await branch.save();
+
+    res.status(200).json({
+      success: true,
+      data: branch,
+      message: "Branch deleted successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getBranches = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Check if user exists
+    const user = await User.findOne({ _id: userId, is_del: false });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    const branches = await CompanyBranch.find({ is_del: false, userId })
+      .populate("country", "name _id")
+      .populate("state", "name _id")
+      .populate("city", "name _id");
+
+    res.status(200).json({
+      success: true,
+      data: branches,
+      message: "Branches fetched successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
