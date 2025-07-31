@@ -21,6 +21,12 @@ import {
   getSocial,
 } from "../../controllers/company/CompanySocialControllers.js";
 
+import {
+  getConunty,
+  getStateByConunty,
+  getCityByState,
+} from "../../controllers/company/CompanyBranchControllers.js";
+
 // Middleware
 import userAuth from "../../middleware/authMiddleware.js";
 import Companymid from "../../middleware/companyMiddleware.js";
@@ -115,5 +121,26 @@ CompanyProfileRouter.post(
 
 // Get Social
 CompanyProfileRouter.get("/get_social", userAuth, Companymid, getSocial);
+
+// ================= Branch ROUTES =================
+
+// Get Conunty
+CompanyProfileRouter.get("/get_conunty", userAuth, Companymid, getConunty);
+
+// Get State By Conunty
+CompanyProfileRouter.get(
+  "/get_state_by_conunty/:id",
+  userAuth,
+  Companymid,
+  getStateByConunty
+);
+
+// Get City By State
+CompanyProfileRouter.get(
+  "/get_city_by_state/:id",
+  userAuth,
+  Companymid,
+  getCityByState
+);
 
 export default CompanyProfileRouter;
