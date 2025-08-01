@@ -81,7 +81,7 @@ export const getMatchingCompany = async (req, res) => {
 
 /**
  * @description Get 50 random company from the database
- * @route GET /api/candidate/employment/random_company
+ * @route GET /api/candidate/employment/random_company?company_name=:company_name
  * @success {object} 200 - Random 50 Company
  * @error {object} 500 - Database query failed
  */
