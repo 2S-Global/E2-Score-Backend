@@ -1,4 +1,3 @@
-import { v2 as cloudinary } from "cloudinary";
 import companylist from "../../models/CompanyListModel.js";
 import CompanyDetails from "../../models/company_Models/companydetails.js";
 import User from "../../models/userModel.js";
@@ -157,7 +156,6 @@ export const AddorUpdateCompany = async (req, res) => {
  * @error {object} 404 - Company not found
  * @error {object} 500 - Internal server error
  */
-
 export const GetCompanyDetails = async (req, res) => {
   try {
     const company = await CompanyDetails.findOne({
@@ -183,7 +181,6 @@ export const GetCompanyDetails = async (req, res) => {
  * @error {object} 404 - Company not found
  * @error {object} 500 - Internal server error
  */
-
 export const Deletecoverphoto = async (req, res) => {
   try {
     const company = await CompanyDetails.findOne({
@@ -218,5 +215,69 @@ export const Deletecoverphoto = async (req, res) => {
       message: "Error deleting cover photo",
       error: error.message,
     });
+  }
+};
+
+/**
+ * @description Get the account details of the user
+ * @route GET /api/companyprofile/get_account_details
+ * @success {object} 200 - Account details
+ * @error {object} 404 - Company not found
+ * @error {object} 500 - Internal server error
+ */
+export const GetAccountDetails = async (req, res) => {
+  try {
+    const company = await User.findById(req.userId);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found." });
+    }
+    return res.status(200).json({
+      success: true,
+      data: {
+        companyname: company.name,
+        email: company.email,
+        phone: company.phone_number,
+      },
+    });
+  } catch (error) {
+    console.error("Error in GetAccountDetails:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error", error });
+  }
+};
+
+export const updateAccountDetails = async (req, res) => {
+  try {
+    const { companyname, companyemail, companyphone } = req.body;
+
+    // Basic validation
+    if (!companyname || !companyphone) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required." });
+    }
+
+    const company = await User.findById(req.userId);
+    if (!company) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Company not found." });
+    }
+
+    company.name = companyname;
+    // company.email = companyemail;
+    company.phone_number = companyphone;
+
+    await company.save();
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Account updated successfully." });
+  } catch (error) {
+    console.error("Error in updateAccountDetails:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error", error });
   }
 };
