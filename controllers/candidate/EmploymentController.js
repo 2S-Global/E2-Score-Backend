@@ -539,7 +539,7 @@ export const getEmploymentDetails = async (req, res) => {
       id: { $in: noticePeriodIds },
     }).select("id name").lean();
 
-     // Map data by id for quick lookup
+    // Map data by id for quick lookup
     const companyMap = Object.fromEntries(companies.map((c) => [c._id.toString(), c.companyname]));
     const noticePeriodMap = Object.fromEntries(noticePeriods.map((n) => [n.id.toString(), n.name]));
 
@@ -663,6 +663,28 @@ export const editEmploymentDetails = async (req, res) => {
     }
 
     // Checking Company name exist in database. If not exist then insert that value in database
+
+    const existingCompany = await companylist.findOne({
+      companyname: company_name.trim(),
+      isDel: false,
+    }).select("_id companyname");
+
+    let companyId;
+    if (existingCompany) {
+      companyId = existingCompany._id;
+    } else {
+      const newCompany = new companylist({
+        companyname: company_name.trim(),
+        isActive: false,
+        isDel: false,
+        flag: 1,
+      });
+      const savedCompany = await newCompany.save();
+      companyId = savedCompany._id;
+    }
+
+    //  SQL Query
+    /*
     const [companyName] = await db_sql.execute(
       "SELECT id, NAME FROM company WHERE NAME = ? AND is_del = 0",
       [company_name.trim()]
@@ -679,6 +701,7 @@ export const editEmploymentDetails = async (req, res) => {
 
       companyId = insertResult.insertId;
     }
+    */
 
     // Prepare updated fields
     const updatedFields = {
