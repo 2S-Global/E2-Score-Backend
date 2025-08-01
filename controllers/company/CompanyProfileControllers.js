@@ -24,6 +24,7 @@ export const SearchCompanybyCin = async (req, res) => {
 
   try {
     const company = await companylist.findOne({ cinnumber: cin });
+
     if (!company) {
       return res.status(404).json({
         message:
