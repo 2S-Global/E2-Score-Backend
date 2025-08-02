@@ -60,7 +60,7 @@ export const getMatchingCompany = async (req, res) => {
         companyname: { $regex: `^${company_name}`, $options: "i" }, // prefix + case-insensitive
       })
       .sort({ companyname: 1 })
-      .limit(50)
+      .limit(20)
       .select("companyname");
 
     const companyNames = companies.map((c) => c.companyname);
@@ -123,7 +123,7 @@ export const getRandomCompany = async (req, res) => {
           ...(company_name && { companyname: { $ne: company_name } }) // exclude if passed
         }
       },
-      { $sample: { size: 50 } }
+      { $sample: { size: 20 } }
     ]);
     // Convert to array of strings
     const companyNames = randomCompanies.map((row) => row.companyname);
