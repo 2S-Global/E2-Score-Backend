@@ -123,7 +123,7 @@ export const getRandomCompany = async (req, res) => {
           ...(company_name && { companyname: { $ne: company_name } }) // exclude if passed
         }
       },
-      { $sample: { size: 20 } }
+      { $sample: { size: 5 } }
     ]);
     // Convert to array of strings
     const companyNames = randomCompanies.map((row) => row.companyname);
