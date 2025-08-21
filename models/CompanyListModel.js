@@ -35,12 +35,12 @@ const CompanyListSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
       required: true,
-    },
-    flag: {
-      type: Number,
-      default: 0,
-      required: true,
-    },
+    }
+    // flag: {
+    //   type: Number,
+    //   default: 0,
+    //   required: true,
+    // },
   },
   {
     timestamps: true,

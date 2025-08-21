@@ -88,19 +88,32 @@ export const registerUser = async (req, res) => {
 // Register a new company
 export const registerCompany = async (req, res) => {
   try {
-    const { name, email, password, cin_id, cin } = req.body;
+    const { name, email, password, phone_number, cin_id, cin } = req.body;
     const role = 2;
     // Validate required fields
-    if (!name || !email || !password || !cin) {
+    if (!name || !email || !password || !phone_number || !cin) {
       return res
         .status(400)
-        .json({ message: "Name, email, and password, cin are required" });
+        .json({ message: "Name, email, and password, phone_number cin are required" });
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ cin_number: cin });
+    // const existingUser = await User.findOne({ cin_number: cin });
+    // if (existingUser) {
+    //   return res.status(400).json({ message: "User with this CIN number already exists" });
+    // }
+
+    const existingUser = await User.findOne({
+      $or: [{ email }, { cin_number: cin }]
+    });
+
     if (existingUser) {
-      return res.status(400).json({ message: "User with this CIN number already exists" });
+      if (existingUser.email === email) {
+        return res.status(404).json({ message: "User with this email already exists" });
+      }
+      if (existingUser.cin_number === cin) {
+        return res.status(404).json({ message: "User with this CIN number already exists" });
+      }
     }
 
     // companylist
@@ -109,9 +122,13 @@ export const registerCompany = async (req, res) => {
     });
 
     if (!company) {
-      return res
-        .status(404)
-        .json({ message: "CIN number do not match our records" });
+      const companyData = new companylist({
+        cinnumber: cin,
+        companyname: name,
+        companyemail: email,
+        companyphone: phone_number,
+      });
+      await companyData.save();
     }
 
     // Hash the password before saving
