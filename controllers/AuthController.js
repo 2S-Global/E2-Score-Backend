@@ -1,4 +1,5 @@
 import User from "../models/userModel.js";
+import companylist from "../models/CompanyListModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
@@ -90,16 +91,28 @@ export const registerCompany = async (req, res) => {
     const { name, email, password, cin_id, cin } = req.body;
     const role = 2;
     // Validate required fields
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !cin_id || !cin) {
       return res
         .status(400)
-        .json({ message: "Name, email, and password are required" });
+        .json({ message: "Name, email, and password, cin_id and cin are required" });
     }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
+    }
+
+    // companylist
+    const company = await companylist.findOne({
+      _id: cin_id,
+      cinnumber: cin
+    });
+
+    if (!company) {
+      return res
+        .status(404)
+        .json({ message: "CIN number and company ID do not match our records" });
     }
 
     // Hash the password before saving
