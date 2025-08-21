@@ -91,10 +91,10 @@ export const registerCompany = async (req, res) => {
     const { name, email, password, cin_id, cin } = req.body;
     const role = 2;
     // Validate required fields
-    if (!name || !email || !password || !cin_id || !cin) {
+    if (!name || !email || !password || !cin) {
       return res
         .status(400)
-        .json({ message: "Name, email, and password, cin_id and cin are required" });
+        .json({ message: "Name, email, and password, cin are required" });
     }
 
     // Check if user already exists
@@ -105,14 +105,13 @@ export const registerCompany = async (req, res) => {
 
     // companylist
     const company = await companylist.findOne({
-      _id: cin_id,
       cinnumber: cin
     });
 
     if (!company) {
       return res
         .status(404)
-        .json({ message: "CIN number and company ID do not match our records" });
+        .json({ message: "CIN number do not match our records" });
     }
 
     // Hash the password before saving
