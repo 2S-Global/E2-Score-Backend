@@ -89,12 +89,12 @@ const userSchema = new mongoose.Schema(
     },
     cin_number: {
       type: String,
-      required: true
+      // required: true
     },
     company_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'companylist',
-      required: true
+      // required: true
     }
   },
   {
