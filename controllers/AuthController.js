@@ -86,7 +86,7 @@ export const registerUser = async (req, res) => {
   }
 };
 // Register a new company
-export const registerCompany123 = async (req, res) => {
+export const registerCompany = async (req, res) => {
   try {
     const { name, email, password, phone_number, cin_id, cin } = req.body;
     const role = 2;
@@ -155,7 +155,7 @@ export const registerCompany123 = async (req, res) => {
   }
 };
 
-export const registerCompany = async (req, res) => {
+export const registerCompanyOld = async (req, res) => {
   try {
     const { name, email, password } = req.body;
     const role = 2;
