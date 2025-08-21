@@ -87,6 +87,15 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    cin_number: {
+      type: String,
+      required: true
+    },
+    company_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'companylist',
+      required: true
+    }
   },
   {
     timestamps: true,

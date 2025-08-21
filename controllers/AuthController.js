@@ -87,7 +87,7 @@ export const registerUser = async (req, res) => {
 // Register a new company
 export const registerCompany = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, cin_id, cin } = req.body;
     const role = 2;
     // Validate required fields
     if (!name || !email || !password) {
@@ -107,7 +107,7 @@ export const registerCompany = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create a new user with hashed password
-    const newUser = new User({ name, email, password: hashedPassword, role });
+    const newUser = new User({ name, email, password: hashedPassword, role, cin_number: cin, company_id: cin_id });
     await newUser.save();
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
