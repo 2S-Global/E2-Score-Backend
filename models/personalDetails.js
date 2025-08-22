@@ -28,7 +28,9 @@ const personalSchema = new mongoose.Schema(
     hometown: {
       type: String,
     },
-
+    fatherName: {
+      type: String,
+    },
     resumeHeadline: {
       type: String,
     },

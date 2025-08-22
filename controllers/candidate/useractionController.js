@@ -208,7 +208,7 @@ export const updateUserDetails = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const { full_name, gender, dob, country, currentLocation, hometown } =
+    const { full_name, gender, dob, country, currentLocation, hometown, father_name } =
       req.body;
 
     const updatedUser = await User.findByIdAndUpdate(user_id, {
@@ -224,6 +224,7 @@ export const updateUserDetails = async (req, res) => {
         country_id: country,
         currentLocation: currentLocation,
         hometown: hometown,
+        fatherName: father_name,
         updatedAt: new Date(),
       },
       {
