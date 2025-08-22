@@ -156,9 +156,14 @@ export const getUser = async (req, res) => {
 
     let levelName = "";
     if (selectedLevel !== null) {
-      const selectedLevelObjectId = new mongoose.Types.ObjectId(selectedLevel);
+      // const selectedLevelObjectId = new mongoose.Types.ObjectId(selectedLevel);
+      // const levelResult = await list_education_level.findOne({
+      //   _id: selectedLevelObjectId,
+      //   is_del: 0,
+      //   is_active: 1,
+      // });
       const levelResult = await list_education_level.findOne({
-        _id: selectedLevelObjectId,
+        id: selectedLevel,
         is_del: 0,
         is_active: 1,
       });
