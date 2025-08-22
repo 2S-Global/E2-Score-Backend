@@ -268,7 +268,7 @@ export const getUserDetails = async (req, res) => {
 
     const personalData = await candidateDetails.findOne(
       { userId: userId },
-      "dob country_id currentLocation hometown"
+      "dob country_id currentLocation hometown fatherName"
     );
 
     if (!userData) {
@@ -282,6 +282,7 @@ export const getUserDetails = async (req, res) => {
       country_id: personalData?.country_id || "",
       currentLocation: personalData?.currentLocation || "",
       hometown: personalData?.hometown || "",
+      father_name: personalData?.fatherName || "",
     };
 
     res.status(200).json(result);
