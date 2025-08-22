@@ -176,6 +176,7 @@ export const getUser = async (req, res) => {
         country_id: personalData.country_id,
         currentLocation: personalData.currentLocation,
         hometown: personalData.hometown,
+        father_name: personalData.fatherName || "",
       }),
       gender_name,
       degree: levelName || "",
