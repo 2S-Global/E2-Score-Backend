@@ -36,18 +36,18 @@ export const All_country = async (req, res) => {
     try {
         const countries = await list_tbl_countrie.find(
             { is_del: 0, is_active: 1 },
-            { _id: 1, name: 1 }
+            { _id: 1, id: 1, name: 1 }
         );
 
         // Transform _id to id
-        const formattedCountries = countries.map((country) => ({
-            id: country._id,
-            name: country.name,
-        }));
+        // const formattedCountries = countries.map((country) => ({
+        //     id: country._id,
+        //     name: country.name,
+        // }));
 
         res.status(200).json({
             success: true,
-            data: formattedCountries,
+            data: countries,
             message: "All country",
         });
     } catch (error) {

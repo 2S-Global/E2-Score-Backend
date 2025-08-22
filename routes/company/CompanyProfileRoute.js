@@ -8,7 +8,7 @@ import {
   GetCompanyDetails,
   Deletecoverphoto,
   GetAccountDetails,
-  updateAccountDetails,
+  updateAccountDetails
 } from "../../controllers/company/CompanyProfileControllers.js";
 
 import {
@@ -29,6 +29,7 @@ import {
   editBranch,
   deleteBranch,
   getBranches,
+  getUserAssociatedWithCompany
 } from "../../controllers/company/CompanyBranchControllers.js";
 
 // Middleware
@@ -166,5 +167,9 @@ CompanyProfileRouter.delete(
 
 //GET BRANCHES
 CompanyProfileRouter.get("/get_branches", userAuth, Companymid, getBranches);
+
+// Get User Profile
+CompanyProfileRouter.get("/get_user_associated_with_company", userAuth, Companymid, getUserAssociatedWithCompany);
+
 
 export default CompanyProfileRouter;
