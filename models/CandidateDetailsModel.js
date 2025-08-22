@@ -18,6 +18,9 @@ const candidateDetailsSchema = new mongoose.Schema({
   hometown: {
     type: String,
   },
+  fatherName: {
+    type: String,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
