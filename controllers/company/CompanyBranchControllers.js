@@ -335,6 +335,7 @@ export const getUserAssociatedWithCompany = async (req, res) => {
       { _id: { $in: userIds } },
       {
         name: 1,
+        email: 1,
         profilePicture: 1
       } // only select required fields
     ).lean();
@@ -373,13 +374,14 @@ export const getUserAssociatedWithCompany = async (req, res) => {
       return {
         userId,
         name: user && user.name ? user.name : "N/A",
+        email: user && user.email ? user.email : "N/A",
         photo: user && user.profilePicture ? user.profilePicture : null,
         jobTitle: employment && employment.jobTitle ? employment.jobTitle : "Not Provided",
-        currentLocation: candidate && candidate.currentLocation ? candidate.currentLocation : "Not Provided",
-        countryId: candidate && candidate.country_id ? candidate.country_id : null,
-        countryName: countryName,
-        hometown: candidate && candidate.hometown ? candidate.hometown : "Not Provided",
-        currentAddress: `${candidate?.currentLocation || "Not Provided"}, ${countryName}`,
+        //currentLocation: candidate && candidate.currentLocation ? candidate.currentLocation : "Not Provided",
+        //countryId: candidate && candidate.country_id ? candidate.country_id : null,
+        //countryName: countryName,
+        // hometown: candidate && candidate.hometown ? candidate.hometown : "Not Provided",
+        // currentAddress: `${candidate?.currentLocation || "Not Provided"}, ${countryName}`,
       };
     });
 
