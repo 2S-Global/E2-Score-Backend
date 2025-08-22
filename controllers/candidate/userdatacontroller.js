@@ -116,7 +116,7 @@ export const getUser = async (req, res) => {
     }
 
     const personalData = await candidateDetails
-      .findOne({ userId: user_id }, "dob country_id currentLocation hometown")
+      .findOne({ userId: user_id }, "dob country_id currentLocation hometown fatherName")
       .lean();
 
     // Fetch gender name from SQL
