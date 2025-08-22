@@ -307,7 +307,7 @@ export const getBranches = async (req, res) => {
 
 export const getUserAssociatedWithCompany = async (req, res) => {
   try {
-    const { company_id } = req.query;
+    const company_id = req.companyId;
 
     if (!company_id) {
       return res.status(400).json({
@@ -318,8 +318,6 @@ export const getUserAssociatedWithCompany = async (req, res) => {
 
     // Search employments collection where companyName = company_id
     const employments = await Employment.find({ companyName: company_id });
-
-    // console.log("Employments:", employments);
 
     if (!employments || employments.length === 0) {
       return res.status(404).json({
@@ -332,8 +330,6 @@ export const getUserAssociatedWithCompany = async (req, res) => {
       ...new Set(employments.map(emp => emp.user.toString())),
     ].map(id => new mongoose.Types.ObjectId(id));
 
-    console.log("Here is my all userIds:", userIds);
-
     // 3. Fetch user details (name, photo)
     const users = await User.find(
       { _id: { $in: userIds } },
@@ -343,21 +339,14 @@ export const getUserAssociatedWithCompany = async (req, res) => {
       } // only select required fields
     ).lean();
 
-    console.log("Here is my all users:", users);
-
     // 4. Fetch candidate details (currentLocation, countryId, hometown)
     const candidateDetails = await CandidateDetails.find(
       { userId: { $in: userIds } },
       { currentLocation: 1, country_id: 1, hometown: 1, userId: 1 }
     ).lean();
 
-    console.log("Here is my all Candidate Details:", candidateDetails);
-
     // 4. Collect unique countryIds
     const countryIds = [...new Set(candidateDetails.map(c => c.country_id).filter(Boolean))];
-
-
-    console.log("Here is my all countryIds:", countryIds);
 
     // 5. Fetch country details
     const countries = await list_tbl_countrie.find(
@@ -365,15 +354,11 @@ export const getUserAssociatedWithCompany = async (req, res) => {
       { name: 1 , id: 1}
     ).lean();
 
-    console.log("Here is my all countryNames:", countries);
-
-
     // Create a lookup map: countryId → countryName
     const countryMap = {};
     countries.forEach(c => {
-      countryMap[c._id.toString()] = c.name;
+      countryMap[c.id.toString()] = c.name;
     });
-
 
     // 5. Merge all results
     const result = userIds.map(userId => {
@@ -382,8 +367,8 @@ export const getUserAssociatedWithCompany = async (req, res) => {
       const employment = employments.find(e => e.user && e.user.equals(userId));
       const candidate = candidateDetails.find(c => c.userId && c.userId.equals(userId));
 
-      // const countryId = candidate && candidate.country_id ? candidate.country_id.toString() : null;
-      // const countryName = countryId && countryMap[countryId] ? countryMap[countryId] : "Not Provided";
+      const countryId = candidate && candidate.country_id ? candidate.country_id.toString() : null;
+      const countryName = countryId && countryMap[countryId] ? countryMap[countryId] : "Not Provided";
 
       return {
         userId,
@@ -392,8 +377,9 @@ export const getUserAssociatedWithCompany = async (req, res) => {
         jobTitle: employment && employment.jobTitle ? employment.jobTitle : "Not Provided",
         currentLocation: candidate && candidate.currentLocation ? candidate.currentLocation : "Not Provided",
         countryId: candidate && candidate.country_id ? candidate.country_id : null,
-        // countryName: countryName,
+        countryName: countryName,
         hometown: candidate && candidate.hometown ? candidate.hometown : "Not Provided",
+        currentAddress: `${candidate?.currentLocation || "Not Provided"}, ${countryName}`,
       };
     });
 

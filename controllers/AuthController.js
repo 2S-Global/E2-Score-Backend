@@ -165,24 +165,24 @@ export const registerCompanyOld = async (req, res) => {
         .status(400)
         .json({ message: "Name, email, and password are required" });
     }
- 
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
- 
+
     // Hash the password before saving
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
- 
+
     // Create a new user with hashed password
     const newUser = new User({ name, email, password: hashedPassword, role });
     await newUser.save();
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
     });
- 
+
     res.status(201).json({
       success: true,
       message: "User registered and logged in successfully!",
@@ -264,8 +264,16 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    // Build payload
+    // let payload = { userId: user._id };
+
+    // If employer role, add companyId
+    // if (user.role === 2 && user.company_id) {
+    //   payload.companyId = user.company_id;
+    // }
+
     // Generate JWT token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ userId: user._id, companyId: user.company_id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
     });
 

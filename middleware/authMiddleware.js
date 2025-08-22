@@ -11,9 +11,15 @@ const userAuth = async (req, res, next) => {
     try {
         // Verify the token
         const payload = JWT.verify(token, process.env.JWT_SECRET);
+
         // Attach user information to the request
-        req.user = { userId: payload.userId };
+        // req.user = { userId: payload.userId };
+        req.user = {
+            userId: payload.userId,
+            companyId: payload.companyId || null  // 👈 only present for employers
+        };
         req.userId = payload.userId;
+        req.companyId = payload.companyId || null; // optional shortcut
         next();
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
