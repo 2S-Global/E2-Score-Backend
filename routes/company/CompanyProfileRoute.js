@@ -29,7 +29,8 @@ import {
   editBranch,
   deleteBranch,
   getBranches,
-  getUserAssociatedWithCompany
+  getUserAssociatedWithCompany,
+  getMultipleEmployeeDetails
 } from "../../controllers/company/CompanyBranchControllers.js";
 
 // Middleware
@@ -170,6 +171,9 @@ CompanyProfileRouter.get("/get_branches", userAuth, Companymid, getBranches);
 
 // Get User Profile
 CompanyProfileRouter.get("/get_user_associated_with_company", userAuth, Companymid, getUserAssociatedWithCompany);
+
+// Get Employee Details who are associated with company
+CompanyProfileRouter.get("/get_employee_details", userAuth, Companymid, getMultipleEmployeeDetails);
 
 
 export default CompanyProfileRouter;

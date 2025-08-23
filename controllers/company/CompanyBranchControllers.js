@@ -7,6 +7,8 @@ import Employment from "../../models/Employment.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import mongoose from "mongoose";
 import list_tbl_countrie from "../../models/monogo_query/countriesModel.js";
+import personalDetails from "../../models/personalDetails.js";
+import list_gender from "../../models/monogo_query/genderModel.js";
 
 // Get Conunty
 
@@ -352,7 +354,7 @@ export const getUserAssociatedWithCompany = async (req, res) => {
     // 5. Fetch country details
     const countries = await list_tbl_countrie.find(
       { id: { $in: countryIds } },
-      { name: 1 , id: 1}
+      { name: 1, id: 1 }
     ).lean();
 
     // Create a lookup map: countryId → countryName
@@ -389,6 +391,99 @@ export const getUserAssociatedWithCompany = async (req, res) => {
       success: true,
       data: result,
       message: "User associated with company fetched successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getMultipleEmployeeDetails = async (req, res) => {
+
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "userIds query parameter is required",
+      });
+    }
+
+    // Run queries in parallel
+    const [users, candidateDetails, personalDetail, employments] = await Promise.all([
+      User.findOne(
+        { _id: userId },
+        { name: 1, email: 1, gender: 1, phone_number: 1 }
+      ).lean(),
+
+      CandidateDetails.findOne(
+        { userId },
+        { dob: 1, fatherName: 1, currentLocation: 1, country_id: 1, hometown: 1, userId: 1, _id: 0 }
+      ).lean(),
+
+      personalDetails.findOne(
+        { user: userId },
+        { permanentAddress: 1, _id: 0 }
+      ).lean(),
+
+      Employment.findOne(
+        { user: userId },
+        {
+          jobTitle: 1,
+          employmentType: 1,
+          joiningDate: 1,
+          leavingDate: 1,
+          companyName: 1,
+          currentEmployment: 1,
+          _id: 0
+        }
+      ).lean()
+    ]);
+
+    // Fetch gender name separately (parallelize this too if needed)
+    let genderName = null;
+    if (users?.gender) {
+      const genderDoc = await list_gender.findById(users.gender, { name: 1 }).lean();
+      genderName = genderDoc ? genderDoc.name : null;
+    }
+    if (users) users.gender = genderName;
+
+    // Format DOB
+    if (candidateDetails?.dob) {
+      const dateObj = new Date(candidateDetails.dob);
+      const day = String(dateObj.getDate()).padStart(2, "0");
+      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const year = dateObj.getFullYear();
+      candidateDetails.dob = `${day}-${month}-${year}`;
+    }
+
+    // Format employment dates
+    if (employments?.joiningDate?.year && employments?.joiningDate?.month) {
+      const { year, month } = employments.joiningDate;
+      employments.joiningYear = year;
+      employments.joiningMonth = month;
+      employments.joiningDate = `${new Date(year, month - 1).toLocaleString("en-US", { month: "long" })}, ${year}`;
+    }
+
+    if (employments?.leavingDate?.year && employments?.leavingDate?.month) {
+      const { year, month } = employments.leavingDate;
+      employments.leavingYear = year;
+      employments.leavingMonth = month;
+      employments.leavingDate = `${new Date(year, month - 1).toLocaleString("en-US", { month: "long" })}, ${year}`;
+    }
+
+    // Merge
+    const mergedData = {
+      ...(users || {}),
+      ...(candidateDetails || {}),
+      ...(personalDetail || {}),
+      ...(employments || {}),
+    };
+
+    res.status(200).json({
+      success: true,
+      data: mergedData,
+      message: "Employee details fetched successfully",
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
