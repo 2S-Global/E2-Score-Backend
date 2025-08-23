@@ -77,9 +77,28 @@ const employmentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    designationVerified: {
+      type: Boolean,
+      default: false,
+    },
     jobDurationVerified: {
       type: Boolean,
       default: false,
+    },
+    servedNoticePeriod: {
+      type: Boolean,
+      default: false,
+    },
+    hasNOC: {
+      type: Boolean,
+      default: false,
+    },
+    hasDues: {
+      type: Boolean,
+      default: false,
+    },
+    remarks: {
+      type: String,
     },
   },
   { timestamps: true }

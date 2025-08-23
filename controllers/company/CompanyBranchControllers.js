@@ -400,6 +400,17 @@ export const getUserAssociatedWithCompany = async (req, res) => {
 export const getMultipleEmployeeDetails = async (req, res) => {
 
   try {
+    const user_id = req.userId;
+    const company_id = req.companyId;
+
+    // Check if user exists
+    const user = await User.findOne({ _id: user_id, is_del: false });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
     const { userId } = req.query;
 
     if (!userId) {
@@ -418,7 +429,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
 
       CandidateDetails.findOne(
         { userId },
-        { dob: 1, fatherName: 1, currentLocation: 1, country_id: 1, hometown: 1, userId: 1, _id: 0 }
+        { dob: 1, fatherName: 1, _id: 0 }
       ).lean(),
 
       personalDetails.findOne(
@@ -427,7 +438,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
       ).lean(),
 
       Employment.findOne(
-        { user: userId },
+        { user: userId, companyName: company_id },
         {
           jobTitle: 1,
           employmentType: 1,
@@ -435,6 +446,14 @@ export const getMultipleEmployeeDetails = async (req, res) => {
           leavingDate: 1,
           companyName: 1,
           currentEmployment: 1,
+          isVerified: 1,
+          jobTypeVerified: 1,
+          designationVerified: 1,
+          jobDurationVerified: 1,
+          servedNoticePeriod: 1,
+          hasNOC: 1,
+          hasDues: 1,
+          remarks: 1,
           _id: 0
         }
       ).lean()
@@ -487,5 +506,97 @@ export const getMultipleEmployeeDetails = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+export const addEmployeeVerificationDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const companyId = req.companyId;
+
+    // Check if user exists
+    const user = await User.findOne({ _id: userId, is_del: false });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const {
+      _id,
+      designation,
+      employmenttype,
+      joiningdate,
+      leavedate,
+      joining_year,
+      joining_month,
+      leaving_year,
+      leaving_month,
+      Verified,
+      designation_verified,
+      duration_verified,
+      employmenttype_verified,
+      Serverd_notice_period,
+      has_noc,
+      has_due,
+      remarks
+    } = req.body;
+
+    if (!_id) {
+      return res.status(400).json({ message: "_id is required" });
+    }
+
+    const existingEmployment = await Employment.findOne({
+      user: _id,
+      companyName: companyId,
+      isDel: false,
+    });
+    if (!existingEmployment) {
+      return res.status(404).json({ message: "Employment record not found" });
+    }
+
+    // Prepare updated fields
+    const updatedFields = {
+      jobTitle: designation,
+      employmentType: employmenttype,
+      joiningDate: {
+        year: joining_year,
+        month: joining_month,
+      },
+      leavingDate: {
+        year: leaving_year,
+        month: leaving_month,
+      },
+      isVerified: Verified,
+      jobTypeVerified: employmenttype_verified,
+      designationVerified: designation_verified,
+      jobDurationVerified: duration_verified,
+      servedNoticePeriod: Serverd_notice_period,
+      hasNOC: has_noc,
+      hasDues: has_due,
+      remarks: remarks
+    };
+
+    // Update employment based on conditions
+    const updatedEmployment = await Employment.findOneAndUpdate(
+      { user:_id, companyName: companyId, isDel: false },
+      { $set: updatedFields },
+      { new: true }
+    ).lean();
+
+    if (!updatedEmployment) {
+      return res.status(404).json({ message: "Employment update failed" });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: "Employee Verification Details added successfully",
+      data: updatedEmployment,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error Saving Employment Details",
+      error: error.message,
+    });
   }
 };

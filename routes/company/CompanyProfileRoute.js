@@ -30,7 +30,8 @@ import {
   deleteBranch,
   getBranches,
   getUserAssociatedWithCompany,
-  getMultipleEmployeeDetails
+  getMultipleEmployeeDetails,
+  addEmployeeVerificationDetails
 } from "../../controllers/company/CompanyBranchControllers.js";
 
 // Middleware
@@ -174,6 +175,9 @@ CompanyProfileRouter.get("/get_user_associated_with_company", userAuth, Companym
 
 // Get Employee Details who are associated with company
 CompanyProfileRouter.get("/get_employee_details", userAuth, Companymid, getMultipleEmployeeDetails);
+
+// Add Employee Verification Details By Company
+CompanyProfileRouter.post("/add_employee_verification_details", upload.none(), userAuth, Companymid, addEmployeeVerificationDetails);
 
 
 export default CompanyProfileRouter;
