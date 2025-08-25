@@ -436,12 +436,12 @@ export const getMultipleEmployeeDetails = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    const { userId } = req.query;
+    const { userId, employmentId } = req.query;
 
-    if (!userId) {
+    if (!userId || !employmentId) {
       return res.status(400).json({
         success: false,
-        message: "userIds query parameter is required",
+        message: "userIds, employmentId query parameter is required",
       });
     }
 
@@ -463,7 +463,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
       ).lean(),
 
       Employment.findOne(
-        { user: userId, companyName: company_id },
+        { _id: employmentId, user: userId, companyName: company_id },
         {
           jobTitle: 1,
           employmentType: 1,
