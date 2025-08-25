@@ -549,6 +549,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
 
     const {
       _id,
+      employmentId,
       designation,
       employmenttype,
       joiningdate,
@@ -567,11 +568,12 @@ export const addEmployeeVerificationDetails = async (req, res) => {
       remarks
     } = req.body;
 
-    if (!_id) {
+    if (!_id || !employmentId) {
       return res.status(400).json({ message: "_id is required" });
     }
 
     const existingEmployment = await Employment.findOne({
+      _id: employmentId,
       user: _id,
       companyName: companyId,
       isDel: false,
@@ -604,7 +606,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
 
     // Update employment based on conditions
     const updatedEmployment = await Employment.findOneAndUpdate(
-      { user: _id, companyName: companyId, isDel: false },
+      { _id: employmentId, user: _id, companyName: companyId, isDel: false },
       { $set: updatedFields },
       { new: true }
     ).lean();
