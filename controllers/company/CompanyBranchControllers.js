@@ -319,7 +319,7 @@ export const getUserAssociatedWithCompany = async (req, res) => {
     }
 
     // Search employments collection where companyName = company_id
-    const employments = await Employment.find({ companyName: company_id });
+    const employments = await Employment.find({ companyName: company_id, isVerified: false });
 
     if (!employments || employments.length === 0) {
       return res.status(404).json({
