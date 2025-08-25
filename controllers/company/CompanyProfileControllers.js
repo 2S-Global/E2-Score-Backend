@@ -187,7 +187,7 @@ export const GetCompanyDetails = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        cin_id: user.company_id || "",
+        _id: user.company_id || "",
         cinnumber: user.cin_number || "",
         companyname: user.name || "",
         companyemail: user.email || "",
