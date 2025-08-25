@@ -373,24 +373,24 @@ export const addEmploymentDetails = async (req, res) => {
 
     const employment = new Employment({
       user: userId,
-      currentEmployment: currentlyWorking,
-      employmentType: employmenttype,
+      currentEmployment: currentlyWorking ?? "",
+      employmentType: employmenttype ?? "",
       totalExperience: {
-        year: experience_yr,
-        month: experience_month,
+        year: experience_yr ?? "",
+        month: experience_month ?? "",
       },
-      companyName: companyId,
-      jobTitle: job_title,
+      companyName: companyId ?? "",
+      jobTitle: job_title ?? "",
       joiningDate: {
-        year: joining_year,
-        month: joining_month,
+        year: joining_year ?? "",
+        month: joining_month ?? "",
       },
       leavingDate: {
-        year: leaving_year,
-        month: leaving_month,
+        year: leaving_year ?? "",
+        month: leaving_month ?? "",
       },
-      jobDescription: description,
-      NoticePeriod: notice_period,
+      jobDescription: description ?? "",
+      NoticePeriod: notice_period ?? "",
     });
 
     await employment.save();
