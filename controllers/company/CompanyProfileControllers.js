@@ -187,12 +187,12 @@ export const GetCompanyDetails = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        _id: user.company_id || "",
-        cinnumber: user.cin_number || "",
-        companyname: user.name || "",
-        companyemail: user.email || "",
-        companyphone: user.phone_number || "",
-        companyaddress: user.address || "",
+        cin_id: user.company_id || "",
+        cin: user.cin_number || "",
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone_number || "",
+        address: user.address || "",
       },
     });
   } catch (error) {
