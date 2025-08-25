@@ -163,10 +163,28 @@ export const GetCompanyDetails = async (req, res) => {
       userId: req.userId,
       isDel: false,
     });
-    if (!company) {
-      return res.status(404).json({ message: "Company not found." });
+
+    if (company) {
+      return res.status(200).json({ success: true, data: company });
     }
-    return res.status(200).json({ success: true, data: company });
+
+     // 2. If not found, fallback to User collection
+    const user = await User.findOne(
+      { _id: req.userId },
+      {
+        company_id: 1,
+        cin_number: 1,
+        name: 1,
+        email: 1,
+        phone_number: 1,
+        address: 1,
+      }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    return res.status(200).json({ success: true, data: user });
   } catch (error) {
     console.error("Error in GetCompanyDetails:", error);
     return res
