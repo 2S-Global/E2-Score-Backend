@@ -364,6 +364,8 @@ export const getUserAssociatedWithCompany = async (req, res) => {
     });
 
     // 5. Merge all results
+
+    /*
     const result = userIds.map(userId => {
 
       const user = users.find(u => u._id && u._id.equals(userId));
@@ -384,6 +386,29 @@ export const getUserAssociatedWithCompany = async (req, res) => {
         //countryName: countryName,
         // hometown: candidate && candidate.hometown ? candidate.hometown : "Not Provided",
         // currentAddress: `${candidate?.currentLocation || "Not Provided"}, ${countryName}`,
+      };
+    });
+    */
+
+    // 6. Build result based on employments (not unique users)
+    const result = employments.map(emp => {
+      const user = users.find(u => u._id && u._id.equals(emp.user));
+      const candidate = candidateDetails.find(c => c.userId && c.userId.equals(emp.user));
+
+      //const countryId = candidate?.country_id?.toString() || null;
+      //const countryName = countryId && countryMap[countryId] ? countryMap[countryId] : "Not Provided";
+
+      return {
+        userId: emp.user,
+        name: user?.name || "N/A",
+        email: user?.email || "N/A",
+        photo: user?.profilePicture || null,
+        jobTitle: emp.jobTitle || "Not Provided",
+        // currentLocation: candidate?.currentLocation || "Not Provided",
+        // countryName,
+        // hometown: candidate?.hometown || "Not Provided",
+        // currentAddress: `${candidate?.currentLocation || "Not Provided"}, ${countryName}`,
+        employmentId: emp._id, // to differentiate employments if needed
       };
     });
 
@@ -579,7 +604,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
 
     // Update employment based on conditions
     const updatedEmployment = await Employment.findOneAndUpdate(
-      { user:_id, companyName: companyId, isDel: false },
+      { user: _id, companyName: companyId, isDel: false },
       { $set: updatedFields },
       { new: true }
     ).lean();
