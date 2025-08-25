@@ -105,10 +105,10 @@ export const AddorUpdateCompany = async (req, res) => {
         : null,
       cover
         ? uploadToCloudinary(
-            cover.buffer,
-            "e2score/cover",
-            `cover-${Date.now()}`
-          )
+          cover.buffer,
+          "e2score/cover",
+          `cover-${Date.now()}`
+        )
         : null,
     ]);
 
@@ -168,7 +168,7 @@ export const GetCompanyDetails = async (req, res) => {
       return res.status(200).json({ success: true, data: company });
     }
 
-     // 2. If not found, fallback to User collection
+    // 2. If not found, fallback to User collection
     const user = await User.findOne(
       { _id: req.userId },
       {
@@ -184,7 +184,17 @@ export const GetCompanyDetails = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
-    return res.status(200).json({ success: true, data: user });
+    return res.status(200).json({
+      success: true,
+      data: {
+        cin_id: user.company_id || null,
+        cinnumber: user.cin_number || null,
+        companyname: user.name || null,
+        companyemail: user.email || null,
+        companyphone: user.phone_number || null,
+        companyaddress: user.address || null,
+      },
+    });
   } catch (error) {
     console.error("Error in GetCompanyDetails:", error);
     return res
