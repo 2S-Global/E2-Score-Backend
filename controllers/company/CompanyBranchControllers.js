@@ -319,7 +319,7 @@ export const getUserAssociatedWithCompany = async (req, res) => {
     }
 
     // Search employments collection where companyName = company_id
-    const employments = await Employment.find({ companyName: company_id, isVerified: false });
+    const employments = await Employment.find({ companyName: company_id, is_del: false, isVerified: false });
 
     if (!employments || employments.length === 0) {
       return res.status(404).json({
@@ -334,7 +334,7 @@ export const getUserAssociatedWithCompany = async (req, res) => {
 
     // 3. Fetch user details (name, photo)
     const users = await User.find(
-      { _id: { $in: userIds } },
+      { _id: { $in: userIds }, is_del: false },
       {
         name: 1,
         email: 1,
