@@ -518,7 +518,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
         employments.leavingMonth = month;
         employments.leavingDate = `${new Date(year, month - 1).toLocaleString("en-US", { month: "long" })}, ${year}`;
       } else {
-        employments.leavingDate = "";
+        employments.leavingDate = "Present";
       }
     }
 
