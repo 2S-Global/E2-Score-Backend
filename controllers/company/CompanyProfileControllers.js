@@ -98,11 +98,23 @@ export const AddorUpdateCompany = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    /*
-    let company = null;
-    if (cin_id) {
-      company = await CompanyDetails.findOne({ cin_id: cin_id.trim(), isDel: false });
-    } */
+    // 1. Check if CIN already exists in companylist
+    let companyExist = await companylist.findOne({ cinnumber: cin, isDel: false });
+
+    if (!companyExist) {
+      companyExist = await companylist.create({
+      cinnumber: cin?.trim() || "",
+      companyname: name?.trim() || "",
+      companyemail: email?.trim() || "",
+      companyaddress: address?.trim() || "",
+      companyphone: phone?.trim() || "",
+      // contactpersonname: contactpersonname?.trim() || "",
+      // contactpersoncontact: contactpersoncontact?.trim() || "",
+      // contactpersonemail: contactpersonemail?.trim() || "",
+      isActive: true,
+      isDel: false,
+      });
+    }
 
     // Handle logo and cover uploads concurrently
     const [logoResult, coverResult] = await Promise.all([
@@ -119,36 +131,11 @@ export const AddorUpdateCompany = async (req, res) => {
     ]);
 
     // Insert or update company
-
-    /*
     const company = await CompanyDetails.findOneAndUpdate(
       { userId },
       {
-        cin_id: cin_id?.trim(),
-        cin: cin?.trim(),
-        name: name?.trim(),
-        email: email?.trim(),
-        phone: phone?.trim(),
-        address: address?.trim(),
-        website: website?.trim(),
-        established,
-        teamsize,
-        industry_type: industry_type?.trim(),
-        allowinsearch: !!allowinsearch,
-        about: about?.trim(),
-        ...(logoResult && { logo: logoResult.secure_url }),
-        ...(coverResult && { cover: coverResult.secure_url }),
-      },
-      { upsert: true, new: true }
-    ); */
-
-
-    // Insert or update company
-
-    const company = await CompanyDetails.findOneAndUpdate(
-      { cin_id },
-      {
         userId,
+        cin_id: companyExist._id,
         cin: cin?.trim(),
         name: name?.trim(),
         email: email?.trim(),
@@ -166,41 +153,22 @@ export const AddorUpdateCompany = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    /*
-    const companyData = {
-      cin_id: cin_id?.trim(),
-      cin: cin?.trim(),
-      name: name?.trim(),
-      email: email?.trim(),
-      phone: phone?.trim(),
-      address: address?.trim(),
-      website: website?.trim(),
-      established,
-      teamsize,
-      industry_type: industry_type?.trim(),
-      allowinsearch: !!allowinsearch,
-      about: about?.trim(),
-      userId, // keep track which user owns it
-      ...(logoResult && { logo: logoResult.secure_url }),
-      ...(coverResult && { cover: coverResult.secure_url }),
-    };
-
-    if (company) {
-      // Update existing company (found by CIN ID)
-      company = await CompanyDetails.findOneAndUpdate(
-        { cin_id: cin_id.trim() },
-        companyData,
-        { new: true }
-      );
-    } else {
-      // Create new company
-      company = await CompanyDetails.create(companyData);
-    }
-    */
+    // update in user table 
+    const updateUser = await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        $set: {
+          cin_number: cin?.trim() || "",
+          company_id: companyExist._id,
+        },
+      },
+      { new: true }
+    );
 
     return res.status(200).json({
       success: true,
       message: "Company details updated successfully.",
+      // data: company,
       links: {
         logo: logoResult?.secure_url || null,
         cover: coverResult?.secure_url || null,
