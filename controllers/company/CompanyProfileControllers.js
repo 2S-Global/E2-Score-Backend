@@ -263,7 +263,7 @@ export const GetAccountDetails = async (req, res) => {
 
     const companyDetails = await CompanyDetails.findOne(
       { userId: req.userId, isDel: false },
-      { companyname: 1 }
+      { name: 1 }
     ).lean();
 
     const companyName =
