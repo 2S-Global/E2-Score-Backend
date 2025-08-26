@@ -459,7 +459,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
 
       personalDetails.findOne(
         { user: userId },
-        { permanentAddress: 1, pan_number:1, _id: 0 }
+        { permanentAddress: 1, pan_number: 1, _id: 0 }
       ).lean(),
 
       Employment.findOne(
@@ -501,19 +501,25 @@ export const getMultipleEmployeeDetails = async (req, res) => {
       candidateDetails.dob = `${day}-${month}-${year}`;
     }
 
-    // Format employment dates
-    if (employments?.joiningDate?.year && employments?.joiningDate?.month) {
-      const { year, month } = employments.joiningDate;
-      employments.joiningYear = year;
-      employments.joiningMonth = month;
-      employments.joiningDate = `${new Date(year, month - 1).toLocaleString("en-US", { month: "long" })}, ${year}`;
-    }
+    if (employments) {
+      // Format employment dates
+      if (employments?.joiningDate?.year && employments?.joiningDate?.month) {
+        const { year, month } = employments.joiningDate;
+        employments.joiningYear = year;
+        employments.joiningMonth = month;
+        employments.joiningDate = `${new Date(year, month - 1).toLocaleString("en-US", { month: "long" })}, ${year}`;
+      } else {
+        employments.joiningDate = "";
+      }
 
-    if (employments?.leavingDate?.year && employments?.leavingDate?.month) {
-      const { year, month } = employments.leavingDate;
-      employments.leavingYear = year;
-      employments.leavingMonth = month;
-      employments.leavingDate = `${new Date(year, month - 1).toLocaleString("en-US", { month: "long" })}, ${year}`;
+      if (employments?.leavingDate?.year && employments?.leavingDate?.month) {
+        const { year, month } = employments.leavingDate;
+        employments.leavingYear = year;
+        employments.leavingMonth = month;
+        employments.leavingDate = `${new Date(year, month - 1).toLocaleString("en-US", { month: "long" })}, ${year}`;
+      } else {
+        employments.leavingDate = "";
+      }
     }
 
     // Merge
