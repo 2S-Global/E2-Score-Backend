@@ -260,10 +260,21 @@ export const GetAccountDetails = async (req, res) => {
     if (!company) {
       return res.status(404).json({ message: "Company not found." });
     }
+
+    const companyDetails = await CompanyDetails.findOne(
+      { userId: req.userId, isDel: false },
+      { companyname: 1 }
+    ).lean();
+
+    const companyName =
+      companyDetails?.name && companyDetails.name.trim() !== ""
+        ? companyDetails.name
+        : company.name;
+
     return res.status(200).json({
       success: true,
       data: {
-        companyname: company.name,
+        companyname: companyName,
         email: company.email,
         phone: company.phone_number,
       },
