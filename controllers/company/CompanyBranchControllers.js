@@ -558,6 +558,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
       employmentId,
       designation,
       employmenttype,
+      currentlyemployed,
       joiningdate,
       leavedate,
       joining_year,
@@ -592,6 +593,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
     const updatedFields = {
       jobTitle: designation,
       employmentType: employmenttype,
+      currentEmployment: currentlyemployed,
       joiningDate: {
         year: joining_year,
         month: joining_month,
