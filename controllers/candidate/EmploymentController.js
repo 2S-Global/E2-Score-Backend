@@ -621,6 +621,7 @@ export const getEmploymentDetails = async (req, res) => {
         isVerified: item.isVerified,
         jobTypeVerified: item.jobTypeVerified,
         jobDurationVerified: item.jobDurationVerified,
+        designationVerified: item.designationVerified,
         notice_period: item.NoticePeriod || "",
         notice_period_name: noticePeriodMap[item.NoticePeriod] || "",
       };
