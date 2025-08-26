@@ -459,7 +459,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
 
       personalDetails.findOne(
         { user: userId },
-        { permanentAddress: 1, _id: 0 }
+        { permanentAddress: 1, pan_number:1, _id: 0 }
       ).lean(),
 
       Employment.findOne(
