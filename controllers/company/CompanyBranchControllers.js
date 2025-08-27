@@ -544,8 +544,6 @@ export const getMultipleEmployeeDetails = async (req, res) => {
 export const addEmployeeVerificationDetails = async (req, res) => {
   try {
 
-    console.log("I am inside sending email functions");
-
     const userId = req.userId;
     const companyId = req.companyId;
 
@@ -628,9 +626,6 @@ export const addEmployeeVerificationDetails = async (req, res) => {
     }
 
     const associatedEmployee = await User.findOne({ _id, is_del: false });
-
-    console.log("Here is my Verified value", Verified);
-    console.log("Checking typeof ", typeof Verified);
 
     if (associatedEmployee) {
 
