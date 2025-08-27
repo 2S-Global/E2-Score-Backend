@@ -638,7 +638,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
 
 
       // Build status message for verified fields
-      const verificationStatus = `
+      let verificationStatus = `
       <ul>
         <li>Overall Employment Verified: <strong>${VerifiedBool ? "✅ Yes" : "❌ No"}</strong></li>
         <li>Designation Verified: <strong>${designationVerifiedBool ? "✅ Yes" : "❌ No"}</strong></li>
@@ -646,6 +646,11 @@ export const addEmployeeVerificationDetails = async (req, res) => {
         <li>Employment Type Verified: <strong>${employmentTypeVerifiedBool ? "✅ Yes" : "❌ No"}</strong></li>
       </ul>
     `;
+
+      // Add remarks if present
+      if (remarks && remarks.trim() !== "") {
+        verificationStatus += `<p><strong>Remarks:</strong> ${remarks}</p>`;
+      }
 
       const transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST,

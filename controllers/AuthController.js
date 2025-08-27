@@ -2,6 +2,9 @@ import User from "../models/userModel.js";
 import companylist from "../models/CompanyListModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import Employment from "../models/Employment.js";
+import mongoose from "mongoose";
+import nodemailer from "nodemailer";
 
 /**
  * @function validtoken
@@ -142,6 +145,102 @@ export const registerCompany = async (req, res) => {
       expiresIn: "30d",
     });
 
+
+    // Email is start from here
+
+    const employments = await Employment.find({
+      companyName: cin_id,
+      isDel: false,
+      isVerified: false
+    }).lean();
+
+    if (!employments || employments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No users found for this company",
+      });
+    }
+
+    const userIds = [
+      ...new Set(employments.map(emp => emp.user.toString())),
+    ].map(id => new mongoose.Types.ObjectId(id));
+
+    // 3. Fetch user details (name, photo)
+    const users = await User.find(
+      { _id: { $in: userIds }, is_del: false },
+      {
+        name: 1,
+        email: 1,
+        profilePicture: 1
+      }
+    ).lean();
+
+    // 6. Build result based on employments (not unique users)
+    const result = employments.map(emp => {
+      const user = users.find(u => u._id && u._id.equals(emp.user));
+
+      return {
+        userId: emp.user,
+        name: user?.name || "N/A",
+        email: user?.email || "N/A",
+        photo: user?.profilePicture || null,
+        jobTitle: emp.jobTitle || "Not Provided",
+        employmentId: emp._id,
+      };
+    });
+
+    if (result.length > 0) {
+
+      // === EMAIL SENDING SECTION ===
+
+      // Build HTML like LinkedIn job cards
+
+      const employeeListHtml = result.map(emp => `
+  <div style="display:flex; align-items:center; border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:12px; background:#fff; font-family:Arial, sans-serif;">
+    <img src="${emp.photo || 'https://via.placeholder.com/50'}" 
+         alt="profile" 
+         style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
+    <div>
+      <h3 style="margin:0; font-size:16px; color:#0073b1;">${emp.name || 'N/A'}</h3>
+      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${emp.jobTitle || 'Unknown'}</p>
+      <p style="margin:2px 0; font-size:13px; color:#555;">${emp.email || ''}</p>
+    </div>
+  </div>
+`).join("");
+
+      const htmlTemplate = `
+  <div style="max-width:600px; margin:auto; font-family:Arial, sans-serif; background:#f4f6f9; padding:20px;">
+    <h2 style="color:#333; text-align:center;">Employees Associated with Your Company</h2>
+    <p style="color:#555; text-align:center;">Here are the employees currently linked with your company record:</p>
+    ${employeeListHtml}
+    <p style="margin-top:20px; font-size:12px; color:#999; text-align:center;">
+      If you think some information is incorrect, please contact support.
+    </p>
+  </div>
+`;
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Employment Verification Status Updated",
+        html: htmlTemplate,
+      };
+
+      await transporter.sendMail(mailOptions);
+
+    }
+
+    // Email is end from here
     res.status(201).json({
       success: true,
       message: "User registered and logged in successfully!",
