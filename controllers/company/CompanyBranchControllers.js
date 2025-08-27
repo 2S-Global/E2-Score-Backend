@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import list_tbl_countrie from "../../models/monogo_query/countriesModel.js";
 import personalDetails from "../../models/personalDetails.js";
 import list_gender from "../../models/monogo_query/genderModel.js";
+import nodemailer from "nodemailer";
 
 // Get Conunty
 
@@ -542,6 +543,9 @@ export const getMultipleEmployeeDetails = async (req, res) => {
 
 export const addEmployeeVerificationDetails = async (req, res) => {
   try {
+
+    console.log("I am inside sending email functions");
+
     const userId = req.userId;
     const companyId = req.companyId;
 
@@ -622,6 +626,62 @@ export const addEmployeeVerificationDetails = async (req, res) => {
     if (!updatedEmployment) {
       return res.status(404).json({ message: "Employment update failed" });
     }
+
+    const associatedEmployee = await User.findOne({ _id, is_del: false });
+
+    console.log("Here is my Verified value", Verified);
+    console.log("Checking typeof ", typeof Verified);
+
+    if (associatedEmployee) {
+
+      // === EMAIL SENDING SECTION ===
+
+      const VerifiedBool = Verified === true || Verified === "true";
+      const designationVerifiedBool = designation_verified === true || designation_verified === "true";
+      const durationVerifiedBool = duration_verified === true || duration_verified === "true";
+      const employmentTypeVerifiedBool = employmenttype_verified === true || employmenttype_verified === "true";
+
+
+      // Build status message for verified fields
+      const verificationStatus = `
+      <ul>
+        <li>Overall Employment Verified: <strong>${VerifiedBool ? "✅ Yes" : "❌ No"}</strong></li>
+        <li>Designation Verified: <strong>${designationVerifiedBool ? "✅ Yes" : "❌ No"}</strong></li>
+        <li>Duration Verified: <strong>${durationVerifiedBool ? "✅ Yes" : "❌ No"}</strong></li>
+        <li>Employment Type Verified: <strong>${employmentTypeVerifiedBool ? "✅ Yes" : "❌ No"}</strong></li>
+      </ul>
+    `;
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
+        to: associatedEmployee.email,
+        subject: "Employment Verification Status Updated",
+        html: `
+        <p>Dear <strong>${associatedEmployee.name}</strong>,</p>
+        <p>Your employment verification details have been updated by <strong>${user.name}</strong>.</p>
+        <p>Here is the status of your verification:</p>
+        ${verificationStatus}
+        <p>If you believe there is an error, please contact our support team.</p>
+        <br/>
+        <p>Regards,<br/>E2Score Verification Team</p>
+      `,
+      };
+
+      await transporter.sendMail(mailOptions);
+
+    }
+
+    // === END EMAIL SECTION ===
 
     res.status(201).json({
       success: true,
