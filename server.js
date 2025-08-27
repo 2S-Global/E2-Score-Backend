@@ -44,6 +44,9 @@ import resumeMakingRouter from "./routes/candidate/resumeMakingRoute.js";
 //company Routes
 import CompanyProfileRouter from "./routes/company/CompanyProfileRoute.js";
 
+//Institute Routes
+import InstituteProfileRouter from "./routes/institute/InstituteProfileRoute.js";
+
 // Routes
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
@@ -82,6 +85,9 @@ app.use("/api/dashboard", dashboardRoute);
 
 //company routes
 app.use("/api/companyprofile", CompanyProfileRouter);
+
+//institute routes
+app.use("/api/instituteprofile", InstituteProfileRouter);
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
