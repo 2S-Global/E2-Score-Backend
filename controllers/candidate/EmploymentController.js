@@ -3,6 +3,7 @@ import Employment from "../../models/Employment.js";
 import companylist from "../../models/CompanyListModel.js";
 import list_notice from "../../models/monogo_query/noticeModel.js";
 import User from "../../models/userModel.js";
+import nodemailer from "nodemailer";
 
 /**
  * @description Search for matching Company based on the query parameter company_name
@@ -403,9 +404,7 @@ export const addEmploymentDetails = async (req, res) => {
     }).select("email name");
 
     if (existingCompanyUser) {
-      // Step 4: Send email (using nodemailer / your mailer util)
-
-      // Fetch details of the user who added this employment
+      
       const newEmployeeUser = await User.findOne({
         _id: userId,
         is_del: false,
@@ -455,7 +454,7 @@ export const addEmploymentDetails = async (req, res) => {
 
         const mailOptions = {
           from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-          to: existingCompanyUser.email, // ✅ mail goes to company’s existing user
+          to: existingCompanyUser.email,
           subject: "New Employment Added to Your Company",
           html: htmlTemplate,
         };
@@ -464,7 +463,7 @@ export const addEmploymentDetails = async (req, res) => {
       }
     // Email is end from here
   }
-  
+
     res.status(201).json({
     success: true,
     message: "Employment Details added successfully!",
