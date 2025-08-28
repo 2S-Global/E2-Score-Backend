@@ -10,6 +10,7 @@ import {
   getUserEducation,
   getUserLevelDetails,
   getEditUserData,
+  getOnlyStudentName
 } from "../../controllers/candidate/userdatacontroller.js";
 
 //middleware
@@ -39,5 +40,8 @@ userdataRouter.get("/get_user_level", userAuth, getUserLevelDetails);
 
 //get Edit User data
 userdataRouter.get("/get_edit_user_data", userAuth, getEditUserData);
+
+//get student name
+userdataRouter.get("/get_only_student_name", userAuth, getOnlyStudentName);
 
 export default userdataRouter;

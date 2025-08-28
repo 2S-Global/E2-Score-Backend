@@ -803,3 +803,35 @@ export const getEditUserData = async (req, res) => {
       .json({ message: "Server error", error: error.message });
   }
 };
+
+/**
+ * @description Get only student name by user_id
+ * @route GET /api/userdata/get_only_student_name
+ * @access protected
+ * @returns {object} 200 - Student name data
+ * @returns {object} 500 - Server error
+ */
+
+export const getOnlyStudentName = async (req, res) => {
+  try {
+    const user_id = req.userId;
+
+    if (!user_id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const user = await User.findOne({ _id: user_id }).select("name");
+
+    if (!user) {
+      return res.status(404).json({ message: "No user found" });
+    }
+
+    if (!user.name || user.name.trim() === "") {
+      return res.status(404).json({ message: "User name not found" });
+    }
+
+    res.status(200).json({ name: user.name });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
