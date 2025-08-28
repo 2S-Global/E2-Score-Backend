@@ -1306,7 +1306,7 @@ export const getUserVerificationList = async (req, res) => {
 
     const verificationList = await ListVerificationList.find(
       { isDel: false, isActive: true }
-    ).select("_id verification_name title fields");
+    ).select("_id verification_name title fields regex");
 
     if (!verificationList) {
       return res.status(404).json({ message: "Verification List found" });
