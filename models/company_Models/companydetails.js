@@ -38,6 +38,9 @@ const Schema = new mongoose.Schema(
     industry_type: {
       type: String,
     },
+    courses: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "list_university_course" },
+    ],
     allowinsearch: {
       type: Boolean,
       default: true,

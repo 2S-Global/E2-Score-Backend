@@ -3,9 +3,12 @@ import multer from "multer";
 
 // Controllers
 import {
+  AddorUpdateCompany,
+  GetCompanyDetails,
+  Deletecoverphoto,
   GetAccountDetails,
   updateAccountDetails,
-} from "../../controllers/company/CompanyProfileControllers.js";
+} from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
   AddorUpdateContactPerson,
@@ -28,6 +31,33 @@ const InstituteProfileRouter = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ================= COMPANY ROUTES =================
+// Add or Update Company Profile
+InstituteProfileRouter.post(
+  "/add_or_update_company",
+  upload.fields([
+    { name: "logo", maxCount: 1 },
+    { name: "cover", maxCount: 1 },
+  ]),
+  userAuth,
+  Institutemid,
+  AddorUpdateCompany
+);
+
+// Get Company Details
+InstituteProfileRouter.get(
+  "/get_company_details",
+  userAuth,
+  Institutemid,
+  GetCompanyDetails
+);
+
+// Delete Cover Photo
+InstituteProfileRouter.delete(
+  "/delete_cover_photo",
+  userAuth,
+  Institutemid,
+  Deletecoverphoto
+);
 
 // ================= ACCOUNT ROUTES =================
 
