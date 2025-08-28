@@ -88,6 +88,54 @@ export const registerUser = async (req, res) => {
       .json({ message: "Error creating user", error: error.message });
   }
 };
+// Register a new Institute
+export const registerInstituteft = async (req, res) => {
+  try {
+    const { name, email, password, phone_number } = req.body;
+    const role = 1;
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Name, email, and password are required" });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // Hash the password before saving
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create a new user with hashed password
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      phone_number,
+    });
+    await newUser.save();
+    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "30d",
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "User registered and logged in successfully!",
+      token,
+      data: newUser,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error creating user", error: error.message });
+  }
+};
+
 // Register a new company
 export const registerCompany = async (req, res) => {
   try {
@@ -95,9 +143,9 @@ export const registerCompany = async (req, res) => {
     const role = 2;
     // Validate required fields
     if (!name || !email || !password || !phone_number || !cin) {
-      return res
-        .status(400)
-        .json({ message: "Name, email, and password, phone_number cin are required" });
+      return res.status(400).json({
+        message: "Name, email, and password, phone_number cin are required",
+      });
     }
 
     // Check if user already exists
@@ -107,21 +155,25 @@ export const registerCompany = async (req, res) => {
     // }
 
     const existingUser = await User.findOne({
-      $or: [{ email }, { cin_number: cin }]
+      $or: [{ email }, { cin_number: cin }],
     });
 
     if (existingUser) {
       if (existingUser.email === email) {
-        return res.status(404).json({ message: "User with this email already exists" });
+        return res
+          .status(404)
+          .json({ message: "User with this email already exists" });
       }
       if (existingUser.cin_number === cin) {
-        return res.status(404).json({ message: "User with this CIN number already exists" });
+        return res
+          .status(404)
+          .json({ message: "User with this CIN number already exists" });
       }
     }
 
     // companylist
     const company = await companylist.findOne({
-      cinnumber: cin
+      cinnumber: cin,
     });
 
     if (!company) {
@@ -139,19 +191,30 @@ export const registerCompany = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create a new user with hashed password
-    const newUser = new User({ name, email, phone_number, password: hashedPassword, role, cin_number: cin, company_id: cin_id });
-    await newUser.save();
-    const token = jwt.sign({ userId: newUser._id, companyId: newUser.company_id }, process.env.JWT_SECRET, {
-      expiresIn: "30d",
+    const newUser = new User({
+      name,
+      email,
+      phone_number,
+      password: hashedPassword,
+      role,
+      cin_number: cin,
+      company_id: cin_id,
     });
-
+    await newUser.save();
+    const token = jwt.sign(
+      { userId: newUser._id, companyId: newUser.company_id },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
 
     // Email is start from here
 
     const employments = await Employment.find({
       companyName: cin_id,
       isDel: false,
-      isVerified: false
+      isVerified: false,
     }).lean();
 
     if (!employments || employments.length === 0) {
@@ -162,8 +225,8 @@ export const registerCompany = async (req, res) => {
     }
 
     const userIds = [
-      ...new Set(employments.map(emp => emp.user.toString())),
-    ].map(id => new mongoose.Types.ObjectId(id));
+      ...new Set(employments.map((emp) => emp.user.toString())),
+    ].map((id) => new mongoose.Types.ObjectId(id));
 
     // 3. Fetch user details (name, photo)
     const users = await User.find(
@@ -171,13 +234,13 @@ export const registerCompany = async (req, res) => {
       {
         name: 1,
         email: 1,
-        profilePicture: 1
+        profilePicture: 1,
       }
     ).lean();
 
     // 6. Build result based on employments (not unique users)
-    const result = employments.map(emp => {
-      const user = users.find(u => u._id && u._id.equals(emp.user));
+    const result = employments.map((emp) => {
+      const user = users.find((u) => u._id && u._id.equals(emp.user));
 
       return {
         userId: emp.user,
@@ -190,23 +253,32 @@ export const registerCompany = async (req, res) => {
     });
 
     if (result.length > 0) {
-
       // === EMAIL SENDING SECTION ===
 
       // Build HTML like LinkedIn job cards
 
-      const employeeListHtml = result.map(emp => `
+      const employeeListHtml = result
+        .map(
+          (emp) => `
   <div style="display:flex; align-items:center; border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:12px; background:#fff; font-family:Arial, sans-serif;">
-    <img src="${emp.photo || 'https://via.placeholder.com/50'}" 
+    <img src="${emp.photo || "https://via.placeholder.com/50"}" 
          alt="profile" 
          style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
     <div>
-      <h3 style="margin:0; font-size:16px; color:#0073b1;">${emp.name || 'N/A'}</h3>
-      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${emp.jobTitle || 'Unknown'}</p>
-      <p style="margin:2px 0; font-size:13px; color:#555;">${emp.email || ''}</p>
+      <h3 style="margin:0; font-size:16px; color:#0073b1;">${
+        emp.name || "N/A"
+      }</h3>
+      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${
+        emp.jobTitle || "Unknown"
+      }</p>
+      <p style="margin:2px 0; font-size:13px; color:#555;">${
+        emp.email || ""
+      }</p>
     </div>
   </div>
-`).join("");
+`
+        )
+        .join("");
 
       const htmlTemplate = `
   <div style="max-width:600px; margin:auto; font-family:Arial, sans-serif; background:#f4f6f9; padding:20px;">
@@ -237,7 +309,6 @@ export const registerCompany = async (req, res) => {
       };
 
       await transporter.sendMail(mailOptions);
-
     }
 
     // Email is end from here
@@ -336,7 +407,6 @@ export const registerInstitute = async (req, res) => {
   }
 };
 
-
 // Login a user
 export const loginUser = async (req, res) => {
   try {
@@ -372,9 +442,13 @@ export const loginUser = async (req, res) => {
     // }
 
     // Generate JWT token
-    const token = jwt.sign({ userId: user._id, companyId: user.company_id }, process.env.JWT_SECRET, {
-      expiresIn: "30d",
-    });
+    const token = jwt.sign(
+      { userId: user._id, companyId: user.company_id },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
 
     res.status(200).json({
       success: true,

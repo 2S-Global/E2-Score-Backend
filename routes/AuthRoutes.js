@@ -9,6 +9,7 @@ import {
   forgotPassword,
   validtoken,
   registerInstitute,
+  registerInstituteft,
 } from "../controllers/AuthController.js"; // Adjust the path according to your project structure
 // Initialize dotenv to load environment variables
 dotenv.config();
@@ -27,6 +28,8 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 // Register user candidate
 AuthRouter.post("/register", upload.none(), registerUser);
+// Register user institute
+AuthRouter.post("/register-institute", upload.none(), registerInstituteft);
 // Login user
 AuthRouter.post("/login", upload.none(), loginUser);
 // Register company
