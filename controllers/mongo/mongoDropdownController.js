@@ -26,6 +26,7 @@ import list_education_boards from "../../models/monogo_query/educationBoardModel
 import list_course_type from "../../models/monogo_query/courseTypeModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
 import list_school_list from "../../models/monogo_query/schoolListModel.js";
+import ListVerificationList from "../../models/monogo_query/verificationListModel.js";
 
 //Get Courses for search
 
@@ -1289,5 +1290,34 @@ export const getAllSchoolLists = async (req, res) => {
   } catch (error) {
     console.error("MySQL error →", error);
     res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get only student name by user_id
+ * @route GET /api/userdata/get_verification_list
+ * @access protected
+ * @returns {object} 200 - user verification list
+ * @returns {object} 500 - Server error
+ */
+
+export const getUserVerificationList = async (req, res) => {
+  try {
+
+    const verificationList = await ListVerificationList.find(
+      { isDel: false, isActive: true }
+    ).select("_id verification_name title fields");
+
+    if (!verificationList) {
+      return res.status(404).json({ message: "Verification List found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: verificationList,
+      message: "Verification List fetched successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
