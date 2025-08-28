@@ -92,7 +92,7 @@ export const registerUser = async (req, res) => {
 export const registerInstituteft = async (req, res) => {
   try {
     const { name, email, password, phone_number } = req.body;
-    const role = 1;
+    const role = 3;
     // Validate required fields
     if (!name || !email || !password) {
       return res
