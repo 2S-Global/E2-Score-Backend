@@ -111,8 +111,9 @@ export const AddorUpdateCompany = async (req, res) => {
       // contactpersonname: contactpersonname?.trim() || "",
       // contactpersoncontact: contactpersoncontact?.trim() || "",
       // contactpersonemail: contactpersonemail?.trim() || "",
-      isActive: true,
+      isActive: false,
       isDel: false,
+      flag: true,
       });
     }
 
