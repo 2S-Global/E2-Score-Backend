@@ -2,6 +2,7 @@ import db_sql from "../../config/sqldb.js";
 import Employment from "../../models/Employment.js";
 import companylist from "../../models/CompanyListModel.js";
 import list_notice from "../../models/monogo_query/noticeModel.js";
+import User from "../../models/userModel.js";
 
 /**
  * @description Search for matching Company based on the query parameter company_name
@@ -395,17 +396,86 @@ export const addEmploymentDetails = async (req, res) => {
 
     await employment.save();
 
-    res.status(201).json({
-      success: true,
-      message: "Employment Details added successfully!",
-      data: employment,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error Saving Employment Details",
-      error: error.message,
-    });
+    // Step 3: Check if any user has this companyId
+    const existingCompanyUser = await User.findOne({
+      company_id: companyId,
+      is_del: false,
+    }).select("email name");
+
+    if (existingCompanyUser) {
+      // Step 4: Send email (using nodemailer / your mailer util)
+
+      // Fetch details of the user who added this employment
+      const newEmployeeUser = await User.findOne({
+        _id: userId,
+        is_del: false,
+      }).select("name email profilePicture");
+
+
+      // If user not found (rare case), skip email
+      if (!newEmployeeUser) {
+        console.log("New employee user not found, skipping email...");
+      } else {
+        // Build LinkedIn-style employee card using this user’s data
+        const employeeCardHtml = `
+      <div style="display:flex; align-items:center; border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:12px; background:#fff; font-family:Arial, sans-serif;">
+        <img src="${newEmployeeUser.profilePicture || 'https://via.placeholder.com/50'}" 
+             alt="profile" 
+             style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
+        <div>
+          <h3 style="margin:0; font-size:16px; color:#0073b1;">${newEmployeeUser.name || 'N/A'}</h3>
+          <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${job_title || 'Unknown'}</p>
+          <p style="margin:2px 0; font-size:13px; color:#555;">${newEmployeeUser.email || ''}</p>
+        </div>
+      </div>
+    `;
+
+        // Wrap inside main email template
+        const htmlTemplate = `
+      <div style="max-width:600px; margin:auto; font-family:Arial, sans-serif; background:#f4f6f9; padding:20px;">
+        <h2 style="color:#333; text-align:center;">New Employee Associated with Your Company</h2>
+        <p style="color:#555; text-align:center;">A new employee has added your company in their employment details:</p>
+        ${employeeCardHtml}
+        <p style="margin-top:20px; font-size:12px; color:#999; text-align:center;">
+          If you think some information is incorrect, please contact support.
+        </p>
+      </div>
+    `;
+
+        // Send email
+        const transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST,
+          port: process.env.EMAIL_PORT,
+          secure: true,
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+
+        const mailOptions = {
+          from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
+          to: existingCompanyUser.email, // ✅ mail goes to company’s existing user
+          subject: "New Employment Added to Your Company",
+          html: htmlTemplate,
+        };
+
+        await transporter.sendMail(mailOptions);
+      }
+    // Email is end from here
   }
+  
+    res.status(201).json({
+    success: true,
+    message: "Employment Details added successfully!",
+    data: employment,
+  });
+} catch (error) {
+  res.status(500).json({
+    message: "Error Saving Employment Details",
+    error: error.message,
+  });
+}
 };
 
 /**
