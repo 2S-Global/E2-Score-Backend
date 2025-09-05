@@ -60,19 +60,15 @@ export const addCandidateCart = async (req, res) => {
       });
     }
 
-    // -------------------------
     // Save to cart
-    // -------------------------
     const newUserCart = new CandidateVerificationCart({
       candidate_id: user_id,
       candidate_name: name,
       amount: priceDoc.price,
       fields: {
         number: number,
-        name: name, // 👈 put it in fields object too
+        name: name,
       },
-      // [`${fieldname}_number`]: number,
-      // [`${fieldname}_name`]: name,
       verification_type: fieldname,
     });
 
@@ -116,6 +112,9 @@ export const listCandidateCart = async (req, res) => {
       is_paid: 0,
     });
 
+    console.log("I am inside listCandidateCart API: ");
+    console.log("Here are my cart details: ", userCarts);
+
     if (!userCarts || userCarts.length === 0) {
       return res.status(200).json({
         success: true,
@@ -149,15 +148,16 @@ export const listCandidateCart = async (req, res) => {
 
         const verificationCharge = parseFloat(cart.amount) || 0;
 
-        const payForArray = [];
-        if (cart.pan_number) payForArray.push("PAN");
-        if (cart.aadhar_number) payForArray.push("Aadhaar");
-        if (cart.dl_number) payForArray.push("Driving Licence");
-        if (cart.passport_file_number) payForArray.push("Passport");
-        if (cart.epic_number) payForArray.push("Voter ID (EPIC)");
-        if (cart.uan_number) payForArray.push("UAN");
+        let payFor = "Unknown";
+        if (cart.verification_type === "pan") payFor = "PAN";
+        else if (cart.verification_type === "aadhar") payFor = "Aadhaar";
+        else if (cart.verification_type === "driving_license") payFor = "Driving Licence";
+        else if (cart.verification_type === "passport") payFor = "Passport";
+        else if (cart.verification_type === "epic") payFor = "Voter ID (EPIC)";
+        else if (cart.verification_type === "uan") payFor = "UAN";
 
-        const totalVerifications = payForArray.length;
+
+        const totalVerifications = 1;
 
         const subtotal = verificationCharge;
 
@@ -167,34 +167,12 @@ export const listCandidateCart = async (req, res) => {
         return {
           id: cart._id,
           name: cart.candidate_name,
-          mobile: cart.candidate_mobile || "",
-          payFor: payForArray.join(", "),
+          // mobile: cart.candidate_mobile || "",
+          payFor: payFor,
           amount: subtotal,
         };
       })
     );
-
-
-    // 🔹 Role 3 → return free billing (no discount/GST)
-    if (employer.role === 3 && overallSubtotal === 0) {
-      return res.status(200).json({
-        success: true,
-        data: formattedData,
-        overall_billing: {
-          total_verifications: overallTotalVerifications,
-          wallet_amount: employer.wallet_amount || "0.00",
-          fund_status: "NA",
-          subtotal: "0.00",
-          discount: "0.00",
-          discount_percent: "0.00",
-          cgst: "0.00",
-          cgst_percent: "0.00",
-          sgst: "0.00",
-          sgst_percent: "0.00",
-          total: "0.00",
-        },
-      });
-    }
 
     const discountAmount = overallSubtotal * discountPercent;
     const discountedSubtotal = overallSubtotal - discountAmount;
@@ -212,7 +190,7 @@ export const listCandidateCart = async (req, res) => {
       data: formattedData,
       overall_billing: {
         total_verifications: overallTotalVerifications,
-        wallet_amount: employer.wallet_amount || "0.00",
+        wallet_amount: candidate.wallet_amount || "0.00",
         fund_status: "NA",
         subtotal: overallSubtotal.toFixed(2),
         discount: discountAmount.toFixed(2),
@@ -227,7 +205,7 @@ export const listCandidateCart = async (req, res) => {
   } catch (error) {
     res.status(401).json({
       success: false,
-      message: "Error fetching user verification carts",
+      message: "Error fetching candidate verification carts",
       error: error.message,
     });
   }
