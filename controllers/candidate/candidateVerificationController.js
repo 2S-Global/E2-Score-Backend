@@ -112,9 +112,6 @@ export const listCandidateCart = async (req, res) => {
       is_paid: 0,
     });
 
-    console.log("I am inside listCandidateCart API: ");
-    console.log("Here are my cart details: ", userCarts);
-
     if (!userCarts || userCarts.length === 0) {
       return res.status(200).json({
         success: true,
