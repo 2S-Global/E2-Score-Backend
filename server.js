@@ -40,6 +40,7 @@ import userAccomplishmentRouter from "./routes/candidate/userAccomplishmentRoute
 import resumeFileRouter from "./routes/candidate/resumeFileRoute.js";
 import employmentRouter from "./routes/candidate/EmploymentRoute.js";
 import resumeMakingRouter from "./routes/candidate/resumeMakingRoute.js";
+import candidateVerificationCartRouter from "./routes/candidate/candidateVerificationCartRoute.js";
 
 //company Routes
 import CompanyProfileRouter from "./routes/company/CompanyProfileRoute.js";
@@ -75,6 +76,7 @@ app.use("/api/candidate/project", projectDetailsRouter);
 app.use("/api/candidate/resumefile", resumeFileRouter);
 app.use("/api/candidate/employment", employmentRouter);
 app.use("/api/candidate/resume", resumeMakingRouter);
+app.use("/api/candidate/usercart", candidateVerificationCartRouter);
 // Start server hello
 
 // Admin Routes test
