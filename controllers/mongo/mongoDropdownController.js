@@ -1308,8 +1308,11 @@ export const getUserVerificationList = async (req, res) => {
       { isDel: false, isActive: true }
     ).select("_id verification_name title fields regex");
 
-    if (!verificationList) {
-      return res.status(404).json({ message: "Verification List found" });
+    if (!verificationList || verificationList.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Verification List not found",
+      });
     }
 
     res.status(200).json({

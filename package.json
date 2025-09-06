@@ -29,6 +29,7 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.14",
     "puppeteer": "^24.12.1",
+    "razorpay": "^2.9.6",
     "sharp": "^0.33.5"
   },
   "devDependencies": {

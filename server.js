@@ -48,6 +48,9 @@ import CompanyProfileRouter from "./routes/company/CompanyProfileRoute.js";
 //Institute Routes
 import InstituteProfileRouter from "./routes/institute/InstituteProfileRoute.js";
 
+// Payment Routes
+import paymentRoutes from "./routes/paymentRoutes.js";
+
 // Routes
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
@@ -65,6 +68,9 @@ app.use("/api/pdf", pdfRouter);
 // app.use("/api/sql/dropdown", DropdownRouterouter);
 //Mongo Dropdown Routes
 app.use("/api/sql/dropdown", MongoDropdownRouter);
+
+// Payment Routes
+app.use("/api/payment", paymentRoutes);
 
 //candidate routes
 app.use("/api/useraction", userRouter);
