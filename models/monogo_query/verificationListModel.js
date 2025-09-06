@@ -26,7 +26,7 @@ const ListVerificationListSchema = new mongoose.Schema(
 );
 
 const ListVerificationList = mongoose.model(
-  "list_verification_lists",
+  "list_verification_list",
   ListVerificationListSchema
 );
 
