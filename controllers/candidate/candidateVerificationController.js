@@ -457,7 +457,8 @@ export const payNowCandidateCart = async (req, res) => {
 
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
+      // to: user.email,
+      to: "chandrasarkar2001@gmail.com",
       subject: "Order Confirmation : QuikChek - Thank You for Your Purchase!",
       html: `
       <div style="text-align: center; margin-bottom: 20px;">
@@ -490,7 +491,8 @@ export const payNowCandidateCart = async (req, res) => {
 
     const mailOptions2 = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
+      // to: user.email,
+      to: "chandrasarkar2001@gmail.com",
       to: "chandrasarkar2001@gmail.com",
       subject: "Payment Received: QuikChek - Your Order is Confirmed!",
       html: `
@@ -520,7 +522,8 @@ export const payNowCandidateCart = async (req, res) => {
 
     const mailOptions3 = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: "kp.sunit@gmail.com",
+      // to: "kp.sunit@gmail.com",
+      to: "chandrasarkar26345@gmail.com",
       subject:
         "Payment Received: QuikChek - " +
         user.name +
