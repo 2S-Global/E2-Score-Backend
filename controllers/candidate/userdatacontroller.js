@@ -862,6 +862,46 @@ export const getCandidateInfo = async (req, res) => {
       return res.status(404).json({ message: "User name not found" });
     }
 
+    res.status(200).json({ 
+      success: true, 
+      data: {
+        _id: user._id,
+        name: user.name || "N/A",
+        email: user.email || "N/A",
+        phone_number: user.phone_number || "N/A"
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @description Get only candidate image url by user_id
+ * @route GET /api/userdata/get_candidate_img
+ * @access protected
+ * @returns {object} 200 - Student Candidate Image
+ * @returns {object} 500 - Server error
+ */
+
+export const getCandidateInfo123 = async (req, res) => {
+  try {
+    const user_id = req.userId;
+
+    if (!user_id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const user = await User.findOne({ _id: user_id }).select("name phone_number email");
+
+    if (!user) {
+      return res.status(404).json({ message: "No user found" });
+    }
+
+    if (!user.name || user.name.trim() === "") {
+      return res.status(404).json({ message: "User name not found" });
+    }
+
     res.status(200).json({ success: true, data: user});
   } catch (error) {
     res.status(500).json({ message: error.message });

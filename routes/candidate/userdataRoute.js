@@ -45,7 +45,10 @@ userdataRouter.get("/get_edit_user_data", userAuth, getEditUserData);
 //get student name
 userdataRouter.get("/get_only_student_name", userAuth, getOnlyStudentName);
 
-//get student name
+//get candidate name, phone_number, email
 userdataRouter.get("/get_candidate_info", userAuth, getCandidateInfo);
+
+//get candidate image url
+// userdataRouter.get("/get_candidate_img", userAuth, getCandidateImg);
 
 export default userdataRouter;
