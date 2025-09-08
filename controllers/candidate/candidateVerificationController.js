@@ -446,12 +446,13 @@ export const payNowCandidateCart = async (req, res) => {
 
     // Send email with login credentials
     const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
+      // host: process.env.EMAIL_HOST,
+      host: "smtp.zoho.in",
+      port: 465,
       secure: true, // true for port 465
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: "support@quikchek.in",
+        pass: "Quikchek@432",
       },
     });
 
