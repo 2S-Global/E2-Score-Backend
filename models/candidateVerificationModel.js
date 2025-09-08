@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const candidateVerificationCartSchema = new mongoose.Schema(
+const candidateVerificationSchema = new mongoose.Schema(
   {
     candidate_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -11,14 +11,26 @@ const candidateVerificationCartSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "allOrdersData",
     },
+    order_id: {
+      type: String,
+    },
     // plan: {
     //   type: mongoose.Schema.Types.ObjectId,
     //   ref: "Package",
     // },
+    // owner_id: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "ownerdetails",
+    // },
+    // amount: {
+    //   type: String,
+    // },
+    // pdf_url: {
+    //   type: String,
+    // },
     candidate_name: {
       type: String,
-      required: true,
-      trim: true,
+      required: false,
     },
     verification_type: {
       type: String, // e.g. "pan", "aadhar", "passport", etc.
@@ -37,19 +49,16 @@ const candidateVerificationCartSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    // status: {
-    //   type: String,
-    //   enum: ["pending", "verified", "rejected"],
-    //   default: "pending",
-    // },
     // candidate_email: {
     //   type: String,
+    //   required: false,
     // },
     // candidate_mobile: {
     //   type: String,
     // },
     // candidate_dob: {
     //   type: String,
+    //   required: true,
     // },
     // candidate_address: {
     //   type: String,
@@ -63,11 +72,11 @@ const candidateVerificationCartSchema = new mongoose.Schema(
     // pan_number: {
     //   type: String,
     // },
-    // pan_image: {
-    //   type: String,
-    // },
     // pan_response: {
     //   type: Object,
+    // },
+    // pan_image: {
+    //   type: String,
     // },
     // aadhar_name: {
     //   type: String,
@@ -75,11 +84,11 @@ const candidateVerificationCartSchema = new mongoose.Schema(
     // aadhar_number: {
     //   type: String,
     // },
-    // aadhar_image: {
-    //   type: String,
-    // },
     // aadhaar_response: {
     //   type: Object,
+    // },
+    // aadhar_image: {
+    //   type: String,
     // },
     // dl_name: {
     //   type: String,
@@ -87,11 +96,12 @@ const candidateVerificationCartSchema = new mongoose.Schema(
     // dl_number: {
     //   type: String,
     // },
-    // dl_image: {
-    //   type: String,
-    // },
+
     // dl_response: {
     //   type: Object,
+    // },
+    // dl_image: {
+    //   type: String,
     // },
     // passport_name: {
     //   type: String,
@@ -99,11 +109,11 @@ const candidateVerificationCartSchema = new mongoose.Schema(
     // passport_file_number: {
     //   type: String,
     // },
-    // passport_image: {
-    //   type: String,
-    // },
     // passport_response: {
     //   type: Object,
+    // },
+    // passport_image: {
+    //   type: String,
     // },
     // epic_name: {
     //   type: String,
@@ -111,19 +121,17 @@ const candidateVerificationCartSchema = new mongoose.Schema(
     // epic_number: {
     //   type: String,
     // },
-    // epic_image: {
-    //   type: String,
-    // },
     // epic_response: {
     //   type: Object,
     // },
+    // epic_image: {
+    //   type: String, 
+    // },
+
     // uan_name: {
     //   type: String,
     // },
     // uan_number: {
-    //   type: String,
-    // },
-    // uan_image: {
     //   type: String,
     // },
     // uan_response: {
@@ -138,35 +146,37 @@ const candidateVerificationCartSchema = new mongoose.Schema(
     // epfo_response: {
     //   type: Object,
     // },
-    // additionalfields: {
+    // aadhat_otp: {
     //   type: String,
+    //   default: "no",
     // },
     updatedAt: {
       type: Date,
       default: Date.now,
-    },
-    is_paid: {
-      type: Number,
-      default: 0,
     },
 
     is_del: {
       type: Boolean,
       default: false,
     },
+    is_paid: {
+      type: Number,
+    },
+
     all_verified: {
       type: Number,
       default: 0,
     },
   },
+
   {
     timestamps: true,
   }
 );
 
-const CandidateVerificationCart = mongoose.model(
-  "CandidateVerificationCart",
-  candidateVerificationCartSchema
+const CandidateVerification = mongoose.model(
+  "CandidateVerificationOrder",
+  candidateVerificationSchema
 );
 
-export default CandidateVerificationCart;
+export default CandidateVerification;
