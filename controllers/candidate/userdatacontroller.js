@@ -862,7 +862,7 @@ export const getCandidateInfo = async (req, res) => {
       return res.status(404).json({ message: "User name not found" });
     }
 
-    res.status(200).json({ name: user });
+    res.status(200).json({ success: true, data: user});
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
