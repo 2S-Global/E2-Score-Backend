@@ -49,6 +49,9 @@ const candidateVerificationSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    response: {
+      type: Object,
+    },
     // candidate_email: {
     //   type: String,
     //   required: false,
