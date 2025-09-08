@@ -899,7 +899,7 @@ export const getCandidateImg = async (req, res) => {
     }
 
     if (!user.profilePicture || user.profilePicture.trim() === "") {
-      return res.status(404).json({ message: "User Profile Picture not found" });
+      return res.status(404).json({ success: false, message: "User Profile Picture not found" });
     }
 
     res.status(200).json({ success: true, data: user});
