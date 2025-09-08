@@ -884,7 +884,7 @@ export const getCandidateInfo = async (req, res) => {
  * @returns {object} 500 - Server error
  */
 
-export const getCandidateInfo123 = async (req, res) => {
+export const getCandidateImg = async (req, res) => {
   try {
     const user_id = req.userId;
 
@@ -892,14 +892,14 @@ export const getCandidateInfo123 = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const user = await User.findOne({ _id: user_id }).select("name phone_number email");
+    const user = await User.findOne({ _id: user_id }).select("profilePicture");
 
     if (!user) {
       return res.status(404).json({ message: "No user found" });
     }
 
-    if (!user.name || user.name.trim() === "") {
-      return res.status(404).json({ message: "User name not found" });
+    if (!user.profilePicture || user.profilePicture.trim() === "") {
+      return res.status(404).json({ message: "User Profile Picture not found" });
     }
 
     res.status(200).json({ success: true, data: user});

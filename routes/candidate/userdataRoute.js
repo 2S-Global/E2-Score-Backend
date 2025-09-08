@@ -11,7 +11,8 @@ import {
   getUserLevelDetails,
   getEditUserData,
   getOnlyStudentName,
-  getCandidateInfo
+  getCandidateInfo,
+  getCandidateImg
 } from "../../controllers/candidate/userdatacontroller.js";
 
 //middleware
@@ -49,6 +50,6 @@ userdataRouter.get("/get_only_student_name", userAuth, getOnlyStudentName);
 userdataRouter.get("/get_candidate_info", userAuth, getCandidateInfo);
 
 //get candidate image url
-// userdataRouter.get("/get_candidate_img", userAuth, getCandidateImg);
+userdataRouter.get("/get_candidate_img", userAuth, getCandidateImg);
 
 export default userdataRouter;
