@@ -444,13 +444,6 @@ export const payNowCandidateCart = async (req, res) => {
 
     await transaction.save();
 
-    return res.status(200).json({
-      message:
-        "Payment processed, verifications archived, and transaction recorded",
-      archivedUsersCount: usersWithOrderId.length,
-      remainingWalletBalance: user.wallet_amount,
-    });
-
     // Send email with login credentials
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
@@ -493,11 +486,12 @@ export const payNowCandidateCart = async (req, res) => {
       `,
     };
 
-    // await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions);
 
     const mailOptions2 = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: user.email,
+      to: "chandrasarkar2001@gmail.com",
       subject: "Payment Received: QuikChek - Your Order is Confirmed!",
       html: `
       <div style="text-align: center; margin-bottom: 20px;">
@@ -522,7 +516,7 @@ export const payNowCandidateCart = async (req, res) => {
       `,
     };
 
-    // await transporter.sendMail(mailOptions2);
+    await transporter.sendMail(mailOptions2);
 
     const mailOptions3 = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
@@ -564,14 +558,14 @@ export const payNowCandidateCart = async (req, res) => {
   `,
     };
 
-    // await transporter.sendMail(mailOptions3);
+    await transporter.sendMail(mailOptions3);
 
-    // return res.status(200).json({
-    //   message:
-    //     "Payment processed, verifications archived, and transaction recorded",
-    //   archivedUsersCount: usersWithOrderId.length,
-    //   remainingWalletBalance: user.wallet_amount,
-    // });
+    return res.status(200).json({
+      message:
+        "Payment processed, verifications archived, and transaction recorded",
+      archivedUsersCount: usersWithOrderId.length,
+      remainingWalletBalance: user.wallet_amount,
+    });
   } catch (error) {
     console.error("Payment Error:", error);
     return res.status(500).json({
