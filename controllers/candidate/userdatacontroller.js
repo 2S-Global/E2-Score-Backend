@@ -120,6 +120,18 @@ export const getUser = async (req, res) => {
       .findOne({ userId: user_id }, "dob country_id currentLocation hometown fatherName")
       .lean();
 
+    // Format phone number for display
+    let displayPhone = "";
+    if (user.phone_number) {
+      const phoneNumber = parsePhoneNumberFromString(user.phone_number);
+      if (phoneNumber && phoneNumber.isValid()) {
+        displayPhone = `+${phoneNumber.countryCallingCode} ${phoneNumber.nationalNumber}`;
+      } else {
+        displayPhone = user.phone_number; // fallback if invalid
+      }
+    }
+    user.phone_number = displayPhone;
+
     // Fetch gender name from SQL
     let gender_name = "";
     if (user.gender) {
