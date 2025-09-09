@@ -6,6 +6,8 @@ import Employment from "../models/Employment.js";
 import mongoose from "mongoose";
 import nodemailer from "nodemailer";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import dotenv from "dotenv";
+dotenv.config();
 
 /**
  * @function validtoken
@@ -45,6 +47,7 @@ export const validtoken = async (req, res) => {
 // Register a new user
 export const registerUser = async (req, res) => {
   try {
+    dotenv.config();
     const { name, email, password, phone_number } = req.body;
     const role = 1;
     // Validate required fields
@@ -104,8 +107,7 @@ export const registerUser = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject:
-        "Access Credentials for Geisil",
+      subject: "Access Credentials for Geisil",
       html: `
       <div style="text-align: center; margin-bottom: 20px;">
     <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
@@ -353,12 +355,15 @@ export const registerCompany = async (req, res) => {
          alt="profile" 
          style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
     <div>
-      <h3 style="margin:0; font-size:16px; color:#0073b1;">${emp.name || "N/A"
-            }</h3>
-      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${emp.jobTitle || "Unknown"
-            }</p>
-      <p style="margin:2px 0; font-size:13px; color:#555;">${emp.email || ""
-            }</p>
+      <h3 style="margin:0; font-size:16px; color:#0073b1;">${
+        emp.name || "N/A"
+      }</h3>
+      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${
+        emp.jobTitle || "Unknown"
+      }</p>
+      <p style="margin:2px 0; font-size:13px; color:#555;">${
+        emp.email || ""
+      }</p>
     </div>
   </div>
 `
@@ -509,7 +514,7 @@ export const loginUser = async (req, res) => {
           "Your account is deactivated or deleted. Please contact support.",
       });
     }
-    
+
     if (!user.isVerified) {
       return res.status(403).json({
         message: "Your Email is not Verified.Please Verify it first.",
