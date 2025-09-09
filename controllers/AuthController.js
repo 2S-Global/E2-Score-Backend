@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import Employment from "../models/Employment.js";
 import mongoose from "mongoose";
 import nodemailer from "nodemailer";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 /**
  * @function validtoken
@@ -63,13 +64,26 @@ export const registerUser = async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+    // Formatting Phone Number
+    const phoneNumber = parsePhoneNumberFromString(phone_number, "IN");
+
+    if (!phoneNumber || !phoneNumber.isValid()) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid phone number",
+      });
+    }
+
+    // ✅ Store in DB (E.164 format)
+    const dbPhoneNumber = phoneNumber.number;
+
     // Create a new user with hashed password
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
       role,
-      phone_number,
+      phone_number: dbPhoneNumber,
     });
     await newUser.save();
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
@@ -265,15 +279,12 @@ export const registerCompany = async (req, res) => {
          alt="profile" 
          style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
     <div>
-      <h3 style="margin:0; font-size:16px; color:#0073b1;">${
-        emp.name || "N/A"
-      }</h3>
-      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${
-        emp.jobTitle || "Unknown"
-      }</p>
-      <p style="margin:2px 0; font-size:13px; color:#555;">${
-        emp.email || ""
-      }</p>
+      <h3 style="margin:0; font-size:16px; color:#0073b1;">${emp.name || "N/A"
+            }</h3>
+      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${emp.jobTitle || "Unknown"
+            }</p>
+      <p style="margin:2px 0; font-size:13px; color:#555;">${emp.email || ""
+            }</p>
     </div>
   </div>
 `
