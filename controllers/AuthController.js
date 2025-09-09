@@ -90,6 +90,80 @@ export const registerUser = async (req, res) => {
       expiresIn: "30d",
     });
 
+    // Send email with login credentials
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject:
+        "Access Credentials for Geisil",
+      html: `
+      <div style="text-align: center; margin-bottom: 20px;">
+    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
+  </div>
+        <p>Dear <strong>${name}</strong>,</p>
+        <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
+        <p>
+          We are pleased to provide you with access to our newly launched platform,
+          <a href="https://e2-score-updated.vercel.app" target="_blank">https://e2-score-updated.vercel.app</a>,
+          <strong>Geisil</strong> is a comprehensive job and career platform designed for both candidates and companies. Candidates can register, update their professional profiles, and apply to job opportunities. Employers can sign in, post jobs, and verify candidates who have listed their company in their employment details. Institutes also have the ability to verify candidates in a similar way.
+        </p>
+      
+        <p>Your corporate account has been successfully created with the following credentials:</p>
+        <ul>
+          <li><strong>Email:</strong> ${email}</li>
+          <li><strong>Password:</strong> ${password}</li>
+        </ul>
+      
+       <p>Click the link  to verify your email: <a href="${process.env.CLIENT_BASE_URL}/api/auth/verify-email/${token}">Verify Email</a></p>
+      
+        <p><strong>Key Features and Benefits of Geisil:</strong></p>
+        <ul>
+          <li>Job Search & Applications: Candidates can explore and apply to a wide range of job opportunities.</li>
+          <li>Profile Management: Build and update a complete professional profile including education, skills, and work experience.</li>
+          <li>Job Posting: Employers and institutes can post jobs and connect with qualified candidates.</li>
+          <li>Candidate Verification: Companies and institutes can verify candidates who list them in their employment or education history.</li>
+          <li>Seamless Communication: Easy interaction between candidates and employers for smoother recruitment.</li>
+          <li>Secure Platform: Data protection and privacy ensured for both candidates and employers.</li>
+        </ul>
+      
+        <p>
+          We are confident that E2 Score will significantly improve your recruitment and job search experience by making the process faster, easier, and more reliable for both candidates and employers.
+        </p>
+      
+        <p>
+          For any assistance with the platform, including login issues or technical support, please contact our support team at:
+        </p>
+        <ul>
+          <li><strong>Email:</strong> <a href="mailto:info@geisil.com">info@geisil.com</a></li>
+          <li><strong>Phone:</strong> 9831823898</li>
+        </ul>
+      
+        <p>Thank you for choosing <strong>Global Employability Information Services India Limited</strong>.</p>
+        <p>We look forward to supporting your Job Searching and Job Posting needs.</p>
+      
+        <br />
+        <p>Sincerely,<br />
+        The Admin Team<br />
+        <strong>Global Employability Information Services India Limited</strong></p>
+
+         <div style="text-align: center; margin-top: 30px;">
+      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
+    </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+
     res.status(201).json({
       success: true,
       message: "User registered and logged in successfully!",
@@ -435,6 +509,12 @@ export const loginUser = async (req, res) => {
           "Your account is deactivated or deleted. Please contact support.",
       });
     }
+    
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message: "Your Email is not Verified.Please Verify it first.",
+      });
+    }
 
     // If password is hashed, compare using bcrypt
     const isMatch = await bcrypt.compare(password, user.password);
@@ -546,5 +626,132 @@ export const forgotPassword = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error resetting password", error: error.message });
+  }
+};
+
+// Verify-email
+export const verifyEmail = async (req, res) => {
+  const { token } = req.params;
+  console.log("This is Token", token);
+
+  const generateHTML = (title, heading, message, color) => `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>${title}</title>
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: #f4f4f9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+        }
+        .container {
+          max-width: 500px;
+          width: 90%;
+          padding: 30px;
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          text-align: center;
+        }
+        .logo {
+          max-width: 150px;
+          margin-bottom: 20px;
+        }
+        h1 {
+          color: ${color};
+          font-size: 24px;
+          margin-bottom: 10px;
+        }
+        p {
+          font-size: 16px;
+          color: #333;
+        }
+        @media (max-width: 600px) {
+          .container {
+            padding: 20px;
+          }
+          h1 {
+            font-size: 20px;
+          }
+          p {
+            font-size: 14px;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+       
+        <h1>${heading}</h1>
+        <p>${message}</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { userId } = decoded;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .send(
+          generateHTML(
+            "Verification Failed",
+            "User Not Found",
+            "The user associated with this token does not exist.",
+            "red"
+          )
+        );
+    }
+
+    if (user.isVerified) {
+      return res
+        .status(200)
+        .send(
+          generateHTML(
+            "Email Already Verified",
+            "You're Already Verified!",
+            "Your email address has already been verified. You can log in now.",
+            "green"
+          )
+        );
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    return res
+      .status(200)
+      .send(
+        generateHTML(
+          "Email Verified",
+          "Success!",
+          "Your email has been verified successfully. You can now access all features.",
+          "#28a745"
+        )
+      );
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(400)
+      .send(
+        generateHTML(
+          "Invalid or Expired Token",
+          "Verification Failed",
+          "The verification link is invalid or has expired. Please try again or contact support.",
+          "red"
+        )
+      );
   }
 };

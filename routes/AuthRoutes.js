@@ -41,5 +41,7 @@ AuthRouter.post("/forgotpass", upload.none(), forgotPassword);
 
 //validate token
 AuthRouter.get("/validtoken", userAuth, validtoken);
+// Validate email
+AuthRouter.get("/verify-email/:token", verifyEmail);
 
 export default AuthRouter;

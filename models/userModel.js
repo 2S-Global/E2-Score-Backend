@@ -95,7 +95,8 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'companylist',
       // required: true
-    }
+    },
+    isVerified: { type: Boolean, default: false },
   },
   {
     timestamps: true,
