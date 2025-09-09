@@ -161,14 +161,14 @@ export const All_country = async (req, res) => {
     );
 
     // Transform _id to id
-    // const formattedCountries = countries.map((country) => ({
-    //     id: country._id,
-    //     name: country.name,
-    // }));
+    const formattedCountries = countries.map((country) => ({
+        id: country._id,
+        name: country.name,
+    }));
 
     res.status(200).json({
       success: true,
-      data: countries,
+      data: formattedCountries,
       message: "All country",
     });
   } catch (error) {

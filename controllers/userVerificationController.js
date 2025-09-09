@@ -3,6 +3,7 @@ import UserVerification from "../models/userVerificationModel.js";
 import mongoose from "mongoose";
 import axios from "axios";
 import CandidateVerification from "../models/candidateVerificationModel.js";
+import CandidateDetails from "../models/CandidateDetailsModel.js";
 
 import Transaction from "../models/transactionModel.js";
 // Register a new user
@@ -512,6 +513,14 @@ export const verifyDataBackground = async (req, res) => {
     // Fetch only one user that needs verification
     const userCart = await CandidateVerification.findOne({ is_paid: 1, is_del: false, all_verified: 0 });
 
+    const candidate_details = await CandidateDetails.findOne({ userId: userCart.candidate_id });
+
+    // Convert to Date object
+    // const date = new Date(candidate_details.dob);
+
+    // Format as DD-MM-YYYY
+    // const formattedDOB = `${String(date.getDate()).padStart(2, "0")}-${String(date.getMonth() + 1).padStart(2, "0")}-${date.getFullYear()}`;
+
     if (!userCart) {
       console.log("No users left for verification.");
       return res.status(200).json({ message: "No users left for verification." });
@@ -529,12 +538,12 @@ export const verifyDataBackground = async (req, res) => {
     console.log("verification type : ", userCart.verification_type);
 
     // PAN verification
-    if (userCart.pan_number && !userCart.response) {
+    if (userCart.verification_type === "pan" && userCart.fields.get("number") && !userCart.response) {
       const panData = {
         mode: "sync",
         data: {
-          customer_pan_number: userCart.pan_number,
-          pan_holder_name: userCart.pan_name,
+          customer_pan_number: userCart.fields.get("number"),
+          pan_holder_name: userCart.candidate_name,
           consent: "Y",
           consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
         },
@@ -555,40 +564,18 @@ export const verifyDataBackground = async (req, res) => {
       }
       // Code is Ended By me -- Ended
 
-      await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { pan_response: response.data } }, { new: true });
+      await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { response: response.data } }, { new: true });
       await delay(2000); // Wait 2 seconds before the next API call
     }
 
-    // Aadhaar verification
-    if (userCart.aadhar_number && !userCart.aadhaar_response) {
-      const aadhaarData = {
-        mode: "sync",
-        data: {
-          customer_aadhaar_number: userCart.aadhar_number,
-          consent: "Y",
-          consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
-        },
-        task_id: "ecc326d9-d676-4b10-a82b-50b4b9dd8a16",
-      };
-
-      const response = await axios.post(
-        "https://test.zoop.one/api/v1/in/identity/aadhaar/verification",
-        aadhaarData,
-        { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
-      );
-
-      await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { aadhaar_response: response.data } }, { new: true });
-      await delay(2000);
-    }
-
     // Driving License verification
-    if (userCart.dl_number && !userCart.dl_response) {
+    if (userCart.verification_type === "driving_license" && userCart.fields.get("number") && !userCart.response) {
       const dlData = {
         mode: "sync",
         data: {
-          customer_dl_number: userCart.dl_number,
-          name_to_match: userCart.dl_name,
-          customer_dob: convertDateFormat(userCart.candidate_dob),
+          customer_dl_number: userCart.fields.get("number"),
+          name_to_match: userCart.candidate_name,
+          customer_dob: convertDateFormat(candidate_details.dob),
           consent: "Y",
           consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
         },
@@ -601,18 +588,18 @@ export const verifyDataBackground = async (req, res) => {
         { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
       );
 
-      await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { dl_response: response.data } }, { new: true });
+      await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { response: response.data } }, { new: true });
       await delay(2000);
     }
 
     // Passport verification
-    if (userCart.passport_file_number && !userCart.passport_response) {
+    if (userCart.verification_type === "passport" && userCart.fields.get("number") && !userCart.response) {
       const passportData = {
         mode: "sync",
         data: {
-          customer_file_number: userCart.passport_file_number,
-          name_to_match: userCart.passport_name,
-          customer_dob: convertDateFormat(userCart.candidate_dob),
+          customer_file_number: userCart.fields.get("number"),
+          name_to_match: userCart.candidate_name,
+          customer_dob: convertDateFormat(candidate_details.dob),
           consent: "Y",
           consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
         },
@@ -627,16 +614,16 @@ export const verifyDataBackground = async (req, res) => {
         { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
       );
 
-      await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { passport_response: response.data } }, { new: true });
+      await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { response: response.data } }, { new: true });
       await delay(2000);
     }
 
     // EPIC (Voter ID) verification
-    if (userCart.epic_number && !userCart.epic_response) {
+    if (userCart.verification_type === "epic" && userCart.fields.get("number") && !userCart.response) {
       const epicData = {
         data: {
-          customer_epic_number: userCart.epic_number,
-          name_to_match: userCart.epic_name,
+          customer_epic_number: userCart.fields.get("number"),
+          name_to_match: userCart.candidate_name,
           consent: "Y",
           consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
         },
@@ -649,11 +636,12 @@ export const verifyDataBackground = async (req, res) => {
         { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
       );
 
-      await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { epic_response: response.data } }, { new: true });
+      await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { response: response.data } }, { new: true });
       await delay(2000);
     }
 
     /////UAN VERIFICATION
+    /*
     if (userCart.uan_number && !userCart.uan_response) {
 
       const data = {
@@ -680,8 +668,10 @@ export const verifyDataBackground = async (req, res) => {
       await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { uan_response: response.data } }, { new: true });
       await delay(2000);
     }
+    */
 
     ///Epfo Verification
+    /*
     if (userCart.epfo_number && !userCart.epfo_response) {
       const data = {
         mode: 'sync',
@@ -707,6 +697,31 @@ export const verifyDataBackground = async (req, res) => {
       await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { epfo_response: response.data } }, { new: true });
       await delay(2000);
     }
+    */
+
+    // Aadhaar verification
+    /*
+    if (userCart.aadhar_number && !userCart.aadhaar_response) {
+      const aadhaarData = {
+        mode: "sync",
+        data: {
+          customer_aadhaar_number: userCart.aadhar_number,
+          consent: "Y",
+          consent_text: "I hereby declare my consent agreement for fetching my information via ZOOP API",
+        },
+        task_id: "ecc326d9-d676-4b10-a82b-50b4b9dd8a16",
+      };
+
+      const response = await axios.post(
+        "https://test.zoop.one/api/v1/in/identity/aadhaar/verification",
+        aadhaarData,
+        { headers: { "app-id": "67b8252871c07100283cedc6", "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", "Content-Type": "application/json" } }
+      );
+
+      await CandidateVerification.findByIdAndUpdate(currentUserID, { $set: { aadhaar_response: response.data } }, { new: true });
+      await delay(2000);
+    }
+    */
 
 
     // After all verifications are done, update all_verified to 1
