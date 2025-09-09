@@ -17,6 +17,7 @@ import list_medium_of_education from "../../models/monogo_query/mediumOfEducatio
 import list_education_boards from "../../models/monogo_query/educationBoardModel.js";
 import list_school_list from "../../models/monogo_query/schoolListModel.js";
 import mongoose from "mongoose";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 /**
  * @function getUser
  *  @route GET /api/userdata/userdata
@@ -360,7 +361,7 @@ export const getUserEducationBySql = async (req, res) => {
       .sort({ level: -1 })
       .lean();
 
-      console.log("Education Records:", educationRecords);
+    console.log("Education Records:", educationRecords);
 
     if (!educationRecords || educationRecords.length === 0) {
       return res.status(404).json({ message: "User education data not found" });
@@ -862,13 +863,24 @@ export const getCandidateInfo = async (req, res) => {
       return res.status(404).json({ message: "User name not found" });
     }
 
-    res.status(200).json({ 
-      success: true, 
+    //Format phone number for display
+    let displayPhone = "";
+    if (user.phone_number) {
+      const phoneNumber = parsePhoneNumberFromString(user.phone_number);
+      if (phoneNumber && phoneNumber.isValid()) {
+        displayPhone = `+${phoneNumber.countryCallingCode} ${phoneNumber.nationalNumber}`;
+      } else {
+        displayPhone = user.phone_number;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
       data: {
         _id: user._id,
         name: user.name || "N/A",
         email: user.email || "N/A",
-        phone_number: user.phone_number || "N/A"
+        phone_number: displayPhone || "N/A"
       }
     });
   } catch (error) {
@@ -902,7 +914,7 @@ export const getCandidateImg = async (req, res) => {
       return res.status(404).json({ success: false, message: "User Profile Picture not found" });
     }
 
-    res.status(200).json({ success: true, data: user});
+    res.status(200).json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
