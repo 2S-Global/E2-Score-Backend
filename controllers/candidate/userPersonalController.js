@@ -54,6 +54,8 @@ export const submitPersonalDetails = async (req, res) => {
         .json({ message: "Date of birth (dob) is required." });
     }
 
+    console.log("Language Proeficiency Object : ", data.languageProficiency);
+
     const candidateUpdate = {
       dob: data.dob,
     };
