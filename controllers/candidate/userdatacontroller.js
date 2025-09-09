@@ -122,10 +122,12 @@ export const getUser = async (req, res) => {
 
     // Format phone number for display
     let displayPhone = "";
+    let isIndianNumber = false;
     if (user.phone_number) {
       const phoneNumber = parsePhoneNumberFromString(user.phone_number);
       if (phoneNumber && phoneNumber.isValid()) {
         displayPhone = `+${phoneNumber.countryCallingCode} ${phoneNumber.nationalNumber}`;
+        isIndianNumber = phoneNumber.country === "IN"; // ✅ check if India
       } else {
         displayPhone = user.phone_number; // fallback if invalid
       }
@@ -199,6 +201,7 @@ export const getUser = async (req, res) => {
       gender_name,
       degree: levelName || "",
       progress,
+      isIndianNumber,
     };
 
     res.status(200).json(responseData);
