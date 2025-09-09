@@ -48,13 +48,30 @@ export const submitPersonalDetails = async (req, res) => {
     if (data.gender !== undefined) {
       await User.findByIdAndUpdate(userId, { gender: data.gender });
     }
+
+    const languageProficiency = data.languages;
+
+    console.log("Here is my language proficiency: ", languageProficiency);
+
+    if (languageProficiency && Array.isArray(languageProficiency)) {
+      for (const lp of languageProficiency) {
+        if (lp.language && lp.proficiency) {
+          // check at least one of read/write/speak is true
+          if (!(lp.read || lp.write || lp.speak)) {
+            return res.status(400).json({
+              success: false,
+              message: "You have to select atleast one option - read, write or speak",
+            });
+          }
+        }
+      }
+    }
+
     if (!data.dob) {
       return res
         .status(400)
         .json({ message: "Date of birth (dob) is required." });
     }
-
-    console.log("Language Proeficiency Object : ", data.languageProficiency);
 
     const candidateUpdate = {
       dob: data.dob,
@@ -85,7 +102,7 @@ export const submitPersonalDetails = async (req, res) => {
       workPermitOther: data.work_permit_other_countries,
       permanentAddress: data.permanent_address,
       pincode: data.pincode,
-      languageProficiency: (data.languages || []).map((lang) => ({
+      languageProficiency: (data.languageProficiency || []).map((lang) => ({
         language: lang.language,
         proficiency: lang.proficiency,
         read: lang.read || false,
