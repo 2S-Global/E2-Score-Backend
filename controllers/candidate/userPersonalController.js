@@ -102,7 +102,7 @@ export const submitPersonalDetails = async (req, res) => {
       workPermitOther: data.work_permit_other_countries,
       permanentAddress: data.permanent_address,
       pincode: data.pincode,
-      languageProficiency: (data.languageProficiency || []).map((lang) => ({
+      languageProficiency: (data.languages || []).map((lang) => ({
         language: lang.language,
         proficiency: lang.proficiency,
         read: lang.read || false,
