@@ -97,6 +97,7 @@ const userSchema = new mongoose.Schema(
       // required: true
     },
     isVerified: { type: Boolean, default: false },
+    numberVerified: { type: Boolean, default: false }
   },
   {
     timestamps: true,

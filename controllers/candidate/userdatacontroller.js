@@ -1091,6 +1091,13 @@ export const candidateVerifyOtp = async (req, res) => {
     verifyDetails.otpExpiresAt = null;
     await verifyDetails.save();
 
+    // Update user collection -> numberVerified = true
+    await User.findByIdAndUpdate(
+      user_id,
+      { numberVerified: true },
+      { new: true }
+    );
+
     res.json({ success: true, message: "email verified successfully" });
   } catch (error) {
     console.error("Error in send-otp:", error.message);
