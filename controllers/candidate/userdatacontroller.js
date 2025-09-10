@@ -18,6 +18,9 @@ import list_education_boards from "../../models/monogo_query/educationBoardModel
 import list_school_list from "../../models/monogo_query/schoolListModel.js";
 import mongoose from "mongoose";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import PhoneNumberVerify from "../../models/phoneNumberVerifyModel.js";
+import axios from "axios";
+import nodemailer from "nodemailer";
 /**
  * @function getUser
  *  @route GET /api/userdata/userdata
@@ -932,5 +935,165 @@ export const getCandidateImg = async (req, res) => {
     res.status(200).json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// OTP Generator
+// OTP generator
+function generateOtp() {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
+}
+
+//Candidate Phone Number Verify
+export const candidatePhoneNumberVerify = async (req, res) => {
+  try {
+    const user_id = req.userId;
+
+    if (!user_id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const user = await User.findById(user_id);
+
+    if (!user) {
+      return res.status(404).json({ message: "No user found" });
+    }
+
+    let phoneVerification = await PhoneNumberVerify.findOne({ userId: user_id });
+
+    const now = new Date();
+
+    if (phoneVerification && phoneVerification.otpExpiresAt > now) {
+      return res.status(200).json({
+        success: true,
+        message: "OTP already sent and still valid. Please wait before requesting again.",
+      });
+    }
+
+    const otp = generateOtp();
+    if (phoneVerification) {
+      // update existing record
+      phoneVerification.otp = otp;
+      phoneVerification.phoneNumber = user.phone_number;
+      phoneVerification.otpExpiresAt = new Date(Date.now() + 1 * 60 * 1000);
+    } else {
+      // create new record
+      phoneVerification = new PhoneNumberVerify({
+        userId: user_id,
+        phoneNumber: user.phone_number,
+        otp,
+        otpExpiresAt: new Date(Date.now() + 1 * 60 * 1000),
+      });
+    }
+
+    // save to DB
+    await phoneVerification.save();
+
+    // Email configuration starts here
+
+    // 3. Send OTP via Email
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "OTP Verification - Geisil",
+      html: `
+        <p>Dear <strong>${user.name || "User"}</strong>,</p>
+        <p>Your OTP for verification is: <strong>${otp}</strong></p>
+        <p>This OTP will expire in 5 minutes.</p>
+        <br/>
+        <p>Regards,<br/>Team Geisil</p>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log("✅ Email sent successfully");
+    } catch (err) {
+      console.error("❌ Email sending failed:", err);
+    }
+
+    // Email configuration ends here
+
+
+    // PhoneNumberVerify.otp = otp;
+    // PhoneNumberVerify.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+    // await PhoneNumberVerify.save();
+
+    // 🔑 SMS Gateway details
+    /*
+    const username = process.env.SMS_USERNAME;
+    const password = process.env.SMS_PASSWORD;
+    const sender   = process.env.SMS_SENDER;
+    const templateId = process.env.SMS_TEMPLATE_ID;
+    */
+
+    /*
+    const username = "ARFOA2021";
+    const password = "2249746";
+    const sender = "ARCAOA";
+    const templateId = '1507162960790862342';
+
+    const message = `Dear User, Your OTP for verification is ${otp}. Regards, ARCAOA`;
+
+    // Build SMS gateway URL
+    const url = `https://login.bulksmsgateway.in/sendmessage.php?user=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&mobile=${encodeURIComponent(mobile)}&sender=${encodeURIComponent(sender)}&message=${encodeURIComponent(message)}&type=3&template_id=${encodeURIComponent(templateId)}`;
+
+    // Call SMS API
+    const response = await axios.get(url);
+
+    */
+
+    // res.json({ success: true, message: "OTP sent successfully", gatewayResponse: response.data });
+    res.json({ success: true, message: "OTP sent successfully" });
+  } catch (error) {
+    console.error("Error in send-otp:", error.message);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+// Candidate OTP verify
+export const candidateVerifyOtp = async (req, res) => {
+  try {
+    const user_id = req.userId;
+
+    if (!user_id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const { mobile, otp } = req.body;
+
+    if (!mobile || !otp) {
+      return res.status(400).json({ success: false, message: "Mobile and OTP required" });
+    }
+
+    const verifyDetails = await PhoneNumberVerify.findOne({ userId: user_id, phoneNumber: mobile });
+
+    console.log("Here is my verifyDetails scheema details ", verifyDetails);
+
+    if (!verifyDetails || verifyDetails.otp !== otp || verifyDetails.otpExpiresAt < new Date()) {
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+    }
+
+    verifyDetails.isVerified = true;
+    verifyDetails.otp = null;
+    verifyDetails.otpExpiresAt = null;
+    await verifyDetails.save();
+
+    res.json({ success: true, message: "email verified successfully" });
+  } catch (error) {
+    console.error("Error in send-otp:", error.message);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };

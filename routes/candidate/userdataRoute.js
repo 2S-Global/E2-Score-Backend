@@ -12,11 +12,15 @@ import {
   getEditUserData,
   getOnlyStudentName,
   getCandidateInfo,
-  getCandidateImg
+  getCandidateImg,
+  candidatePhoneNumberVerify,
+  candidateVerifyOtp
 } from "../../controllers/candidate/userdatacontroller.js";
 
 //middleware
 import userAuth from "../../middleware/authMiddleware.js";
+import multer from "multer";
+const upload = multer();
 
 const userdataRouter = exprss.Router();
 //get user data
@@ -51,5 +55,11 @@ userdataRouter.get("/get_candidate_info", userAuth, getCandidateInfo);
 
 //get candidate image url
 userdataRouter.get("/get_candidate_img", userAuth, getCandidateImg);
+
+//Candidate send OTP to phone number API
+userdataRouter.post("/candidate_phonenumber_verify", userAuth, upload.none(), candidatePhoneNumberVerify);
+
+//Candidate OTP verify API
+userdataRouter.post("/verify-otp", userAuth, upload.none(), candidateVerifyOtp);
 
 export default userdataRouter;
