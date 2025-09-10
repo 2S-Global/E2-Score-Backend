@@ -1089,6 +1089,7 @@ export const candidateVerifyOtp = async (req, res) => {
     verifyDetails.isVerified = true;
     verifyDetails.otp = null;
     verifyDetails.otpExpiresAt = null;
+
     await verifyDetails.save();
 
     // Update user collection -> numberVerified = true
@@ -1098,7 +1099,10 @@ export const candidateVerifyOtp = async (req, res) => {
       { new: true }
     );
 
-    res.json({ success: true, message: "email verified successfully" });
+    // Delete verifyDetails entry after successful verification
+    await PhoneNumberVerify.deleteOne({ userId: user_id });
+
+    res.json({ success: true, message: "Phone number verified successfully" });
   } catch (error) {
     console.error("Error in send-otp:", error.message);
     res.status(500).json({ success: false, message: "Internal server error" });
