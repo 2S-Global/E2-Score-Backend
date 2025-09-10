@@ -1080,8 +1080,6 @@ export const candidateVerifyOtp = async (req, res) => {
 
     const verifyDetails = await PhoneNumberVerify.findOne({ userId: user_id });
 
-    console.log("Here is my verifyDetails scheema details ", verifyDetails);
-
     if (!verifyDetails || verifyDetails.otp !== otp || verifyDetails.otpExpiresAt < new Date()) {
       return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
     }
