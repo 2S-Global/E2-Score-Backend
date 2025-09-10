@@ -970,7 +970,7 @@ export const getLanguage = async (req, res) => {
  * @success {object} 200 - All language proficiency
  * @error {object} 500 - Database query failed
  */
-export const getLanguageProficiency = async (req, res) => {
+export const getLanguageProficiency234 = async (req, res) => {
   try {
     const proficiencyList = await list_language_proficiency
       .find(
@@ -995,6 +995,53 @@ export const getLanguageProficiency = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+
+export const getLanguageProficiency = async (req, res) => {
+  try {
+    const proficiencyList = await list_language_proficiency
+      .find(
+        { is_del: 0, is_active: 1 },
+        "_id name" // project only `id` and `name`
+      )
+      .lean();
+
+    // Transform _id to id and add extra fields based on proficiency
+    const formattedProficiencyList = proficiencyList.map((item) => {
+      let extraFields = {};
+
+      switch (item.name.toLowerCase()) {
+        case "beginner":
+          extraFields = { read: true, write: false, speak: false };
+          break;
+        case "proficient":
+          extraFields = { read: true, write: true, speak: false };
+          break;
+        case "expert":
+          extraFields = { read: true, write: true, speak: true };
+          break;
+        default:
+          extraFields = { read: false, write: false, speak: false }; // fallback
+      }
+
+      return {
+        id: item._id,
+        name: item.name,
+        ...extraFields,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedProficiencyList,
+      message: "Language Proficiency Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MongoDB error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
 
 // path -   /api/sql/dropdown/social_profile
 
