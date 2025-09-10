@@ -1072,13 +1072,13 @@ export const candidateVerifyOtp = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const { mobile, otp } = req.body;
+    const { otp } = req.body;
 
-    if (!mobile || !otp) {
+    if ( !otp ) {
       return res.status(400).json({ success: false, message: "Mobile and OTP required" });
     }
 
-    const verifyDetails = await PhoneNumberVerify.findOne({ userId: user_id, phoneNumber: mobile });
+    const verifyDetails = await PhoneNumberVerify.findOne({ userId: user_id });
 
     console.log("Here is my verifyDetails scheema details ", verifyDetails);
 
