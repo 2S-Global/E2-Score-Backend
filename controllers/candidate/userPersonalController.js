@@ -76,7 +76,7 @@ export const submitPersonalDetails = async (req, res) => {
     const candidateUpdate = {
       dob: data.dob,
     };
-    if (data.hometown) {
+    if (data.hometown !== undefined) {
       candidateUpdate.hometown = data.hometown;
     }
     await candidateDetails.findOneAndUpdate(
