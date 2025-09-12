@@ -27,6 +27,7 @@ import list_course_type from "../../models/monogo_query/courseTypeModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
 import list_school_list from "../../models/monogo_query/schoolListModel.js";
 import ListVerificationList from "../../models/monogo_query/verificationListModel.js";
+import list_non_it_skills from "../../models/monogo_query/nonTechSkillModel.js";
 
 //Get Courses for search
 
@@ -1284,6 +1285,34 @@ export const getTechSkills = async (req, res) => {
       success: true,
       data: allSkills,
       message: "Tech Skills Data Fetched Successfully",
+    });
+  } catch (error) {
+    console.error("MySQL error →", error);
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+/**
+ * @description Get all tech skills from the database
+ * @route GET /api/sql/dropdown/get_non_tech_skills
+ * @success {object} 200 - All tech skills
+ * @error {object} 500 - Database query failed
+ */
+export const getNonTechSkills = async (req, res) => {
+  try {
+    /* const [rows] = await db_sql.execute(
+          "SELECT name FROM `tech_skills` WHERE is_del = 0 AND is_active = 1;"
+        ); */
+    const rows = await list_non_it_skills.find({ is_del: 0, is_active: 1 });
+
+    const allSkills = rows.map(
+      (row) => row.name.charAt(0).toUpperCase() + row.name.slice(1)
+    );
+
+    res.status(200).json({
+      success: true,
+      data: allSkills,
+      message: "Non Tech Skills Data Fetched Successfully",
     });
   } catch (error) {
     console.error("MySQL error →", error);
