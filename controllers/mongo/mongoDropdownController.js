@@ -293,7 +293,7 @@ export const getMatchingSkill = async (req, res) => {
         "Skill" // project only Skill field
       )
       .sort({ Skill: 1 })
-      .limit(10)
+      .limit(5)
       .lean();
 
     const skills = skillsResult.map((row) => row.Skill);

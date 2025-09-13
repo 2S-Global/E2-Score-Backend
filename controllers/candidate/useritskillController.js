@@ -300,7 +300,7 @@ export const deleteitskill = async (req, res) => {
 export const addOtherSkill = async (req, res) => {
   try {
     const userId = req.userId;
-    const { skillSearch, version, lastUsed, experienceyear, experiencemonth } =
+    const { skillSearch, experienceyear, experiencemonth } =
       req.body;
 
     if (!userId) {
@@ -315,8 +315,6 @@ export const addOtherSkill = async (req, res) => {
     const otherskill = new Otherskill({
       userId,
       skillSearch: skillId,
-      version,
-      lastUsed,
       experienceyear,
       experiencemonth,
     });
