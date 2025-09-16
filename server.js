@@ -41,7 +41,7 @@ import resumeFileRouter from "./routes/candidate/resumeFileRoute.js";
 import employmentRouter from "./routes/candidate/EmploymentRoute.js";
 import resumeMakingRouter from "./routes/candidate/resumeMakingRoute.js";
 import candidateVerificationCartRouter from "./routes/candidate/candidateVerificationCartRoute.js";
-
+import CandidateCartRouter from "./routes/candidate/cart/cartRoute.js";
 //company Routes
 import CompanyProfileRouter from "./routes/company/CompanyProfileRoute.js";
 
@@ -50,6 +50,10 @@ import InstituteProfileRouter from "./routes/institute/InstituteProfileRoute.js"
 
 // Payment Routes
 import paymentRoutes from "./routes/paymentRoutes.js";
+
+//temp routes
+/* import Mrouter from "./routes/modify.js";
+app.use("/api/modify", Mrouter); */
 
 // Routes
 app.get("/", (req, res) => {
@@ -83,6 +87,7 @@ app.use("/api/candidate/resumefile", resumeFileRouter);
 app.use("/api/candidate/employment", employmentRouter);
 app.use("/api/candidate/resume", resumeMakingRouter);
 app.use("/api/candidate/usercart", candidateVerificationCartRouter);
+app.use("/api/candidate/cart", CandidateCartRouter);
 // Start server hello
 
 // Admin Routes test
