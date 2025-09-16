@@ -72,7 +72,7 @@ export const validateKYCData = (formData) => {
   const regexPatterns = {
     pan_number: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
     epic_number: /^[A-Z]{3}[0-9]{7}$/,
-    passport_number: /^[A-PR-WYa-pr-wy][1-9][0-9]{6}$/,
+    //  passport_number: /^[A-PR-WYa-pr-wy][1-9][0-9]{6}$/,
     dl_number: /^[A-Z]{2}[0-9]{2}[0-9]{4}[0-9]{7}$/,
     aadhar_number: /^[2-9]{1}[0-9]{3}\s[0-9]{4}\s[0-9]{4}$/,
   };
