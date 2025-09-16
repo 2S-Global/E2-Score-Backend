@@ -6,7 +6,7 @@ export const resetVerificationFlags = (existingKYC, newData) => {
     epic_name,
     passport_name,
     passport_number,
-    dob_for_passport,
+    passport_dob,
     dl_number,
     dl_name,
     dl_dob,
@@ -30,8 +30,8 @@ export const resetVerificationFlags = (existingKYC, newData) => {
   if (
     (passport_number && passport_number !== existingKYC.passport_number) ||
     (passport_name && passport_name !== existingKYC.passport_name) ||
-    (dob_for_passport &&
-      new Date(dob_for_passport).toISOString() !==
+    (passport_dob &&
+      new Date(passport_dob).toISOString() !==
         existingKYC.passport_dob?.toISOString())
   ) {
     existingKYC.passport_verified = false;
@@ -59,7 +59,7 @@ export const updateKYCFields = (existingKYC, newData) => {
     epic_name: newData.epic_name,
     passport_name: newData.passport_name,
     passport_number: newData.passport_number,
-    passport_dob: newData.dob_for_passport,
+    passport_dob: newData.passport_dob,
     dl_number: newData.dl_number,
     dl_name: newData.dl_name,
     dl_dob: newData.dl_dob,
@@ -88,7 +88,7 @@ export const validateKYCData = (formData) => {
       message: "Please fill both the EPIC number and name.",
     },
     {
-      fields: ["passport_number", "passport_name", "dob_for_passport"],
+      fields: ["passport_number", "passport_name", "passport_dob"],
       message: "Please fill Passport number, name, and DOB.",
     },
     {
