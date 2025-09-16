@@ -2,7 +2,10 @@ import express from "express";
 import multer from "multer";
 
 //import controllers
-import { addOrUpdateKYC } from "../../controllers/candidate/CandidateKycController.js";
+import {
+  addOrUpdateKYC,
+  getKYC,
+} from "../../controllers/candidate/CandidateKycController.js";
 
 //import middleware
 import userAuth from "../../middleware/authMiddleware.js";
@@ -17,6 +20,7 @@ const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
 
 // Routes
+// Add or Update KYC Information
 CandidateKycRoute.post(
   "/kyc",
   userAuth,
@@ -24,5 +28,7 @@ CandidateKycRoute.post(
   upload.none(),
   asyncHandler(addOrUpdateKYC)
 );
+// Get KYC Information
+CandidateKycRoute.get("/kyc", userAuth, Candimid, asyncHandler(getKYC));
 
 export default CandidateKycRoute;
