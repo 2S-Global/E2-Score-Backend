@@ -52,18 +52,24 @@ export const resetVerificationFlags = (existingKYC, newData) => {
 };
 
 export const updateKYCFields = (existingKYC, newData) => {
-  Object.assign(existingKYC, {
-    pan_number: newData.pan_number,
-    pan_name: newData.pan_name,
-    epic_number: newData.epic_number,
-    epic_name: newData.epic_name,
-    passport_name: newData.passport_name,
-    passport_number: newData.passport_number,
-    passport_dob: newData.passport_dob,
-    dl_number: newData.dl_number,
-    dl_name: newData.dl_name,
-    dl_dob: newData.dl_dob,
-    aadhar_number: newData.aadhar_number,
+  const fields = [
+    "pan_number",
+    "pan_name",
+    "epic_number",
+    "epic_name",
+    "passport_name",
+    "passport_number",
+    "passport_dob",
+    "dl_number",
+    "dl_name",
+    "dl_dob",
+    "aadhar_number",
+  ];
+
+  fields.forEach((field) => {
+    if (field in newData) {
+      existingKYC[field] = newData[field]; // accepts "" as valid
+    }
   });
 };
 

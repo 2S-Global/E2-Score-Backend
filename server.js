@@ -53,7 +53,10 @@ import InstituteProfileRouter from "./routes/institute/InstituteProfileRoute.js"
 // Payment Routes
 import paymentRoutes from "./routes/paymentRoutes.js";
 
-//temp routes
+// Temporary route configuration
+// ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
+// This file is reserved for internal use and should remain untouched.
+//Do not edit or uncomment this
 /* import Mrouter from "./routes/modify.js";
 app.use("/api/modify", Mrouter); */
 

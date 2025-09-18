@@ -5,6 +5,10 @@ import multer from "multer";
 import {
   addOrUpdateKYC,
   getKYC,
+  CreateOrder,
+  getFees,
+  getSpecificFees,
+  VerifyOrder,
 } from "../../controllers/candidate/CandidateKycController.js";
 
 //import middleware
@@ -30,5 +34,34 @@ CandidateKycRoute.post(
 );
 // Get KYC Information
 CandidateKycRoute.get("/kyc", userAuth, Candimid, asyncHandler(getKYC));
+
+//get fees
+CandidateKycRoute.get("/fees", userAuth, Candimid, asyncHandler(getFees));
+
+//get specific fees
+CandidateKycRoute.get(
+  "/fees/:documentType",
+  userAuth,
+  Candimid,
+  asyncHandler(getSpecificFees)
+);
+
+//create a order
+CandidateKycRoute.post(
+  "/create-order",
+  userAuth,
+  Candimid,
+  upload.none(),
+  asyncHandler(CreateOrder)
+);
+
+//verify order
+CandidateKycRoute.post(
+  "/verify-order",
+  userAuth,
+  Candimid,
+  upload.none(),
+  asyncHandler(VerifyOrder)
+);
 
 export default CandidateKycRoute;
