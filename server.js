@@ -46,6 +46,7 @@ import CandidateKycRoute from "./routes/candidate/CandidateKycRoute.js";
 
 //company Routes
 import CompanyProfileRouter from "./routes/company/CompanyProfileRoute.js";
+import jobPostingDataRouter from "./routes/company/JobPostingDataRoute.js";
 
 //Institute Routes
 import InstituteProfileRouter from "./routes/institute/InstituteProfileRoute.js";
@@ -105,6 +106,7 @@ app.use("/api/dashboard", dashboardRoute);
 
 //company routes
 app.use("/api/companyprofile", CompanyProfileRouter);
+app.use("/api/jobposting", jobPostingDataRouter);
 
 //institute routes
 app.use("/api/instituteprofile", InstituteProfileRouter);
