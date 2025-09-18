@@ -76,6 +76,9 @@ export const RunVerificationProcess = async (orderId, userId) => {
   const zoopApiKey = process.env.ZOOP_APP_KEY;
   const zoopAppId = process.env.ZOOP_APP_ID;
 
+  const Aadhar_URL = process.env.AADHAR_BASE_URL;
+  const aadharKey = process.env.AADHAR_KEY;
+
   const order = await KycOrder.findOne({ razorpay_order_id: orderId, userId });
   if (!order) {
     return { success: false, message: "Order not found" };
@@ -100,7 +103,7 @@ export const RunVerificationProcess = async (orderId, userId) => {
       return await verifyDLWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
 
     case "aadhar":
-      return await verifyAadhaarWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
+      return await verifyAadhaarWithZoop(kyc, Aadhar_URL, aadharKey);
 
     default:
       return { success: false, message: "Unknown document type" };

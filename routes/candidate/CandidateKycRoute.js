@@ -9,6 +9,7 @@ import {
   getFees,
   getSpecificFees,
   VerifyOrder,
+  VerifyOtp,
 } from "../../controllers/candidate/CandidateKycController.js";
 
 //import middleware
@@ -62,6 +63,15 @@ CandidateKycRoute.post(
   Candimid,
   upload.none(),
   asyncHandler(VerifyOrder)
+);
+
+//verify otp
+CandidateKycRoute.post(
+  "/verify-otp",
+  userAuth,
+  Candimid,
+  upload.none(),
+  asyncHandler(VerifyOtp)
 );
 
 export default CandidateKycRoute;

@@ -36,6 +36,7 @@ const Schema = new mongoose.Schema(
 
     // Aadhaar
     aadhar_number: { type: String, index: true, sparse: true },
+    aadhar_name: { type: String },
     aadhar_verified: { type: Boolean, default: false },
     aadhar_response: { type: Object },
   },

@@ -11,6 +11,7 @@ export const resetVerificationFlags = (existingKYC, newData) => {
     dl_name,
     dl_dob,
     aadhar_number,
+    aadhar_name,
   } = newData;
 
   if (
@@ -46,7 +47,10 @@ export const resetVerificationFlags = (existingKYC, newData) => {
     existingKYC.dl_verified = false;
   }
 
-  if (aadhar_number && aadhar_number !== existingKYC.aadhar_number) {
+  if (
+    (aadhar_number && aadhar_number !== existingKYC.aadhar_number) ||
+    (aadhar_name && aadhar_name !== existingKYC.aadhar_name)
+  ) {
     existingKYC.aadhar_verified = false;
   }
 };
@@ -64,6 +68,7 @@ export const updateKYCFields = (existingKYC, newData) => {
     "dl_name",
     "dl_dob",
     "aadhar_number",
+    "aadhar_name",
   ];
 
   fields.forEach((field) => {
@@ -78,7 +83,7 @@ export const validateKYCData = (formData) => {
   const regexPatterns = {
     pan_number: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
     epic_number: /^[A-Z]{3}[0-9]{7}$/,
-    //  passport_number: /^[A-PR-WYa-pr-wy][1-9][0-9]{6}$/,
+    // passport_number: /^[A-PR-WYa-pr-wy][1-9][0-9]{6}$/, // Uncomment if needed
     dl_number: /^[A-Z]{2}[0-9]{2}[0-9]{4}[0-9]{7}$/,
     aadhar_number: /^\d{12}$/,
   };
@@ -102,43 +107,45 @@ export const validateKYCData = (formData) => {
       message: "Please fill Driving License number, name, and DOB.",
     },
     {
-      fields: ["aadhar_number"],
-      message: "Please fill a valid Aadhar number.",
+      fields: ["aadhar_number", "aadhar_name"],
+      message: "Please fill both the Aadhar number and name.",
     },
   ];
 
   const errors = [];
 
-  // 3️⃣ Regex validation
-  for (const field in regexPatterns) {
-    if (formData[field]) {
-      if (!regexPatterns[field].test(formData[field])) {
-        errors.push(`Invalid format for ${field}`);
-      }
-    }
-  }
+  // Helper: check if field is non-empty
+  const isNonEmpty = (val) =>
+    val !== undefined && val !== null && val.toString().trim() !== "";
 
-  // 4️⃣ Group-based required validation
   let hasAnyGroupFilled = false;
 
+  // 3️⃣ Group-based required + regex validation
   for (const { fields, message } of validationConfig) {
-    const isAnyFilled = fields.some(
-      (field) => formData[field]?.toString().trim() !== ""
-    );
+    const isAnyFilled = fields.some((field) => isNonEmpty(formData[field]));
 
     if (isAnyFilled) {
       hasAnyGroupFilled = true;
 
-      const isAllFilled = fields.every(
-        (field) => formData[field]?.toString().trim() !== ""
-      );
+      const isAllFilled = fields.every((field) => isNonEmpty(formData[field]));
 
       if (!isAllFilled) {
         errors.push(message);
+      } else {
+        // Run regex validation only if the group is complete
+        for (const field of fields) {
+          if (
+            regexPatterns[field] &&
+            !regexPatterns[field].test(formData[field])
+          ) {
+            errors.push(`Invalid format for ${field.replace(/_/g, " ")}`);
+          }
+        }
       }
     }
   }
 
+  // 4️⃣ At least one group must be filled
   if (!hasAnyGroupFilled) {
     errors.push("Please fill at least one document.");
   }

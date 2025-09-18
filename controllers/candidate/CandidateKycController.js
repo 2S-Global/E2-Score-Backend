@@ -5,6 +5,8 @@ import Fees from "../../models/feesModel.js";
 import KycOrder from "../../models/KycorderModel.js";
 import Razorpay from "razorpay";
 
+import axios from "axios";
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -265,6 +267,13 @@ export const VerifyOrder = async (req, res) => {
         message: "Invalid payment signature",
       });
     }
+    const orderofUser = await KycOrder.findOne({
+      razorpay_order_id: razorpay_order_id,
+      userId,
+    });
+    if (!orderofUser) {
+      return { success: false, message: "Order not found" };
+    }
 
     // Step 2: Validate order
     const validOrder = await isOrderValid(razorpay_order_id);
@@ -280,6 +289,15 @@ export const VerifyOrder = async (req, res) => {
       razorpay_order_id,
       userId
     );
+
+    if (orderofUser.documentType === "aadhar") {
+      return res.status(200).json({
+        success: true,
+        message: "Aadhar OTP send successfully",
+        order: orderofUser,
+        verificationResult,
+      });
+    }
 
     // Step 4: Mark order as paid
     const updatedOrder = await markOrderPaid(
@@ -298,6 +316,102 @@ export const VerifyOrder = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to verify order",
+      error: error.message,
+    });
+  }
+};
+
+//verify otp
+export const VerifyOtp = async (req, res) => {
+  try {
+    const { otp } = req.body;
+
+    if (!otp || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid 6-digit OTP is required",
+      });
+    }
+
+    const userId = req.userId;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const userkyc = await CandidateKYC.findOne({ userId });
+    if (!userkyc) {
+      return res.status(404).json({
+        success: false,
+        message: "KYC not found",
+      });
+    }
+
+    const request_id = userkyc?.aadhar_response?.request_id;
+    if (!request_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Request ID not found",
+      });
+    }
+
+    const headers = { "Content-Type": "application/json" };
+    const Aadhar_URL = process.env.AADHAR_BASE_URL;
+    const aadharKey = process.env.AADHAR_KEY;
+
+    const response = await axios.post(
+      `${Aadhar_URL}/api/v1/aadhaar-v2/submit-otp`,
+      { key: aadharKey, request_id, otp },
+      { headers }
+    );
+
+    // Store API response
+    userkyc.aadhar_response = response.data;
+
+    if (response.data.status_code !== 200) {
+      await userkyc.save();
+      return res.status(400).json({
+        success: false,
+        message: response.data.message || "OTP verification failed",
+      });
+    }
+
+    // Match name with stored KYC name
+    const isNameMatch =
+      response.data?.data?.full_name?.trim().toLowerCase() ===
+      userkyc.aadhar_name?.trim().toLowerCase();
+
+    userkyc.aadhar_verified = isNameMatch;
+    await userkyc.save();
+
+    const kycorder = await KycOrder.findOne({
+      userId,
+      documentType: "aadhar",
+      is_paid: false,
+    });
+
+    if (kycorder) {
+      kycorder.is_paid = true;
+      kycorder.status = "paid";
+      await kycorder.save();
+    }
+
+    return res.status(200).json({
+      success: userkyc.aadhar_verified,
+      message: userkyc.aadhar_verified
+        ? "Aadhar verification successful. Provided name matches official records."
+        : "Aadhar verification failed. Provided name does not match official records.",
+      // response: response.data,
+    });
+  } catch (error) {
+    console.error("VerifyOtp error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to verify OTP",
       error: error.message,
     });
   }

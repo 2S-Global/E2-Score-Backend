@@ -8,6 +8,7 @@ const Schema = new mongoose.Schema(
       required: true,
     },
     razorpay_order_id: String,
+    razorpay_payment_id: String,
     amount: Number,
     status: { type: String, default: "pending" },
     documentType: { type: String },

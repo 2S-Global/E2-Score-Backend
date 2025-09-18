@@ -339,9 +339,47 @@ export const verifyDLWithZoop = async (
 /**
  * Aadhaar Verification (stub)
  */
-export const verifyAadhaarWithZoop = async (kyc) => {
-  // TODO: Replace with actual Zoop API logic
-  kyc.aadhar_verified = true;
-  await kyc.save();
-  return { success: true, message: "Aadhaar marked verified (stub)" };
+export const verifyAadhaarWithZoop = async (kyc, Aadhar_URL, aadharKey) => {
+  if (!kyc.aadhar_number || !kyc.aadhar_name) {
+    return {
+      success: false,
+      message: "Aadhaar number or name is missing",
+    };
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  try {
+    const response = await axios.post(
+      `${Aadhar_URL}/api/v1/aadhaar-v2/generate-otp`,
+      {
+        key: aadharKey,
+        id_number: kyc.aadhar_number,
+      },
+      { headers }
+    );
+
+    kyc.aadhar_response = response.data;
+
+    await kyc.save();
+
+    return {
+      success: true,
+      message: "Aadhaar verification OTP sent successfully.",
+      response: response.data,
+    };
+  } catch (error) {
+    kyc.aadhar_response = error.response?.data || { error: error.message };
+
+    await kyc.save();
+
+    return {
+      success: false,
+      message:
+        "⚠️ Aadhaar verification request failed due to a technical error. Please try again later.",
+      error: error.response?.data || error.message,
+    };
+  }
 };
