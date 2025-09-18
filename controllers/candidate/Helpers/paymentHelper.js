@@ -66,7 +66,7 @@ export const isOrderValid = async (orderId) => {
 export const markOrderPaid = async (orderId, paymentId) => {
   return await KycOrder.findOneAndUpdate(
     { razorpay_order_id: orderId },
-    { isPaid: true, razorpay_payment_id: paymentId, status: "paid" },
+    { is_paid: true, razorpay_payment_id: paymentId, status: "paid" },
     { new: true }
   );
 };
