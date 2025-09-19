@@ -5,6 +5,8 @@ import list_job_career_level from "../../models/ListJobCareerLevelModel.js";
 import list_job_qualification from "../../models/ListJobQualificationModel.js";
 import list_job_experience_level from "../../models/ListJobExperienceLevelModel.js";
 import list_job_mode from "../../models/ListJobModeModel.js";
+import User from "../../models/userModel.js";
+import CompanyBranch from "../../models/company_Models/CompanyBranch.js";
 
 // List Job Specializations
 export const AllJobSpecialization = async (req, res) => {
@@ -126,6 +128,30 @@ export const AllJobModes = async (req, res) => {
       success: true,
       data: jobModes,
       message: "All Job Modes",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+// All Company Branches
+export const AllCompanyBranches = async (req, res) => {
+  try {
+
+    const company = await User.findById(req.userId);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found." });
+    }
+
+    const companyBranches = await CompanyBranch.find(
+      { userId: req.userId, is_del: false },
+      { name: 1 }
+    ).lean();
+
+    res.status(200).json({
+      success: true,
+      data: companyBranches,
+      message: "All company Branches",
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Database query failed" });
