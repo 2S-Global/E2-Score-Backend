@@ -7,6 +7,8 @@ import list_job_experience_level from "../../models/ListJobExperienceLevelModel.
 import list_job_mode from "../../models/ListJobModeModel.js";
 import User from "../../models/userModel.js";
 import CompanyBranch from "../../models/company_Models/CompanyBranch.js";
+import JobPosting from "../../models/company_Models/JobPostingModel.js";
+import mongoose from "mongoose";
 
 // List Job Specializations
 export const AllJobSpecialization = async (req, res) => {
@@ -155,5 +157,104 @@ export const AllCompanyBranches = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Database query failed" });
+  }
+};
+
+// Add Job Posting Details API
+export const AddJobPostingDetails = async (req, res) => {
+  try {
+
+    const userId = req.userId;
+
+    const company = await User.findById(req.userId);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found." });
+    }
+
+    const {
+      jobTitle,
+      jobDescription,
+      getApplicationUpdateEmail,
+      specialization,
+      jobType,
+      positionAvailable,
+      showBy,
+      expectedHours,
+      contractLength,
+      contractPeriod,
+      jobExpiryDate,
+      salary,
+      benefits,
+      careerLevel,
+      experienceLevel,
+      gender,
+      industry,
+      qualification,
+      jobLocationType,
+      country,
+      city,
+      branch,
+      address,
+      advertiseCity,
+      advertiseCityName,
+    } = req.body;
+
+    console.log("Here is the body data", req.body);
+
+    // Convert repeated fields to arrays if sent as string
+    const parseToArray = (field) => {
+      if (!field) return [];
+      return Array.isArray(field) ? field : [field];
+    };
+    console.log("hello I am here !");
+
+    const newJob = new JobPosting({
+      userId,
+      jobTitle,
+      jobDescription,
+      getApplicationUpdateEmail,
+      specialization: parseToArray(specialization).map(id => mongoose.Types.ObjectId(id)),
+      jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
+      positionAvailable,
+      showBy,
+      expectedHours,
+      contractLength,
+      contractPeriod,
+      jobExpiryDate: jobExpiryDate ? new Date(jobExpiryDate) : null,
+      salary: {
+        structure: salary?.structure || " ",
+        currency: salary?.currency || " ",
+        min: salary?.min ? Number(salary.min) : null,
+        max: salary?.max ? Number(salary.max) : null,
+        amount: salary?.amount ? Number(salary.amount) : null,
+        rate: salary?.rate || "per year",
+      },
+      benefits: parseToArray(benefits).map(id => mongoose.Types.ObjectId(id)),
+      careerLevel: careerLevel ? mongoose.Types.ObjectId(careerLevel) : null,
+      experienceLevel: experienceLevel ? mongoose.Types.ObjectId(experienceLevel) : null,
+      gender: parseToArray(gender).map(id => mongoose.Types.ObjectId(id)),
+      industry,
+      qualification: parseToArray(qualification).map(id => mongoose.Types.ObjectId(id)),
+      jobLocationType,
+      country: country ? mongoose.Types.ObjectId(country) : null,
+      city: city ? mongoose.Types.ObjectId(city) : null,
+      branch: branch ? mongoose.Types.ObjectId(branch) : null,
+      address,
+      advertiseCity,
+      advertiseCityName,
+    });
+
+    console.log("New Job Object:", newJob);
+
+    const savedJob = await newJob.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Job posting created successfully",
+      data: savedJob,
+    });
+  } catch (error) {
+    console.error("Error creating job posting:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
