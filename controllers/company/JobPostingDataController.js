@@ -242,6 +242,7 @@ export const AddJobPostingDetails = async (req, res) => {
       address,
       advertiseCity,
       advertiseCityName,
+      status: "draft"
     });
 
     console.log("New Job Object:", newJob);
@@ -251,7 +252,50 @@ export const AddJobPostingDetails = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Job posting created successfully",
+      jobId: savedJob._id,
       data: savedJob,
+    });
+  } catch (error) {
+    console.error("Error creating job posting:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get Job Posting Details API
+export const GetJobPostingDetails = async (req, res) => {
+  try {
+
+    const userId = req.userId;
+    const { jobId, status } = req.query;
+
+    console.log("User ID:", userId, "Job ID:", jobId, "Status:", status);
+
+    const company = await User.findById(userId);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found." });
+    }
+
+    // console.log("Here is the Company Details", company);
+
+    // Find job by id, status, and userId
+    let job = await JobPosting.findOne({ _id: jobId, status, userId })
+      .populate("specialization jobType benefits careerLevel experienceLevel gender qualification country city branch").lean();  // 👈 important;
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found, status mismatch, or not authorized."
+      });
+    }
+
+    job.companyName = company.name;
+
+    console.log("Here is the fetch Job Details", company.name);
+
+    res.status(200).json({
+      success: true,
+      message: "Job fetched successfully",
+      data: job,
     });
   } catch (error) {
     console.error("Error creating job posting:", error);

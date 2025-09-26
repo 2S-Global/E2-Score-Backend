@@ -44,7 +44,7 @@ const jobPostingSchema = new mongoose.Schema(
         },
         contractPeriod: {
             type: String,
-            enum: ["month", "week", "day"],
+            // enum: ["month", "week", "day"],
         },
         jobExpiryDate: {
             type: Date
@@ -119,10 +119,15 @@ const jobPostingSchema = new mongoose.Schema(
         },
         advertiseCity: {
             type: String,
-            enum: ["Yes", "No"],
+            // enum: ["Yes", "No"],
         },
         advertiseCityName: {
             type: String
+        },
+        status: {
+            type: String,
+            enum: ["draft", "completed"],
+            default: "draft"
         },
         is_del: {
             type: Boolean,
