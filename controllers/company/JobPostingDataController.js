@@ -275,7 +275,7 @@ export const GetJobPostingDetails = async (req, res) => {
       return res.status(404).json({ message: "Company not found." });
     }
 
-    // console.log("Here is the Company Details", company);
+    console.log("Here is the Company Details", company);
 
     // Find job by id, status, and userId
     let job = await JobPosting.findOne({ _id: jobId, status, userId })
@@ -289,6 +289,7 @@ export const GetJobPostingDetails = async (req, res) => {
     }
 
     job.companyName = company.name;
+    job.phoneNumber = company.phone_number;
 
     console.log("Here is the fetch Job Details", company.name);
 
