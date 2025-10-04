@@ -108,7 +108,8 @@ const jobPostingSchema = new mongoose.Schema(
         },
         city: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "list_tbl_cities"
+            // ref: "list_tbl_cities"
+            ref: "list_india_cities"
         },
         branch: {
             type: mongoose.Schema.Types.ObjectId,

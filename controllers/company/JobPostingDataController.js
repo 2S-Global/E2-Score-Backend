@@ -303,3 +303,157 @@ export const GetJobPostingDetails = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Edit Job Posting Details API
+export const EditJobPostingDetails = async (req, res) => {
+  try {
+
+    const userId = req.userId;
+
+    const { jobId, status } = req.query;
+    if (!jobId || !status) {
+      return res.status(404).json({ message: "jobId or status not provided in query parameter." });
+    }
+
+    // const id = mongoose.Types.ObjectId(jobId);
+
+    const company = await User.findById(req.userId);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found." });
+    }
+
+    const {
+      jobTitle,
+      jobDescription,
+      getApplicationUpdateEmail,
+      specialization,
+      jobType,
+      positionAvailable,
+      showBy,
+      expectedHours,
+      contractLength,
+      contractPeriod,
+      jobExpiryDate,
+      salary,
+      benefits,
+      careerLevel,
+      experienceLevel,
+      gender,
+      industry,
+      qualification,
+      jobLocationType,
+      country,
+      city,
+      branch,
+      address,
+      advertiseCity,
+      advertiseCityName,
+    } = req.body;
+
+    console.log("Here is the body data", req.body);
+
+    // Convert repeated fields to arrays if sent as string
+    const parseToArray = (field) => {
+      if (!field) return [];
+      return Array.isArray(field) ? field : [field];
+    };
+    console.log("hello I am here EditJobPosting API !");
+    console.log("Id type is : ", typeof jobId, jobId);
+
+    const updatedJob = await JobPosting.findOneAndUpdate(
+      { _id: jobId, status: "draft" },
+      {
+        userId,
+        jobTitle,
+        jobDescription,
+        getApplicationUpdateEmail,
+        specialization: parseToArray(specialization).map(id => mongoose.Types.ObjectId(id)),
+        jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
+        positionAvailable,
+        showBy,
+        expectedHours,
+        contractLength,
+        contractPeriod,
+        jobExpiryDate: jobExpiryDate ? new Date(jobExpiryDate) : null,
+        salary: {
+          structure: salary?.structure || " ",
+          currency: salary?.currency || " ",
+          min: salary?.min ? Number(salary.min) : null,
+          max: salary?.max ? Number(salary.max) : null,
+          amount: salary?.amount ? Number(salary.amount) : null,
+          rate: salary?.rate || "per year",
+        },
+        benefits: parseToArray(benefits).map(id => mongoose.Types.ObjectId(id)),
+        careerLevel: careerLevel ? mongoose.Types.ObjectId(careerLevel) : null,
+        experienceLevel: experienceLevel ? mongoose.Types.ObjectId(experienceLevel) : null,
+        gender: parseToArray(gender).map(id => mongoose.Types.ObjectId(id)),
+        industry,
+        qualification: parseToArray(qualification).map(id => mongoose.Types.ObjectId(id)),
+        jobLocationType,
+        country: country ? mongoose.Types.ObjectId(country) : null,
+        city: city ? mongoose.Types.ObjectId(city) : null,
+        branch: branch ? mongoose.Types.ObjectId(branch) : null,
+        address,
+        advertiseCity,
+        advertiseCityName,
+        status: "draft"
+      },
+      { new: true } // return updated document
+    );
+
+    console.log("New Job Object:", updatedJob);
+
+    // const savedJob = await newJob.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Job posting created successfully",
+      jobId: updatedJob._id,
+      data: updatedJob,
+    });
+  } catch (error) {
+    console.error("Error creating job posting:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Confirm Job Posting Details API
+export const ConfirmJobPostingDetails = async (req, res) => {
+  try {
+
+    const userId = req.userId;
+
+    const company = await User.findById(req.userId);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found." });
+    }
+
+    const { jobId, status } = req.query;
+
+    if (!jobId || !status) {
+      return res.status(404).json({ message: "jobId or status not provided in query parameter." });
+    }
+    
+    const updatedJob = await JobPosting.findOneAndUpdate(
+      { _id: jobId, status: "draft" },
+      {
+        status: "completed"
+      },
+      { new: true } // return updated document
+    );
+
+    console.log("New Job Object:", updatedJob);
+
+    // const savedJob = await newJob.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Job posting created successfully",
+      jobId: updatedJob._id,
+      data: updatedJob,
+    });
+  } catch (error) {
+    console.error("Error creating job posting:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
