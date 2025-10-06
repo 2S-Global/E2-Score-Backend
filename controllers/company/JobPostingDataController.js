@@ -171,6 +171,8 @@ export const AddJobPostingDetails = async (req, res) => {
       return res.status(404).json({ message: "Company not found." });
     }
 
+    // console.log("Request body:", req.body);
+
     const {
       jobTitle,
       jobDescription,
@@ -180,6 +182,8 @@ export const AddJobPostingDetails = async (req, res) => {
       positionAvailable,
       showBy,
       expectedHours,
+      fromHours,
+      toHours,
       contractLength,
       contractPeriod,
       jobExpiryDate,
@@ -199,7 +203,17 @@ export const AddJobPostingDetails = async (req, res) => {
       advertiseCityName,
     } = req.body;
 
-    console.log("Here is the body data", req.body);
+    console.log("Here is the body data by CSSSS )()()()()(", req.body);
+
+    // ------------------- ADD HERE -------------------
+    let finalFromHours = fromHours;
+    let finalToHours = toHours;
+
+    if (showBy !== "range") {
+      finalFromHours = "";
+      finalToHours = "";
+    }
+    // -------------------------------------------------
 
     // Convert repeated fields to arrays if sent as string
     const parseToArray = (field) => {
@@ -218,6 +232,8 @@ export const AddJobPostingDetails = async (req, res) => {
       positionAvailable,
       showBy,
       expectedHours,
+      fromHours: finalFromHours,
+      toHours: finalToHours,
       contractLength,
       contractPeriod,
       jobExpiryDate: jobExpiryDate ? new Date(jobExpiryDate) : null,
@@ -331,6 +347,8 @@ export const EditJobPostingDetails = async (req, res) => {
       positionAvailable,
       showBy,
       expectedHours,
+      fromHours,
+      toHours,
       contractLength,
       contractPeriod,
       jobExpiryDate,
@@ -351,6 +369,15 @@ export const EditJobPostingDetails = async (req, res) => {
     } = req.body;
 
     console.log("Here is the body data", req.body);
+    // ------------------- ADD HERE -------------------
+    let finalFromHours = fromHours;
+    let finalToHours = toHours;
+
+    if (showBy !== "range") {
+      finalFromHours = "";
+      finalToHours = "";
+    }
+    // -------------------------------------------------
 
     // Convert repeated fields to arrays if sent as string
     const parseToArray = (field) => {
@@ -372,6 +399,8 @@ export const EditJobPostingDetails = async (req, res) => {
         positionAvailable,
         showBy,
         expectedHours,
+        fromHours: finalFromHours,
+        toHours: finalToHours,
         contractLength,
         contractPeriod,
         jobExpiryDate: jobExpiryDate ? new Date(jobExpiryDate) : null,
@@ -433,7 +462,7 @@ export const ConfirmJobPostingDetails = async (req, res) => {
     if (!jobId || !status) {
       return res.status(404).json({ message: "jobId or status not provided in query parameter." });
     }
-    
+
     const updatedJob = await JobPosting.findOneAndUpdate(
       { _id: jobId, status: "draft" },
       {

@@ -39,6 +39,12 @@ const jobPostingSchema = new mongoose.Schema(
         expectedHours: {
             type: String
         },
+        fromHours: {
+            type: String
+        },
+        toHours: {
+            type: String
+        },
         contractLength: {
             type: String
         },
