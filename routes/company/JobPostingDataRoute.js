@@ -1,7 +1,7 @@
 import exprss from "express";
 
 //controller
-import { AllJobSpecialization, AllJobTypes, AllJobBenefits, AllJobCareerLevels, AllJobQualifications, AllJobExperienceLevels, AllJobModes, AllCompanyBranches, AddJobPostingDetails, GetJobPostingDetails, EditJobPostingDetails, ConfirmJobPostingDetails } from "../../controllers/company/JobPostingDataController.js";
+import { AllJobSpecialization, AllJobTypes, AllJobBenefits, AllJobCareerLevels, AllJobQualifications, AllJobExperienceLevels, AllJobModes, AllCompanyBranches, AddJobPostingDetails, GetJobPostingDetails, EditJobPostingDetails, ConfirmJobPostingDetails, getAllJobListing } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
 import userAuth from "../../middleware/authMiddleware.js";
@@ -47,5 +47,8 @@ jobPostingDataRouter.post("/edit_job_posting_details", upload.none(), userAuth, 
 
 // Confirm Job Posting Details API
 jobPostingDataRouter.post("/confirm_job_posting_details", upload.none(), userAuth, Companymid, ConfirmJobPostingDetails);
+
+// Get All Job Listing API
+jobPostingDataRouter.get("/get_all_job_listing", userAuth, Companymid, getAllJobListing);
 
 export default jobPostingDataRouter;
