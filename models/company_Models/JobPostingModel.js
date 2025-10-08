@@ -33,8 +33,8 @@ const jobPostingSchema = new mongoose.Schema(
         },
         showBy: {
             type: String,
-            enum: ["fixed", "range", "maximum", "minimum"],
-            default: "fixed"
+            // enum: ["fixed", "range", "maximum", "minimum"],
+            // default: "fixed"
         },
         expectedHours: {
             type: String
