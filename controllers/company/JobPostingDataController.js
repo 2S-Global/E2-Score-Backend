@@ -283,9 +283,9 @@ export const GetJobPostingDetails = async (req, res) => {
   try {
 
     const userId = req.userId;
-    const { jobId, status } = req.query;
+    const { jobId } = req.query;
 
-    console.log("User ID:", userId, "Job ID:", jobId, "Status:", status);
+    console.log("User ID:", userId, "Job ID:", jobId);
 
     const company = await User.findById(userId);
     if (!company) {
@@ -295,7 +295,7 @@ export const GetJobPostingDetails = async (req, res) => {
     console.log("Here is the Company Details", company);
 
     // Find job by id, status, and userId
-    let job = await JobPosting.findOne({ _id: jobId, status, userId })
+    let job = await JobPosting.findOne({ _id: jobId, userId, status: { $in: ["draft", "completed"] } })
       .populate("specialization jobType benefits careerLevel experienceLevel gender qualification country city branch").lean();  // 👈 important;
 
     if (!job) {
@@ -327,9 +327,9 @@ export const EditJobPostingDetails = async (req, res) => {
 
     const userId = req.userId;
 
-    const { jobId, status } = req.query;
-    if (!jobId || !status) {
-      return res.status(404).json({ message: "jobId or status not provided in query parameter." });
+    const { jobId } = req.query;
+    if (!jobId) {
+      return res.status(404).json({ message: "jobId not provided in query parameter." });
     }
 
     // const id = mongoose.Types.ObjectId(jobId);
@@ -389,7 +389,7 @@ export const EditJobPostingDetails = async (req, res) => {
     console.log("Id type is : ", typeof jobId, jobId);
 
     const updatedJob = await JobPosting.findOneAndUpdate(
-      { _id: jobId, status: "draft" },
+      { _id: jobId, status: { $in: ["draft", "completed"] } },
       {
         userId,
         jobTitle,
@@ -426,7 +426,7 @@ export const EditJobPostingDetails = async (req, res) => {
         address,
         advertiseCity,
         advertiseCityName,
-        status: "draft"
+        // status: "draft"
       },
       { new: true } // return updated document
     );
@@ -450,22 +450,21 @@ export const EditJobPostingDetails = async (req, res) => {
 // Confirm Job Posting Details API
 export const ConfirmJobPostingDetails = async (req, res) => {
   try {
-
     const userId = req.userId;
 
-    const company = await User.findById(req.userId);
+    const company = await User.findById(userId);
     if (!company) {
       return res.status(404).json({ message: "Company not found." });
     }
 
-    const { jobId, status } = req.query;
+    const { jobId } = req.query;
 
-    if (!jobId || !status) {
-      return res.status(404).json({ message: "jobId or status not provided in query parameter." });
+    if (!jobId) {
+      return res.status(404).json({ message: "jobId not provided in query parameter." });
     }
 
     const updatedJob = await JobPosting.findOneAndUpdate(
-      { _id: jobId, status: "draft" },
+      { _id: jobId, userId, status: { $in: ["draft", "completed"] } },
       {
         status: "completed"
       },
@@ -512,6 +511,7 @@ export const getAllJobListing = async (req, res) => {
     const jobs = await JobPosting.find({
       userId,
       status: "completed",
+      is_del: false
     })
       .populate("jobType", "name")
       .populate("country", "name")
@@ -541,7 +541,7 @@ export const getAllJobListing = async (req, res) => {
         const city = job.city?.city_name || "";
         const branch = job.branch?.name || "";
 
-        location = [branch, city, country].filter(Boolean).join(", ");
+        location = [city, country].filter(Boolean).join(", ");
       }
 
       // Format date to "October 27, 2017"
@@ -576,5 +576,58 @@ export const getAllJobListing = async (req, res) => {
   } catch (error) {
     console.error("Error fetching job listings:", error);
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Delete Job Posting API
+export const deleteJobPosting = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const company = await User.findById(userId);
+    if (!company) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const { jobId } = req.query;
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "jobId is required.",
+      });
+    }
+
+    // Find the job only if it belongs to this employer
+    const job = await JobPosting.findOne({
+      _id: jobId,
+      userId,
+      status: "completed",
+      is_del: false
+    });
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found or access denied.",
+      });
+    }
+
+    // ✅ Soft delete - mark status as deleted
+    job.is_del = true;
+    await job.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Job deleted successfully.",
+      jobId: job._id,
+    });
+
+  } catch (error) {
+    console.error("Error deleting job posting:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
   }
 };
