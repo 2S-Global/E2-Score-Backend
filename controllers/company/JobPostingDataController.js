@@ -8,6 +8,7 @@ import list_job_mode from "../../models/ListJobModeModel.js";
 import User from "../../models/userModel.js";
 import CompanyBranch from "../../models/company_Models/CompanyBranch.js";
 import JobPosting from "../../models/company_Models/JobPostingModel.js";
+import CompanyDetails from "../../models/company_Models/companydetails.js";
 import mongoose from "mongoose";
 
 // List Job Specializations
@@ -501,6 +502,10 @@ export const getAllJobListing = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
+    // Fetch logo from companyDetails
+    const companyDetails = await CompanyDetails.findOne({ userId }).select("logo");
+    const logo = companyDetails?.logo || null;
+
     const today = new Date();
 
     // Fetch jobs for this user where status is "completed" and expiryDate is not passed
@@ -516,7 +521,7 @@ export const getAllJobListing = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    console.log("Here is my all Job List", jobs)
+    // console.log("Here is my all Job List", jobs)
 
     // Build response
     const jobList = jobs.map((job) => {
@@ -559,6 +564,7 @@ export const getAllJobListing = async (req, res) => {
         createdAt: formatDate(job.createdAt),
         expiryDate: formatDate(job.jobExpiryDate),
         isActive: !job.jobExpiryDate || new Date(job.jobExpiryDate) >= today,
+        logo,
       };
     });
 
