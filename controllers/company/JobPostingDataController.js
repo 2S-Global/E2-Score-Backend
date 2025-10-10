@@ -9,7 +9,11 @@ import User from "../../models/userModel.js";
 import CompanyBranch from "../../models/company_Models/CompanyBranch.js";
 import JobPosting from "../../models/company_Models/JobPostingModel.js";
 import CompanyDetails from "../../models/company_Models/companydetails.js";
+import list_industries from "../../models/monogo_query/industryModel.js";
 import mongoose from "mongoose";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime.js";
+dayjs.extend(relativeTime);
 
 // List Job Specializations
 export const AllJobSpecialization = async (req, res) => {
@@ -303,6 +307,13 @@ export const GetJobPostingDetails = async (req, res) => {
         success: false,
         message: "Job not found, status mismatch, or not authorized."
       });
+    }
+
+    // Fetch industry name (if applicable)
+    let industryName = "Not specified";
+    if (job.industry) {
+      const industryDoc = await list_industries.findOne({ id: job.industry }).select("job_industry").lean();
+      job.industryName = industryDoc?.job_industry || industryName;
     }
 
     job.companyName = company.name;
@@ -629,5 +640,113 @@ export const deleteJobPosting = async (req, res) => {
       success: false,
       message: "Internal server error.",
     });
+  }
+};
+
+// Get Job Preview Details API
+export const getJobPreviewDetails = async (req, res) => {
+  try {
+
+    const userId = req.userId;
+    const { jobId } = req.query;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const company = await User.findById(userId);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found." });
+    }
+
+    // Find job by id, status, and userId
+    let job = await JobPosting.findOne({ _id: jobId, userId, status: { $in: ["draft", "completed"] } })
+      .populate("specialization jobType benefits careerLevel experienceLevel gender qualification country city branch").lean();
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found, status mismatch, or not authorized."
+      });
+    }
+
+    // Fetch industry name (if applicable)
+    let industryName = "";
+    if (job.industry) {
+      const industryDoc = await list_industries.findOne({ id: job.industry }).select("job_industry").lean();
+      industryName = industryDoc?.job_industry || industryName;
+    }
+
+    // Fetch company logo & cover
+    const companyDetails = await CompanyDetails.findOne({ userId }).select("logo cover").lean();
+    const logoImage = companyDetails?.logo || null;
+    const coverImage = companyDetails?.cover || null;
+
+    // Location & advertiseCity logic
+    let location = "";
+    let advertiseCityName = "";
+
+    if (job.jobLocationType === "remote") {
+      location = "Remote";
+      advertiseCityName = job.advertiseCity === "Yes" ? (job.advertiseCityName || "") : "";
+    } else if (job.jobLocationType === "hybrid") {
+      location = "Hybrid";
+      advertiseCityName = "";
+    } else if (job.jobLocationType === "on-site") {
+      const country = job.country?.name || "";
+      const city = job.city?.city_name || "";
+      const branch = job.branch?.name || "";
+      // location = [branch, city, country].filter(Boolean).join(", ") || "On-site";
+      location = [city, country].filter(Boolean).join(", ") || "On-site";
+      advertiseCityName = "";
+    } else {
+      location = "Not specified";
+      advertiseCityName = "";
+    }
+
+    //Optimized return statement started
+
+    const response = {
+      jobId: job._id,
+      title: job.jobTitle,
+      jobDescription: job.jobDescription,
+      industry: industryName,
+      specialization: job.specialization?.map(sp => sp.name) || [],
+      jobType: job.jobType?.map(jt => jt.name) || [],
+      benefits: job.benefits?.map(b => b.name) || [],
+      careerLevel: job.careerLevel?.name || null,
+      experienceLevel: job.experienceLevel?.name || null,
+      gender: job.gender?.map(g => g.name) || [],
+      qualification: job.qualification?.map(q => q.name) || [],
+      jobLocationType: job.jobLocationType,
+      location,
+      advertiseCityName,
+      createdAgo: dayjs(job.createdAt).fromNow(),
+      expiredAt: job.jobExpiryDate ? new Date(job.jobExpiryDate).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }) : "",
+      salary: job.salary,
+      logoImage: logoImage,
+      coverImage: coverImage,
+      // company: {
+      //   name: company.name,
+      //   phoneNumber: company.phone_number,
+      //   logoImage,
+      //   coverImage
+      // }
+    };
+
+    //Optimized return statement ended
+
+    res.status(200).json({
+      success: true,
+      message: "Job Preview Details Fetched successfully !",
+      data: response,
+    });
+  } catch (error) {
+    console.error("Error fetching job listings:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
