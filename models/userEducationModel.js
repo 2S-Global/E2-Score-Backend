@@ -17,6 +17,10 @@ const userEducationSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    level_verified: {
+      type: Boolean,
+      default: false,
+    },
     state: {
       type: String,
     },
@@ -75,6 +79,10 @@ const userEducationSchema = new mongoose.Schema(
         type: Number,
       },
     },
+    duration_verified: {
+      type: Boolean,
+      default: false,
+    },
     // gradingSystem: {
     //   type: mongoose.Schema.Types.ObjectId,
     //   ref:"UserGrading"
@@ -85,11 +93,19 @@ const userEducationSchema = new mongoose.Schema(
     marks: {
       type: mongoose.Schema.Types.Mixed,
     },
+    marks_verified: {
+      type: Boolean,
+      default: false,
+    },
     isPrimary: {
       type: Boolean,
     },
 
     isDel: {
+      type: Boolean,
+      default: false,
+    },
+    is_verified: {
       type: Boolean,
       default: false,
     },

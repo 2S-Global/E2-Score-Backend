@@ -50,7 +50,7 @@ import jobPostingDataRouter from "./routes/company/JobPostingDataRoute.js";
 
 //Institute Routes
 import InstituteProfileRouter from "./routes/institute/InstituteProfileRoute.js";
-
+import InstituteStudentRouter from "./routes/institute/instituteStudentRoute.js";
 // Payment Routes
 import paymentRoutes from "./routes/paymentRoutes.js";
 
@@ -110,6 +110,7 @@ app.use("/api/jobposting", jobPostingDataRouter);
 
 //institute routes
 app.use("/api/instituteprofile", InstituteProfileRouter);
+app.use("/api/institutestudent", InstituteStudentRouter);
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
