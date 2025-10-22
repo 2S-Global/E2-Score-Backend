@@ -77,9 +77,9 @@ export const GetunverifiedStudents = async (req, res) => {
       photo: student.userId?.profilePicture || null,
     }));
 
-    console.log(
+    /* console.log(
       `✅ Returning ${finalList.length} formatted unverified students`
-    );
+    ); */
 
     return res.status(200).json({
       success: true,
