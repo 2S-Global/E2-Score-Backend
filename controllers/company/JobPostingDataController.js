@@ -206,6 +206,7 @@ export const AddJobPostingDetails = async (req, res) => {
       address,
       advertiseCity,
       advertiseCityName,
+      resumeRequired
     } = req.body;
 
     console.log("Here is the body data by CSSSS )()()()()(", req.body);
@@ -263,7 +264,8 @@ export const AddJobPostingDetails = async (req, res) => {
       address,
       advertiseCity,
       advertiseCityName,
-      status: "draft"
+      status: "draft",
+      resumeRequired: resumeRequired
     });
 
     console.log("New Job Object:", newJob);
@@ -378,6 +380,7 @@ export const EditJobPostingDetails = async (req, res) => {
       address,
       advertiseCity,
       advertiseCityName,
+      resumeRequired
     } = req.body;
 
     console.log("Here is the body data", req.body);
@@ -437,6 +440,7 @@ export const EditJobPostingDetails = async (req, res) => {
         address,
         advertiseCity,
         advertiseCityName,
+        resumeRequired: resumeRequired || false,
         // status: "draft"
       },
       { new: true } // return updated document

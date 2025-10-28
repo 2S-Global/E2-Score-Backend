@@ -136,6 +136,10 @@ const jobPostingSchema = new mongoose.Schema(
             enum: ["draft", "completed"],
             default: "draft"
         },
+        resumeRequired: {
+            type: Boolean,
+            default: false,
+        },
         is_del: {
             type: Boolean,
             default: false,
