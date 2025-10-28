@@ -647,6 +647,8 @@ export const deleteJobPosting = async (req, res) => {
 export const getJobPreviewDetails = async (req, res) => {
   try {
 
+    console.log("I am inside Job Preview Details API ! ");
+
     const userId = req.userId;
     const { jobId } = req.query;
 
@@ -678,9 +680,10 @@ export const getJobPreviewDetails = async (req, res) => {
     }
 
     // Fetch company logo & cover
-    const companyDetails = await CompanyDetails.findOne({ userId }).select("logo cover").lean();
+    const companyDetails = await CompanyDetails.findOne({ userId }).select("logo cover website").lean();
     const logoImage = companyDetails?.logo || null;
     const coverImage = companyDetails?.cover || null;
+    const companyWebsite = companyDetails?.website || null;
 
     // Location & advertiseCity logic
     let location = "";
@@ -704,6 +707,11 @@ export const getJobPreviewDetails = async (req, res) => {
       advertiseCityName = "";
     }
 
+    const hasExpectedHours = !!job?.expectedHours;
+    const isPartTime = job?.jobType?.some(
+      jt => jt.name?.toLowerCase() === "part-time"
+    );
+
     //Optimized return statement started
 
     const response = {
@@ -713,6 +721,7 @@ export const getJobPreviewDetails = async (req, res) => {
       industry: industryName,
       specialization: job.specialization?.map(sp => sp.name) || [],
       jobType: job.jobType?.map(jt => jt.name) || [],
+      expectedHours: hasExpectedHours && isPartTime ? job.expectedHours : "",
       benefits: job.benefits?.map(b => b.name) || [],
       careerLevel: job.careerLevel?.name || null,
       experienceLevel: job.experienceLevel?.name || null,
@@ -730,6 +739,8 @@ export const getJobPreviewDetails = async (req, res) => {
       salary: job.salary,
       logoImage: logoImage,
       coverImage: coverImage,
+      companyWebsite: companyWebsite,
+      companyName: company?.name || "",
       // company: {
       //   name: company.name,
       //   phoneNumber: company.phone_number,

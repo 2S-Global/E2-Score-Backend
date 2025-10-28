@@ -32,7 +32,7 @@ const Schema = new mongoose.Schema(
     established: {
       type: Date,
     },
-    team_size: {
+    teamsize: {
       type: String,
     },
     industry_type: {
