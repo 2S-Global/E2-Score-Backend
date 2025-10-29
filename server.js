@@ -43,6 +43,7 @@ import resumeMakingRouter from "./routes/candidate/resumeMakingRoute.js";
 import candidateVerificationCartRouter from "./routes/candidate/candidateVerificationCartRoute.js";
 import CandidateCartRouter from "./routes/candidate/cart/cartRoute.js";
 import CandidateKycRoute from "./routes/candidate/CandidateKycRoute.js";
+import CandidateJobListingRouter from "./routes/candidate/CandidateJobListingRoute.js";
 
 //company Routes
 import CompanyProfileRouter from "./routes/company/CompanyProfileRoute.js";
@@ -95,6 +96,7 @@ app.use("/api/candidate/resume", resumeMakingRouter);
 app.use("/api/candidate/usercart", candidateVerificationCartRouter);
 app.use("/api/candidate/cart", CandidateCartRouter);
 app.use("/api/candidatekyc", CandidateKycRoute);
+app.use("/api/candidate/joblisting", CandidateJobListingRouter);
 
 // Start server hello
 
