@@ -55,6 +55,6 @@ jobPostingDataRouter.get("/get_all_job_listing", userAuth, Companymid, getAllJob
 jobPostingDataRouter.delete("/delete_job_posting", upload.none(), userAuth, Companymid, deleteJobPosting);
 
 // Get All Job Listing API
-jobPostingDataRouter.get("/get_job_preview_details", userAuth, Companymid, getJobPreviewDetails);
+jobPostingDataRouter.get("/get_job_preview_details", userAuth, getJobPreviewDetails);
 
 export default jobPostingDataRouter;

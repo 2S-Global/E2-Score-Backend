@@ -651,8 +651,6 @@ export const deleteJobPosting = async (req, res) => {
 export const getJobPreviewDetails = async (req, res) => {
   try {
 
-    console.log("I am inside Job Preview Details API ! ");
-
     const userId = req.userId;
     const { jobId } = req.query;
 
@@ -665,9 +663,15 @@ export const getJobPreviewDetails = async (req, res) => {
       return res.status(404).json({ message: "Company not found." });
     }
 
-    // Find job by id, status, and userId
-    let job = await JobPosting.findOne({ _id: jobId, userId, status: { $in: ["draft", "completed"] } })
+    // Find job by id, status, and userId   (Only For Employer it will work)
+    // let job = await JobPosting.findOne({ _id: jobId, userId, status: { $in: ["draft", "completed"] } })
+    //   .populate("specialization jobType benefits careerLevel experienceLevel gender qualification country city branch").lean();
+
+    // It will work for both candidate and employer
+    let job = await JobPosting.findOne({ _id: jobId, status: { $in: ["draft", "completed"] } })
       .populate("specialization jobType benefits careerLevel experienceLevel gender qualification country city branch").lean();
+
+    console.log("Here is my Job Posting All Details - 30th october: ", job);
 
     if (!job) {
       return res.status(404).json({
@@ -684,7 +688,7 @@ export const getJobPreviewDetails = async (req, res) => {
     }
 
     // Fetch company logo & cover
-    const companyDetails = await CompanyDetails.findOne({ userId }).select("logo cover website").lean();
+    const companyDetails = await CompanyDetails.findOne({ userId: job.userId }).select("logo cover website").lean();
     const logoImage = companyDetails?.logo || null;
     const coverImage = companyDetails?.cover || null;
     const companyWebsite = companyDetails?.website || null;
