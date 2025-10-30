@@ -113,7 +113,6 @@ export const getRandomCompanyOnly = async (req, res) => {
 
 export const getRandomCompany = async (req, res) => {
   try {
-
     const { company_name } = req.query;
 
     // Step 1: Fetch 50 random companies (excluding the one already selected)
@@ -122,10 +121,10 @@ export const getRandomCompany = async (req, res) => {
         $match: {
           isDel: false,
           isActive: true,
-          ...(company_name && { companyname: { $ne: company_name } }) // exclude if passed
-        }
+          ...(company_name && { companyname: { $ne: company_name } }), // exclude if passed
+        },
       },
-      { $sample: { size: 20 } }
+      { $sample: { size: 20 } },
     ]);
     // Convert to array of strings
     const companyNames = randomCompanies.map((row) => row.companyname);
@@ -145,7 +144,6 @@ export const getRandomCompany = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
-
 
 export const getRandomCompanysql = async (req, res) => {
   try {
@@ -354,10 +352,12 @@ export const addEmploymentDetails = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const existingCompany = await companylist.findOne({
-      companyname: company_name.trim(),
-      isDel: false,
-    }).select("_id companyname");
+    const existingCompany = await companylist
+      .findOne({
+        companyname: company_name.trim(),
+        isDel: false,
+      })
+      .select("_id companyname");
 
     let companyId;
     if (existingCompany) {
@@ -404,12 +404,10 @@ export const addEmploymentDetails = async (req, res) => {
     }).select("email name");
 
     if (existingCompanyUser) {
-      
       const newEmployeeUser = await User.findOne({
         _id: userId,
         is_del: false,
       }).select("name email profilePicture");
-
 
       // If user not found (rare case), skip email
       if (!newEmployeeUser) {
@@ -418,13 +416,21 @@ export const addEmploymentDetails = async (req, res) => {
         // Build LinkedIn-style employee card using this user’s data
         const employeeCardHtml = `
       <div style="display:flex; align-items:center; border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:12px; background:#fff; font-family:Arial, sans-serif;">
-        <img src="${newEmployeeUser.profilePicture || 'https://via.placeholder.com/50'}" 
+        <img src="${
+          newEmployeeUser.profilePicture || "https://via.placeholder.com/50"
+        }" 
              alt="profile" 
              style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
         <div>
-          <h3 style="margin:0; font-size:16px; color:#0073b1;">${newEmployeeUser.name || 'N/A'}</h3>
-          <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${job_title || 'Unknown'}</p>
-          <p style="margin:2px 0; font-size:13px; color:#555;">${newEmployeeUser.email || ''}</p>
+          <h3 style="margin:0; font-size:16px; color:#0073b1;">${
+            newEmployeeUser.name || "N/A"
+          }</h3>
+          <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${
+            job_title || "Unknown"
+          }</p>
+          <p style="margin:2px 0; font-size:13px; color:#555;">${
+            newEmployeeUser.email || ""
+          }</p>
         </div>
       </div>
     `;
@@ -461,20 +467,20 @@ export const addEmploymentDetails = async (req, res) => {
 
         await transporter.sendMail(mailOptions);
       }
-    // Email is end from here
-  }
+      // Email is end from here
+    }
 
     res.status(201).json({
-    success: true,
-    message: "Employment Details added successfully!",
-    data: employment,
-  });
-} catch (error) {
-  res.status(500).json({
-    message: "Error Saving Employment Details",
-    error: error.message,
-  });
-}
+      success: true,
+      message: "Employment Details added successfully!",
+      data: employment,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error Saving Employment Details",
+      error: error.message,
+    });
+  }
 };
 
 /**
@@ -630,24 +636,40 @@ export const getEmploymentDetails = async (req, res) => {
     }
 
     const companyIds = [
-      ...new Set(employmentData.map((emp) => emp.companyName?.toString()).filter(Boolean)),
+      ...new Set(
+        employmentData.map((emp) => emp.companyName?.toString()).filter(Boolean)
+      ),
     ];
     const noticePeriodIds = [
-      ...new Set(employmentData.map((emp) => emp.NoticePeriod?.toString()).filter(Boolean)),
+      ...new Set(
+        employmentData
+          .map((emp) => emp.NoticePeriod?.toString())
+          .filter(Boolean)
+      ),
     ];
 
     // Fetch companies
-    const companies = await companylist.find({
-      _id: { $in: companyIds },
-    }).select("_id companyname").lean();
+    const companies = await companylist
+      .find({
+        _id: { $in: companyIds },
+      })
+      .select("_id companyname")
+      .lean();
 
-    const noticePeriods = await list_notice.find({
-      id: { $in: noticePeriodIds },
-    }).select("id name").lean();
+    const noticePeriods = await list_notice
+      .find({
+        id: { $in: noticePeriodIds },
+      })
+      .select("id name")
+      .lean();
 
     // Map data by id for quick lookup
-    const companyMap = Object.fromEntries(companies.map((c) => [c._id.toString(), c.companyname]));
-    const noticePeriodMap = Object.fromEntries(noticePeriods.map((n) => [n.id.toString(), n.name]));
+    const companyMap = Object.fromEntries(
+      companies.map((c) => [c._id.toString(), c.companyname])
+    );
+    const noticePeriodMap = Object.fromEntries(
+      noticePeriods.map((n) => [n.id.toString(), n.name])
+    );
 
     // Month names
     const monthNames = [
@@ -692,6 +714,7 @@ export const getEmploymentDetails = async (req, res) => {
         jobDurationVerified: item.jobDurationVerified,
         designationVerified: item.designationVerified,
         notice_period: item.NoticePeriod || "",
+        remarks: item.remarks || "",
         notice_period_name: noticePeriodMap[item.NoticePeriod] || "",
       };
     });
@@ -771,10 +794,12 @@ export const editEmploymentDetails = async (req, res) => {
 
     // Checking Company name exist in database. If not exist then insert that value in database
 
-    const existingCompany = await companylist.findOne({
-      companyname: company_name.trim(),
-      isDel: false,
-    }).select("_id companyname");
+    const existingCompany = await companylist
+      .findOne({
+        companyname: company_name.trim(),
+        isDel: false,
+      })
+      .select("_id companyname");
 
     let companyId;
     if (existingCompany) {
