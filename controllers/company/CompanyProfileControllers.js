@@ -3,6 +3,7 @@ import CompanyDetails from "../../models/company_Models/companydetails.js";
 import User from "../../models/userModel.js";
 import uploadToCloudinary from "../../utility/uploadToCloudinary.js";
 import deleteImageByUrl from "../../utility/deleteImageByUrl.js";
+import list_industries from "../../models/monogo_query/industryModel.js";
 /**
  * @description Search company by CIN number
  * @route POST /api/companyprofile/search_company_by_cin
@@ -103,17 +104,17 @@ export const AddorUpdateCompany = async (req, res) => {
 
     if (!companyExist) {
       companyExist = await companylist.create({
-      cinnumber: cin?.trim() || "",
-      companyname: name?.trim() || "",
-      companyemail: email?.trim() || "",
-      companyaddress: address?.trim() || "",
-      companyphone: phone?.trim() || "",
-      // contactpersonname: contactpersonname?.trim() || "",
-      // contactpersoncontact: contactpersoncontact?.trim() || "",
-      // contactpersonemail: contactpersonemail?.trim() || "",
-      isActive: false,
-      isDel: false,
-      flag: true,
+        cinnumber: cin?.trim() || "",
+        companyname: name?.trim() || "",
+        companyemail: email?.trim() || "",
+        companyaddress: address?.trim() || "",
+        companyphone: phone?.trim() || "",
+        // contactpersonname: contactpersonname?.trim() || "",
+        // contactpersoncontact: contactpersoncontact?.trim() || "",
+        // contactpersonemail: contactpersonemail?.trim() || "",
+        isActive: false,
+        isDel: false,
+        flag: true,
       });
     }
 
@@ -195,7 +196,13 @@ export const GetCompanyDetails = async (req, res) => {
     const company = await CompanyDetails.findOne({
       userId: req.userId,
       isDel: false,
-    });
+    }).lean();
+
+    let industryName = "Not specified";
+    if (company?.industry_type) {
+      const industryDoc = await list_industries.findOne({ id: company.industry_type }).select("job_industry").lean();
+      company.industryName = industryDoc?.job_industry || industryName;
+    }
 
     if (company) {
       return res.status(200).json({ success: true, data: company });
@@ -217,6 +224,7 @@ export const GetCompanyDetails = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
+
     return res.status(200).json({
       success: true,
       data: {
