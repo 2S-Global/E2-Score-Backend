@@ -539,10 +539,17 @@ export const getMatchingCourses = async (req, res) => {
       });
     }
 
+    // ✅ Escape regex special characters to prevent invalid regex or ReDoS
+    const escapeRegex = (text = "") =>
+      text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const safeCourseName = escapeRegex(course_name.trim());
+
+    // ✅ Use escaped input in regex
     let matchingCourses = await list_university_course
       .find(
         {
-          name: { $regex: course_name, $options: "i" },
+          name: { $regex: safeCourseName, $options: "i" },
           is_del: 0,
           is_active: 1,
         },
@@ -551,7 +558,7 @@ export const getMatchingCourses = async (req, res) => {
       .limit(100)
       .lean();
 
-    // 🔥 Sort by similarity score (descending)
+    // 🔥 Sort by similarity (descending)
     matchingCourses.sort((a, b) => {
       const scoreA = stringSimilarity.compareTwoStrings(
         a.name.toLowerCase(),
@@ -574,9 +581,11 @@ export const getMatchingCourses = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getMatchingCourses:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Database query failed" });
+    return res.status(500).json({
+      success: false,
+      message: "Database query failed",
+      error: error.message,
+    });
   }
 };
 

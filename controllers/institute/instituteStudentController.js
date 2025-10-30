@@ -10,6 +10,9 @@ import CandidateKYC from "../../models/CandidateKYCModel.js";
 import list_education_level from "../../models/monogo_query/educationLevelModel.js";
 import list_course_type from "../../models/monogo_query/courseTypeModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
+
+import nodemailer from "nodemailer";
+
 export const GetunverifiedStudents = async (req, res) => {
   try {
     const userId = req.userId;
@@ -266,6 +269,7 @@ export const GetstudentDetails = async (req, res) => {
         .findOne({ id: education.courseName }, { name: 1 })
         .lean()
         .exec();
+      education.courseName_id = education.courseName || null;
       education.courseName = courseDoc?.name || null;
     }
     //-- Enrich Duration
@@ -294,10 +298,163 @@ export const GetstudentDetails = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: mergedData,
-      debug: { instituteId, userId, employmentId },
+      ///   debug: { instituteId, userId, employmentId },
     });
   } catch (err) {
     console.error("❌ Error in GetstudentDetails:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: err.message,
+    });
+  }
+};
+
+export const UpdatestudentStatus = async (req, res) => {
+  try {
+    const {
+      is_verified,
+      employmentId,
+      level,
+      level_verified,
+      course_type,
+      courseType_verified,
+      course_id,
+      courseName_verified,
+      duration,
+      duration_verified,
+      grading_system,
+      gradingSystem_verified,
+      marks,
+      marks_verified,
+      remarks,
+    } = req.body;
+
+    const instituteId = req.userId;
+    console.log(instituteId);
+
+    // ✅ Step 1: Verify institute linked to user
+    const instituteDetails = await CompanyDetails.findOne({
+      userId: instituteId,
+      isDel: false,
+    });
+
+    if (!instituteDetails) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Institute not found." });
+    }
+
+    if (!employmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required parameters: employmentId",
+      });
+    }
+    /* update usereducation _id == employmentId  */
+    const updatedUserEducation = await usereducation.findOneAndUpdate(
+      { _id: employmentId },
+      {
+        is_verified,
+        level,
+        level_verified,
+        courseType: course_type,
+        courseType_verified,
+        courseName: course_id,
+        courseName_verified,
+        duration,
+        duration_verified,
+        gradingSystem: grading_system,
+        gradingSystem_verified,
+        marks,
+        marks_verified,
+        remarks,
+      },
+      { new: true }
+    );
+
+    // Handle not found
+    if (!updatedUserEducation) {
+      return res.status(404).json({
+        success: false,
+        message: "Student record not found",
+      });
+    }
+
+    const userId = updatedUserEducation.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    let verificationStatus = `
+        <ul>
+          <li><strong>Level:</strong> ${
+            updatedUserEducation.level_verified ? "Verified" : "Not Verified"
+          }</li>
+          <li><strong>Course Type:</strong> ${
+            updatedUserEducation.courseType_verified
+              ? "Verified"
+              : "Not Verified"
+          }</li>
+          <li><strong>Course Name:</strong> ${
+            updatedUserEducation.courseName_verified
+              ? "Verified"
+              : "Not Verified"
+          }</li>
+          <li><strong>Duration:</strong> ${
+            updatedUserEducation.duration_verified ? "Verified" : "Not Verified"
+          }</li>
+          <li><strong>Grading System:</strong> ${
+            updatedUserEducation.gradingSystem_verified
+              ? "Verified"
+              : "Not Verified"
+          }</li>
+          <li><strong>Marks:</strong> ${
+            updatedUserEducation.marks_verified ? "Verified" : "Not Verified"
+          }</li>
+          <li><strong>Remarks:</strong> ${updatedUserEducation.remarks}</li>
+        </ul>
+      `;
+
+    const emailcontent = `<p>Dear <strong>${user.name}</strong>,</p>
+        <p>Your academic verification details have been updated by <strong>${instituteDetails.name}</strong>.</p>
+        <p>Here is the status of your verification:</p>
+        ${verificationStatus}
+        <p>If you believe there is an error, please contact our support team.</p>
+        <br/>
+        <p>Regards,<br/>E2Score Verification Team</p>`;
+
+    const mailOptions = {
+      from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Academic Verification Status Updated",
+      html: emailcontent,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    return res.status(200).json({
+      success: true,
+      message: "Student status updated successfully",
+      data: updatedUserEducation,
+      debug: { instituteDetails },
+    });
+  } catch (err) {
+    console.error("Error in UpdatestudentStatus:", err);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
