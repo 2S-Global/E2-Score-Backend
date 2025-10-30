@@ -2,7 +2,11 @@ import express from "express";
 import multer from "multer";
 
 //import controllers
-import { GetunverifiedStudents } from "../../controllers/institute/instituteStudentController.js";
+import {
+  GetunverifiedStudents,
+  GetverifiedStudents,
+  GetstudentDetails,
+} from "../../controllers/institute/instituteStudentController.js";
 
 // Middleware
 import userAuth from "../../middleware/authMiddleware.js";
@@ -19,6 +23,20 @@ InstituteStudentRouter.get(
   userAuth,
   Institutemid,
   GetunverifiedStudents
+);
+
+InstituteStudentRouter.get(
+  "/get_verified_students",
+  userAuth,
+  Institutemid,
+  GetverifiedStudents
+);
+
+InstituteStudentRouter.get(
+  "/get_student_details",
+  userAuth,
+  Institutemid,
+  GetstudentDetails
 );
 
 export default InstituteStudentRouter;

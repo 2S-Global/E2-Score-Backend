@@ -65,11 +65,19 @@ const userEducationSchema = new mongoose.Schema(
     courseName: {
       type: String,
     },
+    courseName_verified: {
+      type: Boolean,
+      default: false,
+    },
     specialization: {
       type: String,
     },
     courseType: {
       type: String,
+    },
+    courseType_verified: {
+      type: Boolean,
+      default: false,
     },
     duration: {
       from: {
@@ -90,6 +98,10 @@ const userEducationSchema = new mongoose.Schema(
     gradingSystem: {
       type: String,
     },
+    gradingSystem_verified: {
+      type: Boolean,
+      default: false,
+    },
     marks: {
       type: mongoose.Schema.Types.Mixed,
     },
@@ -108,6 +120,9 @@ const userEducationSchema = new mongoose.Schema(
     is_verified: {
       type: Boolean,
       default: false,
+    },
+    remarks: {
+      type: String,
     },
   },
   {

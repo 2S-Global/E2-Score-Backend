@@ -163,8 +163,8 @@ export const All_country = async (req, res) => {
 
     // Transform _id to id
     const formattedCountries = countries.map((country) => ({
-        id: country._id,
-        name: country.name,
+      id: country._id,
+      name: country.name,
     }));
 
     res.status(200).json({
@@ -518,6 +518,62 @@ export const getCourseByUniversity = async (req, res) => {
       message: "Courses based on provided filters",
     });
   } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Database query failed" });
+  }
+};
+
+/* matching_courses?course_name=${inputValue} */
+
+import stringSimilarity from "string-similarity";
+
+export const getMatchingCourses = async (req, res) => {
+  try {
+    const { course_name } = req.query;
+
+    if (!course_name || course_name.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Missing or empty course_name parameter",
+      });
+    }
+
+    let matchingCourses = await list_university_course
+      .find(
+        {
+          name: { $regex: course_name, $options: "i" },
+          is_del: 0,
+          is_active: 1,
+        },
+        { id: 1, name: 1, _id: 0 }
+      )
+      .limit(100)
+      .lean();
+
+    // 🔥 Sort by similarity score (descending)
+    matchingCourses.sort((a, b) => {
+      const scoreA = stringSimilarity.compareTwoStrings(
+        a.name.toLowerCase(),
+        course_name.toLowerCase()
+      );
+      const scoreB = stringSimilarity.compareTwoStrings(
+        b.name.toLowerCase(),
+        course_name.toLowerCase()
+      );
+      return scoreB - scoreA;
+    });
+
+    // Keep top 50
+    matchingCourses = matchingCourses.slice(0, 50);
+
+    return res.status(200).json({
+      success: true,
+      data: matchingCourses,
+      message: "Matching courses found and sorted by relevance",
+    });
+  } catch (error) {
+    console.error("Error in getMatchingCourses:", error);
     return res
       .status(500)
       .json({ success: false, message: "Database query failed" });
@@ -997,7 +1053,6 @@ export const getLanguageProficiency234 = async (req, res) => {
   }
 };
 
-
 export const getLanguageProficiency = async (req, res) => {
   try {
     const proficiencyList = await list_language_proficiency
@@ -1042,7 +1097,6 @@ export const getLanguageProficiency = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
-
 
 // path -   /api/sql/dropdown/social_profile
 
@@ -1379,10 +1433,10 @@ export const getAllSchoolLists = async (req, res) => {
 
 export const getUserVerificationList = async (req, res) => {
   try {
-
-    const verificationList = await ListVerificationList.find(
-      { isDel: false, isActive: true }
-    ).select("_id verification_name title fields regex");
+    const verificationList = await ListVerificationList.find({
+      isDel: false,
+      isActive: true,
+    }).select("_id verification_name title fields regex");
 
     if (!verificationList || verificationList.length === 0) {
       return res.status(404).json({

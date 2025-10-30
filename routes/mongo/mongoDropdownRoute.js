@@ -31,7 +31,8 @@ import {
   GetCourcesSearch,
   AddCourse,
   getUserVerificationList,
-  getNonTechSkills
+  getNonTechSkills,
+  getMatchingCourses,
 } from "../../controllers/mongo/mongoDropdownController.js";
 
 const MongoDropdownRouter = express.Router();
@@ -62,6 +63,9 @@ MongoDropdownRouter.get("/university_state", getUniversityByState);
 
 //get course  by university
 MongoDropdownRouter.get("/university_course", getCourseByUniversity);
+
+//getMatchingCourses
+MongoDropdownRouter.get("/matching_courses", getMatchingCourses);
 
 //get Grading System
 MongoDropdownRouter.get("/grading_system", getGradingSystem);

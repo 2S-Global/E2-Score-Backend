@@ -320,7 +320,11 @@ export const getUserAssociatedWithCompany = async (req, res) => {
     }
 
     // Search employments collection where companyName = company_id
-    const employments = await Employment.find({ companyName: company_id, isDel: false, isVerified: false });
+    const employments = await Employment.find({
+      companyName: company_id,
+      isDel: false,
+      isVerified: false,
+    });
 
     if (!employments || employments.length === 0) {
       return res.status(404).json({
@@ -330,8 +334,8 @@ export const getUserAssociatedWithCompany = async (req, res) => {
     }
 
     const userIds = [
-      ...new Set(employments.map(emp => emp.user.toString())),
-    ].map(id => new mongoose.Types.ObjectId(id));
+      ...new Set(employments.map((emp) => emp.user.toString())),
+    ].map((id) => new mongoose.Types.ObjectId(id));
 
     // 3. Fetch user details (name, photo)
     const users = await User.find(
@@ -339,7 +343,7 @@ export const getUserAssociatedWithCompany = async (req, res) => {
       {
         name: 1,
         email: 1,
-        profilePicture: 1
+        profilePicture: 1,
       } // only select required fields
     ).lean();
 
@@ -350,17 +354,18 @@ export const getUserAssociatedWithCompany = async (req, res) => {
     ).lean();
 
     // 4. Collect unique countryIds
-    const countryIds = [...new Set(candidateDetails.map(c => c.country_id).filter(Boolean))];
+    const countryIds = [
+      ...new Set(candidateDetails.map((c) => c.country_id).filter(Boolean)),
+    ];
 
     // 5. Fetch country details
-    const countries = await list_tbl_countrie.find(
-      { id: { $in: countryIds } },
-      { name: 1, id: 1 }
-    ).lean();
+    const countries = await list_tbl_countrie
+      .find({ id: { $in: countryIds } }, { name: 1, id: 1 })
+      .lean();
 
     // Create a lookup map: countryId → countryName
     const countryMap = {};
-    countries.forEach(c => {
+    countries.forEach((c) => {
       countryMap[c.id.toString()] = c.name;
     });
 
@@ -392,9 +397,11 @@ export const getUserAssociatedWithCompany = async (req, res) => {
     */
 
     // 6. Build result based on employments (not unique users)
-    const result = employments.map(emp => {
-      const user = users.find(u => u._id && u._id.equals(emp.user));
-      const candidate = candidateDetails.find(c => c.userId && c.userId.equals(emp.user));
+    const result = employments.map((emp) => {
+      const user = users.find((u) => u._id && u._id.equals(emp.user));
+      const candidate = candidateDetails.find(
+        (c) => c.userId && c.userId.equals(emp.user)
+      );
 
       //const countryId = candidate?.country_id?.toString() || null;
       //const countryName = countryId && countryMap[countryId] ? countryMap[countryId] : "Not Provided";
@@ -424,7 +431,6 @@ export const getUserAssociatedWithCompany = async (req, res) => {
 };
 
 export const getMultipleEmployeeDetails = async (req, res) => {
-
   try {
     const user_id = req.userId;
     const company_id = req.companyId;
@@ -447,48 +453,53 @@ export const getMultipleEmployeeDetails = async (req, res) => {
     }
 
     // Run queries in parallel
-    const [users, candidateDetails, personalDetail, employments] = await Promise.all([
-      User.findOne(
-        { _id: userId },
-        { name: 1, email: 1, gender: 1, phone_number: 1 }
-      ).lean(),
+    const [users, candidateDetails, personalDetail, employments] =
+      await Promise.all([
+        User.findOne(
+          { _id: userId },
+          { name: 1, email: 1, gender: 1, phone_number: 1 }
+        ).lean(),
 
-      CandidateDetails.findOne(
-        { userId },
-        { dob: 1, fatherName: 1, _id: 0 }
-      ).lean(),
+        CandidateDetails.findOne(
+          { userId },
+          { dob: 1, fatherName: 1, _id: 0 }
+        ).lean(),
 
-      personalDetails.findOne(
-        { user: userId },
-        { permanentAddress: 1, pan_number: 1, _id: 0 }
-      ).lean(),
+        personalDetails
+          .findOne(
+            { user: userId },
+            { permanentAddress: 1, pan_number: 1, _id: 0 }
+          )
+          .lean(),
 
-      Employment.findOne(
-        { _id: employmentId, user: userId, companyName: company_id },
-        {
-          jobTitle: 1,
-          employmentType: 1,
-          joiningDate: 1,
-          leavingDate: 1,
-          companyName: 1,
-          currentEmployment: 1,
-          isVerified: 1,
-          jobTypeVerified: 1,
-          designationVerified: 1,
-          jobDurationVerified: 1,
-          servedNoticePeriod: 1,
-          hasNOC: 1,
-          hasDues: 1,
-          remarks: 1,
-          _id: 0
-        }
-      ).lean()
-    ]);
+        Employment.findOne(
+          { _id: employmentId, user: userId, companyName: company_id },
+          {
+            jobTitle: 1,
+            employmentType: 1,
+            joiningDate: 1,
+            leavingDate: 1,
+            companyName: 1,
+            currentEmployment: 1,
+            isVerified: 1,
+            jobTypeVerified: 1,
+            designationVerified: 1,
+            jobDurationVerified: 1,
+            servedNoticePeriod: 1,
+            hasNOC: 1,
+            hasDues: 1,
+            remarks: 1,
+            _id: 0,
+          }
+        ).lean(),
+      ]);
 
     // Fetch gender name separately (parallelize this too if needed)
     let genderName = null;
     if (users?.gender) {
-      const genderDoc = await list_gender.findById(users.gender, { name: 1 }).lean();
+      const genderDoc = await list_gender
+        .findById(users.gender, { name: 1 })
+        .lean();
       genderName = genderDoc ? genderDoc.name : null;
     }
     if (users) users.gender = genderName;
@@ -508,7 +519,10 @@ export const getMultipleEmployeeDetails = async (req, res) => {
         const { year, month } = employments.joiningDate;
         employments.joiningYear = year;
         employments.joiningMonth = month;
-        employments.joiningDate = `${new Date(year, month - 1).toLocaleString("en-US", { month: "long" })}, ${year}`;
+        employments.joiningDate = `${new Date(year, month - 1).toLocaleString(
+          "en-US",
+          { month: "long" }
+        )}, ${year}`;
       } else {
         employments.joiningDate = "";
       }
@@ -517,7 +531,10 @@ export const getMultipleEmployeeDetails = async (req, res) => {
         const { year, month } = employments.leavingDate;
         employments.leavingYear = year;
         employments.leavingMonth = month;
-        employments.leavingDate = `${new Date(year, month - 1).toLocaleString("en-US", { month: "long" })}, ${year}`;
+        employments.leavingDate = `${new Date(year, month - 1).toLocaleString(
+          "en-US",
+          { month: "long" }
+        )}, ${year}`;
       } else {
         employments.leavingDate = "Present";
       }
@@ -543,7 +560,6 @@ export const getMultipleEmployeeDetails = async (req, res) => {
 
 export const addEmployeeVerificationDetails = async (req, res) => {
   try {
-
     const userId = req.userId;
     const companyId = req.companyId;
 
@@ -574,7 +590,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
       Serverd_notice_period,
       has_noc,
       has_due,
-      remarks
+      remarks,
     } = req.body;
 
     if (!_id || !employmentId) {
@@ -611,7 +627,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
       servedNoticePeriod: Serverd_notice_period,
       hasNOC: has_noc,
       hasDues: has_due,
-      remarks: remarks
+      remarks: remarks,
     };
 
     // Update employment based on conditions
@@ -628,22 +644,31 @@ export const addEmployeeVerificationDetails = async (req, res) => {
     const associatedEmployee = await User.findOne({ _id, is_del: false });
 
     if (associatedEmployee) {
-
       // === EMAIL SENDING SECTION ===
 
       const VerifiedBool = Verified === true || Verified === "true";
-      const designationVerifiedBool = designation_verified === true || designation_verified === "true";
-      const durationVerifiedBool = duration_verified === true || duration_verified === "true";
-      const employmentTypeVerifiedBool = employmenttype_verified === true || employmenttype_verified === "true";
-
+      const designationVerifiedBool =
+        designation_verified === true || designation_verified === "true";
+      const durationVerifiedBool =
+        duration_verified === true || duration_verified === "true";
+      const employmentTypeVerifiedBool =
+        employmenttype_verified === true || employmenttype_verified === "true";
 
       // Build status message for verified fields
       let verificationStatus = `
       <ul>
-        <li>Overall Employment Verified: <strong>${VerifiedBool ? "✅ Yes" : "❌ No"}</strong></li>
-        <li>Designation Verified: <strong>${designationVerifiedBool ? "✅ Yes" : "❌ No"}</strong></li>
-        <li>Duration Verified: <strong>${durationVerifiedBool ? "✅ Yes" : "❌ No"}</strong></li>
-        <li>Employment Type Verified: <strong>${employmentTypeVerifiedBool ? "✅ Yes" : "❌ No"}</strong></li>
+        <li>Overall Employment Verified: <strong>${
+          VerifiedBool ? "✅ Yes" : "❌ No"
+        }</strong></li>
+        <li>Designation Verified: <strong>${
+          designationVerifiedBool ? "✅ Yes" : "❌ No"
+        }</strong></li>
+        <li>Duration Verified: <strong>${
+          durationVerifiedBool ? "✅ Yes" : "❌ No"
+        }</strong></li>
+        <li>Employment Type Verified: <strong>${
+          employmentTypeVerifiedBool ? "✅ Yes" : "❌ No"
+        }</strong></li>
       </ul>
     `;
 
@@ -678,7 +703,6 @@ export const addEmployeeVerificationDetails = async (req, res) => {
       };
 
       await transporter.sendMail(mailOptions);
-
     }
 
     // === END EMAIL SECTION ===
@@ -708,7 +732,10 @@ export const getVerifiedUser = async (req, res) => {
     }
 
     // Search employments collection where companyName = company_id
-    const employments = await Employment.find({ companyName: company_id, isVerified: true });
+    const employments = await Employment.find({
+      companyName: company_id,
+      isVerified: true,
+    });
 
     if (!employments || employments.length === 0) {
       return res.status(404).json({
@@ -718,8 +745,8 @@ export const getVerifiedUser = async (req, res) => {
     }
 
     const userIds = [
-      ...new Set(employments.map(emp => emp.user.toString())),
-    ].map(id => new mongoose.Types.ObjectId(id));
+      ...new Set(employments.map((emp) => emp.user.toString())),
+    ].map((id) => new mongoose.Types.ObjectId(id));
 
     // 3. Fetch user details (name, photo)
     const users = await User.find(
@@ -727,7 +754,7 @@ export const getVerifiedUser = async (req, res) => {
       {
         name: 1,
         email: 1,
-        profilePicture: 1
+        profilePicture: 1,
       } // only select required fields
     ).lean();
 
@@ -738,17 +765,18 @@ export const getVerifiedUser = async (req, res) => {
     ).lean();
 
     // 4. Collect unique countryIds
-    const countryIds = [...new Set(candidateDetails.map(c => c.country_id).filter(Boolean))];
+    const countryIds = [
+      ...new Set(candidateDetails.map((c) => c.country_id).filter(Boolean)),
+    ];
 
     // 5. Fetch country details
-    const countries = await list_tbl_countrie.find(
-      { id: { $in: countryIds } },
-      { name: 1, id: 1 }
-    ).lean();
+    const countries = await list_tbl_countrie
+      .find({ id: { $in: countryIds } }, { name: 1, id: 1 })
+      .lean();
 
     // Create a lookup map: countryId → countryName
     const countryMap = {};
-    countries.forEach(c => {
+    countries.forEach((c) => {
       countryMap[c.id.toString()] = c.name;
     });
 
@@ -780,9 +808,11 @@ export const getVerifiedUser = async (req, res) => {
     */
 
     // 6. Build result based on employments (not unique users)
-    const result = employments.map(emp => {
-      const user = users.find(u => u._id && u._id.equals(emp.user));
-      const candidate = candidateDetails.find(c => c.userId && c.userId.equals(emp.user));
+    const result = employments.map((emp) => {
+      const user = users.find((u) => u._id && u._id.equals(emp.user));
+      const candidate = candidateDetails.find(
+        (c) => c.userId && c.userId.equals(emp.user)
+      );
 
       //const countryId = candidate?.country_id?.toString() || null;
       //const countryName = countryId && countryMap[countryId] ? countryMap[countryId] : "Not Provided";
