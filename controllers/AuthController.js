@@ -658,21 +658,23 @@ export const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
+    const user = await User.findOne({
+      email,
+      is_active: true,
+      is_del: false,
+    });
 
-    if (user.is_active === false || user.is_del === true) {
+    if (!user) {
       return res.status(401).json({
-        message:
-          "Your account is deactivated or deleted. Please contact support.",
+        message: "Invalid credentials or account not active.",
+        success: false,
       });
     }
 
     if (!user.isVerified) {
       return res.status(403).json({
         message: "Your Email is not Verified.Please Verify it first.",
+        success: false,
       });
     }
 
@@ -681,7 +683,10 @@ export const loginUser = async (req, res) => {
 
     // If passwords don't match
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({
+        message: "Invalid email or password",
+        success: false,
+      });
     }
 
     // Build payload
