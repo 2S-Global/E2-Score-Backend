@@ -208,8 +208,15 @@ export const updateUserDetails = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const { full_name, gender, dob, country, currentLocation, hometown, father_name } =
-      req.body;
+    const {
+      full_name,
+      gender,
+      dob,
+      country,
+      currentLocation,
+      hometown,
+      father_name,
+    } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(user_id, {
       name: full_name,
@@ -393,12 +400,21 @@ export const addKeySkills = async (req, res) => {
       return res.status(400).json({ message: "All skills must be strings." });
     }
 
+    // ✅ Normalize: lowercase and trim spaces
+    parsedSkills = parsedSkills.map((s) => s.trim().toLowerCase());
+
+    const regexArray = parsedSkills.map(
+      (skill) => new RegExp(`^${skill}$`, "i")
+    );
     // Find matching skills in MongoDB
-    const matchedSkills = await list_key_skill.find({
-      Skill: { $in: parsedSkills },
-      is_del: 0,
-      is_active: 1,
-    }, "_id Skill");
+    const matchedSkills = await list_key_skill.find(
+      {
+        Skill: { $in: regexArray },
+        is_del: 0,
+        is_active: 1,
+      },
+      "_id Skill"
+    );
 
     const skillMap = {};
     matchedSkills.forEach((row) => {
@@ -503,7 +519,13 @@ async function getOrInsertIdBySql(tableName, columnName, value) {
   return insertResult.insertId;
 }
 
-async function getOrInsertId(model, fieldName, value, additionalFieldName = null, additionalFieldValue = null) {
+async function getOrInsertId(
+  model,
+  fieldName,
+  value,
+  additionalFieldName = null,
+  additionalFieldValue = null
+) {
   if (!value || typeof value !== "string") {
     return null;
   }
@@ -515,7 +537,7 @@ async function getOrInsertId(model, fieldName, value, additionalFieldName = null
 
   const filter = {
     [fieldName]: trimmedValue,
-    is_del: 0
+    is_del: 0,
   };
 
   const existingDoc = await model.findOne(filter, { id: 1 }).lean();
@@ -605,8 +627,18 @@ export const submitUserEducation = async (req, res) => {
     }
     let savedRecord;
     if (levelId === "1" || levelId === "2") {
-      const boardId = await getOrInsertId(list_education_boards, "board_name", data.board);
-      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name, "board_id", boardId);
+      const boardId = await getOrInsertId(
+        list_education_boards,
+        "board_name",
+        data.board
+      );
+      const schoolId = await getOrInsertId(
+        list_school_list,
+        "school_name",
+        data.school_name,
+        "board_id",
+        boardId
+      );
 
       const educationData = {
         userId: user,
@@ -671,8 +703,9 @@ export const submitUserEducation = async (req, res) => {
       savedRecord = await newRecord.save();
     }
     res.status(201).json({
-      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-        } successfully`,
+      message: `Education ${
+        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+      } successfully`,
       data: savedRecord,
     });
   } catch (error) {
@@ -747,16 +780,25 @@ export const updateUserEducation = async (req, res) => {
     }
     let savedRecord;
     if (levelId == "1" || levelId == "2") {
-
       // const boardId = await getOrInsertId(
       //   "education_boards",
       //   "board_name",
       //   data.board
       // );
 
-      const boardId = await getOrInsertId(list_education_boards, "board_name", data.board);
+      const boardId = await getOrInsertId(
+        list_education_boards,
+        "board_name",
+        data.board
+      );
       // const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name);
-      const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name, "board_id", boardId);
+      const schoolId = await getOrInsertId(
+        list_school_list,
+        "school_name",
+        data.school_name,
+        "board_id",
+        boardId
+      );
 
       const educationData = {
         userId: user,
@@ -849,8 +891,9 @@ export const updateUserEducation = async (req, res) => {
     }
 
     res.status(201).json({
-      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-        } successfully`,
+      message: `Education ${
+        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+      } successfully`,
       data: savedRecord,
     });
   } catch (error) {
@@ -1055,27 +1098,27 @@ export const getCareerProfileBySql = async (req, res) => {
       await Promise.all([
         CurrentIndustry
           ? db_sql.execute("SELECT job_industry FROM industries WHERE id = ?", [
-            CurrentIndustry,
-          ])
+              CurrentIndustry,
+            ])
           : Promise.resolve([[]]),
         CurrentDepartment
           ? db_sql.execute(
-            "SELECT job_department FROM departments WHERE id = ?",
-            [CurrentDepartment]
-          )
+              "SELECT job_department FROM departments WHERE id = ?",
+              [CurrentDepartment]
+            )
           : Promise.resolve([[]]),
         JobRole
           ? db_sql.execute("SELECT job_role FROM job_roles WHERE id = ?", [
-            JobRole,
-          ])
+              JobRole,
+            ])
           : Promise.resolve([[]]),
         locationIds.length > 0
           ? db_sql.execute(
-            `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
-              .map(() => "?")
-              .join(", ")})`,
-            locationIds
-          )
+              `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
+                .map(() => "?")
+                .join(", ")})`,
+              locationIds
+            )
           : Promise.resolve([[]]),
       ]);
 
@@ -1119,7 +1162,6 @@ export const getCareerProfileBySql = async (req, res) => {
   }
 };
 
-
 export const getCareerProfile = async (req, res) => {
   try {
     const userId = req.userId;
@@ -1158,16 +1200,25 @@ export const getCareerProfile = async (req, res) => {
     const [industryDoc, departmentDoc, jobRoleDoc, cityDocs] =
       await Promise.all([
         CurrentIndustry
-          ? list_industries.findOne({ id: CurrentIndustry }).select("job_industry").lean()
+          ? list_industries
+              .findOne({ id: CurrentIndustry })
+              .select("job_industry")
+              .lean()
           : null,
         CurrentDepartment
-          ? list_department.findOne({ id: CurrentDepartment }).select("job_department").lean()
+          ? list_department
+              .findOne({ id: CurrentDepartment })
+              .select("job_department")
+              .lean()
           : null,
         JobRole
           ? list_job_role.findById(JobRole).select("job_role").lean()
           : null,
         locationIds.length > 0
-          ? list_india_cities.find({ _id: { $in: locationIds } }).select("city_name").lean()
+          ? list_india_cities
+              .find({ _id: { $in: locationIds } })
+              .select("city_name")
+              .lean()
           : [],
       ]);
 

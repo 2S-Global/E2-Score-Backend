@@ -662,6 +662,7 @@ export const getEducationBoardById = async (req, res) => {
       .find(
         {
           $or: [{ state_region_id: boardId }, { state_region_id: 0 }],
+          is_active: 1,
         },
         { id: 1, board_name: 1, _id: 0 }
       )
