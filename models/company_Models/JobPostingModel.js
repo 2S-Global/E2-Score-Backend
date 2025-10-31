@@ -23,6 +23,10 @@ const jobPostingSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "list_job_specialization",
         }],
+        jobSkills: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "list_key_skill",
+        }],
         jobType: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "list_job_type",

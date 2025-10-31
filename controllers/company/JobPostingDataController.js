@@ -10,6 +10,7 @@ import CompanyBranch from "../../models/company_Models/CompanyBranch.js";
 import JobPosting from "../../models/company_Models/JobPostingModel.js";
 import CompanyDetails from "../../models/company_Models/companydetails.js";
 import list_industries from "../../models/monogo_query/industryModel.js";
+import list_key_skill from "../../models/monogo_query/keySkillModel.js";
 import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
@@ -206,7 +207,8 @@ export const AddJobPostingDetails = async (req, res) => {
       address,
       advertiseCity,
       advertiseCityName,
-      resumeRequired
+      resumeRequired,
+      jobSkills
     } = req.body;
 
     console.log("Here is the body data by CSSSS )()()()()(", req.body);
@@ -228,12 +230,63 @@ export const AddJobPostingDetails = async (req, res) => {
     };
     console.log("hello I am here !");
 
+    // Iterrate Skills from name to array starts from here  --- 31th october
+
+    if (!Array.isArray(jobSkills) || jobSkills.length === 0) {
+      return res.status(400).json({
+        message: "Skills must be a non-empty array of strings.",
+      });
+    }
+
+    // Case: If skills came as a string from form-data
+    let parsedSkills = jobSkills;
+    if (typeof jobSkills === "string") {
+      try {
+        parsedSkills = JSON.parse(jobSkills);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid skills format." });
+      }
+    }
+
+    const allStrings = parsedSkills.every((skill) => typeof skill === "string");
+    if (!allStrings) {
+      return res.status(400).json({ message: "All skills must be strings." });
+    }
+
+    // Find matching skills in MongoDB
+    const matchedSkills = await list_key_skill.find({
+      Skill: { $in: parsedSkills },
+      is_del: 0,
+      is_active: 1,
+    }, "_id Skill");
+
+    const skillMap = {};
+    matchedSkills.forEach((row) => {
+      skillMap[row.Skill] = row._id;
+    });
+
+    const missingSkills = parsedSkills.filter((skill) => !skillMap[skill]);
+    if (missingSkills.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Some skills not found in the database.",
+        missingSkills,
+      });
+    }
+
+    const skillObjectIds = parsedSkills.map((skill) => skillMap[skill]);
+
+
+    // Iterrate Skills from name to array ends here   -- 31th october
+
+
     const newJob = new JobPosting({
       userId,
       jobTitle,
       jobDescription,
       getApplicationUpdateEmail,
       specialization: parseToArray(specialization).map(id => mongoose.Types.ObjectId(id)),
+      jobSkills: skillObjectIds,
       jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
       positionAvailable,
       showBy,
@@ -302,7 +355,7 @@ export const GetJobPostingDetails = async (req, res) => {
 
     // Find job by id, status, and userId
     let job = await JobPosting.findOne({ _id: jobId, userId, status: { $in: ["draft", "completed"] } })
-      .populate("specialization jobType benefits careerLevel experienceLevel gender qualification country city branch").lean();  // 👈 important;
+      .populate("specialization jobType benefits careerLevel experienceLevel gender qualification country city branch jobSkills").lean();  // 👈 important;
 
     if (!job) {
       return res.status(404).json({
@@ -380,7 +433,8 @@ export const EditJobPostingDetails = async (req, res) => {
       address,
       advertiseCity,
       advertiseCityName,
-      resumeRequired
+      resumeRequired,
+      jobSkills
     } = req.body;
 
     console.log("Here is the body data", req.body);
@@ -402,6 +456,59 @@ export const EditJobPostingDetails = async (req, res) => {
     console.log("hello I am here EditJobPosting API !");
     console.log("Id type is : ", typeof jobId, jobId);
 
+    // Iterrate Skills from name to array starts from here  --- 31th october
+
+    if (!Array.isArray(jobSkills) || jobSkills.length === 0) {
+      return res.status(400).json({
+        message: "Skills must be a non-empty array of strings.",
+      });
+    }
+
+    // Case: If skills came as a string from form-data
+    let parsedSkills = jobSkills;
+    if (typeof jobSkills === "string") {
+      try {
+        parsedSkills = JSON.parse(jobSkills);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid skills format." });
+      }
+    }
+
+    const allStrings = parsedSkills.every((skill) => typeof skill === "string");
+    if (!allStrings) {
+      return res.status(400).json({ message: "All skills must be strings." });
+    }
+
+    // Find matching skills in MongoDB
+    const matchedSkills = await list_key_skill.find({
+      Skill: { $in: parsedSkills },
+      is_del: 0,
+      is_active: 1,
+    }, "_id Skill");
+
+    const skillMap = {};
+    matchedSkills.forEach((row) => {
+      skillMap[row.Skill] = row._id;
+    });
+
+    const missingSkills = parsedSkills.filter((skill) => !skillMap[skill]);
+    if (missingSkills.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Some skills not found in the database.",
+        missingSkills,
+      });
+    }
+
+    const skillObjectIds = parsedSkills.map((skill) => skillMap[skill]);
+
+
+
+    console.log("Here is my all skill object IDS --", skillObjectIds);
+
+
+    // Iterrate Skills from name to array ends here   -- 31th october
+
     const updatedJob = await JobPosting.findOneAndUpdate(
       { _id: jobId, status: { $in: ["draft", "completed"] } },
       {
@@ -410,6 +517,7 @@ export const EditJobPostingDetails = async (req, res) => {
         jobDescription,
         getApplicationUpdateEmail,
         specialization: parseToArray(specialization).map(id => mongoose.Types.ObjectId(id)),
+        jobSkills: skillObjectIds,
         jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
         positionAvailable,
         showBy,
