@@ -1464,3 +1464,35 @@ export const getUserVerificationList = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/**
+ * @description Get only student name by user_id
+ * @route GET /api/sql/dropdown/get_city_based_on_country
+ * @access protected
+ * @returns {object} 200 - user verification list
+ * @returns {object} 500 - Server error
+ */
+export const getCityBasedOnCountry = async (req, res) => {
+  try {
+    const boardName = req.query.board_name;
+    // const verificationList = await ListVerificationList.find({
+    //   isDel: false,
+    //   isActive: true,
+    // }).select("_id verification_name title fields regex");
+
+    // if (!verificationList || verificationList.length === 0) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "Verification List not found",
+    //   });
+    // }
+
+    res.status(200).json({
+      success: true,
+      // data: verificationList,
+      message: "Get City based on Country API is running successfully ! ",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

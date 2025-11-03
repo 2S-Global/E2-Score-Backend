@@ -150,7 +150,10 @@ export const getResume = async (req, res) => {
       // Get Marital Status Name
       list_marital_status.findById(userDetails.maritialStatus).select("status").lean(),
       // Get visa type name or usa Permit name
-      list_visa_type.findById(userDetails.usaPermit).select("visa_name").lean(),
+      // list_visa_type.findById(userDetails.usaPermit).select("visa_name").lean(),
+      userDetails.usaPermit && mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
+        ? list_visa_type.findById(userDetails.usaPermit).select("visa_name").lean()
+        : Promise.resolve(null),
       // Get all Additional Information Name
       list_more_information.find({ _id: { $in: userDetails.additionalInformation } }).select("name").lean(),
       // Get Gender name from id

@@ -33,6 +33,7 @@ import {
   getUserVerificationList,
   getNonTechSkills,
   getMatchingCourses,
+  getCityBasedOnCountry
 } from "../../controllers/mongo/mongoDropdownController.js";
 
 const MongoDropdownRouter = express.Router();
@@ -131,5 +132,8 @@ MongoDropdownRouter.get("/get_school_lists", getAllSchoolLists);
 
 //Get All School List
 MongoDropdownRouter.get("/get_verification_list", getUserVerificationList);
+
+//Get City Based on Country
+MongoDropdownRouter.get("/get_city_based_on_country", getCityBasedOnCountry);
 
 export default MongoDropdownRouter;
