@@ -83,8 +83,6 @@ export const getResume = async (req, res) => {
       UserCareer.find({ userId, isDel: false }).lean(),
     ]);
 
-    console.log("Project Details:", userProjects);
-
     const userDetails = userDetailsArr[0] || {};
     const candidateDetails = candidateDetailsArr[0] || {};
 
@@ -102,18 +100,23 @@ export const getResume = async (req, res) => {
     const courseTypeIds = educationRaw?.length ? getUniqueIds(educationRaw, "courseType") : [];
     // const gradingSystemIds = getUniqueIds(educationRaw, "gradingSystem");
     const gradingSystemIds = educationRaw?.length ? getUniqueIds(educationRaw, "gradingSystem") : [];
+
     // For Employments
     // const companyIds = getUniqueIds(employmentsRaw, "companyName");
     const companyIds = employmentsRaw?.length ? getUniqueIds(employmentsRaw, "companyName") : [];
+
     // For Online Profiles
     // const socialProfileIds = getUniqueIds(onlineProfilesRaw, "socialProfile");
     const socialProfileIds = onlineProfilesRaw?.length ? getUniqueIds(onlineProfilesRaw, "socialProfile") : [];
+
     // For IT Skills
     // const itSkillIds = getUniqueIds(userItSkills, "skillSearch");
     const itSkillIds = userItSkills?.length ? getUniqueIds(userItSkills, "skillSearch") : [];
+
     // For Project Details
     // const taggedWithIds = getUniqueIds(userProjects, "taggedWith");
     const taggedWithIds = userProjects?.length ? getUniqueIds(userProjects, "taggedWith") : [];
+
     // For Language
 
     // const languageIds = getUniqueIds(
@@ -137,7 +140,9 @@ export const getResume = async (req, res) => {
       ? getUniqueIds(userDetails.languageProficiency, "proficiency")
       : [];
 
-    const userPref = careerProfile[0];
+    const userPref = careerProfile[0] || {};
+
+    console.log("userPref detials---", userPref);
 
     const [
       universities,
@@ -303,9 +308,13 @@ export const getResume = async (req, res) => {
     ]);
 
 
-    user.gender_name = userGender.name;
+    user.gender_name = userGender?.name || "";
 
-    const locationNames = locations.map((city) => city.city_name).join(", ");
+
+    // const locationNames = locations.map((city) => city.city_name).join(", ");
+
+    const locationNames = locations?.map((city) => city.city_name).join(", ") || "";
+
 
     const universityMap = createMap(universities);
     const instituteMap = createMap(institutes);
@@ -348,7 +357,7 @@ export const getResume = async (req, res) => {
     const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
 
     // Modify Education result
-    const education = educationRaw.map((edu) => {
+    const education = (educationRaw || []).map((edu) => {
       const level = edu.level;
       if (level === "1" || level === "2") {
         return {
@@ -379,35 +388,35 @@ export const getResume = async (req, res) => {
     }).sort((a, b) => Number(b.levelId) - Number(a.levelId)); // 👈 this line sorts descending;
 
     // Modify Employments result
-    const employment = employmentsRaw.map((job) => ({
+    const employment = (employmentsRaw || []).map((job) => ({
       ...job,
       companyName:
         companyMap[job.companyName.toString()] || "Company Name Not Found",
     }));
 
     // Modify Online Profile Result
-    const onlineProfiles = onlineProfilesRaw.map((p) => ({
+    const onlineProfiles = (onlineProfilesRaw || []).map((p) => ({
       name: socialMap[p.socialProfile] || "Unknown",
       url: p.url,
     }));
 
     // Modify user Details Result
-    userDetails.skillsResolved = skills.map((s) => s.Skill);
+    userDetails.skillsResolved = (skills || []).map((s) => s.Skill);
 
     // Modify IT Skill Result
-    const itSkills = userItSkills.map((data) => ({
+    const itSkills = (userItSkills || []).map((data) => ({
       ...data,
       skillName: itSkillMap[data.skillSearch.toString()] || "Not Found",
     }));
 
     // Modify Project Details For getting tagged with map
-    const projectDetails = userProjects.map((data) => ({
+    const projectDetails = (userProjects || []).map((data) => ({
       ...data,
       taggedWithName: taggedWithMap[data.taggedWith.toString()] || "Not Found",
     }));
 
     //Modify Candidate Profile Details
-    const preferenceDetails = careerProfile.map((data) => ({
+    const preferenceDetails = (careerProfile || []).map((data) => ({
       ...data,
       industryName: currentIndustry?.job_industry || "Unknown Industry",
       departmentName: currentDepartment?.job_department || "Unknown Department",
@@ -417,13 +426,13 @@ export const getResume = async (req, res) => {
 
     // Modify user Personal Details
     const userPersonalDetails = {
-      ...userDetails,
-      languageProficiency: userDetails.languageProficiency.map((lp) => ({
+      ...(userDetails || {}),
+      languageProficiency: (userDetails?.languageProficiency || []).map((lp) => ({
         ...lp,
-        languageName: languageNameWithMap[lp.language] || "",
-        proficiencyName: languageProficiencyWithMap[lp.proficiency] || "",
+        languageName: languageNameWithMap[lp?.language] || "",
+        proficiencyName: languageProficiencyWithMap[lp?.proficiency] || "",
       })),
-      workPermitOtherNames: (userDetails.workPermitOther || []).map(
+      workPermitOtherNames: (userDetails?.workPermitOther || []).map(
         (id) => workPermitOtherNameWithMap[id] || ""
       ),
       categoryName: categoryName?.[0]?.category_name || "",
@@ -431,12 +440,10 @@ export const getResume = async (req, res) => {
       reasonName: breakReasonName?.[0]?.name || "",
       maritalStatusName: maritalStatusName?.status || "",
       usaPermitName: usaPermitName?.visa_name || "",
-      additionalInformationNames: (userDetails.additionalInformation || []).map(
+      additionalInformationNames: (userDetails?.additionalInformation || []).map(
         (id) => addiInfoNameWithMap[id] || ""
       ),
     };
-
-    console.log("Here is my Personal Details:", userPersonalDetails);
 
     const pdfBuffer = await generateResumePDF({
       user,
