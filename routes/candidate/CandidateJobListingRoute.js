@@ -3,7 +3,10 @@ import multer from "multer";
 
 //import controllers
 
-import { getAllJobList } from "../../controllers/candidate/CandidateJobListingController.js"
+import {
+  getAllJobList,
+  jobsearchFilters,
+} from "../../controllers/candidate/CandidateJobListingController.js";
 
 //import middleware
 import userAuth from "../../middleware/authMiddleware.js";
@@ -24,10 +27,18 @@ const upload = multer({ storage: storage });
 // );
 
 CandidateJobListingRouter.get(
-    "/get_all_job_list",
-    userAuth,
-    Candimid,
-    getAllJobList
+  "/get_all_job_list",
+  userAuth,
+  Candimid,
+  getAllJobList
+);
+
+CandidateJobListingRouter.post(
+  "/job_search_filters",
+  /*   userAuth,
+  Candimid, */
+  upload.none(),
+  jobsearchFilters
 );
 
 export default CandidateJobListingRouter;
