@@ -168,6 +168,7 @@ export const getResume = async (req, res) => {
     const instituteMap = createMap(institutes);
     const courseMap = createMap(courses);
     const boardMap = createMap(boards, 'id', 'board_name');
+    // console.log("Here is my all boards: ", boardMap); return;
     const levelMap = createMap(levels, 'id', 'level');
     const gradingSystemMap = createMap(gradingSystemName, 'id', 'name');
 
@@ -217,9 +218,7 @@ export const getResume = async (req, res) => {
           gradingName: gradingSystemMap[edu.gradingSystem] || 'Not Provided',
         };
       }
-    });
-
-    console.log("Education Data:", education);
+    }).sort((a, b) => Number(b.levelId) - Number(a.levelId)); // 👈 this line sorts descending;
 
     // Modify Employments result
     const employment = employmentsRaw.map(job => ({

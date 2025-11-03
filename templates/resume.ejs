@@ -138,6 +138,10 @@
       page-break-inside: avoid;
     }
 
+    .page-break-group-presentations {
+      page-break-before: auto;
+    }
+
     ul a {
       color: #61c2f4
     }
@@ -323,7 +327,7 @@
                       <%= edu.levelName %>
                     </td>
                     <td>
-                      <% if (edu.levelId===' 1' || edu.levelId==='2' ) { %>
+                      <% if (edu.levelId==='1' || edu.levelId==='2' ) { %>
                     <%= edu.board %>
                       <% } else { %>
                         <%= edu.universityName %>
