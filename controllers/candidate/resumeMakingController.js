@@ -88,31 +88,54 @@ export const getResume = async (req, res) => {
     const userDetails = userDetailsArr[0] || {};
     const candidateDetails = candidateDetailsArr[0] || {};
 
-    const universityIds = getUniqueIds(educationRaw, "universityName");
-    const instituteIds = getUniqueIds(educationRaw, "instituteName");
-    const courseIds = getUniqueIds(educationRaw, "courseName");
-    const boardIds = getUniqueIds(educationRaw, "board");
-    const levelIds = getUniqueIds(educationRaw, "level");
-    const courseTypeIds = getUniqueIds(educationRaw, "courseType");
-    const gradingSystemIds = getUniqueIds(educationRaw, "gradingSystem");
+    // const universityIds = getUniqueIds(educationRaw, "universityName");
+    const universityIds = educationRaw?.length ? getUniqueIds(educationRaw, "universityName") : [];
+    // const instituteIds = getUniqueIds(educationRaw, "instituteName");
+    const instituteIds = educationRaw?.length ? getUniqueIds(educationRaw, "instituteName") : [];
+    // const courseIds = getUniqueIds(educationRaw, "courseName");
+    const courseIds = educationRaw?.length ? getUniqueIds(educationRaw, "courseName") : [];
+    // const boardIds = getUniqueIds(educationRaw, "board");
+    const boardIds = educationRaw?.length ? getUniqueIds(educationRaw, "board") : [];
+    // const levelIds = getUniqueIds(educationRaw, "level");
+    const levelIds = educationRaw?.length ? getUniqueIds(educationRaw, "level") : [];
+    // const courseTypeIds = getUniqueIds(educationRaw, "courseType");
+    const courseTypeIds = educationRaw?.length ? getUniqueIds(educationRaw, "courseType") : [];
+    // const gradingSystemIds = getUniqueIds(educationRaw, "gradingSystem");
+    const gradingSystemIds = educationRaw?.length ? getUniqueIds(educationRaw, "gradingSystem") : [];
     // For Employments
-    const companyIds = getUniqueIds(employmentsRaw, "companyName");
+    // const companyIds = getUniqueIds(employmentsRaw, "companyName");
+    const companyIds = employmentsRaw?.length ? getUniqueIds(employmentsRaw, "companyName") : [];
     // For Online Profiles
-    const socialProfileIds = getUniqueIds(onlineProfilesRaw, "socialProfile");
+    // const socialProfileIds = getUniqueIds(onlineProfilesRaw, "socialProfile");
+    const socialProfileIds = onlineProfilesRaw?.length ? getUniqueIds(onlineProfilesRaw, "socialProfile") : [];
     // For IT Skills
-    const itSkillIds = getUniqueIds(userItSkills, "skillSearch");
+    // const itSkillIds = getUniqueIds(userItSkills, "skillSearch");
+    const itSkillIds = userItSkills?.length ? getUniqueIds(userItSkills, "skillSearch") : [];
     // For Project Details
-    const taggedWithIds = getUniqueIds(userProjects, "taggedWith");
+    // const taggedWithIds = getUniqueIds(userProjects, "taggedWith");
+    const taggedWithIds = userProjects?.length ? getUniqueIds(userProjects, "taggedWith") : [];
     // For Language
-    const languageIds = getUniqueIds(
-      userDetails.languageProficiency,
-      "language"
-    );
+
+    // const languageIds = getUniqueIds(
+    //   userDetails.languageProficiency,
+    //   "language"
+    // );
+
+    const languageIds = userDetails?.languageProficiency?.length
+      ? getUniqueIds(userDetails.languageProficiency, "language")
+      : [];
+
     // For Language proficiency
-    const languageProficiencyIds = getUniqueIds(
-      userDetails.languageProficiency,
-      "proficiency"
-    );
+
+    // const languageProficiencyIds = getUniqueIds(
+    //   userDetails.languageProficiency,
+    //   "proficiency"
+    // );
+
+    // For Language proficiency
+    const languageProficiencyIds = userDetails?.languageProficiency?.length
+      ? getUniqueIds(userDetails.languageProficiency, "proficiency")
+      : [];
 
     const userPref = careerProfile[0];
 
@@ -167,27 +190,66 @@ export const getResume = async (req, res) => {
       // Getting taggedwithName  from user projects
       list_project_tag.find({ _id: { $in: taggedWithIds } }).lean(),
       //Getting Current Industry
-      list_industries
-        .findOne({ id: userPref.CurrentIndustry })
-        .select("job_industry")
-        .lean(),
+
+      // list_industries
+      //   .findOne({ id: userPref.CurrentIndustry })
+      //   .select("job_industry")
+      //   .lean(),
+
+      userPref?.CurrentIndustry
+        ? list_industries
+          .findOne({ id: userPref.CurrentIndustry })
+          .select("job_industry")
+          .lean()
+        : Promise.resolve(null), // ✅ safe fallback promise
+
       // Getting Current Department
-      list_department
-        .findOne({ id: userPref.CurrentDepartment })
-        .select("job_department")
-        .lean(),
+      // list_department
+      //   .findOne({ id: userPref.CurrentDepartment })
+      //   .select("job_department")
+      //   .lean(),
+
+      userPref?.CurrentDepartment
+        ? list_department
+          .findOne({ id: userPref.CurrentDepartment })
+          .select("job_department")
+          .lean()
+        : Promise.resolve(null),
+
+
       //Getting Job Role
-      list_job_role.findById(userPref.JobRole).select("job_role").lean(),
+      // list_job_role.findById(userPref.JobRole).select("job_role").lean(),
+
+      userPref?.JobRole
+        ? list_job_role.findById(userPref.JobRole).select("job_role").lean()
+        : Promise.resolve(null),
+
+
       // Getting Locations
-      list_india_cities
-        .find({ _id: { $in: userPref.location } })
-        .select("city_name")
-        .lean(),
+
+      // list_india_cities
+      //   .find({ _id: { $in: userPref.location } })
+      //   .select("city_name")
+      //   .lean(),
+
+      userPref?.location
+        ? list_india_cities.find({ _id: { $in: userPref.location } })
+          .select("city_name")
+          .lean()
+        : Promise.resolve(null),
+
+
       // Getting Language Name
-      list_language
-        .find({ _id: { $in: languageIds } })
-        .select("name")
-        .lean(),
+
+      // list_language
+      //   .find({ _id: { $in: languageIds } })
+      //   .select("name")
+      //   .lean(),
+
+      languageIds?.length
+        ? list_language.find({ _id: { $in: languageIds } }).select("name").lean()
+        : Promise.resolve([]),
+
       //Getting Language Proficiency
       list_language_proficiency
         .find({ _id: { $in: languageProficiencyIds } })
@@ -221,11 +283,11 @@ export const getResume = async (req, res) => {
       // Get visa type name or usa Permit name
       // list_visa_type.findById(userDetails.usaPermit).select("visa_name").lean(),
       userDetails.usaPermit &&
-      mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
+        mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
         ? list_visa_type
-            .findById(userDetails.usaPermit)
-            .select("visa_name")
-            .lean()
+          .findById(userDetails.usaPermit)
+          .select("visa_name")
+          .lean()
         : Promise.resolve(null),
       // Get all Additional Information Name
       list_more_information
@@ -233,8 +295,13 @@ export const getResume = async (req, res) => {
         .select("name")
         .lean(),
       // Get Gender name from id
-      list_gender.findById(user.gender).select("name").lean(),
+
+      // list_gender.findById(user.gender).select("name").lean(),
+      user?.gender
+        ? list_gender.findById(user.gender).select("name").lean()
+        : Promise.resolve(null),
     ]);
+
 
     user.gender_name = userGender.name;
 
@@ -258,6 +325,12 @@ export const getResume = async (req, res) => {
     // For Tagged with name
     const taggedWithMap = createMap(taggedWithNames, "_id", "name");
     // For Language
+
+    // const validLanguageName = Array.isArray(languageName)
+    //   ? languageName.filter(l => l && l._id && l.name)
+    //   : [];
+
+    // const languageNameWithMap = createMap(validLanguageName, "_id", "name");
     const languageNameWithMap = createMap(languageName, "_id", "name");
     // For Language Proficiency
     const languageProficiencyWithMap = createMap(
@@ -390,10 +463,10 @@ export const getResume = async (req, res) => {
     );
     res.end(pdfBuffer);
   } catch (error) {
-    console.error("Error fetching itskills:", error);
+    console.error("Error fetching resume making details:", error);
     res
       .status(500)
-      .json({ message: "Error fetching itskills", error: error.message });
+      .json({ message: "Error fetching resume making details", error: error.message });
   }
 };
 
@@ -573,11 +646,11 @@ export const AdmingetResume = async (req, res) => {
       // Get visa type name or usa Permit name
       // list_visa_type.findById(userDetails.usaPermit).select("visa_name").lean(),
       userDetails.usaPermit &&
-      mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
+        mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
         ? list_visa_type
-            .findById(userDetails.usaPermit)
-            .select("visa_name")
-            .lean()
+          .findById(userDetails.usaPermit)
+          .select("visa_name")
+          .lean()
         : Promise.resolve(null),
       // Get all Additional Information Name
       list_more_information
