@@ -6,111 +6,172 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
 dayjs.extend(relativeTime);
 
+import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
+
 export const getAllJobList = async (req, res) => {
+  const userId = req.userId;
+  const user = await User.findById(userId);
 
-    const userId = req.userId;
-    const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
 
-    if (!user) {
-        return res.status(404).json({
-            success: false,
-            message: "User not found",
-        });
+  const today = new Date();
+
+  // Fetch jobs for this user where status is "completed" and expiryDate is not passed
+  const jobs = await JobPosting.find({
+    status: "completed",
+    is_del: false,
+    jobExpiryDate: { $gte: today },
+  })
+    .populate("jobType", "name")
+    .populate("country", "name")
+    .populate("city", "city_name")
+    .populate("branch", "name")
+    .populate("experienceLevel", "name")
+    .select(
+      "_id userId jobTitle jobType jobLocationType advertiseCity advertiseCityName country city branch createdAt jobExpiryDate salary"
+    )
+    .sort({ createdAt: -1 })
+    .lean();
+
+  // Step 2: Extract all unique userIds from jobs
+  const employerIds = [...new Set(jobs.map((job) => job.userId?.toString()))];
+
+  // Step 3: Fetch company details for all those userIds at once
+  const companies = await CompanyDetails.find({
+    userId: { $in: employerIds },
+  })
+    .select("userId name logo")
+    .lean();
+
+  // Step 4: Build a quick lookup map for company info
+  const companyMap = {};
+  companies.forEach((company) => {
+    companyMap[company.userId.toString()] = {
+      companyName: company.name || "",
+      logo: company.logo || "",
+    };
+  });
+
+  // Build response
+  const jobList = jobs.map((job) => {
+    const companyInfo = companyMap[job.userId?.toString()] || {
+      companyName: user?.name || "",
+      logo: "",
+    };
+
+    let location = "";
+    let advertiseCityName = "";
+
+    // Remote job logic
+    if (job.jobLocationType === "remote") {
+      location = "Remote";
+      advertiseCityName =
+        job.advertiseCity === "Yes" ? job.advertiseCityName || "" : "";
     }
 
-    const today = new Date();
+    // On-site job logic
+    else if (job.jobLocationType === "on-site") {
+      const country = job.country?.name || "";
+      const city = job.city?.city_name || "";
+      const branch = job.branch?.name || "";
 
-    // Fetch jobs for this user where status is "completed" and expiryDate is not passed
-    const jobs = await JobPosting.find({
-        status: "completed",
-        is_del: false,
-        jobExpiryDate: { $gte: today }
-    })
-        .populate("jobType", "name")
-        .populate("country", "name")
-        .populate("city", "city_name")
-        .populate("branch", "name")
-        .populate("experienceLevel", "name")
-        .select("_id userId jobTitle jobType jobLocationType advertiseCity advertiseCityName country city branch createdAt jobExpiryDate salary")
-        .sort({ createdAt: -1 })
-        .lean();
+      location = [city, country].filter(Boolean).join(", ");
+    }
 
-    // Step 2: Extract all unique userIds from jobs
-    const employerIds = [...new Set(jobs.map((job) => job.userId?.toString()))];
+    // Format date to "October 27, 2017"
+    const formatDate = (date) => {
+      if (!date) return "";
+      return new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    };
 
-    // Step 3: Fetch company details for all those userIds at once
-    const companies = await CompanyDetails.find({
-        userId: { $in: employerIds },
-    })
-        .select("userId name logo")
-        .lean();
+    return {
+      _id: job._id,
+      jobTitle: job.jobTitle,
+      jobType: job.jobType.map((item) => item.name),
+      jobExperienceLevel: job?.experienceLevel?.name || "",
+      jobLocationType: job.jobLocationType,
+      location,
+      advertiseCityName,
+      salary: job.salary || "",
+      // createdAt: formatDate(job.createdAt),
+      // expiryDate: formatDate(job.jobExpiryDate),
+      createdAgo: dayjs(job.createdAt).fromNow(),
+      // isActive: !job.jobExpiryDate || new Date(job.jobExpiryDate) >= today,
+      companyName: companyInfo.companyName || "",
+      logo: companyInfo.logo || "",
+    };
+  });
 
-    // Step 4: Build a quick lookup map for company info
-    const companyMap = {};
-    companies.forEach((company) => {
-        companyMap[company.userId.toString()] = {
-            companyName: company.name || "",
-            logo: company.logo || "",
-        };
-    });
+  res.status(200).json({
+    success: true,
+    message: "Job listing fetched successfully.",
+    data: jobList,
+  });
+};
 
-    // Build response
-    const jobList = jobs.map((job) => {
-        const companyInfo = companyMap[job.userId?.toString()] || {
-            companyName: user?.name || "",
-            logo: "",
-        };
+export const jobsearchFilters = async (req, res) => {
+  try {
+    const { keyword, city, range } = req.body;
 
-        let location = "";
-        let advertiseCityName = "";
+    let cityIds = [];
+    if (city) {
+      const cityRecord = await list_india_cities.findById(city);
 
-        // Remote job logic
-        if (job.jobLocationType === "remote") {
-            location = "Remote";
-            advertiseCityName =
-                job.advertiseCity === "Yes" ? (job.advertiseCityName || "") : "";
-        }
+      if (!cityRecord) {
+        return res.status(404).json({
+          success: false,
+          message: "City not found",
+        });
+      }
 
-        // On-site job logic
-        else if (job.jobLocationType === "on-site") {
-            const country = job.country?.name || "";
-            const city = job.city?.city_name || "";
-            const branch = job.branch?.name || "";
+      cityIds.push(cityRecord._id);
 
-            location = [city, country].filter(Boolean).join(", ");
-        }
+      // If range is provided, find nearby cities within that range (in km)
+      if (
+        range &&
+        cityRecord.location &&
+        cityRecord.location.coordinates.length === 2
+      ) {
+        // console.log("Finding nearby cities within range:", range);
 
-        // Format date to "October 27, 2017"
-        const formatDate = (date) => {
-            if (!date) return "";
-            return new Date(date).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-            });
-        };
+        const nearbyCities = await list_india_cities.find({
+          location: {
+            $nearSphere: {
+              $geometry: {
+                type: "Point",
+                coordinates: cityRecord.location.coordinates,
+              },
+              $maxDistance: range * 1000,
+            },
+          },
+          _id: { $ne: cityRecord._id },
+        });
 
-        return {
-            _id: job._id,
-            jobTitle: job.jobTitle,
-            jobType: job.jobType.map((item) => item.name),
-            jobExperienceLevel: job?.experienceLevel?.name || "",
-            jobLocationType: job.jobLocationType,
-            location,
-            advertiseCityName,
-            salary: job.salary || "",
-            // createdAt: formatDate(job.createdAt),
-            // expiryDate: formatDate(job.jobExpiryDate),
-            createdAgo: dayjs(job.createdAt).fromNow(),
-            // isActive: !job.jobExpiryDate || new Date(job.jobExpiryDate) >= today,
-            companyName: companyInfo.companyName || "",
-            logo: companyInfo.logo || "",
-        };
-    });
+        cityIds.push(...nearbyCities.map((c) => c._id));
+        // console.log("Nearby city IDs:", cityIds);
+      }
+    }
 
     res.status(200).json({
-        success: true,
-        message: "Job listing fetched successfully.",
-        data: jobList,
+      success: true,
+      message: "Job listing fetched successfully.",
+      data: {},
+      debug: { keyword, city, range, cityIds },
     });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
 };
