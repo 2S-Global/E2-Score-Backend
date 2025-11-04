@@ -289,7 +289,7 @@ export const getCandidateDetails = async (req, res) => {
 
 
         // Extract current employment safely
-        let currentEmployment = null;
+        let currentEmployment = "Fresher";
 
         // Check if employments exists and is a non-empty array
         if (Array.isArray(employment) && employment.length > 0) {
