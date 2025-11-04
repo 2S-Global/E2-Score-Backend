@@ -311,6 +311,11 @@ export const getCandidateDetails = async (req, res) => {
             resumeHeadline: userPersonalDetails?.resumeHeadline || "",
             profileSummary: userPersonalDetails?.profileSummary || "",
             expectedSalary: preferenceDetails[0]?.expectedSalary || {},
+            skills: Array.isArray(skills)
+                ? skills
+                    .filter(skill => skill?.Skill && skill.is_active === 1 && skill.is_del === 0)
+                    .map(skill => skill.Skill)
+                : [],
             // mobile: userDetails?.mobile || "",
             // dob: userDetails?.dob || "",
             // address: userDetails?.address || "",
