@@ -39,6 +39,7 @@ import list_visa_type from "../../models/monogo_query/visaTypeModel.js";
 import list_more_information from "../../models/monogo_query/moreInformationModel.js";
 import list_gender from "../../models/monogo_query/genderModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
+import mongoose from 'mongoose';
 
 const getUniqueIds = (arr, field) => [
   ...new Set(arr.map((e) => e[field]).filter(Boolean)),
