@@ -50,10 +50,10 @@ const createMap = (arr, key = "id", value = "name") =>
 
 export const getCandidateDetails = async (req, res) => {
     try {
-        const adminId = req.userId;
+        // const adminId = req.userId;
         const userId = req.query.candidateId;
 
-        if (!adminId || !userId) {
+        if (!userId) {
             return res.status(400).json({ message: "User ID and Candidate ID both are required." });
         }
 
