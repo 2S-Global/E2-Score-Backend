@@ -19,7 +19,6 @@ const upload = multer({ storage: storage });
 CandidateDetailsRouter.get(
   "/get_candidate_details",
   userAuth,
-  Adminmid,
   getCandidateDetails
 );
 
