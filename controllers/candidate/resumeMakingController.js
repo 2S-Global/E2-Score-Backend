@@ -87,76 +87,58 @@ export const getResume = async (req, res) => {
     const userDetails = userDetailsArr[0] || {};
     const candidateDetails = candidateDetailsArr[0] || {};
 
-    // const universityIds = getUniqueIds(educationRaw, "universityName");
     const universityIds = educationRaw?.length
       ? getUniqueIds(educationRaw, "universityName")
       : [];
-    // const instituteIds = getUniqueIds(educationRaw, "instituteName");
+
     const instituteIds = educationRaw?.length
       ? getUniqueIds(educationRaw, "instituteName")
       : [];
-    // const courseIds = getUniqueIds(educationRaw, "courseName");
+
     const courseIds = educationRaw?.length
       ? getUniqueIds(educationRaw, "courseName")
       : [];
-    // const boardIds = getUniqueIds(educationRaw, "board");
+
     const boardIds = educationRaw?.length
       ? getUniqueIds(educationRaw, "board")
       : [];
-    // const levelIds = getUniqueIds(educationRaw, "level");
+
     const levelIds = educationRaw?.length
       ? getUniqueIds(educationRaw, "level")
       : [];
-    // const courseTypeIds = getUniqueIds(educationRaw, "courseType");
+
     const courseTypeIds = educationRaw?.length
       ? getUniqueIds(educationRaw, "courseType")
       : [];
-    // const gradingSystemIds = getUniqueIds(educationRaw, "gradingSystem");
+
     const gradingSystemIds = educationRaw?.length
       ? getUniqueIds(educationRaw, "gradingSystem")
       : [];
 
     // For Employments
-    // const companyIds = getUniqueIds(employmentsRaw, "companyName");
     const companyIds = employmentsRaw?.length
       ? getUniqueIds(employmentsRaw, "companyName")
       : [];
 
     // For Online Profiles
-    // const socialProfileIds = getUniqueIds(onlineProfilesRaw, "socialProfile");
     const socialProfileIds = onlineProfilesRaw?.length
       ? getUniqueIds(onlineProfilesRaw, "socialProfile")
       : [];
 
     // For IT Skills
-    // const itSkillIds = getUniqueIds(userItSkills, "skillSearch");
     const itSkillIds = userItSkills?.length
       ? getUniqueIds(userItSkills, "skillSearch")
       : [];
 
     // For Project Details
-    // const taggedWithIds = getUniqueIds(userProjects, "taggedWith");
     const taggedWithIds = userProjects?.length
       ? getUniqueIds(userProjects, "taggedWith")
       : [];
 
     // For Language
-
-    // const languageIds = getUniqueIds(
-    //   userDetails.languageProficiency,
-    //   "language"
-    // );
-
     const languageIds = userDetails?.languageProficiency?.length
       ? getUniqueIds(userDetails.languageProficiency, "language")
       : [];
-
-    // For Language proficiency
-
-    // const languageProficiencyIds = getUniqueIds(
-    //   userDetails.languageProficiency,
-    //   "proficiency"
-    // );
 
     // For Language proficiency
     const languageProficiencyIds = userDetails?.languageProficiency?.length
@@ -164,8 +146,6 @@ export const getResume = async (req, res) => {
       : [];
 
     const userPref = careerProfile[0] || {};
-
-    console.log("userPref detials---", userPref);
 
     const [
       universities,
@@ -195,148 +175,214 @@ export const getResume = async (req, res) => {
       addiInfoName,
       userGender,
     ] = await Promise.all([
-      list_university_univercities.find({ id: { $in: universityIds } }).lean(),
-      list_university_colleges.find({ id: { $in: instituteIds } }).lean(),
-      list_university_course.find({ id: { $in: courseIds } }).lean(),
-      list_education_boards.find({ id: { $in: boardIds } }).lean(),
-      list_education_levels.find({ id: { $in: levelIds } }).lean(),
-      list_course_type.find({ id: { $in: courseTypeIds } }).lean(),
-      list_grading_system.find({ id: { $in: gradingSystemIds } }).lean(),
+      Array.isArray(universityIds) && universityIds.length > 0
+        ? list_university_univercities
+          .find({
+            _id: {
+              $in: universityIds.filter(id => mongoose.Types.ObjectId.isValid(id)),
+            },
+          })
+          .lean()
+        : Promise.resolve([]),
+      Array.isArray(instituteIds) && instituteIds.length > 0
+        ? list_university_colleges
+          .find({
+            _id: {
+              $in: instituteIds.filter(id => mongoose.Types.ObjectId.isValid(id)),
+            },
+          })
+          .lean()
+        : Promise.resolve([]),
+      Array.isArray(courseIds) && courseIds.length > 0
+        ? list_university_course
+          .find({
+            _id: {
+              $in: courseIds.filter(id => mongoose.Types.ObjectId.isValid(id)),
+            },
+          })
+          .lean()
+        : Promise.resolve([]),
+      Array.isArray(boardIds) && boardIds.length > 0
+        ? list_education_boards
+          .find({
+            _id: {
+              $in: boardIds.filter(id => mongoose.Types.ObjectId.isValid(id)),
+            },
+          })
+          .lean()
+        : Promise.resolve([]),
+      Array.isArray(levelIds) && levelIds.length > 0
+        ? list_education_levels
+          .find({
+            _id: { $in: levelIds.filter(id => mongoose.Types.ObjectId.isValid(id)) },
+          })
+          .lean()
+        : Promise.resolve([]),
+      Array.isArray(courseTypeIds) && courseTypeIds.length > 0
+        ? list_course_type
+          .find({
+            _id: {
+              $in: courseTypeIds.filter(id => mongoose.Types.ObjectId.isValid(id)),
+            },
+          })
+          .lean()
+        : Promise.resolve([]),
+      Array.isArray(gradingSystemIds) && gradingSystemIds.length > 0
+        ? list_grading_system
+          .find({
+            _id: {
+              $in: gradingSystemIds.filter(id => mongoose.Types.ObjectId.isValid(id)),
+            },
+          })
+          .lean()
+        : Promise.resolve([]),
       //For Employments
-      companylist.find({ _id: { $in: companyIds } }).lean(),
+      Array.isArray(companyIds) && companyIds.length > 0
+        ? companylist
+          .find({
+            _id: {
+              $in: companyIds.filter(id => mongoose.Types.ObjectId.isValid(id)),
+            },
+          })
+          .lean()
+        : Promise.resolve([]),
       // For Online Profiles
-      list_social_profile
-        .find({ _id: { $in: socialProfileIds }, is_del: 0 })
-        .lean(),
+      Array.isArray(socialProfileIds) && socialProfileIds.length > 0
+        ? list_social_profile
+          .find({
+            _id: {
+              $in: socialProfileIds.filter(id => mongoose.Types.ObjectId.isValid(id)),
+            },
+            is_del: 0,
+          })
+          .lean()
+        : Promise.resolve([]),
       // skill name value from personal details
-      list_key_skill.find({ _id: { $in: userDetails.skills || [] } }).lean(),
-      // Getting IT Skill Name
-      list_tech_skill
-        .find({ _id: { $in: itSkillIds } })
-        .select("name")
-        .lean(),
+      Array.isArray(userDetails.skills) && userDetails.skills.length > 0
+        ? list_key_skill
+          .find({
+            _id: {
+              $in: userDetails.skills.filter(id => mongoose.Types.ObjectId.isValid(id)),
+            },
+          })
+          .lean()
+        : Promise.resolve([]),
+      Array.isArray(itSkillIds) && itSkillIds.length > 0
+        ? list_tech_skill
+          .find({
+            _id: {
+              $in: itSkillIds.filter(id => mongoose.Types.ObjectId.isValid(id)),
+            },
+          })
+          .select("name")
+          .lean()
+        : Promise.resolve([]),
       // Getting taggedwithName  from user projects
-      list_project_tag.find({ _id: { $in: taggedWithIds } }).lean(),
+      Array.isArray(taggedWithIds) && taggedWithIds.length > 0
+        ? list_project_tag
+          .find({
+            _id: { $in: taggedWithIds.filter(id => mongoose.Types.ObjectId.isValid(id)) },
+          })
+          .lean()
+        : Promise.resolve([]),
       //Getting Current Industry
-
-      // list_industries
-      //   .findOne({ id: userPref.CurrentIndustry })
-      //   .select("job_industry")
-      //   .lean(),
-
       userPref?.CurrentIndustry
         ? list_industries
-            .findOne({ id: userPref.CurrentIndustry })
-            .select("job_industry")
-            .lean()
-        : Promise.resolve(null), // ✅ safe fallback promise
-
-      // Getting Current Department
-      // list_department
-      //   .findOne({ id: userPref.CurrentDepartment })
-      //   .select("job_department")
-      //   .lean(),
-
+          .findOne({ id: userPref.CurrentIndustry })
+          .select("job_industry")
+          .lean()
+        : Promise.resolve([]),
       userPref?.CurrentDepartment
         ? list_department
-            .findOne({ id: userPref.CurrentDepartment })
-            .select("job_department")
-            .lean()
-        : Promise.resolve(null),
-
-      //Getting Job Role
-      // list_job_role.findById(userPref.JobRole).select("job_role").lean(),
-
+          .findOne({ id: userPref.CurrentDepartment })
+          .select("job_department")
+          .lean()
+        : Promise.resolve([]),
       userPref?.JobRole
         ? list_job_role.findById(userPref.JobRole).select("job_role").lean()
-        : Promise.resolve(null),
-
+        : Promise.resolve([]),
       // Getting Locations
-
-      // list_india_cities
-      //   .find({ _id: { $in: userPref.location } })
-      //   .select("city_name")
-      //   .lean(),
-
       userPref?.location
         ? list_india_cities
-            .find({ _id: { $in: userPref.location } })
-            .select("city_name")
-            .lean()
-        : Promise.resolve(null),
-
+          .find({ _id: { $in: userPref.location } })
+          .select("city_name")
+          .lean()
+        : Promise.resolve([]),
       // Getting Language Name
-
-      // list_language
-      //   .find({ _id: { $in: languageIds } })
-      //   .select("name")
-      //   .lean(),
-
       languageIds?.length
         ? list_language
-            .find({ _id: { $in: languageIds } })
-            .select("name")
-            .lean()
+          .find({ _id: { $in: languageIds } })
+          .select("name")
+          .lean()
         : Promise.resolve([]),
-
       //Getting Language Proficiency
-      list_language_proficiency
-        .find({ _id: { $in: languageProficiencyIds } })
-        .select("name")
-        .lean(),
+      Array.isArray(userDetails.languageProficiencyIds) && userDetails.languageProficiencyIds.length > 0
+        ? list_language_proficiency
+          .find({ _id: { $in: userDetails.languageProficiencyIds.filter(id => mongoose.Types.ObjectId.isValid(id)) }, })
+          .select("name")
+          .lean()
+        : Promise.resolve([]),
       // Getting work permit other name
-      list_tbl_countrie
-        .find({ _id: { $in: userDetails.workPermitOther } })
-        .select("name")
-        .lean(),
+      Array.isArray(userDetails.workPermitOther) && userDetails.workPermitOther.length > 0
+        ? list_tbl_countrie
+          .find({ _id: userDetails.workPermitOther.filter(id => mongoose.Types.ObjectId.isValid(id)), })
+          .select("name")
+          .lean()
+        : Promise.resolve([]),
       // Getting Category Name
-      list_category
-        .find({ _id: userDetails.category })
-        .select("category_name")
-        .lean(),
+      userDetails.category && mongoose.Types.ObjectId.isValid(userDetails.category)
+        ? list_category
+          .find({ _id: userDetails.category })
+          .select("category_name")
+          .lean()
+        : Promise.resolve([]),
       // Get Disability Type Name
-      list_disability_type
-        .find({ _id: userDetails.disability_type })
-        .select("name")
-        .lean(),
+      userDetails.disability_type && mongoose.Types.ObjectId.isValid(userDetails.disability_type)
+        ? list_disability_type
+          .find({ _id: userDetails.disability_type })
+          .select("name")
+          .lean()
+        : Promise.resolve([]),
       // Get Career break reason
-      list_career_break_reason
-        .find({ _id: userDetails.reason })
-        .select("name")
-        .lean(),
+      userDetails.reason && mongoose.Types.ObjectId.isValid(userDetails.reason)
+        ? list_career_break_reason
+          .find({ _id: userDetails.reason })
+          .select("name")
+          .lean()
+        : Promise.resolve([]),
       // Get Marital Status Name
-      list_marital_status
-        .findById(userDetails.maritialStatus)
-        .select("status")
-        .lean(),
+      userDetails.maritialStatus && mongoose.Types.ObjectId.isValid(userDetails.maritialStatus)
+        ? list_marital_status
+          .findById(userDetails.maritialStatus)
+          .select("status")
+          .lean()
+        : Promise.resolve([]),
       // Get visa type name or usa Permit name
-      // list_visa_type.findById(userDetails.usaPermit).select("visa_name").lean(),
       userDetails.usaPermit &&
-      mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
+        mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
         ? list_visa_type
-            .findById(userDetails.usaPermit)
-            .select("visa_name")
-            .lean()
-        : Promise.resolve(null),
+          .findById(userDetails.usaPermit)
+          .select("visa_name")
+          .lean()
+        : Promise.resolve([]),
       // Get all Additional Information Name
-      list_more_information
-        .find({ _id: { $in: userDetails.additionalInformation } })
-        .select("name")
-        .lean(),
+      userDetails.additionalInformation && mongoose.Types.ObjectId.isValid(userDetails.additionalInformation)
+        ? list_more_information
+          .find({ _id: { $in: userDetails.additionalInformation } })
+          .select("name")
+          .lean()
+        : Promise.resolve([]),
       // Get Gender name from id
-
-      // list_gender.findById(user.gender).select("name").lean(),
       user?.gender
         ? list_gender.findById(user.gender).select("name").lean()
-        : Promise.resolve(null),
+        : Promise.resolve([]),
     ]);
 
     user.gender_name = userGender?.name || "";
 
-    // const locationNames = locations.map((city) => city.city_name).join(", ");
-
     const locationNames =
       locations?.map((city) => city.city_name).join(", ") || "";
+
 
     const universityMap = createMap(universities);
     const instituteMap = createMap(institutes);
@@ -345,7 +391,6 @@ export const getResume = async (req, res) => {
     // console.log("Here is my all boards: ", boardMap); return;
     const levelMap = createMap(levels, "id", "level");
     const gradingSystemMap = createMap(gradingSystemName, "id", "name");
-
     const courseTypeMap = createMap(courseTypes);
     // For Employment
     const companyMap = createMap(companies, "_id", "companyname");
@@ -357,26 +402,37 @@ export const getResume = async (req, res) => {
     const taggedWithMap = createMap(taggedWithNames, "_id", "name");
     // For Language
 
+
     // const validLanguageName = Array.isArray(languageName)
     //   ? languageName.filter(l => l && l._id && l.name)
     //   : [];
 
     // const languageNameWithMap = createMap(validLanguageName, "_id", "name");
     const languageNameWithMap = createMap(languageName, "_id", "name");
+
     // For Language Proficiency
     const languageProficiencyWithMap = createMap(
       proficiencyName,
       "_id",
       "name"
     );
+
+
+
     // For Work Perrmit Other Country Name
     const workPermitOtherNameWithMap = createMap(
       workPermitOtherName,
       "_id",
       "name"
     );
+
+
     // For Additional Information
     const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
+
+    console.log("It is running successfully after universityMap !");
+
+
 
     // Modify Education result
     const education = (educationRaw || [])
@@ -508,11 +564,11 @@ export const getResume = async (req, res) => {
 export const AdmingetResume = async (req, res) => {
   try {
     // const userId = req.userId;
-    const userId = req.query.userId;
+    // const userId = req.query.userId;
 
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required." });
-    }
+    // if (!userId) {
+    //   return res.status(400).json({ message: "User ID is required." });
+    // }
 
     const [
       user,
@@ -688,9 +744,9 @@ export const AdmingetResume = async (req, res) => {
 
       userPref?.CurrentIndustry
         ? list_industries
-            .findOne({ id: userPref.CurrentIndustry })
-            .select("job_industry")
-            .lean()
+          .findOne({ id: userPref.CurrentIndustry })
+          .select("job_industry")
+          .lean()
         : Promise.resolve(null), // ✅ safe fallback promise
 
       // Getting Current Department
@@ -701,9 +757,9 @@ export const AdmingetResume = async (req, res) => {
 
       userPref?.CurrentDepartment
         ? list_department
-            .findOne({ id: userPref.CurrentDepartment })
-            .select("job_department")
-            .lean()
+          .findOne({ id: userPref.CurrentDepartment })
+          .select("job_department")
+          .lean()
         : Promise.resolve(null),
 
       //Getting Job Role
@@ -722,9 +778,9 @@ export const AdmingetResume = async (req, res) => {
 
       userPref?.location
         ? list_india_cities
-            .find({ _id: { $in: userPref.location } })
-            .select("city_name")
-            .lean()
+          .find({ _id: { $in: userPref.location } })
+          .select("city_name")
+          .lean()
         : Promise.resolve(null),
 
       // Getting Language Name
@@ -736,9 +792,9 @@ export const AdmingetResume = async (req, res) => {
 
       languageIds?.length
         ? list_language
-            .find({ _id: { $in: languageIds } })
-            .select("name")
-            .lean()
+          .find({ _id: { $in: languageIds } })
+          .select("name")
+          .lean()
         : Promise.resolve([]),
 
       //Getting Language Proficiency
@@ -774,11 +830,11 @@ export const AdmingetResume = async (req, res) => {
       // Get visa type name or usa Permit name
       // list_visa_type.findById(userDetails.usaPermit).select("visa_name").lean(),
       userDetails.usaPermit &&
-      mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
+        mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
         ? list_visa_type
-            .findById(userDetails.usaPermit)
-            .select("visa_name")
-            .lean()
+          .findById(userDetails.usaPermit)
+          .select("visa_name")
+          .lean()
         : Promise.resolve(null),
       // Get all Additional Information Name
       list_more_information
