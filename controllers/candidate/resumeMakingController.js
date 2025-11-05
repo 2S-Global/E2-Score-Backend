@@ -379,7 +379,6 @@ export const getResume = async (req, res) => {
     const instituteMap = createMap(institutes);
     const courseMap = createMap(courses);
     const boardMap = createMap(boards, "id", "board_name");
-    // console.log("Here is my all boards: ", boardMap); return;
     const levelMap = createMap(levels, "id", "level");
     const gradingSystemMap = createMap(gradingSystemName, "id", "name");
     const courseTypeMap = createMap(courseTypes);
@@ -389,6 +388,7 @@ export const getResume = async (req, res) => {
     const socialMap = createMap(socialProfiles, "_id", "name");
     // For IT skills Name
     const itSkillMap = createMap(itSkillNameList, "_id", "name");
+
     // For Tagged with name
     const taggedWithMap = createMap(taggedWithNames, "_id", "name");
     // For Language
@@ -417,9 +417,6 @@ export const getResume = async (req, res) => {
     // For Additional Information
     const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
 
-    console.log("It is running successfully after universityMap !");
-    console.log("Here is my all education : ", educationRaw);
-    console.log("Board map: ", boardMap);
     // Modify Education result
     const education = (educationRaw || [])
       .map((edu) => {
@@ -669,8 +666,6 @@ export const AdmingetResume123 = async (req, res) => {
 
     const userPref = careerProfile[0] || {};
 
-    console.log("userPref detials---", userPref);
-
     const [
       universities,
       institutes,
@@ -846,7 +841,6 @@ export const AdmingetResume123 = async (req, res) => {
     const instituteMap = createMap(institutes);
     const courseMap = createMap(courses);
     const boardMap = createMap(boards, "id", "board_name");
-    // console.log("Here is my all boards: ", boardMap); return;
     const levelMap = createMap(levels, "id", "level");
     const gradingSystemMap = createMap(gradingSystemName, "id", "name");
 
@@ -1141,81 +1135,25 @@ export const AdmingetResume = async (req, res) => {
       userGender,
     ] = await Promise.all([
       Array.isArray(universityIds) && universityIds.length > 0
-        ? list_university_univercities
-          .find({
-            _id: {
-              $in: universityIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+        ? list_university_univercities.find({ id: { $in: universityIds } }).lean()
         : Promise.resolve([]),
       Array.isArray(instituteIds) && instituteIds.length > 0
-        ? list_university_colleges
-          .find({
-            _id: {
-              $in: instituteIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+        ? list_university_colleges.find({ id: { $in: instituteIds } }).lean()
         : Promise.resolve([]),
       Array.isArray(courseIds) && courseIds.length > 0
-        ? list_university_course
-          .find({
-            _id: {
-              $in: courseIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+        ? list_university_course.find({ id: { $in: courseIds } }).lean()
         : Promise.resolve([]),
       Array.isArray(boardIds) && boardIds.length > 0
-        ? list_education_boards
-          .find({
-            _id: {
-              $in: boardIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+        ? list_education_boards.find({ id: { $in: boardIds } }).lean()
         : Promise.resolve([]),
       Array.isArray(levelIds) && levelIds.length > 0
-        ? list_education_levels
-          .find({
-            _id: {
-              $in: levelIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+        ? list_education_levels.find({ id: { $in: levelIds } }).lean()
         : Promise.resolve([]),
       Array.isArray(courseTypeIds) && courseTypeIds.length > 0
-        ? list_course_type
-          .find({
-            _id: {
-              $in: courseTypeIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+        ? list_course_type.find({ id: { $in: courseTypeIds } }).lean()
         : Promise.resolve([]),
       Array.isArray(gradingSystemIds) && gradingSystemIds.length > 0
-        ? list_grading_system
-          .find({
-            _id: {
-              $in: gradingSystemIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+        ? list_grading_system.find({ id: { $in: gradingSystemIds } }).lean()
         : Promise.resolve([]),
       //For Employments
       Array.isArray(companyIds) && companyIds.length > 0
@@ -1396,7 +1334,6 @@ export const AdmingetResume = async (req, res) => {
     const instituteMap = createMap(institutes);
     const courseMap = createMap(courses);
     const boardMap = createMap(boards, "id", "board_name");
-    // console.log("Here is my all boards: ", boardMap); return;
     const levelMap = createMap(levels, "id", "level");
     const gradingSystemMap = createMap(gradingSystemName, "id", "name");
     const courseTypeMap = createMap(courseTypes);
@@ -1433,9 +1370,6 @@ export const AdmingetResume = async (req, res) => {
 
     // For Additional Information
     const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
-
-    console.log("It is running successfully after universityMap !");
-
     // Modify Education result
     const education = (educationRaw || [])
       .map((edu) => {
