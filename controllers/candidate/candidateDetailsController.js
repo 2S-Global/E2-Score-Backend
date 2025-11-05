@@ -374,6 +374,7 @@ export const getCandidateDetails = async (req, res) => {
             }
 
             return {
+                _id: emp._id || "",
                 jobTitle: emp.jobTitle || "Not Provided",
                 companyName: emp.companyName || "Not Provided",
                 jobDescription: emp.jobDescription || "Not Provided",
