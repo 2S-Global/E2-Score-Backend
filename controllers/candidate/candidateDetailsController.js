@@ -48,6 +48,24 @@ const getUniqueIds = (arr, field) => [
 const createMap = (arr, key = "id", value = "name") =>
     Object.fromEntries(arr.map((item) => [item[key], item[value]]));
 
+const calculateAge = (dob) => {
+    if (!dob) return ""; // handle missing DOB safely
+
+    const birthDate = new Date(dob);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    // adjust if birthday hasn't occurred yet this year
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+
+    return `${age} Years`;
+};
+
+
 export const getCandidateDetails = async (req, res) => {
     try {
         // const adminId = req.userId;
@@ -380,9 +398,35 @@ export const getCandidateDetails = async (req, res) => {
                 jobDescription: emp.jobDescription || "Not Provided",
                 duration,
                 isVerified: emp.isVerified || false,
-                meta: emp.companyName?.charAt(0).toUpperCase() || "" ,
+                meta: emp.companyName?.charAt(0).toUpperCase() || "",
             };
         });
+
+        // SidebarDetails
+        const sidebarDetails = {
+            // Basic Info
+            totalExperience: candidateDetails?.totalExperience || "",
+            age: calculateAge(candidateDetails?.dob),
+            currentSalary:
+                candidateDetails?.currentSalary && candidateDetails?.currentSalary?.salary != null
+                    ? candidateDetails.currentSalary
+                    : { currency: "", salary: 0 },
+            expectedSalary: preferenceDetails[0]?.expectedSalary || {},
+            genderName: userPersonalDetails?.genderName || "",
+            languages: userPersonalDetails?.languageProficiency?.length > 0
+                ? userPersonalDetails.languageProficiency
+                    .map(lang => lang.languageName)
+                    .sort()
+                : [],
+            highestEducation:
+                Array.isArray(education) && education.length > 0
+                    ? education.reduce((highest, current) =>
+                        Number(current.level) > Number(highest.level) ? current : highest
+                    ).levelName
+                    : "",
+        };
+
+
 
         // ===== Return Final Data =====
         return res.status(200).json({
@@ -392,6 +436,7 @@ export const getCandidateDetails = async (req, res) => {
                 userInformation,
                 education,
                 employment: formattedEmployment,
+                sidebarDetails,
                 user,
                 userPersonalDetails,
                 candidateDetails,
