@@ -108,7 +108,7 @@ export const getCandidateDetails = async (req, res) => {
             Itskill.find({ userId, is_del: false }).lean(),
             ProjectDetails.find({ userId, isDel: false }).lean(),
             UserCareer.find({ userId, isDel: false }).lean(),
-            ResumeDetails.findOne({ user:userId, isDel: false }).select("fileUrl").lean(),
+            ResumeDetails.findOne({ user: userId, isDel: false }).select("fileUrl").lean(),
         ]);
 
         const userDetails = userDetailsArr[0] || {};
@@ -249,7 +249,7 @@ export const getCandidateDetails = async (req, res) => {
         const workPermitOtherNameWithMap = createMap(workPermitOtherName, "_id", "name");
         const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
 
-        // ===== Format Results =====
+        // Education Section
         const education = (educationRaw || [])
             .map((edu) => {
                 const isSchool = ["1", "2"].includes(edu.level);
@@ -279,6 +279,7 @@ export const getCandidateDetails = async (req, res) => {
             })
             .sort((a, b) => Number(b.level) - Number(a.level)); // Descending order
 
+        // Employment Section
         const employment = (employmentsRaw || []).map((job) => ({
             ...job,
             companyName: companyMap[job.companyName?.toString()] || "Unknown Company",
@@ -336,7 +337,6 @@ export const getCandidateDetails = async (req, res) => {
         }
 
         const userInformation = {
-            // Basic Info
             _id: user?._id || "",
             fullName: user?.name || "",
             email: user?.email || "",
@@ -352,37 +352,9 @@ export const getCandidateDetails = async (req, res) => {
                     .filter(skill => skill?.Skill && skill.is_active === 1 && skill.is_del === 0)
                     .map(skill => skill.Skill)
                 : [],
-            // mobile: userDetails?.mobile || "",
-            // dob: userDetails?.dob || "",
-            // address: userDetails?.address || "",
-            // city: userDetails?.city || "",
-            // state: userDetails?.state || "",
-            // pincode: userDetails?.pincode || "",
-
-            // // Derived / lookup fields
-            // genderName: userGender?.name || "",
-            // categoryName: categoryName?.[0]?.category_name || "",
-            // disabilityTypeName: disabilityTypeName?.[0]?.name || "",
-            // reasonName: breakReasonName?.[0]?.name || "",
-            // maritalStatusName: maritalStatusName?.status || "",
-            // usaPermitName: usaPermitName?.visa_name || "",
-
-            // // Arrays (processed mappings)
-            // languageProficiency: (userDetails?.languageProficiency || []).map(lp => ({
-            //     languageName: languageNameWithMap[lp.language] || "",
-            //     proficiencyName: languageProficiencyWithMap[lp.proficiency] || "",
-            // })),
-
-            // workPermitOtherNames: (userDetails?.workPermitOther || []).map(
-            //     id => workPermitOtherNameWithMap[id] || ""
-            // ),
-
-            // additionalInformationNames: (userDetails?.additionalInformation || []).map(
-            //     id => addiInfoNameWithMap[id] || ""
-            // ),
         };
 
-        // ===== Format employment =====
+        // Format employment
         const formattedEmployment = (employment || []).map((emp) => {
             const joiningYear = emp.joiningDate?.year;
             const leavingYear = emp.leavingDate?.year;
@@ -408,7 +380,6 @@ export const getCandidateDetails = async (req, res) => {
 
         // SidebarDetails
         const sidebarDetails = {
-            // Basic Info
             totalExperience: candidateDetails?.totalExperience || "",
             age: calculateAge(candidateDetails?.dob),
             currentSalary:
@@ -431,9 +402,7 @@ export const getCandidateDetails = async (req, res) => {
             resumeUrl: candidateResume?.fileUrl || "",
         };
 
-
-
-        // ===== Return Final Data =====
+        // Return Final Data 
         return res.status(200).json({
             success: true,
             message: "Candidate details fetched successfully!",
@@ -442,18 +411,18 @@ export const getCandidateDetails = async (req, res) => {
                 education,
                 employment: formattedEmployment,
                 sidebarDetails,
-                user,
-                userPersonalDetails,
-                candidateDetails,
-                itSkills,
-                onlineProfiles: onlineProfilesRaw,
-                projects: projectDetails,
-                workSamples,
-                researchPublications,
-                userPresentations,
-                userPatents,
-                userCertifications,
-                preferenceDetails,
+                // user,
+                // userPersonalDetails,
+                // candidateDetails,
+                // itSkills,
+                // onlineProfiles: onlineProfilesRaw,
+                // projects: projectDetails,
+                // workSamples,
+                // researchPublications,
+                // userPresentations,
+                // userPatents,
+                // userCertifications,
+                // preferenceDetails,
             },
         });
     } catch (error) {
