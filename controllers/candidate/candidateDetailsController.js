@@ -39,6 +39,7 @@ import list_visa_type from "../../models/monogo_query/visaTypeModel.js";
 import list_more_information from "../../models/monogo_query/moreInformationModel.js";
 import list_gender from "../../models/monogo_query/genderModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
+import ResumeDetails from "../../models/resumeDetailsModels.js";
 import mongoose from "mongoose";
 
 const getUniqueIds = (arr, field) => [
@@ -91,6 +92,7 @@ export const getCandidateDetails = async (req, res) => {
             userItSkills,
             userProjects,
             careerProfile,
+            candidateResume
         ] = await Promise.all([
             User.findById(userId).lean(),
             usereducation.find({ userId, isDel: false }).lean(),
@@ -106,11 +108,13 @@ export const getCandidateDetails = async (req, res) => {
             Itskill.find({ userId, is_del: false }).lean(),
             ProjectDetails.find({ userId, isDel: false }).lean(),
             UserCareer.find({ userId, isDel: false }).lean(),
+            ResumeDetails.findOne({ user:userId, isDel: false }).select("fileUrl").lean(),
         ]);
 
         const userDetails = userDetailsArr[0] || {};
         const candidateDetails = candidateDetailsArr[0] || {};
         const userPref = careerProfile[0] || {};
+        // const resumeUrl = candidateResume[0] || {};
 
         // ===== Collect unique IDs =====
         const universityIds = educationRaw?.length ? getUniqueIds(educationRaw, "universityName") : [];
@@ -424,6 +428,7 @@ export const getCandidateDetails = async (req, res) => {
                         Number(current.level) > Number(highest.level) ? current : highest
                     ).levelName
                     : "",
+            resumeUrl: candidateResume?.fileUrl || "",
         };
 
 
