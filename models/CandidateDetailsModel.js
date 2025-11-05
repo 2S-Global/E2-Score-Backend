@@ -31,10 +31,10 @@ const candidateDetailsSchema = new mongoose.Schema({
   },
   totalExperience: {
     year: {
-      type: Number,
+      type: String,
     },
     month: {
-      type: Number,
+      type: String,
     },
   },
   createdAt: {
