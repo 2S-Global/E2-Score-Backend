@@ -228,12 +228,12 @@ export const getCandidateDetails = async (req, res) => {
         const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
 
         // ===== Format Results =====
-        // ===== Format Results =====
         const education = (educationRaw || [])
             .map((edu) => {
                 const isSchool = ["1", "2"].includes(edu.level);
 
                 return {
+                    _id: edu._id || "",
                     level: edu.level || "",
                     type: isSchool ? "school" : "higher",
                     levelName: levelMap[edu.level] || "Unknown Level",
