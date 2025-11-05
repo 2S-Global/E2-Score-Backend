@@ -29,6 +29,14 @@ const candidateDetailsSchema = new mongoose.Schema({
       type: Number,
     },
   },
+  totalExperience: {
+    year: {
+      type: Number,
+    },
+    month: {
+      type: Number,
+    },
+  },
   createdAt: {
     type: Date,
     default: Date.now,

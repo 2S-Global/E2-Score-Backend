@@ -217,7 +217,9 @@ export const updateUserDetails = async (req, res) => {
       hometown,
       father_name,
       salary,
-      currency
+      currency,
+      experience_years,
+      experience_months,
     } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(user_id, {
@@ -237,6 +239,10 @@ export const updateUserDetails = async (req, res) => {
         currentSalary: {
           currency: currency,
           salary: salary,
+        },
+        totalExperience: {
+          year: experience_years,
+          month: experience_months,
         },
         updatedAt: new Date(),
       },

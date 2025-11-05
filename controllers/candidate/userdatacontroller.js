@@ -120,7 +120,7 @@ export const getUser = async (req, res) => {
     }
 
     const personalData = await candidateDetails
-      .findOne({ userId: user_id }, "dob country_id currentLocation hometown fatherName currentSalary")
+      .findOne({ userId: user_id }, "dob country_id currentLocation hometown fatherName currentSalary totalExperience")
       .lean();
 
     // Format phone number for display
@@ -202,6 +202,8 @@ export const getUser = async (req, res) => {
         father_name: personalData.fatherName || "",
         currency: personalData.currentSalary?.currency || "",
         salary: personalData.currentSalary?.salary || 0,
+        experience_yr: personalData.totalExperience?.year || "",
+        experience_month: personalData.totalExperience?.month || "",
       }),
       gender_name,
       degree: levelName || "",
@@ -295,7 +297,7 @@ export const getUserDetails = async (req, res) => {
 
     const personalData = await candidateDetails.findOne(
       { userId: userId },
-      "dob country_id currentLocation hometown fatherName currentSalary"
+      "dob country_id currentLocation hometown fatherName currentSalary totalExperience"
     );
 
     if (!userData) {
@@ -312,6 +314,8 @@ export const getUserDetails = async (req, res) => {
       father_name: personalData?.fatherName || "",
       currency: personalData.currentSalary?.currency || "",
       salary: personalData.currentSalary?.salary || 0,
+      experience_yr: personalData.totalExperience?.year || "",
+      experience_month: personalData.totalExperience?.month || "",
     };
 
     res.status(200).json(result);
