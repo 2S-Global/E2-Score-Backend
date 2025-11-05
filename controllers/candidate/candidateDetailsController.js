@@ -367,10 +367,10 @@ export const getCandidateDetails = async (req, res) => {
             data: {
                 userInformation,
                 education,
+                employment,
                 user,
                 userPersonalDetails,
                 candidateDetails,
-                employment,
                 itSkills,
                 onlineProfiles: onlineProfilesRaw,
                 projects: projectDetails,
