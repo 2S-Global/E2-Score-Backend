@@ -236,7 +236,6 @@ export const getCandidateDetails = async (req, res) => {
         const instituteMap = createMap(institutes);
         const courseMap = createMap(courses);
         const boardMap = createMap(boards, "id", "board_name");
-        console.log("Here is my board map: ", boardMap);
         const levelMap = createMap(levels, "id", "level");
         const gradingSystemMap = createMap(gradingSystemName, "id", "name");
         const courseTypeMap = createMap(courseTypes);
