@@ -360,6 +360,29 @@ export const getCandidateDetails = async (req, res) => {
             // ),
         };
 
+        // ===== Format employment =====
+        const formattedEmployment = (employment || []).map((emp) => {
+            const joiningYear = emp.joiningDate?.year;
+            const leavingYear = emp.leavingDate?.year;
+
+            let duration = "Not Provided";
+
+            if (joiningYear && leavingYear) {
+                duration = `${joiningYear} - ${leavingYear}`;
+            } else if (joiningYear && !leavingYear) {
+                duration = `${joiningYear} - Present`;
+            }
+
+            return {
+                jobTitle: emp.jobTitle || "Not Provided",
+                companyName: emp.companyName || "Not Provided",
+                jobDescription: emp.jobDescription || "Not Provided",
+                duration,
+                isVerified: emp.isVerified || false,
+                meta: emp.companyName?.charAt(0).toUpperCase() || "" ,
+            };
+        });
+
         // ===== Return Final Data =====
         return res.status(200).json({
             success: true,
@@ -367,6 +390,7 @@ export const getCandidateDetails = async (req, res) => {
             data: {
                 userInformation,
                 education,
+                formattedEmployment,
                 employment,
                 user,
                 userPersonalDetails,
