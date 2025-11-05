@@ -202,8 +202,8 @@ export const getUser = async (req, res) => {
         father_name: personalData.fatherName || "",
         currency: personalData.currentSalary?.currency || "",
         salary: personalData.currentSalary?.salary || 0,
-        experience_yr: personalData.totalExperience?.year || "",
-        experience_month: personalData.totalExperience?.month || "",
+        experience_years: personalData.totalExperience?.year || "",
+        experience_months: personalData.totalExperience?.month || "",
       }),
       gender_name,
       degree: levelName || "",
@@ -314,8 +314,8 @@ export const getUserDetails = async (req, res) => {
       father_name: personalData?.fatherName || "",
       currency: personalData.currentSalary?.currency || "",
       salary: personalData.currentSalary?.salary || 0,
-      experience_yr: personalData.totalExperience?.year || "",
-      experience_month: personalData.totalExperience?.month || "",
+      experience_years: personalData.totalExperience?.year || "",
+      experience_months: personalData.totalExperience?.month || "",
     };
 
     res.status(200).json(result);
