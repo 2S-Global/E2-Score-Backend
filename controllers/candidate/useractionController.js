@@ -216,6 +216,8 @@ export const updateUserDetails = async (req, res) => {
       currentLocation,
       hometown,
       father_name,
+      salary,
+      currency
     } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(user_id, {
@@ -232,6 +234,10 @@ export const updateUserDetails = async (req, res) => {
         currentLocation: currentLocation,
         hometown: hometown,
         fatherName: father_name,
+        currentSalary: {
+          currency: currency,
+          salary: salary,
+        },
         updatedAt: new Date(),
       },
       {
@@ -703,9 +709,8 @@ export const submitUserEducation = async (req, res) => {
       savedRecord = await newRecord.save();
     }
     res.status(201).json({
-      message: `Education ${
-        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-      } successfully`,
+      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+        } successfully`,
       data: savedRecord,
     });
   } catch (error) {
@@ -891,9 +896,8 @@ export const updateUserEducation = async (req, res) => {
     }
 
     res.status(201).json({
-      message: `Education ${
-        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-      } successfully`,
+      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+        } successfully`,
       data: savedRecord,
     });
   } catch (error) {
@@ -1098,27 +1102,27 @@ export const getCareerProfileBySql = async (req, res) => {
       await Promise.all([
         CurrentIndustry
           ? db_sql.execute("SELECT job_industry FROM industries WHERE id = ?", [
-              CurrentIndustry,
-            ])
+            CurrentIndustry,
+          ])
           : Promise.resolve([[]]),
         CurrentDepartment
           ? db_sql.execute(
-              "SELECT job_department FROM departments WHERE id = ?",
-              [CurrentDepartment]
-            )
+            "SELECT job_department FROM departments WHERE id = ?",
+            [CurrentDepartment]
+          )
           : Promise.resolve([[]]),
         JobRole
           ? db_sql.execute("SELECT job_role FROM job_roles WHERE id = ?", [
-              JobRole,
-            ])
+            JobRole,
+          ])
           : Promise.resolve([[]]),
         locationIds.length > 0
           ? db_sql.execute(
-              `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
-                .map(() => "?")
-                .join(", ")})`,
-              locationIds
-            )
+            `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
+              .map(() => "?")
+              .join(", ")})`,
+            locationIds
+          )
           : Promise.resolve([[]]),
       ]);
 
@@ -1201,24 +1205,24 @@ export const getCareerProfile = async (req, res) => {
       await Promise.all([
         CurrentIndustry
           ? list_industries
-              .findOne({ id: CurrentIndustry })
-              .select("job_industry")
-              .lean()
+            .findOne({ id: CurrentIndustry })
+            .select("job_industry")
+            .lean()
           : null,
         CurrentDepartment
           ? list_department
-              .findOne({ id: CurrentDepartment })
-              .select("job_department")
-              .lean()
+            .findOne({ id: CurrentDepartment })
+            .select("job_department")
+            .lean()
           : null,
         JobRole
           ? list_job_role.findById(JobRole).select("job_role").lean()
           : null,
         locationIds.length > 0
           ? list_india_cities
-              .find({ _id: { $in: locationIds } })
-              .select("city_name")
-              .lean()
+            .find({ _id: { $in: locationIds } })
+            .select("city_name")
+            .lean()
           : [],
       ]);
 

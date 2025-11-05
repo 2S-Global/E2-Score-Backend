@@ -120,7 +120,7 @@ export const getUser = async (req, res) => {
     }
 
     const personalData = await candidateDetails
-      .findOne({ userId: user_id }, "dob country_id currentLocation hometown fatherName")
+      .findOne({ userId: user_id }, "dob country_id currentLocation hometown fatherName currentSalary")
       .lean();
 
     // Format phone number for display
@@ -200,6 +200,8 @@ export const getUser = async (req, res) => {
         currentLocation: personalData.currentLocation,
         hometown: personalData.hometown,
         father_name: personalData.fatherName || "",
+        currency: personalData.currentSalary?.currency || "",
+        salary: personalData.currentSalary?.salary || 0,
       }),
       gender_name,
       degree: levelName || "",
@@ -1074,7 +1076,7 @@ export const candidateVerifyOtp = async (req, res) => {
 
     const { otp } = req.body;
 
-    if ( !otp ) {
+    if (!otp) {
       return res.status(400).json({ success: false, message: "Mobile and OTP required" });
     }
 

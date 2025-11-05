@@ -21,6 +21,14 @@ const candidateDetailsSchema = new mongoose.Schema({
   fatherName: {
     type: String,
   },
+  currentSalary: {
+    currency: {
+      type: String,
+    },
+    salary: {
+      type: Number,
+    },
+  },
   createdAt: {
     type: Date,
     default: Date.now,
