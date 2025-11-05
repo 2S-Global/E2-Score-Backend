@@ -214,6 +214,7 @@ export const getCandidateDetails = async (req, res) => {
         const instituteMap = createMap(institutes);
         const courseMap = createMap(courses);
         const boardMap = createMap(boards, "id", "board_name");
+        console.log("Here is my board map: ", boardMap);
         const levelMap = createMap(levels, "id", "level");
         const gradingSystemMap = createMap(gradingSystemName, "id", "name");
         const courseTypeMap = createMap(courseTypes);
@@ -227,21 +228,34 @@ export const getCandidateDetails = async (req, res) => {
         const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
 
         // ===== Format Results =====
-        const education = (educationRaw || []).map((edu) => ({
-            type: ["1", "2"].includes(edu.level) ? "school" : "higher",
-            levelName: levelMap[edu.level] || "Unknown Level",
-            courseName: courseMap[edu.courseName] || "Unknown Course",
-            instituteName: instituteMap[edu.instituteName] || "Unknown Institute",
-            universityName: universityMap[edu.universityName] || "Unknown University",
-            board: boardMap[edu.board] || "Unknown Board",
-            courseType: courseTypeMap[edu.courseType] || "Unknown Course Type",
-            gradingName: gradingSystemMap[edu.gradingSystem] || "Not Provided",
-            year_of_passing: edu.year_of_passing,
-            marks: edu.marks || "Not Provided",
-            from: edu.duration?.from,
-            to: edu.duration?.to,
-        }))
-            .sort((a, b) => Number(b.level) - Number(a.level)); // descending order;
+        // ===== Format Results =====
+        const education = (educationRaw || [])
+            .map((edu) => {
+                const isSchool = ["1", "2"].includes(edu.level);
+
+                return {
+                    level: edu.level || "",
+                    type: isSchool ? "school" : "higher",
+                    levelName: levelMap[edu.level] || "Unknown Level",
+                    marks: edu.marks || "Not Provided",
+
+                    ...(isSchool
+                        ? {
+                            board: boardMap[edu.board] || "Unknown Board",
+                            year_of_passing: edu.year_of_passing || "Not Provided",
+                        }
+                        : {
+                            courseName: courseMap[edu.courseName] || "Unknown Course",
+                            instituteName: instituteMap[edu.instituteName] || "Unknown Institute",
+                            universityName: universityMap[edu.universityName] || "Unknown University",
+                            courseType: courseTypeMap[edu.courseType] || "Unknown Course Type",
+                            gradingName: gradingSystemMap[edu.gradingSystem] || "Not Provided",
+                            from: edu.duration?.from || "Not Provided",
+                            to: edu.duration?.to || "Not Provided",
+                        }),
+                };
+            })
+            .sort((a, b) => Number(b.level) - Number(a.level)); // Descending order
 
         const employment = (employmentsRaw || []).map((job) => ({
             ...job,
@@ -352,10 +366,10 @@ export const getCandidateDetails = async (req, res) => {
             message: "Candidate details fetched successfully!",
             data: {
                 userInformation,
+                education,
                 user,
                 userPersonalDetails,
                 candidateDetails,
-                education,
                 employment,
                 itSkills,
                 onlineProfiles: onlineProfilesRaw,
