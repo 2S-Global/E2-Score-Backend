@@ -131,6 +131,8 @@ export const getCandidateDetails = async (req, res) => {
         const languageIds = userDetails?.languageProficiency?.length ? getUniqueIds(userDetails.languageProficiency, "language") : [];
         const languageProficiencyIds = userDetails?.languageProficiency?.length ? getUniqueIds(userDetails.languageProficiency, "proficiency") : [];
 
+        // console.log("Here I am getting socialProfileDetails logo: ", socialProfileDetails);
+
         // ===== Fetch all referenced data safely =====
         const [
             universities,
@@ -158,7 +160,7 @@ export const getCandidateDetails = async (req, res) => {
             maritalStatusName,
             usaPermitName,
             addiInfoName,
-            userGender,
+            userGender
         ] = await Promise.all([
             Array.isArray(universityIds) && universityIds.length > 0
                 ? list_university_univercities.find({ id: { $in: universityIds } }).lean()
@@ -187,7 +189,7 @@ export const getCandidateDetails = async (req, res) => {
                 : Promise.resolve([]),
             // Social Profiles
             Array.isArray(socialProfileIds) && socialProfileIds.length > 0
-                ? list_social_profile.find({ _id: { $in: socialProfileIds.filter(id => mongoose.Types.ObjectId.isValid(id)) }, is_del: 0 }).lean()
+                ? list_social_profile.find({ _id: { $in: socialProfileIds.filter(id => mongoose.Types.ObjectId.isValid(id)) }, is_del: 0, }, { icon: 1 }).lean()
                 : Promise.resolve([]),
             // Skills
             Array.isArray(userDetails.skills) && userDetails.skills.length > 0
@@ -231,6 +233,8 @@ export const getCandidateDetails = async (req, res) => {
             user?.gender ? list_gender.findById(user.gender).select("name").lean() : Promise.resolve([]),
         ]);
 
+        console.log("Here is my social profiles: ", socialProfiles);
+
         // ===== Create Maps for lookup =====
         const universityMap = createMap(universities);
         const instituteMap = createMap(institutes);
@@ -240,13 +244,16 @@ export const getCandidateDetails = async (req, res) => {
         const gradingSystemMap = createMap(gradingSystemName, "id", "name");
         const courseTypeMap = createMap(courseTypes);
         const companyMap = createMap(companies, "_id", "companyname");
-        const socialMap = createMap(socialProfiles, "_id", "name");
+        const socialIconMap = createMap(socialProfiles, "_id", "icon");
         const itSkillMap = createMap(itSkillNameList, "_id", "name");
         const taggedWithMap = createMap(taggedWithNames, "_id", "name");
         const languageNameWithMap = createMap(languageName, "_id", "name");
         const languageProficiencyWithMap = createMap(proficiencyName, "_id", "name");
         const workPermitOtherNameWithMap = createMap(workPermitOtherName, "_id", "name");
         const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
+
+
+        console.log("Here is my social maps: ", socialIconMap);
 
         // Education Section
         const education = (educationRaw || [])
@@ -401,6 +408,13 @@ export const getCandidateDetails = async (req, res) => {
             resumeUrl: candidateResume?.fileUrl || "",
         };
 
+        // Map Online Profiles
+        const mappedOnlineProfiles = onlineProfilesRaw.map(profile => ({
+            _id: profile._id,
+            url: profile.url,
+            icon: socialIconMap[profile.socialProfile] || null
+        }));
+
         // Return Final Data 
         return res.status(200).json({
             success: true,
@@ -410,11 +424,11 @@ export const getCandidateDetails = async (req, res) => {
                 education,
                 employment: formattedEmployment,
                 sidebarDetails,
+                onlineProfiles: mappedOnlineProfiles,
                 // user,
                 // userPersonalDetails,
                 // candidateDetails,
                 // itSkills,
-                // onlineProfiles: onlineProfilesRaw,
                 // projects: projectDetails,
                 // workSamples,
                 // researchPublications,
