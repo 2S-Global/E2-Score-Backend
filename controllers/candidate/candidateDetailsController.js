@@ -288,10 +288,10 @@ export const getCandidateDetails = async (req, res) => {
             .sort((a, b) => Number(b.level) - Number(a.level)); // Descending order
 
         // Employment Section
-        const employment = (employmentsRaw || []).map((job) => ({
-            ...job,
-            companyName: companyMap[job.companyName?.toString()] || "Unknown Company",
-        }));
+        // const employment = (employmentsRaw || []).map((job) => ({
+        //     ...job,
+        //     companyName: companyMap[job.companyName?.toString()] || "Unknown Company",
+        // }));
 
         // Mapping IT skills
         const itSkillNames = [
@@ -350,11 +350,11 @@ export const getCandidateDetails = async (req, res) => {
         let currentEmployment = "Fresher";
 
         // Check if employments exists and is a non-empty array
-        if (Array.isArray(employment) && employment.length > 0) {
+        if (Array.isArray(employmentsRaw) && employmentsRaw.length > 0) {
             // Find current employment where currentEmployment = true
             currentEmployment =
-                employment.find(emp => emp.currentEmployment === true) ||
-                employment.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+                employmentsRaw.find(emp => emp.currentEmployment === true) ||
+                employmentsRaw.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
         }
 
         const userInformation = {
@@ -376,7 +376,30 @@ export const getCandidateDetails = async (req, res) => {
         };
 
         // Format employment
-        const formattedEmployment = (employment || []).map((emp) => {
+        // const formattedEmployment = (employment || []).map((emp) => {
+        //     const joiningYear = emp.joiningDate?.year;
+        //     const leavingYear = emp.leavingDate?.year;
+
+        //     let duration = "Not Provided";
+
+        //     if (joiningYear && leavingYear) {
+        //         duration = `${joiningYear} - ${leavingYear}`;
+        //     } else if (joiningYear && !leavingYear) {
+        //         duration = `${joiningYear} - Present`;
+        //     }
+
+        //     return {
+        //         _id: emp._id || "",
+        //         jobTitle: emp.jobTitle || "Not Provided",
+        //         companyName: emp.companyName || "Not Provided",
+        //         jobDescription: emp.jobDescription || "Not Provided",
+        //         duration,
+        //         isVerified: emp.isVerified || false,
+        //         meta: emp.companyName?.charAt(0).toUpperCase() || "",
+        //     };
+        // });
+
+        const formattedEmployment = (employmentsRaw || []).map((emp) => {
             const joiningYear = emp.joiningDate?.year;
             const leavingYear = emp.leavingDate?.year;
 
@@ -388,16 +411,34 @@ export const getCandidateDetails = async (req, res) => {
                 duration = `${joiningYear} - Present`;
             }
 
+            const companyName = companyMap[emp.companyName?.toString()] || "Unknown Company";
+
             return {
                 _id: emp._id || "",
                 jobTitle: emp.jobTitle || "Not Provided",
-                companyName: emp.companyName || "Not Provided",
+                companyName: companyName,
                 jobDescription: emp.jobDescription || "Not Provided",
+                joiningYear: joiningYear || "",
+                leavingYear: leavingYear || "",
                 duration,
                 isVerified: emp.isVerified || false,
-                meta: emp.companyName?.charAt(0).toUpperCase() || "",
+                meta: companyName?.charAt(0).toUpperCase() || "",
             };
-        });
+        })
+            .sort((a, b) => {
+                // If "Present" job (no leavingYear), it should come first
+                if (!a.leavingYear && b.leavingYear) return -1;
+                if (a.leavingYear && !b.leavingYear) return 1;
+
+                // Otherwise, sort by leavingYear descending
+                const leaveA = a.leavingYear || 0;
+                const leaveB = b.leavingYear || 0;
+
+                if (leaveA !== leaveB) return leaveB - leaveA;
+
+                // If same leaving year, sort by joiningYear descending
+                return (b.joiningYear || 0) - (a.joiningYear || 0);
+            });
 
         // SidebarDetails
         const sidebarDetails = {
@@ -453,6 +494,7 @@ export const getCandidateDetails = async (req, res) => {
                 // userPatents,
                 // userCertifications,
                 // preferenceDetails,
+                employmentsRaw
             },
         });
     } catch (error) {
