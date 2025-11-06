@@ -40,6 +40,8 @@ import list_more_information from "../../models/monogo_query/moreInformationMode
 import list_gender from "../../models/monogo_query/genderModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
 import ResumeDetails from "../../models/resumeDetailsModels.js";
+import list_non_tech_skill from "../../models/monogo_query/nonTechSkillModel.js";
+import Otherskill from "../../models/OtherSkillModel.js";
 import mongoose from "mongoose";
 
 const getUniqueIds = (arr, field) => [
@@ -90,6 +92,7 @@ export const getCandidateDetails = async (req, res) => {
             userPatents,
             userCertifications,
             userItSkills,
+            nonItSkills,
             userProjects,
             careerProfile,
             candidateResume
@@ -106,6 +109,7 @@ export const getCandidateDetails = async (req, res) => {
             UserPatent.find({ userId, isDel: false }).lean(),
             UserCertification.find({ userId, isDel: false }).lean(),
             Itskill.find({ userId, is_del: false }).lean(),
+            Otherskill.find({ userId, is_del: false }).lean(),
             ProjectDetails.find({ userId, isDel: false }).lean(),
             UserCareer.find({ userId, isDel: false }).lean(),
             ResumeDetails.findOne({ user: userId, isDel: false }).select("fileUrl").lean(),
@@ -115,6 +119,8 @@ export const getCandidateDetails = async (req, res) => {
         const candidateDetails = candidateDetailsArr[0] || {};
         const userPref = careerProfile[0] || {};
         // const resumeUrl = candidateResume[0] || {};
+
+        console.log("Here is my all non IT Skills: ", nonItSkills);
 
         // ===== Collect unique IDs =====
         const universityIds = educationRaw?.length ? getUniqueIds(educationRaw, "universityName") : [];
@@ -127,11 +133,12 @@ export const getCandidateDetails = async (req, res) => {
         const companyIds = employmentsRaw?.length ? getUniqueIds(employmentsRaw, "companyName") : [];
         const socialProfileIds = onlineProfilesRaw?.length ? getUniqueIds(onlineProfilesRaw, "socialProfile") : [];
         const itSkillIds = userItSkills?.length ? getUniqueIds(userItSkills, "skillSearch") : [];
+        const nonItSkillIds = nonItSkills?.length ? getUniqueIds(nonItSkills, "skillSearch") : [];
         const taggedWithIds = userProjects?.length ? getUniqueIds(userProjects, "taggedWith") : [];
         const languageIds = userDetails?.languageProficiency?.length ? getUniqueIds(userDetails.languageProficiency, "language") : [];
         const languageProficiencyIds = userDetails?.languageProficiency?.length ? getUniqueIds(userDetails.languageProficiency, "proficiency") : [];
 
-        // console.log("Here I am getting socialProfileDetails logo: ", socialProfileDetails);
+        console.log("Here I am getting all nonItSkillIds: ", nonItSkillIds);
 
         // ===== Fetch all referenced data safely =====
         const [
@@ -146,6 +153,7 @@ export const getCandidateDetails = async (req, res) => {
             socialProfiles,
             skills,
             itSkillNameList,
+            nonItSkillNameList,
             taggedWithNames,
             currentIndustry,
             currentDepartment,
@@ -198,6 +206,9 @@ export const getCandidateDetails = async (req, res) => {
             Array.isArray(itSkillIds) && itSkillIds.length > 0
                 ? list_tech_skill.find({ _id: { $in: itSkillIds.filter(id => mongoose.Types.ObjectId.isValid(id)) } }).select("name").lean()
                 : Promise.resolve([]),
+            Array.isArray(nonItSkillIds) && nonItSkillIds.length > 0
+                ? list_non_tech_skill.find({ _id: { $in: nonItSkillIds.filter(id => mongoose.Types.ObjectId.isValid(id)) } }).select("name").lean()
+                : Promise.resolve([]),
             Array.isArray(taggedWithIds) && taggedWithIds.length > 0
                 ? list_project_tag.find({ _id: { $in: taggedWithIds.filter(id => mongoose.Types.ObjectId.isValid(id)) } }).lean()
                 : Promise.resolve([]),
@@ -233,8 +244,6 @@ export const getCandidateDetails = async (req, res) => {
             user?.gender ? list_gender.findById(user.gender).select("name").lean() : Promise.resolve([]),
         ]);
 
-        console.log("Here is my social profiles: ", socialProfiles);
-
         // ===== Create Maps for lookup =====
         const universityMap = createMap(universities);
         const instituteMap = createMap(institutes);
@@ -246,14 +255,14 @@ export const getCandidateDetails = async (req, res) => {
         const companyMap = createMap(companies, "_id", "companyname");
         const socialIconMap = createMap(socialProfiles, "_id", "icon");
         const itSkillMap = createMap(itSkillNameList, "_id", "name");
+        const nonItSkillMap = createMap(nonItSkillNameList, "_id", "name");
+        // nonItSkillNameList
+        // console.log("Here is my raw data after fetching nonItSkillNameList: ", nonItSkillNameList);
         const taggedWithMap = createMap(taggedWithNames, "_id", "name");
         const languageNameWithMap = createMap(languageName, "_id", "name");
         const languageProficiencyWithMap = createMap(proficiencyName, "_id", "name");
         const workPermitOtherNameWithMap = createMap(workPermitOtherName, "_id", "name");
         const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
-
-
-        console.log("Here is my social maps: ", socialIconMap);
 
         // Education Section
         const education = (educationRaw || [])
@@ -291,10 +300,21 @@ export const getCandidateDetails = async (req, res) => {
             companyName: companyMap[job.companyName?.toString()] || "Unknown Company",
         }));
 
-        const itSkills = (userItSkills || []).map((data) => ({
-            ...data,
-            skillName: itSkillMap[data.skillSearch?.toString()] || "Not Found",
-        }));
+        const itSkillNames = [
+            ...new Set( // remove duplicates
+                (userItSkills || [])
+                    .map(data => itSkillMap[data.skillSearch?.toString()]?.trim().toLowerCase())
+                    .filter(Boolean)
+            )
+        ];
+
+        const nonItSkillNames = [
+            ...new Set( // remove duplicates
+                (nonItSkills || [])
+                    .map(data => nonItSkillMap[data.skillSearch?.toString()]?.trim().toLowerCase())
+                    .filter(Boolean)
+            )
+        ];
 
         const projectDetails = (userProjects || []).map((data) => ({
             ...data,
@@ -425,6 +445,8 @@ export const getCandidateDetails = async (req, res) => {
                 employment: formattedEmployment,
                 sidebarDetails,
                 onlineProfiles: mappedOnlineProfiles,
+                itSkillNames,
+                nonItSkillNames,
                 // user,
                 // userPersonalDetails,
                 // candidateDetails,
