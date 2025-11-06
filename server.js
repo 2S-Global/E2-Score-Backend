@@ -45,6 +45,7 @@ import CandidateCartRouter from "./routes/candidate/cart/cartRoute.js";
 import CandidateKycRoute from "./routes/candidate/CandidateKycRoute.js";
 import CandidateJobListingRouter from "./routes/candidate/CandidateJobListingRoute.js";
 import CandidateDetailsRouter from "./routes/candidate/candidateDetailsRoute.js";
+import candidateBookmarkRouter from "./routes/admin/candidateBookmarkRoute.js";
 
 //company Routes
 import CompanyProfileRouter from "./routes/company/CompanyProfileRoute.js";
@@ -111,6 +112,9 @@ app.use("/api/dashboard", dashboardRoute);
 //company routes
 app.use("/api/companyprofile", CompanyProfileRouter);
 app.use("/api/jobposting", jobPostingDataRouter);
+
+//Bookmark routes for Admin
+app.use("/api/candidatebookmark", candidateBookmarkRouter);
 
 //institute routes
 app.use("/api/instituteprofile", InstituteProfileRouter);
