@@ -118,11 +118,8 @@ export const getCandidateDetails = async (req, res) => {
         const userDetails = userDetailsArr[0] || {};
         const candidateDetails = candidateDetailsArr[0] || {};
         const userPref = careerProfile[0] || {};
-        // const resumeUrl = candidateResume[0] || {};
 
-        console.log("Here is my all non IT Skills: ", nonItSkills);
-
-        // ===== Collect unique IDs =====
+        // Collect unique IDs
         const universityIds = educationRaw?.length ? getUniqueIds(educationRaw, "universityName") : [];
         const instituteIds = educationRaw?.length ? getUniqueIds(educationRaw, "instituteName") : [];
         const courseIds = educationRaw?.length ? getUniqueIds(educationRaw, "courseName") : [];
@@ -138,9 +135,7 @@ export const getCandidateDetails = async (req, res) => {
         const languageIds = userDetails?.languageProficiency?.length ? getUniqueIds(userDetails.languageProficiency, "language") : [];
         const languageProficiencyIds = userDetails?.languageProficiency?.length ? getUniqueIds(userDetails.languageProficiency, "proficiency") : [];
 
-        console.log("Here I am getting all nonItSkillIds: ", nonItSkillIds);
-
-        // ===== Fetch all referenced data safely =====
+        // Fetch all referenced data safely
         const [
             universities,
             institutes,
@@ -244,7 +239,7 @@ export const getCandidateDetails = async (req, res) => {
             user?.gender ? list_gender.findById(user.gender).select("name").lean() : Promise.resolve([]),
         ]);
 
-        // ===== Create Maps for lookup =====
+        // Create Maps for lookup
         const universityMap = createMap(universities);
         const instituteMap = createMap(institutes);
         const courseMap = createMap(courses);
@@ -256,8 +251,6 @@ export const getCandidateDetails = async (req, res) => {
         const socialIconMap = createMap(socialProfiles, "_id", "icon");
         const itSkillMap = createMap(itSkillNameList, "_id", "name");
         const nonItSkillMap = createMap(nonItSkillNameList, "_id", "name");
-        // nonItSkillNameList
-        // console.log("Here is my raw data after fetching nonItSkillNameList: ", nonItSkillNameList);
         const taggedWithMap = createMap(taggedWithNames, "_id", "name");
         const languageNameWithMap = createMap(languageName, "_id", "name");
         const languageProficiencyWithMap = createMap(proficiencyName, "_id", "name");
@@ -300,6 +293,7 @@ export const getCandidateDetails = async (req, res) => {
             companyName: companyMap[job.companyName?.toString()] || "Unknown Company",
         }));
 
+        // Mapping IT skills
         const itSkillNames = [
             ...new Set( // remove duplicates
                 (userItSkills || [])
@@ -308,6 +302,7 @@ export const getCandidateDetails = async (req, res) => {
             )
         ];
 
+        // Mapping Non IT skills
         const nonItSkillNames = [
             ...new Set( // remove duplicates
                 (nonItSkills || [])
