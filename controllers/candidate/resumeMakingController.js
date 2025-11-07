@@ -534,7 +534,7 @@ export const getResume = async (req, res) => {
     //   "Content-Disposition",
     //   `attachment; filename="${user.name}_Resume.pdf"`
     // );
-    // res.setHeader("filename", `${user.name}_Resume.pdf`);
+    res.setHeader("filename", `${user.name}_Resume.pdf`);
     res.setHeader("Access-Control-Expose-Headers", "filename");
     res.end(pdfBuffer);
   } catch (error) {
