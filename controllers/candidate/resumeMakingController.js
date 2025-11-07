@@ -534,7 +534,7 @@ export const getResume = async (req, res) => {
     //   "Content-Disposition",
     //   `attachment; filename="${user.name}_Resume.pdf"`
     // );
-    res.setHeader("my_filename", `${user.name}_Resume.pdf`);
+    res.setHeader("filename", `${user.name}_Resume.pdf`);
     res.end(pdfBuffer);
   } catch (error) {
     console.error("Error fetching resume making details:", error);
