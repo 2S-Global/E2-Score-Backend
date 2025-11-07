@@ -376,6 +376,7 @@ export const getCandidateDetails = async (req, res) => {
             fullName: user?.name || "",
             fatherName: candidateDetails?.fatherName || "",
             email: user?.email || "",
+            phoneNumber: user?.phone_number || "",
             profilePicture: user?.profilePicture || "",
             createdAt: user?.createdAt || "",
             currentLocation: candidateDetails?.currentLocation || "",
