@@ -248,8 +248,6 @@ export const getCandidateDetails = async (req, res) => {
 
         ]);
 
-        console.log("Here is my country name information---: ", countryName);
-
         // Create Maps for lookup
         const universityMap = createMap(universities);
         const instituteMap = createMap(institutes);
@@ -389,30 +387,6 @@ export const getCandidateDetails = async (req, res) => {
                 : [],
         };
 
-        // Format employment
-        // const formattedEmployment = (employment || []).map((emp) => {
-        //     const joiningYear = emp.joiningDate?.year;
-        //     const leavingYear = emp.leavingDate?.year;
-
-        //     let duration = "Not Provided";
-
-        //     if (joiningYear && leavingYear) {
-        //         duration = `${joiningYear} - ${leavingYear}`;
-        //     } else if (joiningYear && !leavingYear) {
-        //         duration = `${joiningYear} - Present`;
-        //     }
-
-        //     return {
-        //         _id: emp._id || "",
-        //         jobTitle: emp.jobTitle || "Not Provided",
-        //         companyName: emp.companyName || "Not Provided",
-        //         jobDescription: emp.jobDescription || "Not Provided",
-        //         duration,
-        //         isVerified: emp.isVerified || false,
-        //         meta: emp.companyName?.charAt(0).toUpperCase() || "",
-        //     };
-        // });
-
         const formattedEmployment = (employmentsRaw || []).map((emp) => {
             const joiningYear = emp.joiningDate?.year;
             const leavingYear = emp.leavingDate?.year;
@@ -472,13 +446,7 @@ export const getCandidateDetails = async (req, res) => {
                     : { currency: "", salary: 0 },
             expectedSalary: preferenceDetails[0]?.expectedSalary || {},
             genderName: userPersonalDetails?.genderName || "",
-            // languages: userPersonalDetails?.languageProficiency?.length > 0
-            //     ? userPersonalDetails.languageProficiency
-            //         .map(lang => lang.languageName)
-            //         .sort()
-            //     : [],
-            // Update Version of Language List
-            languageList: (userDetails.languageProficiency || [])
+            languages: (userDetails.languageProficiency || [])
                 .map(lp => {
                     const lang = languageName.find(l => l._id.toString() === lp.language.toString());
                     const prof = proficiencyName.find(p => p._id.toString() === lp.proficiency.toString());
@@ -486,8 +454,6 @@ export const getCandidateDetails = async (req, res) => {
                 })
                 .sort((a, b) => (proficiencyOrder[a.prof] || 99) - (proficiencyOrder[b.prof] || 99))
                 .map(i => i.lang),
-            // Testing Languages
-            // languagesTest: userPersonalDetails.languageProficiency,
             highestEducation:
                 Array.isArray(education) && education.length > 0
                     ? education.reduce((highest, current) =>
@@ -529,7 +495,7 @@ export const getCandidateDetails = async (req, res) => {
                 // preferenceDetails,
                 // employmentsRaw
                 // candidateDetails
-                userDetails,
+                // userDetails,
             },
         });
     } catch (error) {
