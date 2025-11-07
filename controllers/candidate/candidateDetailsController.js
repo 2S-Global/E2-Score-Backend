@@ -454,6 +454,14 @@ export const getCandidateDetails = async (req, res) => {
                 return (b.joiningYear || 0) - (a.joiningYear || 0);
             });
 
+
+        // Define your proficiency priority
+        const proficiencyOrder = {
+            Expert: 1,
+            Proficient: 2,
+            Beginner: 3,
+        };
+
         // SidebarDetails
         const sidebarDetails = {
             totalExperience: candidateDetails?.totalExperience || "",
@@ -464,11 +472,22 @@ export const getCandidateDetails = async (req, res) => {
                     : { currency: "", salary: 0 },
             expectedSalary: preferenceDetails[0]?.expectedSalary || {},
             genderName: userPersonalDetails?.genderName || "",
-            languages: userPersonalDetails?.languageProficiency?.length > 0
-                ? userPersonalDetails.languageProficiency
-                    .map(lang => lang.languageName)
-                    .sort()
-                : [],
+            // languages: userPersonalDetails?.languageProficiency?.length > 0
+            //     ? userPersonalDetails.languageProficiency
+            //         .map(lang => lang.languageName)
+            //         .sort()
+            //     : [],
+            // Update Version of Language List
+            languageList: (userDetails.languageProficiency || [])
+                .map(lp => {
+                    const lang = languageName.find(l => l._id.toString() === lp.language.toString());
+                    const prof = proficiencyName.find(p => p._id.toString() === lp.proficiency.toString());
+                    return { lang: lang?.name, prof: prof?.name };
+                })
+                .sort((a, b) => (proficiencyOrder[a.prof] || 99) - (proficiencyOrder[b.prof] || 99))
+                .map(i => i.lang),
+            // Testing Languages
+            // languagesTest: userPersonalDetails.languageProficiency,
             highestEducation:
                 Array.isArray(education) && education.length > 0
                     ? education.reduce((highest, current) =>
@@ -509,7 +528,8 @@ export const getCandidateDetails = async (req, res) => {
                 // userCertifications,
                 // preferenceDetails,
                 // employmentsRaw
-                candidateDetails
+                // candidateDetails
+                userDetails,
             },
         });
     } catch (error) {
