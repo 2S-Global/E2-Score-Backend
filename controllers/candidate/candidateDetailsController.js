@@ -41,6 +41,7 @@ import list_gender from "../../models/monogo_query/genderModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
 import ResumeDetails from "../../models/resumeDetailsModels.js";
 import list_non_tech_skill from "../../models/monogo_query/nonTechSkillModel.js";
+import CandidateKYC from "../../models/CandidateKYCModel.js";
 import Otherskill from "../../models/OtherSkillModel.js";
 import mongoose from "mongoose";
 
@@ -95,7 +96,8 @@ export const getCandidateDetails = async (req, res) => {
             nonItSkills,
             userProjects,
             careerProfile,
-            candidateResume
+            candidateResume,
+            candidateKycDetails
         ] = await Promise.all([
             User.findById(userId).lean(),
             usereducation.find({ userId, isDel: false }).lean(),
@@ -113,7 +115,10 @@ export const getCandidateDetails = async (req, res) => {
             ProjectDetails.find({ userId, isDel: false }).lean(),
             UserCareer.find({ userId, isDel: false }).lean(),
             ResumeDetails.findOne({ user: userId, isDel: false }).select("fileUrl").lean(),
+            CandidateKYC.findOne({ userId }).lean(),
         ]);
+
+        console.log("----------Candidate Details-------  : ", candidateKycDetails);
 
         const userDetails = userDetailsArr[0] || {};
         const candidateDetails = candidateDetailsArr[0] || {};
@@ -446,7 +451,7 @@ export const getCandidateDetails = async (req, res) => {
                     : { currency: "", salary: 0 },
             expectedSalary: preferenceDetails[0]?.expectedSalary || {},
             genderName: userPersonalDetails?.genderName || "",
-            languages: (userDetails.languageProficiency || [])
+            languages: (userDetails?.languageProficiency || [])
                 .map(lp => {
                     const lang = languageName.find(l => l._id.toString() === lp.language.toString());
                     const prof = proficiencyName.find(p => p._id.toString() === lp.proficiency.toString());
@@ -470,6 +475,25 @@ export const getCandidateDetails = async (req, res) => {
             icon: socialIconMap[profile.socialProfile] || null
         }));
 
+
+        // KYC Details
+        // Define the document types you want to check
+        const docTypes = ["pan", "epic", "aadhar", "passport", "dl"];
+        const kycResult = {};
+
+        // Iterate over each type and determine verified or not
+        for (const type of docTypes) {
+            const verifiedField = `${type}_verified`; // e.g. pan_verified
+            const isVerified = candidateKycDetails[verifiedField] === true; // boolean check
+
+            // Add verified status to result like { pan_verified: true }
+            kycResult[verifiedField] = isVerified;
+        }
+
+        // console.log("Here is my results map: ", kycResult);
+
+
+
         // Return Final Data 
         return res.status(200).json({
             success: true,
@@ -482,6 +506,7 @@ export const getCandidateDetails = async (req, res) => {
                 onlineProfiles: mappedOnlineProfiles,
                 itSkillNames,
                 nonItSkillNames,
+                kycResult,
                 // user,
                 // userPersonalDetails,
                 // candidateDetails,
