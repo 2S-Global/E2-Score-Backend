@@ -118,7 +118,7 @@ export const getCandidateDetails = async (req, res) => {
             CandidateKYC.findOne({ userId }).lean(),
         ]);
 
-        console.log("----------Candidate Details-------  : ", candidateKycDetails);
+        console.log("---------Here I am getting user projects-------  : ", userProjects);
 
         const userDetails = userDetailsArr[0] || {};
         const candidateDetails = candidateDetailsArr[0] || {};
@@ -325,10 +325,67 @@ export const getCandidateDetails = async (req, res) => {
             )
         ];
 
-        const projectDetails = (userProjects || []).map((data) => ({
-            ...data,
-            taggedWithName: taggedWithMap[data.taggedWith?.toString()] || "Not Found",
-        }));
+        // This is for Project Section
+
+
+        // const projectDetails = (userProjects || []).map((data) => ({
+        //     ...data,
+        //     taggedWithName: taggedWithMap[data.taggedWith?.toString()] || "Not Found",
+        // }));
+
+
+        const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ];
+
+        const formattedProjects = await Promise.all(
+            userProjects.map(async (project) => {
+                // const doc = project._doc;
+                const taggedWith = project.taggedWith || "";
+
+                let taggedWithName = null;
+                if (taggedWith && mongoose.Types.ObjectId.isValid(taggedWith)) {
+                    const tag = await list_project_tag.findOne({
+                        _id: new mongoose.Types.ObjectId(taggedWith),
+                    });
+                    taggedWithName = tag?.name || null;
+                }
+
+                return {
+                    _id: project._id,
+                    userId: project.userId,
+                    title: project.projectTitle || "",
+                    taggedWith,
+                    taggedWithName,
+                    client: project.clientName || "",
+                    status: project.projectStatus || "",
+                    description: project.description || "",
+                    workfromyear: project.workedFrom?.year || null,
+                    workfrommonth: project.workedFrom?.month || null,
+                    workfrommonth_name: project.workedFrom?.month
+                        ? monthNames[project.workedFrom.month - 1]
+                        : null,
+                    worktoyear: project.workedTill?.year || null,
+                    worktomonth: project.workedTill?.month || null,
+                    worktomonth_name: project.workedTill?.month
+                        ? monthNames[project.workedTill.month - 1]
+                        : null,
+                    createdAt: project.createdAt || null,
+                    updatedAt: project.updatedAt || null,
+                };
+            })
+        );
 
         const preferenceDetails = (careerProfile || []).map((data) => ({
             ...data,
