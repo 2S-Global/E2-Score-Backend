@@ -222,6 +222,8 @@ export const updateUserDetails = async (req, res) => {
       experience_months,
     } = req.body;
 
+    console.log("Here I am getting country: ", country);
+
     const updatedUser = await User.findByIdAndUpdate(user_id, {
       name: full_name,
       gender: gender || "",

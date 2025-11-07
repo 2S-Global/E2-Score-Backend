@@ -163,7 +163,8 @@ export const getCandidateDetails = async (req, res) => {
             maritalStatusName,
             usaPermitName,
             addiInfoName,
-            userGender
+            userGender,
+            countryName,
         ] = await Promise.all([
             Array.isArray(universityIds) && universityIds.length > 0
                 ? list_university_univercities.find({ id: { $in: universityIds } }).lean()
@@ -237,7 +238,17 @@ export const getCandidateDetails = async (req, res) => {
                 ? list_more_information.find({ _id: { $in: userDetails.additionalInformation } }).select("name").lean()
                 : Promise.resolve([]),
             user?.gender ? list_gender.findById(user.gender).select("name").lean() : Promise.resolve([]),
+
+            candidateDetails?.country_id
+                ? list_tbl_countrie.findOne(
+                    { id: Number(candidateDetails.country_id) }, // change to _id if needed
+                    { name: 1 }
+                ).lean()
+                : Promise.resolve(null),
+
         ]);
+
+        console.log("Here is my country name information---: ", countryName);
 
         // Create Maps for lookup
         const universityMap = createMap(universities);
@@ -360,10 +371,13 @@ export const getCandidateDetails = async (req, res) => {
         const userInformation = {
             _id: user?._id || "",
             fullName: user?.name || "",
+            fatherName: candidateDetails?.fatherName || "",
             email: user?.email || "",
             profilePicture: user?.profilePicture || "",
             createdAt: user?.createdAt || "",
             currentLocation: candidateDetails?.currentLocation || "",
+            countryName: countryName?.name || "",
+            hometown: candidateDetails?.hometown || "",
             currentJobTitle: currentEmployment?.jobTitle || "",
             resumeHeadline: userPersonalDetails?.resumeHeadline || "",
             profileSummary: userPersonalDetails?.profileSummary || "",
@@ -494,7 +508,8 @@ export const getCandidateDetails = async (req, res) => {
                 // userPatents,
                 // userCertifications,
                 // preferenceDetails,
-                employmentsRaw
+                // employmentsRaw
+                candidateDetails
             },
         });
     } catch (error) {

@@ -163,7 +163,7 @@ export const All_country = async (req, res) => {
 
     // Transform _id to id
     const formattedCountries = countries.map((country) => ({
-      id: country._id,
+      id: country.id,
       name: country.name,
     }));
 
