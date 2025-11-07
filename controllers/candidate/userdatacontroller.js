@@ -1114,3 +1114,28 @@ export const candidateVerifyOtp = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
+// Get Name By Token
+export const getNameByToken = async (req, res) => {
+  try {
+    const user_id = req.userId;
+
+    if (!user_id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const user = await user.findOne({ _id: user_id });
+
+    if (!user) {
+      return res.status(404).json({ message: "No User" });
+    }
+
+    if (!user.resumeHeadline || user.resumeHeadline.trim() === "") {
+      return res.status(404).json({ message: "Resume headline not found" });
+    }
+
+    res.status(200).json({ resumeHeadline: user.resumeHeadline });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
