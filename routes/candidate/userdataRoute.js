@@ -63,6 +63,6 @@ userdataRouter.post("/candidate_phonenumber_verify", userAuth, upload.none(), ca
 userdataRouter.post("/verify-otp", userAuth, upload.none(), candidateVerifyOtp);
 
 //Get Name By Token
-userdataRouter.get("/get_name_by_token", userAuth, getNameByToken);
+// userdataRouter.get("/get_name_by_token", userAuth, getNameByToken);
 
 export default userdataRouter;
