@@ -351,16 +351,13 @@ export const getCandidateDetails = async (req, res) => {
             "December",
         ];
 
-        const formattedProjects = await Promise.all(
+        const candidateProjects = await Promise.all(
             userProjects.map(async (project) => {
-                // const doc = project._doc;
                 const taggedWith = project.taggedWith || "";
-                // Find matching tag by ID
                 const tag = taggedWithNames.find(
                     t => t._id.toString() === taggedWith.toString()
                 );
 
-                // Get tag name if found, else null
                 const taggedName = tag ? tag.name : null;
 
                 return {
@@ -568,6 +565,7 @@ export const getCandidateDetails = async (req, res) => {
                 itSkillNames,
                 nonItSkillNames,
                 kycResult,
+                candidateProjects,
                 // user,
                 // userPersonalDetails,
                 // candidateDetails,
@@ -582,7 +580,7 @@ export const getCandidateDetails = async (req, res) => {
                 // employmentsRaw
                 // candidateDetails
                 // userDetails,
-                formattedProjects
+                // formattedProjects
             },
         });
     } catch (error) {
