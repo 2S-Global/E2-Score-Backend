@@ -566,7 +566,11 @@ export const getCandidateDetails = async (req, res) => {
                 nonItSkillNames,
                 kycResult,
                 candidateProjects,
-                userCertifications
+                userCertifications,
+                userPatents,
+                userPresentations,
+                researchPublications,
+                workSamples,
                 // user,
                 // userPersonalDetails,
                 // candidateDetails,
