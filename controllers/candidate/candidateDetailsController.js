@@ -253,6 +253,8 @@ export const getCandidateDetails = async (req, res) => {
 
         ]);
 
+        console.log("---------Here is Tagged with name all details:-------", taggedWithNames);
+
         // Create Maps for lookup
         const universityMap = createMap(universities);
         const instituteMap = createMap(institutes);
@@ -353,21 +355,20 @@ export const getCandidateDetails = async (req, res) => {
             userProjects.map(async (project) => {
                 // const doc = project._doc;
                 const taggedWith = project.taggedWith || "";
+                // Find matching tag by ID
+                const tag = taggedWithNames.find(
+                    t => t._id.toString() === taggedWith.toString()
+                );
 
-                let taggedWithName = null;
-                if (taggedWith && mongoose.Types.ObjectId.isValid(taggedWith)) {
-                    const tag = await list_project_tag.findOne({
-                        _id: new mongoose.Types.ObjectId(taggedWith),
-                    });
-                    taggedWithName = tag?.name || null;
-                }
+                // Get tag name if found, else null
+                const taggedName = tag ? tag.name : null;
 
                 return {
                     _id: project._id,
                     userId: project.userId,
                     title: project.projectTitle || "",
                     taggedWith,
-                    taggedWithName,
+                    taggedName,
                     client: project.clientName || "",
                     status: project.projectStatus || "",
                     description: project.description || "",
@@ -541,8 +542,10 @@ export const getCandidateDetails = async (req, res) => {
 
         // Iterate over each type and determine verified or not
         for (const type of docTypes) {
-            const verifiedField = `${type}_verified`; // e.g. pan_verified
-            const isVerified = candidateKycDetails[verifiedField] === true; // boolean check
+            const verifiedField = `${type}_verified`;
+            const value = candidateKycDetails?.[verifiedField];
+
+            const isVerified = value === true ? true : false;
 
             // Add verified status to result like { pan_verified: true }
             kycResult[verifiedField] = isVerified;
@@ -579,6 +582,7 @@ export const getCandidateDetails = async (req, res) => {
                 // employmentsRaw
                 // candidateDetails
                 // userDetails,
+                formattedProjects
             },
         });
     } catch (error) {
