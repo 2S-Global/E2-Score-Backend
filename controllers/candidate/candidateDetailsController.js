@@ -275,8 +275,8 @@ export const getCandidateDetails = async (req, res) => {
                 : Promise.resolve(null),
         ]);
 
-        console.log("---------Here is addiInfoName Details:-------", addiInfoName);
-        console.log("---Here is my all User Details---", userDetails);
+        console.log("---------Here is currentDepartment :-------", currentDepartment);
+        // console.log("---Here is my all User Details---", userDetails);
 
         // Create Maps for lookup
         const universityMap = createMap(universities);
@@ -296,7 +296,7 @@ export const getCandidateDetails = async (req, res) => {
         const workPermitOtherNameWithMap = createMap(workPermitOtherName, "id", "name");
         const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
 
-        console.log("--Here is my all addiInfoNameWithMap --", addiInfoNameWithMap);
+        // console.log("--Here is my all addiInfoNameWithMap --", addiInfoNameWithMap);
 
         // Education Section
         const education = (educationRaw || [])
@@ -417,6 +417,8 @@ export const getCandidateDetails = async (req, res) => {
             jobRoleName: jobRole?.job_role || "Unknown Role",
             preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
         }));
+
+        console.log("----Here is my Career Profile: -----", careerProfile);
 
         const userPersonalDetails = {
             ...(userDetails || {}),
@@ -607,6 +609,25 @@ export const getCandidateDetails = async (req, res) => {
                 .join(", "),
         };
 
+        const candidateCareerProfile = {
+            // currentIndustry
+            industry_name: currentIndustry?.job_industry || "",
+            department_name: currentDepartment?.job_department || "",
+            job_role_name: jobRole?.job_role || "",
+            job_type: userPref?.DesiredJob || "",
+            employment_type: userPref?.DesiredEmployment || "",
+            shift: userPref?.PreferredShift || "",
+            // currency_type: userPref?.expectedSalary?.currency || "",
+            expected_salary: userPref?.expectedSalary?.salary
+                ? new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: userPref?.expectedSalary?.currency || "INR",
+                    maximumFractionDigits: 0
+                }).format(userPref.expectedSalary.salary)
+                : "",
+            preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
+        };
+
         // Return Final Data 
         return res.status(200).json({
             success: true,
@@ -627,6 +648,7 @@ export const getCandidateDetails = async (req, res) => {
                 researchPublications,
                 workSamples,
                 candidatePersonalDetails,
+                candidateCareerProfile,
                 // user,
                 // userPersonalDetails,
                 // candidateDetails,
