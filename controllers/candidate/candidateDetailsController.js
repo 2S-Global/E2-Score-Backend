@@ -576,9 +576,9 @@ export const getCandidateDetails = async (req, res) => {
         // console.log("Here is workPermitOtherNameWithMap map: ", workPermitOtherNameWithMap);
 
         const candidatePersonalDetails = {
-            gender: userGender?.name || "",
-            dob: candidateDetails?.dob,
-            hometown: candidateDetails?.hometown,
+            // gender: userGender?.name || "",
+            // dob: candidateDetails?.dob,
+            // hometown: candidateDetails?.hometown,
             category: categoryName?.[0]?.category_name || "",
             career_break: userDetails?.careerBreak ?? "",
             currently_on_career_break: userDetails.currentlyOnCareerBreak ?? false,
