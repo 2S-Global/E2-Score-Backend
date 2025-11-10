@@ -275,9 +275,6 @@ export const getCandidateDetails = async (req, res) => {
                 : Promise.resolve(null),
         ]);
 
-        console.log("---------Here is currentDepartment :-------", currentDepartment);
-        // console.log("---Here is my all User Details---", userDetails);
-
         // Create Maps for lookup
         const universityMap = createMap(universities);
         const instituteMap = createMap(institutes);
@@ -649,21 +646,6 @@ export const getCandidateDetails = async (req, res) => {
                 workSamples,
                 candidatePersonalDetails,
                 candidateCareerProfile,
-                // user,
-                // userPersonalDetails,
-                // candidateDetails,
-                // itSkills,
-                // projects: projectDetails,
-                // workSamples,
-                // researchPublications,
-                // userPresentations,
-                // userPatents,
-                // userCertifications,
-                // preferenceDetails,
-                // employmentsRaw
-                // candidateDetails
-                // userDetails,
-                // formattedProjects
             },
         });
     } catch (error) {
