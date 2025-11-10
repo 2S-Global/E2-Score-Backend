@@ -239,7 +239,7 @@ export const getCandidateDetails = async (req, res) => {
                 ? list_language_proficiency.find({ _id: { $in: languageProficiencyIds.filter(id => mongoose.Types.ObjectId.isValid(id)) } }).select("name").lean()
                 : Promise.resolve([]),
             Array.isArray(userDetails.workPermitOther) && userDetails.workPermitOther.length > 0
-                ? list_tbl_countrie.find({ id: { $in: userDetails.workPermitOther } }).select("id name").lean()
+                ? list_tbl_countrie.find({ id: { $in: userDetails.workPermitOther.map(Number) } }).select("id name").lean()
                 : Promise.resolve([]),
             userDetails.category && mongoose.Types.ObjectId.isValid(userDetails.category)
                 ? list_category.find({ _id: userDetails.category }).select("category_name").lean()
