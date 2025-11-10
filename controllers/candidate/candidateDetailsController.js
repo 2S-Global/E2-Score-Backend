@@ -118,7 +118,7 @@ export const getCandidateDetails = async (req, res) => {
             CandidateKYC.findOne({ userId }).lean(),
         ]);
 
-        console.log("---------Here I am getting user projects-------  : ", userProjects);
+        console.log("---------Here I am getting user certifications-------  : ", userCertifications);
 
         const userDetails = userDetailsArr[0] || {};
         const candidateDetails = candidateDetailsArr[0] || {};
@@ -253,7 +253,7 @@ export const getCandidateDetails = async (req, res) => {
 
         ]);
 
-        console.log("---------Here is Tagged with name all details:-------", taggedWithNames);
+        // console.log("---------Here is Tagged with name all details:-------", taggedWithNames);
 
         // Create Maps for lookup
         const universityMap = createMap(universities);
@@ -566,6 +566,7 @@ export const getCandidateDetails = async (req, res) => {
                 nonItSkillNames,
                 kycResult,
                 candidateProjects,
+                userCertifications
                 // user,
                 // userPersonalDetails,
                 // candidateDetails,
