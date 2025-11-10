@@ -293,8 +293,6 @@ export const getCandidateDetails = async (req, res) => {
         const workPermitOtherNameWithMap = createMap(workPermitOtherName, "id", "name");
         const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
 
-        // console.log("--Here is my all addiInfoNameWithMap --", addiInfoNameWithMap);
-
         // Education Section
         const education = (educationRaw || [])
             .map((edu) => {
@@ -325,12 +323,6 @@ export const getCandidateDetails = async (req, res) => {
             })
             .sort((a, b) => Number(b.level) - Number(a.level)); // Descending order
 
-        // Employment Section
-        // const employment = (employmentsRaw || []).map((job) => ({
-        //     ...job,
-        //     companyName: companyMap[job.companyName?.toString()] || "Unknown Company",
-        // }));
-
         // Mapping IT skills
         const itSkillNames = [
             ...new Set( // remove duplicates
@@ -348,15 +340,6 @@ export const getCandidateDetails = async (req, res) => {
                     .filter(Boolean)
             )
         ];
-
-        // This is for Project Section
-
-
-        // const projectDetails = (userProjects || []).map((data) => ({
-        //     ...data,
-        //     taggedWithName: taggedWithMap[data.taggedWith?.toString()] || "Not Found",
-        // }));
-
 
         const monthNames = [
             "January",
@@ -407,38 +390,6 @@ export const getCandidateDetails = async (req, res) => {
             })
         );
 
-        const preferenceDetails = (careerProfile || []).map((data) => ({
-            ...data,
-            industryName: currentIndustry?.job_industry || "Unknown Industry",
-            departmentName: currentDepartment?.job_department || "Unknown Department",
-            jobRoleName: jobRole?.job_role || "Unknown Role",
-            preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
-        }));
-
-        console.log("----Here is my Career Profile: -----", careerProfile);
-
-        const userPersonalDetails = {
-            ...(userDetails || {}),
-            genderName: userGender?.name || "",
-            categoryName: categoryName?.[0]?.category_name || "",
-            disabilityTypeName: disabilityTypeName?.[0]?.name || "",
-            reasonName: breakReasonName?.[0]?.name || "",
-            maritalStatusName: maritalStatusName?.status || "",
-            usaPermitName: usaPermitName?.visa_name || "",
-            languageProficiency: (userDetails?.languageProficiency || []).map((lp) => ({
-                ...lp,
-                languageName: languageNameWithMap[lp.language] || "",
-                proficiencyName: languageProficiencyWithMap[lp.proficiency] || "",
-            })),
-            workPermitOtherNames: (userDetails?.workPermitOther || []).map(
-                (id) => workPermitOtherNameWithMap[id] || ""
-            ),
-            additionalInformationNames: (userDetails?.additionalInformation || []).map(
-                (id) => addiInfoNameWithMap[id] || ""
-            ),
-        };
-
-
         // Extract current employment safely
         let currentEmployment = "Fresher";
 
@@ -462,9 +413,9 @@ export const getCandidateDetails = async (req, res) => {
             countryName: countryName?.name || "",
             hometown: candidateDetails?.hometown || "",
             currentJobTitle: currentEmployment?.jobTitle || "",
-            resumeHeadline: userPersonalDetails?.resumeHeadline || "",
-            profileSummary: userPersonalDetails?.profileSummary || "",
-            expectedSalary: preferenceDetails[0]?.expectedSalary || {},
+            resumeHeadline: userDetails?.resumeHeadline || "",
+            profileSummary: userDetails?.profileSummary || "",
+            expectedSalary: userPref?.expectedSalary || {},
             skills: Array.isArray(skills)
                 ? skills
                     .filter(skill => skill?.Skill && skill.is_active === 1 && skill.is_del === 0)
@@ -529,8 +480,8 @@ export const getCandidateDetails = async (req, res) => {
                 candidateDetails?.currentSalary && candidateDetails?.currentSalary?.salary != null
                     ? candidateDetails.currentSalary
                     : { currency: "", salary: 0 },
-            expectedSalary: preferenceDetails[0]?.expectedSalary || {},
-            genderName: userPersonalDetails?.genderName || "",
+            expectedSalary: userPref?.expectedSalary || {},
+            genderName: userGender?.name || "",
             languages: (userDetails?.languageProficiency || [])
                 .map(lp => {
                     const lang = languageName.find(l => l._id.toString() === lp.language.toString());
@@ -572,12 +523,7 @@ export const getCandidateDetails = async (req, res) => {
             kycResult[verifiedField] = isVerified;
         }
 
-        // console.log("Here is workPermitOtherNameWithMap map: ", workPermitOtherNameWithMap);
-
         const candidatePersonalDetails = {
-            // gender: userGender?.name || "",
-            // dob: candidateDetails?.dob,
-            // hometown: candidateDetails?.hometown,
             category: categoryName?.[0]?.category_name || "",
             career_break: userDetails?.careerBreak ?? "",
             currently_on_career_break: userDetails.currentlyOnCareerBreak ?? false,
@@ -597,24 +543,20 @@ export const getCandidateDetails = async (req, res) => {
                 .join(", "),
             permanent_address: userDetails.permanentAddress,
             pincode: userDetails.pincode,
-            // languages,
             marital_status: maritalStatusName?.status || "",
-            // more_info: moreInfo,
             more_info: (userDetails?.additionalInformation || [])
                 .map((id) => addiInfoNameWithMap[id] || "")
-                .filter(Boolean) // remove any empty strings
+                .filter(Boolean)
                 .join(", "),
         };
 
         const candidateCareerProfile = {
-            // currentIndustry
             industry_name: currentIndustry?.job_industry || "",
             department_name: currentDepartment?.job_department || "",
             job_role_name: jobRole?.job_role || "",
             job_type: userPref?.DesiredJob || "",
             employment_type: userPref?.DesiredEmployment || "",
             shift: userPref?.PreferredShift || "",
-            // currency_type: userPref?.expectedSalary?.currency || "",
             expected_salary: userPref?.expectedSalary?.salary
                 ? new Intl.NumberFormat("en-IN", {
                     style: "currency",
