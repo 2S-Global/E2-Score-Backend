@@ -69,6 +69,25 @@ const calculateAge = (dob) => {
     return `${age} Years`;
 };
 
+const getMonthName = (monthNumber) => {
+    const monthIndex = parseInt(monthNumber, 10) - 1;
+    const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    ];
+    return monthNames[monthIndex] || "";
+};
+
 
 export const getCandidateDetails = async (req, res) => {
     try {
@@ -117,8 +136,6 @@ export const getCandidateDetails = async (req, res) => {
             ResumeDetails.findOne({ user: userId, isDel: false }).select("fileUrl").lean(),
             CandidateKYC.findOne({ userId }).lean(),
         ]);
-
-        console.log("---------Here I am getting user certifications-------  : ", userCertifications);
 
         const userDetails = userDetailsArr[0] || {};
         const candidateDetails = candidateDetailsArr[0] || {};
@@ -222,7 +239,7 @@ export const getCandidateDetails = async (req, res) => {
                 ? list_language_proficiency.find({ _id: { $in: languageProficiencyIds.filter(id => mongoose.Types.ObjectId.isValid(id)) } }).select("name").lean()
                 : Promise.resolve([]),
             Array.isArray(userDetails.workPermitOther) && userDetails.workPermitOther.length > 0
-                ? list_tbl_countrie.find({ _id: { $in: userDetails.workPermitOther.filter(id => mongoose.Types.ObjectId.isValid(id)) } }).select("name").lean()
+                ? list_tbl_countrie.find({ id: { $in: userDetails.workPermitOther } }).select("id name").lean()
                 : Promise.resolve([]),
             userDetails.category && mongoose.Types.ObjectId.isValid(userDetails.category)
                 ? list_category.find({ _id: userDetails.category }).select("category_name").lean()
@@ -239,8 +256,14 @@ export const getCandidateDetails = async (req, res) => {
             userDetails.usaPermit && mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
                 ? list_visa_type.findById(userDetails.usaPermit).select("visa_name").lean()
                 : Promise.resolve([]),
-            userDetails.additionalInformation && mongoose.Types.ObjectId.isValid(userDetails.additionalInformation)
-                ? list_more_information.find({ _id: { $in: userDetails.additionalInformation } }).select("name").lean()
+            Array.isArray(userDetails.additionalInformation) && userDetails.additionalInformation.length > 0
+                ? list_more_information.find({
+                    _id: {
+                        $in: userDetails.additionalInformation.filter(id =>
+                            mongoose.Types.ObjectId.isValid(id)
+                        )
+                    }
+                }).select("name").lean()
                 : Promise.resolve([]),
             user?.gender ? list_gender.findById(user.gender).select("name").lean() : Promise.resolve([]),
 
@@ -250,10 +273,10 @@ export const getCandidateDetails = async (req, res) => {
                     { name: 1 }
                 ).lean()
                 : Promise.resolve(null),
-
         ]);
 
-        // console.log("---------Here is Tagged with name all details:-------", taggedWithNames);
+        console.log("---------Here is addiInfoName Details:-------", addiInfoName);
+        console.log("---Here is my all User Details---", userDetails);
 
         // Create Maps for lookup
         const universityMap = createMap(universities);
@@ -270,8 +293,10 @@ export const getCandidateDetails = async (req, res) => {
         const taggedWithMap = createMap(taggedWithNames, "_id", "name");
         const languageNameWithMap = createMap(languageName, "_id", "name");
         const languageProficiencyWithMap = createMap(proficiencyName, "_id", "name");
-        const workPermitOtherNameWithMap = createMap(workPermitOtherName, "_id", "name");
+        const workPermitOtherNameWithMap = createMap(workPermitOtherName, "id", "name");
         const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
+
+        console.log("--Here is my all addiInfoNameWithMap --", addiInfoNameWithMap);
 
         // Education Section
         const education = (educationRaw || [])
@@ -548,9 +573,39 @@ export const getCandidateDetails = async (req, res) => {
             kycResult[verifiedField] = isVerified;
         }
 
-        // console.log("Here is my results map: ", kycResult);
+        // console.log("Here is workPermitOtherNameWithMap map: ", workPermitOtherNameWithMap);
 
-
+        const candidatePersonalDetails = {
+            gender: userGender?.name || "",
+            dob: candidateDetails?.dob,
+            hometown: candidateDetails?.hometown,
+            category: categoryName?.[0]?.category_name || "",
+            career_break: userDetails?.careerBreak ?? "",
+            currently_on_career_break: userDetails.currentlyOnCareerBreak ?? false,
+            career_break_start_month: getMonthName(userDetails.startMonth),
+            career_break_start_year: userDetails.startYear,
+            career_break_end_month: getMonthName(userDetails.endMonth),
+            career_break_end_year: userDetails.endYear,
+            career_break_reason: breakReasonName?.[0]?.name || "",
+            differently_abled: userDetails?.differentlyAble ?? "",
+            disability_type: disabilityTypeName?.[0]?.name || "",
+            disability_description: userDetails.other_disability_type,
+            workplace_assistance: userDetails.workplace_assistance,
+            usa_visa_type: usaPermitName?.visa_name || "",
+            work_permit_other_countries: (userDetails?.workPermitOther || [])
+                .map((id) => workPermitOtherNameWithMap[id] || "")
+                .filter(Boolean)
+                .join(", "),
+            permanent_address: userDetails.permanentAddress,
+            pincode: userDetails.pincode,
+            // languages,
+            marital_status: maritalStatusName?.status || "",
+            // more_info: moreInfo,
+            more_info: (userDetails?.additionalInformation || [])
+                .map((id) => addiInfoNameWithMap[id] || "")
+                .filter(Boolean) // remove any empty strings
+                .join(", "),
+        };
 
         // Return Final Data 
         return res.status(200).json({
@@ -571,6 +626,7 @@ export const getCandidateDetails = async (req, res) => {
                 userPresentations,
                 researchPublications,
                 workSamples,
+                candidatePersonalDetails,
                 // user,
                 // userPersonalDetails,
                 // candidateDetails,

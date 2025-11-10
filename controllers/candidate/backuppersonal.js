@@ -1,6 +1,7 @@
 import User from "../../models/userModel.js";
 import personalDetails from "../../models/personalDetails.js";
 import candidateDetails from "../../models/CandidateDetailsModel.js";
+import list_tbl_countrie from "../../models/monogo_query/countriesModel.js";
 
 import {
   getColumnValueById,
@@ -39,6 +40,9 @@ export const getPersonalDetailsWithName = async (req, res) => {
       personalDetails.findOne({ user: userId }),
     ]);
 
+
+    console.log("Here I am getting all Personal Details: ", personal);
+
     if (!user || !candidate || !personal) {
       return res
         .status(404)
@@ -64,7 +68,12 @@ export const getPersonalDetailsWithName = async (req, res) => {
         "name"
       ),
       getColumnValueById("list_visa_type", personal.usaPermit, "visa_name"),
-      getCountryNamesByIds(personal.workPermitOther),
+      // getCountryNamesByIds(personal.workPermitOther),
+      personal.workPermitOther && personal.workPermitOther.length > 0
+        ? (
+          await list_tbl_countrie.find({ id: { $in: personal.workPermitOther } })
+        ).map(c => c.name).join(", ")
+        : "",
       getColumnValueById(
         "list_marital_status",
         personal.maritialStatus,
