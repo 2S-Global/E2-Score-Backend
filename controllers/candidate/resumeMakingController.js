@@ -42,8 +42,8 @@ import list_grading_system from "../../models/monogo_query/gradingSystemModel.js
 import mongoose from "mongoose";
 
 /// Import PDF generation utility
-// import generateResumePDF from "../../services/pdfGenerator.js"; //for local testing
-import generateResumePDF from "../../services/pdfGenerator_server.js"; //for vps production
+import generateResumePDF from "../../services/pdfGenerator.js"; //for local testing
+// import generateResumePDF from "../../services/pdfGenerator_server.js"; //for vps production
 
 const getUniqueIds = (arr, field) => [
   ...new Set(arr.map((e) => e[field]).filter(Boolean)),
@@ -306,15 +306,16 @@ export const getResume = async (req, res) => {
           .lean()
         : Promise.resolve([]),
       // Getting work permit other name
-      Array.isArray(userDetails.workPermitOther) &&
-        userDetails.workPermitOther.length > 0
+      Array.isArray(userDetails.workPermitOther) && userDetails.workPermitOther.length > 0
         ? list_tbl_countrie
           .find({
-            _id: userDetails.workPermitOther.filter((id) =>
-              mongoose.Types.ObjectId.isValid(id)
-            ),
+            id: {
+              $in: userDetails.workPermitOther
+                .map((id) => Number(id))
+                .filter((id) => !isNaN(id)), // ✅ keep only valid numbers
+            },
           })
-          .select("name")
+          .select("id name")
           .lean()
         : Promise.resolve([]),
       // Getting Category Name
@@ -357,10 +358,15 @@ export const getResume = async (req, res) => {
           .lean()
         : Promise.resolve([]),
       // Get all Additional Information Name
-      userDetails.additionalInformation &&
-        mongoose.Types.ObjectId.isValid(userDetails.additionalInformation)
+      Array.isArray(userDetails.additionalInformation) && userDetails.additionalInformation.length > 0
         ? list_more_information
-          .find({ _id: { $in: userDetails.additionalInformation } })
+          .find({
+            _id: {
+              $in: userDetails.additionalInformation.filter((id) =>
+                mongoose.Types.ObjectId.isValid(id)
+              ),
+            },
+          })
           .select("name")
           .lean()
         : Promise.resolve([]),
@@ -410,7 +416,7 @@ export const getResume = async (req, res) => {
     // For Work Perrmit Other Country Name
     const workPermitOtherNameWithMap = createMap(
       workPermitOtherName,
-      "_id",
+      "id",
       "name"
     );
 

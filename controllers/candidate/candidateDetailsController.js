@@ -239,11 +239,20 @@ export const getCandidateDetails = async (req, res) => {
                 ? list_language_proficiency.find({ _id: { $in: languageProficiencyIds.filter(id => mongoose.Types.ObjectId.isValid(id)) } }).select("name").lean()
                 : Promise.resolve([]),
             Array.isArray(userDetails.workPermitOther) && userDetails.workPermitOther.length > 0
-                ? list_tbl_countrie.find({ id: { $in: userDetails.workPermitOther.map(Number) } }).select("id name").lean()
+                ? list_tbl_countrie
+                    .find({
+                        id: {
+                            $in: userDetails.workPermitOther
+                                .map(Number)
+                                .filter(v => !isNaN(v)),
+                        },
+                    })
+                    .select("id name")
+                    .lean()
                 : Promise.resolve([]),
-            userDetails.category && mongoose.Types.ObjectId.isValid(userDetails.category)
-                ? list_category.find({ _id: userDetails.category }).select("category_name").lean()
-                : Promise.resolve([]),
+        userDetails.category && mongoose.Types.ObjectId.isValid(userDetails.category)
+            ? list_category.find({ _id: userDetails.category }).select("category_name").lean()
+            : Promise.resolve([]),
             userDetails.disability_type && mongoose.Types.ObjectId.isValid(userDetails.disability_type)
                 ? list_disability_type.find({ _id: userDetails.disability_type }).select("name").lean()
                 : Promise.resolve([]),
@@ -275,327 +284,327 @@ export const getCandidateDetails = async (req, res) => {
                 : Promise.resolve(null),
         ]);
 
-        // Create Maps for lookup
-        const universityMap = createMap(universities);
-        const instituteMap = createMap(institutes);
-        const courseMap = createMap(courses);
-        const boardMap = createMap(boards, "id", "board_name");
-        const levelMap = createMap(levels, "id", "level");
-        const gradingSystemMap = createMap(gradingSystemName, "id", "name");
-        const courseTypeMap = createMap(courseTypes);
-        const companyMap = createMap(companies, "_id", "companyname");
-        const socialIconMap = createMap(socialProfiles, "_id", "icon");
-        const itSkillMap = createMap(itSkillNameList, "_id", "name");
-        const nonItSkillMap = createMap(nonItSkillNameList, "_id", "name");
-        const taggedWithMap = createMap(taggedWithNames, "_id", "name");
-        const languageNameWithMap = createMap(languageName, "_id", "name");
-        const languageProficiencyWithMap = createMap(proficiencyName, "_id", "name");
-        const workPermitOtherNameWithMap = createMap(workPermitOtherName, "id", "name");
-        const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
+// Create Maps for lookup
+const universityMap = createMap(universities);
+const instituteMap = createMap(institutes);
+const courseMap = createMap(courses);
+const boardMap = createMap(boards, "id", "board_name");
+const levelMap = createMap(levels, "id", "level");
+const gradingSystemMap = createMap(gradingSystemName, "id", "name");
+const courseTypeMap = createMap(courseTypes);
+const companyMap = createMap(companies, "_id", "companyname");
+const socialIconMap = createMap(socialProfiles, "_id", "icon");
+const itSkillMap = createMap(itSkillNameList, "_id", "name");
+const nonItSkillMap = createMap(nonItSkillNameList, "_id", "name");
+const taggedWithMap = createMap(taggedWithNames, "_id", "name");
+const languageNameWithMap = createMap(languageName, "_id", "name");
+const languageProficiencyWithMap = createMap(proficiencyName, "_id", "name");
+const workPermitOtherNameWithMap = createMap(workPermitOtherName, "id", "name");
+const addiInfoNameWithMap = createMap(addiInfoName, "_id", "name");
 
-        // Education Section
-        const education = (educationRaw || [])
-            .map((edu) => {
-                const isSchool = ["1", "2"].includes(edu.level);
+// Education Section
+const education = (educationRaw || [])
+    .map((edu) => {
+        const isSchool = ["1", "2"].includes(edu.level);
 
-                return {
-                    _id: edu._id || "",
-                    level: edu.level || "",
-                    type: isSchool ? "school" : "higher",
-                    levelName: levelMap[edu.level] || "Unknown Level",
-                    marks: edu.marks || "Not Provided",
+        return {
+            _id: edu._id || "",
+            level: edu.level || "",
+            type: isSchool ? "school" : "higher",
+            levelName: levelMap[edu.level] || "Unknown Level",
+            marks: edu.marks || "Not Provided",
 
-                    ...(isSchool
-                        ? {
-                            board: boardMap[edu.board] || "Unknown Board",
-                            year_of_passing: edu.year_of_passing || "Not Provided",
-                        }
-                        : {
-                            courseName: courseMap[edu.courseName] || "Unknown Course",
-                            instituteName: instituteMap[edu.instituteName] || "Unknown Institute",
-                            universityName: universityMap[edu.universityName] || "Unknown University",
-                            courseType: courseTypeMap[edu.courseType] || "Unknown Course Type",
-                            gradingName: gradingSystemMap[edu.gradingSystem] || "Not Provided",
-                            from: edu.duration?.from || "Not Provided",
-                            to: edu.duration?.to || "Not Provided",
-                        }),
-                };
-            })
-            .sort((a, b) => Number(b.level) - Number(a.level)); // Descending order
+            ...(isSchool
+                ? {
+                    board: boardMap[edu.board] || "Unknown Board",
+                    year_of_passing: edu.year_of_passing || "Not Provided",
+                }
+                : {
+                    courseName: courseMap[edu.courseName] || "Unknown Course",
+                    instituteName: instituteMap[edu.instituteName] || "Unknown Institute",
+                    universityName: universityMap[edu.universityName] || "Unknown University",
+                    courseType: courseTypeMap[edu.courseType] || "Unknown Course Type",
+                    gradingName: gradingSystemMap[edu.gradingSystem] || "Not Provided",
+                    from: edu.duration?.from || "Not Provided",
+                    to: edu.duration?.to || "Not Provided",
+                }),
+        };
+    })
+    .sort((a, b) => Number(b.level) - Number(a.level)); // Descending order
 
-        // Mapping IT skills
-        const itSkillNames = [
-            ...new Set( // remove duplicates
-                (userItSkills || [])
-                    .map(data => itSkillMap[data.skillSearch?.toString()]?.trim().toLowerCase())
-                    .filter(Boolean)
-            )
-        ];
+// Mapping IT skills
+const itSkillNames = [
+    ...new Set( // remove duplicates
+        (userItSkills || [])
+            .map(data => itSkillMap[data.skillSearch?.toString()]?.trim().toLowerCase())
+            .filter(Boolean)
+    )
+];
 
-        // Mapping Non IT skills
-        const nonItSkillNames = [
-            ...new Set( // remove duplicates
-                (nonItSkills || [])
-                    .map(data => nonItSkillMap[data.skillSearch?.toString()]?.trim().toLowerCase())
-                    .filter(Boolean)
-            )
-        ];
+// Mapping Non IT skills
+const nonItSkillNames = [
+    ...new Set( // remove duplicates
+        (nonItSkills || [])
+            .map(data => nonItSkillMap[data.skillSearch?.toString()]?.trim().toLowerCase())
+            .filter(Boolean)
+    )
+];
 
-        const monthNames = [
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December",
-        ];
+const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+];
 
-        const candidateProjects = await Promise.all(
-            userProjects.map(async (project) => {
-                const taggedWith = project.taggedWith || "";
-                const tag = taggedWithNames.find(
-                    t => t._id.toString() === taggedWith.toString()
-                );
-
-                const taggedName = tag ? tag.name : null;
-
-                return {
-                    _id: project._id,
-                    userId: project.userId,
-                    title: project.projectTitle || "",
-                    taggedWith,
-                    taggedName,
-                    client: project.clientName || "",
-                    status: project.projectStatus || "",
-                    description: project.description || "",
-                    workfromyear: project.workedFrom?.year || null,
-                    workfrommonth: project.workedFrom?.month || null,
-                    workfrommonth_name: project.workedFrom?.month
-                        ? monthNames[project.workedFrom.month - 1]
-                        : null,
-                    worktoyear: project.workedTill?.year || null,
-                    worktomonth: project.workedTill?.month || null,
-                    worktomonth_name: project.workedTill?.month
-                        ? monthNames[project.workedTill.month - 1]
-                        : null,
-                    createdAt: project.createdAt || null,
-                    updatedAt: project.updatedAt || null,
-                };
-            })
+const candidateProjects = await Promise.all(
+    userProjects.map(async (project) => {
+        const taggedWith = project.taggedWith || "";
+        const tag = taggedWithNames.find(
+            t => t._id.toString() === taggedWith.toString()
         );
 
-        // Extract current employment safely
-        let currentEmployment = "Fresher";
+        const taggedName = tag ? tag.name : null;
 
-        // Check if employments exists and is a non-empty array
-        if (Array.isArray(employmentsRaw) && employmentsRaw.length > 0) {
-            // Find current employment where currentEmployment = true
-            currentEmployment =
-                employmentsRaw.find(emp => emp.currentEmployment === true) ||
-                employmentsRaw.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
-        }
-
-        const userInformation = {
-            _id: user?._id || "",
-            fullName: user?.name || "",
-            fatherName: candidateDetails?.fatherName || "",
-            email: user?.email || "",
-            phoneNumber: user?.phone_number || "",
-            profilePicture: user?.profilePicture || "",
-            createdAt: user?.createdAt || "",
-            currentLocation: candidateDetails?.currentLocation || "",
-            countryName: countryName?.name || "",
-            hometown: candidateDetails?.hometown || "",
-            currentJobTitle: currentEmployment?.jobTitle || "",
-            resumeHeadline: userDetails?.resumeHeadline || "",
-            profileSummary: userDetails?.profileSummary || "",
-            expectedSalary: userPref?.expectedSalary || {},
-            skills: Array.isArray(skills)
-                ? skills
-                    .filter(skill => skill?.Skill && skill.is_active === 1 && skill.is_del === 0)
-                    .map(skill => skill.Skill)
-                : [],
+        return {
+            _id: project._id,
+            userId: project.userId,
+            title: project.projectTitle || "",
+            taggedWith,
+            taggedName,
+            client: project.clientName || "",
+            status: project.projectStatus || "",
+            description: project.description || "",
+            workfromyear: project.workedFrom?.year || null,
+            workfrommonth: project.workedFrom?.month || null,
+            workfrommonth_name: project.workedFrom?.month
+                ? monthNames[project.workedFrom.month - 1]
+                : null,
+            worktoyear: project.workedTill?.year || null,
+            worktomonth: project.workedTill?.month || null,
+            worktomonth_name: project.workedTill?.month
+                ? monthNames[project.workedTill.month - 1]
+                : null,
+            createdAt: project.createdAt || null,
+            updatedAt: project.updatedAt || null,
         };
+    })
+);
 
-        const formattedEmployment = (employmentsRaw || []).map((emp) => {
-            const joiningYear = emp.joiningDate?.year;
-            const leavingYear = emp.leavingDate?.year;
+// Extract current employment safely
+let currentEmployment = "Fresher";
 
-            let duration = "Not Provided";
+// Check if employments exists and is a non-empty array
+if (Array.isArray(employmentsRaw) && employmentsRaw.length > 0) {
+    // Find current employment where currentEmployment = true
+    currentEmployment =
+        employmentsRaw.find(emp => emp.currentEmployment === true) ||
+        employmentsRaw.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+}
 
-            if (joiningYear && leavingYear) {
-                duration = `${joiningYear} - ${leavingYear}`;
-            } else if (joiningYear && !leavingYear) {
-                duration = `${joiningYear} - Present`;
-            }
+const userInformation = {
+    _id: user?._id || "",
+    fullName: user?.name || "",
+    fatherName: candidateDetails?.fatherName || "",
+    email: user?.email || "",
+    phoneNumber: user?.phone_number || "",
+    profilePicture: user?.profilePicture || "",
+    createdAt: user?.createdAt || "",
+    currentLocation: candidateDetails?.currentLocation || "",
+    countryName: countryName?.name || "",
+    hometown: candidateDetails?.hometown || "",
+    currentJobTitle: currentEmployment?.jobTitle || "",
+    resumeHeadline: userDetails?.resumeHeadline || "",
+    profileSummary: userDetails?.profileSummary || "",
+    expectedSalary: userPref?.expectedSalary || {},
+    skills: Array.isArray(skills)
+        ? skills
+            .filter(skill => skill?.Skill && skill.is_active === 1 && skill.is_del === 0)
+            .map(skill => skill.Skill)
+        : [],
+};
 
-            const companyName = companyMap[emp.companyName?.toString()] || "Unknown Company";
+const formattedEmployment = (employmentsRaw || []).map((emp) => {
+    const joiningYear = emp.joiningDate?.year;
+    const leavingYear = emp.leavingDate?.year;
 
-            return {
-                _id: emp._id || "",
-                jobTitle: emp.jobTitle || "Not Provided",
-                companyName: companyName,
-                jobDescription: emp.jobDescription || "Not Provided",
-                joiningYear: joiningYear || "",
-                leavingYear: leavingYear || "",
-                duration,
-                isVerified: emp.isVerified || false,
-                meta: companyName?.charAt(0).toUpperCase() || "",
-            };
-        })
-            .sort((a, b) => {
-                // If "Present" job (no leavingYear), it should come first
-                if (!a.leavingYear && b.leavingYear) return -1;
-                if (a.leavingYear && !b.leavingYear) return 1;
+    let duration = "Not Provided";
 
-                // Otherwise, sort by leavingYear descending
-                const leaveA = a.leavingYear || 0;
-                const leaveB = b.leavingYear || 0;
-
-                if (leaveA !== leaveB) return leaveB - leaveA;
-
-                // If same leaving year, sort by joiningYear descending
-                return (b.joiningYear || 0) - (a.joiningYear || 0);
-            });
-
-
-        // Define your proficiency priority
-        const proficiencyOrder = {
-            Expert: 1,
-            Proficient: 2,
-            Beginner: 3,
-        };
-
-        // SidebarDetails
-        const sidebarDetails = {
-            totalExperience: candidateDetails?.totalExperience || "",
-            age: calculateAge(candidateDetails?.dob),
-            currentSalary:
-                candidateDetails?.currentSalary && candidateDetails?.currentSalary?.salary != null
-                    ? candidateDetails.currentSalary
-                    : { currency: "", salary: 0 },
-            expectedSalary: userPref?.expectedSalary || {},
-            genderName: userGender?.name || "",
-            languages: (userDetails?.languageProficiency || [])
-                .map(lp => {
-                    const lang = languageName.find(l => l._id.toString() === lp.language.toString());
-                    const prof = proficiencyName.find(p => p._id.toString() === lp.proficiency.toString());
-                    return { lang: lang?.name, prof: prof?.name };
-                })
-                .sort((a, b) => (proficiencyOrder[a.prof] || 99) - (proficiencyOrder[b.prof] || 99))
-                .map(i => i.lang),
-            highestEducation:
-                Array.isArray(education) && education.length > 0
-                    ? education.reduce((highest, current) =>
-                        Number(current.level) > Number(highest.level) ? current : highest
-                    ).levelName
-                    : "",
-            resumeUrl: candidateResume?.fileUrl || "",
-        };
-
-        // Map Online Profiles
-        const mappedOnlineProfiles = onlineProfilesRaw.map(profile => ({
-            _id: profile._id,
-            url: profile.url,
-            icon: socialIconMap[profile.socialProfile] || null
-        }));
-
-
-        // KYC Details
-        // Define the document types you want to check
-        const docTypes = ["pan", "epic", "aadhar", "passport", "dl"];
-        const kycResult = {};
-
-        // Iterate over each type and determine verified or not
-        for (const type of docTypes) {
-            const verifiedField = `${type}_verified`;
-            const value = candidateKycDetails?.[verifiedField];
-
-            const isVerified = value === true ? true : false;
-
-            // Add verified status to result like { pan_verified: true }
-            kycResult[verifiedField] = isVerified;
-        }
-
-        const candidatePersonalDetails = {
-            category: categoryName?.[0]?.category_name || "",
-            career_break: userDetails?.careerBreak ?? "",
-            currently_on_career_break: userDetails.currentlyOnCareerBreak ?? false,
-            career_break_start_month: getMonthName(userDetails.startMonth),
-            career_break_start_year: userDetails.startYear,
-            career_break_end_month: getMonthName(userDetails.endMonth),
-            career_break_end_year: userDetails.endYear,
-            career_break_reason: breakReasonName?.[0]?.name || "",
-            differently_abled: userDetails?.differentlyAble ?? "",
-            disability_type: disabilityTypeName?.[0]?.name || "",
-            disability_description: userDetails.other_disability_type,
-            workplace_assistance: userDetails.workplace_assistance,
-            usa_visa_type: usaPermitName?.visa_name || "",
-            work_permit_other_countries: (userDetails?.workPermitOther || [])
-                .map((id) => workPermitOtherNameWithMap[id] || "")
-                .filter(Boolean)
-                .join(", "),
-            permanent_address: userDetails.permanentAddress,
-            pincode: userDetails.pincode,
-            marital_status: maritalStatusName?.status || "",
-            more_info: (userDetails?.additionalInformation || [])
-                .map((id) => addiInfoNameWithMap[id] || "")
-                .filter(Boolean)
-                .join(", "),
-        };
-
-        const candidateCareerProfile = {
-            industry_name: currentIndustry?.job_industry || "",
-            department_name: currentDepartment?.job_department || "",
-            job_role_name: jobRole?.job_role || "",
-            job_type: userPref?.DesiredJob || "",
-            employment_type: userPref?.DesiredEmployment || "",
-            shift: userPref?.PreferredShift || "",
-            expected_salary: userPref?.expectedSalary?.salary
-                ? new Intl.NumberFormat("en-IN", {
-                    style: "currency",
-                    currency: userPref?.expectedSalary?.currency || "INR",
-                    maximumFractionDigits: 0
-                }).format(userPref.expectedSalary.salary)
-                : "",
-            preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
-        };
-
-        // Return Final Data 
-        return res.status(200).json({
-            success: true,
-            message: "Candidate details fetched successfully!",
-            data: {
-                userInformation,
-                education,
-                employment: formattedEmployment,
-                sidebarDetails,
-                onlineProfiles: mappedOnlineProfiles,
-                itSkillNames,
-                nonItSkillNames,
-                kycResult,
-                candidateProjects,
-                userCertifications,
-                userPatents,
-                userPresentations,
-                researchPublications,
-                workSamples,
-                candidatePersonalDetails,
-                candidateCareerProfile,
-            },
-        });
-    } catch (error) {
-        console.error("Error fetching candidate details:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Error fetching candidate details",
-            error: error.message,
-        });
+    if (joiningYear && leavingYear) {
+        duration = `${joiningYear} - ${leavingYear}`;
+    } else if (joiningYear && !leavingYear) {
+        duration = `${joiningYear} - Present`;
     }
+
+    const companyName = companyMap[emp.companyName?.toString()] || "Unknown Company";
+
+    return {
+        _id: emp._id || "",
+        jobTitle: emp.jobTitle || "Not Provided",
+        companyName: companyName,
+        jobDescription: emp.jobDescription || "Not Provided",
+        joiningYear: joiningYear || "",
+        leavingYear: leavingYear || "",
+        duration,
+        isVerified: emp.isVerified || false,
+        meta: companyName?.charAt(0).toUpperCase() || "",
+    };
+})
+    .sort((a, b) => {
+        // If "Present" job (no leavingYear), it should come first
+        if (!a.leavingYear && b.leavingYear) return -1;
+        if (a.leavingYear && !b.leavingYear) return 1;
+
+        // Otherwise, sort by leavingYear descending
+        const leaveA = a.leavingYear || 0;
+        const leaveB = b.leavingYear || 0;
+
+        if (leaveA !== leaveB) return leaveB - leaveA;
+
+        // If same leaving year, sort by joiningYear descending
+        return (b.joiningYear || 0) - (a.joiningYear || 0);
+    });
+
+
+// Define your proficiency priority
+const proficiencyOrder = {
+    Expert: 1,
+    Proficient: 2,
+    Beginner: 3,
+};
+
+// SidebarDetails
+const sidebarDetails = {
+    totalExperience: candidateDetails?.totalExperience || "",
+    age: calculateAge(candidateDetails?.dob),
+    currentSalary:
+        candidateDetails?.currentSalary && candidateDetails?.currentSalary?.salary != null
+            ? candidateDetails.currentSalary
+            : { currency: "", salary: 0 },
+    expectedSalary: userPref?.expectedSalary || {},
+    genderName: userGender?.name || "",
+    languages: (userDetails?.languageProficiency || [])
+        .map(lp => {
+            const lang = languageName.find(l => l._id.toString() === lp.language.toString());
+            const prof = proficiencyName.find(p => p._id.toString() === lp.proficiency.toString());
+            return { lang: lang?.name, prof: prof?.name };
+        })
+        .sort((a, b) => (proficiencyOrder[a.prof] || 99) - (proficiencyOrder[b.prof] || 99))
+        .map(i => i.lang),
+    highestEducation:
+        Array.isArray(education) && education.length > 0
+            ? education.reduce((highest, current) =>
+                Number(current.level) > Number(highest.level) ? current : highest
+            ).levelName
+            : "",
+    resumeUrl: candidateResume?.fileUrl || "",
+};
+
+// Map Online Profiles
+const mappedOnlineProfiles = onlineProfilesRaw.map(profile => ({
+    _id: profile._id,
+    url: profile.url,
+    icon: socialIconMap[profile.socialProfile] || null
+}));
+
+
+// KYC Details
+// Define the document types you want to check
+const docTypes = ["pan", "epic", "aadhar", "passport", "dl"];
+const kycResult = {};
+
+// Iterate over each type and determine verified or not
+for (const type of docTypes) {
+    const verifiedField = `${type}_verified`;
+    const value = candidateKycDetails?.[verifiedField];
+
+    const isVerified = value === true ? true : false;
+
+    // Add verified status to result like { pan_verified: true }
+    kycResult[verifiedField] = isVerified;
+}
+
+const candidatePersonalDetails = {
+    category: categoryName?.[0]?.category_name || "",
+    career_break: userDetails?.careerBreak ?? "",
+    currently_on_career_break: userDetails.currentlyOnCareerBreak ?? false,
+    career_break_start_month: getMonthName(userDetails.startMonth),
+    career_break_start_year: userDetails.startYear,
+    career_break_end_month: getMonthName(userDetails.endMonth),
+    career_break_end_year: userDetails.endYear,
+    career_break_reason: breakReasonName?.[0]?.name || "",
+    differently_abled: userDetails?.differentlyAble ?? "",
+    disability_type: disabilityTypeName?.[0]?.name || "",
+    disability_description: userDetails.other_disability_type,
+    workplace_assistance: userDetails.workplace_assistance,
+    usa_visa_type: usaPermitName?.visa_name || "",
+    work_permit_other_countries: (userDetails?.workPermitOther || [])
+        .map((id) => workPermitOtherNameWithMap[id] || "")
+        .filter(Boolean)
+        .join(", "),
+    permanent_address: userDetails.permanentAddress,
+    pincode: userDetails.pincode,
+    marital_status: maritalStatusName?.status || "",
+    more_info: (userDetails?.additionalInformation || [])
+        .map((id) => addiInfoNameWithMap[id] || "")
+        .filter(Boolean)
+        .join(", "),
+};
+
+const candidateCareerProfile = {
+    industry_name: currentIndustry?.job_industry || "",
+    department_name: currentDepartment?.job_department || "",
+    job_role_name: jobRole?.job_role || "",
+    job_type: userPref?.DesiredJob || "",
+    employment_type: userPref?.DesiredEmployment || "",
+    shift: userPref?.PreferredShift || "",
+    expected_salary: userPref?.expectedSalary?.salary
+        ? new Intl.NumberFormat("en-IN", {
+            style: "currency",
+            currency: userPref?.expectedSalary?.currency || "INR",
+            maximumFractionDigits: 0
+        }).format(userPref.expectedSalary.salary)
+        : "",
+    preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
+};
+
+// Return Final Data 
+return res.status(200).json({
+    success: true,
+    message: "Candidate details fetched successfully!",
+    data: {
+        userInformation,
+        education,
+        employment: formattedEmployment,
+        sidebarDetails,
+        onlineProfiles: mappedOnlineProfiles,
+        itSkillNames,
+        nonItSkillNames,
+        kycResult,
+        candidateProjects,
+        userCertifications,
+        userPatents,
+        userPresentations,
+        researchPublications,
+        workSamples,
+        candidatePersonalDetails,
+        candidateCareerProfile,
+    },
+});
+    } catch (error) {
+    console.error("Error fetching candidate details:", error);
+    return res.status(500).json({
+        success: false,
+        message: "Error fetching candidate details",
+        error: error.message,
+    });
+}
 };
