@@ -40,9 +40,6 @@ export const getPersonalDetailsWithName = async (req, res) => {
       personalDetails.findOne({ user: userId }),
     ]);
 
-
-    console.log("Here I am getting all Personal Details: ", personal);
-
     if (!user || !candidate || !personal) {
       return res
         .status(404)

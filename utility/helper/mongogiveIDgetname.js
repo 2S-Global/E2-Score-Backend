@@ -194,6 +194,7 @@ export const formatUserData = (result) => {
     usa_visa_type: result.usa_visa_type || "",
     gender: result.gender || "",
     maritalStatus: result.marital_status || "",
+    partner_name: result.partner_name || "",
     moreinfo: getMoreInfo(result.more_info),
     dob: getFormattedDOB(result.dob),
     category: result.category || "",
