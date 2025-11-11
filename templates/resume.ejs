@@ -203,11 +203,24 @@
             <tr>
               <td class="left-column"><strong>Date of Birth</strong></td>
               <td>
-                <% const dob=new Date(candidateDetails.dob); const day=dob.getDate(); const
-                  month=dob.toLocaleString('default', { month: 'long' }); const year=dob.getFullYear(); function
-                  getOrdinal(n) { const s=["th", "st" , "nd" , "rd" ], v=n % 100; return n + (s[(v - 20) % 10] || s[v]
-                  || s[0]); } const formattedDOB=`${getOrdinal(day)} ${month} ${year}`; %>
+                <% if (candidateDetails?.dob) { 
+                  const dob = new Date(candidateDetails.dob);
+                  const day = dob.getDate();
+                  const month = dob.toLocaleString('default', { month: 'long' });
+                  const year = dob.getFullYear();
+
+                  function getOrdinal(n) {
+                    const s = ["th", "st", "nd", "rd"],
+                          v = n % 100;
+                    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+                  }
+
+                  const formattedDOB = `${getOrdinal(day)} ${month} ${year}`;
+                %>
                   <%= formattedDOB %>
+                <% } else { %>
+                   N/A
+                <% } %>
               </td>
             </tr>
 
@@ -215,7 +228,11 @@
             <tr>
               <td class="left-column"><strong>Gender</strong></td>
               <td>
-                <%= user.gender_name %>
+                <% if (user?.gender_name) { %>
+                  <%= user.gender_name %>
+                <% } else { %>
+                  N/A
+                <% } %>
               </td>
             </tr>
 
@@ -223,21 +240,33 @@
             <tr>
               <td class="left-column"><strong>Marital Status</strong></td>
               <td>
-                <%= userPersonalDetails.maritalStatusName %>
+                <% if (userPersonalDetails?.maritalStatusName) { %>
+                  <%= userPersonalDetails.maritalStatusName %>
+                <% } else { %>
+                  N/A
+                <% } %>
               </td>
             </tr>
             <!-- Father Name -->
              <tr>
               <td class="left-column"><strong>Father's Name</strong></td>
               <td>
-                <%= userPersonalDetails.maritalStatusName %>
+                <% if (candidateDetails?.father_name) { %>
+                  <%= candidateDetails.father_name %>
+                <% } else { %>
+                  N/A
+                <% } %>
               </td>
             </tr>
             <!--Mother Name -->
              <tr>
               <td class="left-column"><strong>Mother's Name</strong></td>
               <td>
-                <%= userPersonalDetails.maritalStatusName %>
+                <% if (candidateDetails?.mother_name) { %>
+                  <%= candidateDetails.mother_name %>
+                <% } else { %>
+                  N/A
+                <% } %>
               </td>
             </tr>
 
@@ -276,7 +305,11 @@
             <tr>
               <td class="left-column"><strong>Category</strong></td>
               <td>
-                <%= userPersonalDetails.categoryName %>
+                <% if (userPersonalDetails?.categoryName) { %>
+                  <%= userPersonalDetails.categoryName %>
+                <% } else { %>
+                  N/A
+                <% } %>
               </td>
             </tr>
 
@@ -292,21 +325,29 @@
             <!-- Address -->
             <tr>
               <td class="left-column"><strong>Address</strong></td>
-              <td><%= userPersonalDetails.permanentAddress %><% if (userPersonalDetails?.pincode) { %>, <%= userPersonalDetails.pincode %><% }%></td>
+              <td>
+                <% if (userPersonalDetails?.permanentAddress) { %>
+                  <%= userPersonalDetails.permanentAddress %>
+                  <% if (userPersonalDetails?.pincode) { %>, <%= userPersonalDetails.pincode %><% } %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
             </tr>
 
             <!-- Disability -->
             <tr>
               <td class="left-column"><strong>Differently Abled</strong></td>
               <td>
-                <% if (userPersonalDetails.differentlyAble === 'Yes') { %>
-                  Yes, <%= userPersonalDetails.disabilityTypeName %>
-                  <% if (userPersonalDetails?.other_disability_type) { %>
-                  , <%= userPersonalDetails.other_disability_type %>
-                  <% } %>,
-                  <%= userPersonalDetails.workplace_assistance %>
-                <% } else if (userPersonalDetails.differentlyAble === 'No') { %>
+                <% if (userPersonalDetails?.differentlyAble === 'Yes') { %>
+                  Yes
+                  <% if (userPersonalDetails?.disabilityTypeName) { %>, <%= userPersonalDetails.disabilityTypeName %><% } %>
+                  <% if (userPersonalDetails?.other_disability_type) { %>, <%= userPersonalDetails.other_disability_type %><% } %>
+                  <% if (userPersonalDetails?.workplace_assistance) { %>, <%= userPersonalDetails.workplace_assistance %><% } %>
+                <% } else if (userPersonalDetails?.differentlyAble === 'No') { %>
                   No
+                <% } else { %>
+                  N/A
                 <% } %>
               </td>
             </tr>
