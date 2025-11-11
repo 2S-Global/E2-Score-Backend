@@ -110,6 +110,7 @@ export const submitPersonalDetails = async (req, res) => {
         speak: lang.speak || false,
       })),
       maritialStatus: String(data.marital_status),
+      partnerName: String(data.partner_name),
       additionalInformation: (data.more_info || []).filter(
         (id) => id && id !== "null" && id !== ""
       ),
@@ -179,6 +180,7 @@ export const getPersonalDetails = async (req, res) => {
       pincode: personal?.pincode || null,
       languages: personal?.languageProficiency || [],
       marital_status: personal?.maritialStatus || null,
+      partner_name: personal?.partnerName || null,
       more_info: personal?.additionalInformation || [],
       have_usa_visa: personal?.have_usa_visa || false
     };

@@ -871,8 +871,6 @@ export const getMaritalStatus = async (req, res) => {
 
     const hasPartner = marriedCivilIds.map((items) => (items._id));
 
-    console.log("Here is my gender id: ", marriedCivilIds);
-
     res.status(200).json({
       success: true,
       data: formattedMaritalStatusList,

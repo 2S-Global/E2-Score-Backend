@@ -40,6 +40,9 @@ const personalSchema = new mongoose.Schema(
     maritialStatus: {
       type: String,
     },
+    partnerName: {
+      type: String,
+    },
     category: {
       type: String,
     },
