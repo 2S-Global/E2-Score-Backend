@@ -861,9 +861,22 @@ export const getMaritalStatus = async (req, res) => {
       status: items.status,
     }));
 
+
+    const marriedCivilIds = await list_marital_status.find({
+      is_del: 0, is_active: 1,
+      status: { $in: ["Civil partnership", "Married"] }
+    },
+      { _id: 1, status: 1 }
+    );
+
+    const hasPartner = marriedCivilIds.map((items) => (items._id));
+
+    console.log("Here is my gender id: ", marriedCivilIds);
+
     res.status(200).json({
       success: true,
       data: formattedMaritalStatusList,
+      hasPartner,
       message: "Martital Status Fetched Successfully",
     });
   } catch (error) {

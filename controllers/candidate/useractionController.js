@@ -216,6 +216,7 @@ export const updateUserDetails = async (req, res) => {
       currentLocation,
       hometown,
       father_name,
+      mother_name,
       salary,
       currency,
       experience_years,
@@ -238,6 +239,7 @@ export const updateUserDetails = async (req, res) => {
         currentLocation: currentLocation,
         hometown: hometown,
         fatherName: father_name,
+        motherName: mother_name,
         currentSalary: {
           currency: currency,
           salary: salary,

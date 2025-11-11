@@ -195,124 +195,146 @@
 
         <!-- Personal Details Section Start -->
 
-        <div class="section">
-          <h3>Personal Details</h3>
-          <table class="info-table">
+        <%
+          // Check if any field inside userPersonalDetails or candidateDetails has data
+          const hasPersonalDetails =
+            (candidateDetails?.dob) ||
+            (user?.gender_name) ||
+            (userPersonalDetails?.maritalStatusName) ||
+            (userPersonalDetails?.additionalInformationNames?.length > 0) ||
+            (userPersonalDetails?.reasonName) ||
+            (userPersonalDetails?.categoryName) ||
+            (userPersonalDetails?.usaPermitName) ||
+            (userPersonalDetails?.workPermitOtherNames?.length > 0) ||
+            (userPersonalDetails?.permanentAddress) ||
+            (userPersonalDetails?.pincode) ||
+            (userPersonalDetails?.disabilityTypeName);
+        %>
 
-            <!-- Date of Birth -->
-            <tr>
-              <td class="left-column"><strong>Date of Birth</strong></td>
-              <td>
-                <% const dob=new Date(candidateDetails.dob); const day=dob.getDate(); const
-                  month=dob.toLocaleString('default', { month: 'long' }); const year=dob.getFullYear(); function
-                  getOrdinal(n) { const s=["th", "st" , "nd" , "rd" ], v=n % 100; return n + (s[(v - 20) % 10] || s[v]
-                  || s[0]); } const formattedDOB=`${getOrdinal(day)} ${month} ${year}`; %>
-                  <%= formattedDOB %>
-              </td>
-            </tr>
+        <% if (hasPersonalDetails) { %>
+          <div class="section">
+            <h3>Personal Details</h3>
+            <table class="info-table">
 
-            <!-- Gender -->
-            <tr>
-              <td class="left-column"><strong>Gender</strong></td>
-              <td>
-                <%= user.gender_name %>
-              </td>
-            </tr>
+              <!-- Date of Birth -->
+              <% if (candidateDetails?.dob) { %>
+                <tr>
+                  <td class="left-column"><strong>Date of Birth</strong></td>
+                  <td>
+                    <% const dob=new Date(candidateDetails.dob); const day=dob.getDate(); const
+                      month=dob.toLocaleString('default', { month: 'long' }); const year=dob.getFullYear(); function
+                      getOrdinal(n) { const s=["th", "st" , "nd" , "rd" ], v=n % 100; return n + (s[(v - 20) % 10] || s[v]
+                      || s[0]); } const formattedDOB=`${getOrdinal(day)} ${month} ${year}`; %>
+                      <%= formattedDOB %>
+                  </td>
+                </tr>
+              <% } %>
 
-            <!-- Marital Status -->
-            <tr>
-              <td class="left-column"><strong>Marital Status</strong></td>
-              <td>
-                <%= userPersonalDetails.maritalStatusName %>
-              </td>
-            </tr>
-            <!-- Father Name -->
-             <tr>
-              <td class="left-column"><strong>Father's Name</strong></td>
-              <td>
-                <%= userPersonalDetails.maritalStatusName %>
-              </td>
-            </tr>
-            <!--Mother Name -->
-             <tr>
-              <td class="left-column"><strong>Mother's Name</strong></td>
-              <td>
-                <%= userPersonalDetails.maritalStatusName %>
-              </td>
-            </tr>
+              <!-- Gender -->
+              <% if (user?.gender_name) { %>
+                <tr>
+                  <td class="left-column"><strong>Gender</strong></td>
+                  <td>
+                    <%= user.gender_name %>
+                  </td>
+                </tr>
+              <% } %>
 
-            <!-- Additional Information -->
-            <tr>
-              <td class="left-column"><strong>Additional Information</strong></td>
-              <td>
-                <%= userPersonalDetails.additionalInformationNames?.join(', ') || "N/A" %>
-              </td>
-            </tr>
+              <!-- Marital Status -->
+              <% if (userPersonalDetails?.maritalStatusName) { %>
+                <tr>
+                  <td class="left-column"><strong>Marital Status</strong></td>
+                  <td>
+                    <%= userPersonalDetails.maritalStatusName %>
+                  </td>
+                </tr>
+              <% } %>
 
-            <!-- Career Break -->
-            <tr>
-            <td class="left-column"><strong>Career Break</strong></td>
-            <td>
-              <% if (userPersonalDetails.reasonName) { %>
-                Yes – <%= userPersonalDetails.reasonName %><br>
-                From:
-              <%= new Date(2000, userPersonalDetails.startMonth - 1).toLocaleString('default', { month: 'long' }) %>
-                  <%= userPersonalDetails.startYear %><br>
-                    <% if (userPersonalDetails.endMonth && userPersonalDetails.endYear) { %>
-                      To:
-                      <%= new Date(2000, userPersonalDetails.endMonth - 1).toLocaleString('default', { month: 'long' })
-                        %>
-                        <%= userPersonalDetails.endYear %>
-                          <% } else { %>
-                            To: Present
-                            <% } %>
+              <!-- Additional Information -->
+              <% if (userPersonalDetails?.additionalInformationNames?.length > 0) { %>
+                <tr>
+                  <td class="left-column"><strong>Additional Information</strong></td>
+                  <td>
+                    <%= userPersonalDetails.additionalInformationNames?.join(', ') || "N/A" %>
+                  </td>
+                </tr>
+              <% } %>
+
+              <!-- Career Break -->
+              <% if (userPersonalDetails?.reasonName) { %>
+                <tr>
+                <td class="left-column"><strong>Career Break</strong></td>
+                <td>
+                  <% if (userPersonalDetails.reasonName) { %>
+                    Yes – <%= userPersonalDetails.reasonName %><br>
+                    From:
+                  <%= new Date(2000, userPersonalDetails.startMonth - 1).toLocaleString('default', { month: 'long' }) %>
+                      <%= userPersonalDetails.startYear %><br>
+                        <% if (userPersonalDetails.endMonth && userPersonalDetails.endYear) { %>
+                          To:
+                          <%= new Date(2000, userPersonalDetails.endMonth - 1).toLocaleString('default', { month: 'long' })
+                            %>
+                            <%= userPersonalDetails.endYear %>
                               <% } else { %>
-                                No
+                                To: Present
                                 <% } %>
-              </td>
-            </tr>
+                                  <% } else { %>
+                                    No
+                                    <% } %>
+                  </td>
+                </tr>
+              <% } %>
 
-            <!-- Category -->
-            <tr>
-              <td class="left-column"><strong>Category</strong></td>
-              <td>
-                <%= userPersonalDetails.categoryName %>
-              </td>
-            </tr>
+              <!-- Category -->
+              <% if (userPersonalDetails?.categoryName) { %>
+                <tr>
+                  <td class="left-column"><strong>Category</strong></td>
+                  <td>
+                    <%= userPersonalDetails.categoryName %>
+                  </td>
+                </tr>
+              <% } %>
 
-            <!-- Work Permit -->
-            <tr>
-              <td class="left-column"><strong>Work Permit</strong></td>
-              <td>
-                <%= userPersonalDetails.usaPermitName %><br>
-                  <%= userPersonalDetails.workPermitOtherNames?.join(' , ') || "N/A" %>
-              </td>
-            </tr>
+              <!-- Work Permit -->
+              <% if (userPersonalDetails?.usaPermitName || userPersonalDetails?.workPermitOtherNames?.length > 0) { %>
+                <tr>
+                  <td class="left-column"><strong>Work Permit</strong></td>
+                  <td>
+                    <%= userPersonalDetails.usaPermitName %><br>
+                      <%= userPersonalDetails.workPermitOtherNames?.join(' , ') || "N/A" %>
+                  </td>
+                </tr>
+              <% } %>
 
-            <!-- Address -->
-            <tr>
-              <td class="left-column"><strong>Address</strong></td>
-              <td><%= userPersonalDetails.permanentAddress %><% if (userPersonalDetails?.pincode) { %>, <%= userPersonalDetails.pincode %><% }%></td>
-            </tr>
+              <!-- Address -->
+              <% if (userPersonalDetails?.permanentAddress) { %>
+                <tr>
+                  <td class="left-column"><strong>Address</strong></td>
+                  <td><%= userPersonalDetails.permanentAddress %><% if (userPersonalDetails?.pincode) { %>, <%= userPersonalDetails.pincode %><% }%></td>
+                </tr>
+              <% } %>
 
-            <!-- Disability -->
-            <tr>
-              <td class="left-column"><strong>Differently Abled</strong></td>
-              <td>
-                <% if (userPersonalDetails.differentlyAble === 'Yes') { %>
-                  Yes, <%= userPersonalDetails.disabilityTypeName %>
-                  <% if (userPersonalDetails?.other_disability_type) { %>
-                  , <%= userPersonalDetails.other_disability_type %>
-                  <% } %>,
-                  <%= userPersonalDetails.workplace_assistance %>
-                <% } else if (userPersonalDetails.differentlyAble === 'No') { %>
-                  No
-                <% } %>
-              </td>
-            </tr>
+              <!-- Disability -->
+              <% if (userPersonalDetails?.differentlyAble) { %>
+                <tr>
+                  <td class="left-column"><strong>Differently Abled</strong></td>
+                  <td>
+                    <% if (userPersonalDetails.differentlyAble === 'Yes') { %>
+                      Yes, <%= userPersonalDetails.disabilityTypeName %>
+                      <% if (userPersonalDetails?.other_disability_type) { %>
+                      , <%= userPersonalDetails.other_disability_type %>
+                      <% } %>,
+                      <%= userPersonalDetails.workplace_assistance %>
+                    <% } else if (userPersonalDetails.differentlyAble === 'No') { %>
+                      No
+                    <% } %>
+                  </td>
+                </tr>
+              <% } %>
 
-          </table>
-        </div>
+            </table>
+          </div>
+        <% } %>
 
     <!-- Personal Details Section End -->
 
@@ -432,7 +454,7 @@
 
               <!-- End IT Skills -->
   </div>
-
+  
   <!-- <% if (employment && employment.length> 0) { %>
     <div class="page-break-group-employments">
       <div class="section">

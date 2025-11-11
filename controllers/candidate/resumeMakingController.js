@@ -42,8 +42,8 @@ import list_grading_system from "../../models/monogo_query/gradingSystemModel.js
 import mongoose from "mongoose";
 
 /// Import PDF generation utility
-// import generateResumePDF from "../../services/pdfGenerator.js"; //for local testing
-import generateResumePDF from "../../services/pdfGenerator_server.js"; //for vps production
+import generateResumePDF from "../../services/pdfGenerator.js"; //for local testing
+// import generateResumePDF from "../../services/pdfGenerator_server.js"; //for vps production
 
 const getUniqueIds = (arr, field) => [
   ...new Set(arr.map((e) => e[field]).filter(Boolean)),
