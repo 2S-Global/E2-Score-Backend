@@ -454,10 +454,8 @@
 
               <!-- End IT Skills -->
   </div>
-
-
-
-  <% if (employment && employment.length> 0) { %>
+  
+  <!-- <% if (employment && employment.length> 0) { %>
     <div class="page-break-group-employments">
       <div class="section">
         <h3>Employment History</h3>
@@ -511,7 +509,51 @@
         </table>
       </div>
     </div>
+    <% } %> -->
+
+    <% if (employment && employment.length > 0) { %>
+      <div class="page-break-group-employments">
+        <div class="section">
+          <h3>Employment History</h3>
+          <ul style="line-height: 22px; list-style-type: disc; padding-left: 20px;">
+            <% employment.forEach(job => { 
+              const monthNames = [
+                "January","February","March","April","May","June",
+                "July","August","September","October","November","December"
+              ];
+              const startMonth = job.joiningDate?.month ? monthNames[job.joiningDate.month - 1] : null;
+              const startYear = job.joiningDate?.year;
+              const endMonth = job.leavingDate?.month ? monthNames[job.leavingDate.month - 1] : null;
+              const endYear = job.leavingDate?.year;
+              const formattedStart = startMonth && startYear ? `${startMonth} ${startYear}` : "Start Date Unknown";
+              const formattedEnd = job.currentEmployment ? "Present" : (endMonth && endYear ? `${endMonth} ${endYear}` : "End Date Unknown");
+
+              const startDate = job.joiningDate?.year && job.joiningDate?.month ? new Date(job.joiningDate.year, job.joiningDate.month - 1) : null;
+              const endDate = job.currentEmployment ? new Date() : (job.leavingDate?.year && job.leavingDate?.month ? new Date(job.leavingDate.year, job.leavingDate.month - 1) : null);
+
+              let durationText = "";
+              if (startDate && endDate) {
+                let years = endDate.getFullYear() - startDate.getFullYear();
+                let months = endDate.getMonth() - startDate.getMonth();
+                if (months < 0) { years--; months += 12; }
+                if (years > 0 || months > 0) {
+                  durationText = ` (${years > 0 ? years + " year" + (years > 1 ? "s" : "") : ""}${years > 0 && months > 0 ? " " : ""}${months > 0 ? months + " month" + (months > 1 ? "s" : "") : ""})`;
+                }
+              }
+            %>
+            <li style="margin-bottom: 12px; text-align: justify;">
+              <strong><%= job.jobTitle %></strong> at <strong><%= job.companyName %></strong><br>
+              <em style="display: inline-block; margin-bottom: 6px;">
+                <%= formattedStart %> – <%= formattedEnd %><%= durationText %>
+              </em><br>
+              <%- job.jobDescription %>
+            </li>
+            <% }) %>
+          </ul>
+        </div>
+      </div>
     <% } %>
+
 
       <% if (projectDetails && projectDetails.length> 0) { %>
         <div class="page-break-group-projects">
