@@ -106,6 +106,7 @@ export const getPersonalDetailsWithName = async (req, res) => {
       pincode: personal.pincode,
       languages,
       marital_status: maritalStatus,
+      partner_name: personal?.partnerName ?? "",
       more_info: moreInfo,
     };
 
