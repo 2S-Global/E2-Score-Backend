@@ -414,6 +414,7 @@ const userInformation = {
     _id: user?._id || "",
     fullName: user?.name || "",
     fatherName: candidateDetails?.fatherName || "",
+    motherName: candidateDetails?.motherName || "",
     email: user?.email || "",
     phoneNumber: user?.phone_number || "",
     profilePicture: user?.profilePicture || "",
@@ -553,6 +554,7 @@ const candidatePersonalDetails = {
     permanent_address: userDetails.permanentAddress,
     pincode: userDetails.pincode,
     marital_status: maritalStatusName?.status || "",
+    partner_name: userDetails?.partnerName || "",
     more_info: (userDetails?.additionalInformation || [])
         .map((id) => addiInfoNameWithMap[id] || "")
         .filter(Boolean)

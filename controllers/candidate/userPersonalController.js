@@ -114,7 +114,7 @@ export const submitPersonalDetails = async (req, res) => {
       additionalInformation: (data.more_info || []).filter(
         (id) => id && id !== "null" && id !== ""
       ),
-      have_usa_visa: data.have_usa_visa || false
+      have_usa_visa: data.have_usa_visa || ""
     };
 
     await personalDetails.findOneAndUpdate(

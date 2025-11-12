@@ -39,6 +39,7 @@ import list_visa_type from "../../models/monogo_query/visaTypeModel.js";
 import list_more_information from "../../models/monogo_query/moreInformationModel.js";
 import list_gender from "../../models/monogo_query/genderModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
+import CandidateKYC from "../../models/CandidateKYCModel.js";
 import mongoose from "mongoose";
 
 /// Import PDF generation utility
@@ -71,6 +72,7 @@ export const getResume = async (req, res) => {
       userItSkills,
       userProjects,
       careerProfile,
+      candidateKycDetails
     ] = await Promise.all([
       User.findById(userId).lean(),
       usereducation.find({ userId, isDel: false }).lean(),
@@ -86,10 +88,13 @@ export const getResume = async (req, res) => {
       Itskill.find({ userId, is_del: false }).lean(),
       ProjectDetails.find({ userId, isDel: false }).lean(),
       UserCareer.find({ userId, isDel: false }).lean(),
+      CandidateKYC.findOne({ userId }).lean(),
     ]);
 
     const userDetails = userDetailsArr[0] || {};
     const candidateDetails = candidateDetailsArr[0] || {};
+
+    // console.log("--Here I am getting all candidate KYC details--", candidateKycDetails);
 
     const universityIds = educationRaw?.length
       ? getUniqueIds(educationRaw, "universityName")
@@ -178,6 +183,7 @@ export const getResume = async (req, res) => {
       usaPermitName,
       addiInfoName,
       userGender,
+      candidateDetailsCountryName,
     ] = await Promise.all([
       Array.isArray(universityIds) && universityIds.length > 0
         ? list_university_univercities.find({ id: { $in: universityIds } }).lean()
@@ -374,12 +380,21 @@ export const getResume = async (req, res) => {
       user?.gender
         ? list_gender.findById(user.gender).select("name").lean()
         : Promise.resolve([]),
+      candidateDetails?.country_id
+        ? list_tbl_countrie
+          .findOne({ id: Number(candidateDetails.country_id) })
+          .select("name")
+          .lean()
+        : Promise.resolve(null),
     ]);
 
     user.gender_name = userGender?.name || "";
+    candidateDetails.countryName = candidateDetailsCountryName?.name || "";
 
     const locationNames =
       locations?.map((city) => city.city_name).join(", ") || "";
+
+    // console.log("Here is my all Location Names: ", locationNames);
 
     const universityMap = createMap(universities);
     const instituteMap = createMap(institutes);
@@ -517,6 +532,24 @@ export const getResume = async (req, res) => {
       ).map((id) => addiInfoNameWithMap[id] || ""),
     };
 
+    // KYC Details
+    // Define the document types you want to check
+    const docTypes = ["pan", "epic", "aadhar", "passport", "dl"];
+    const kycResult = {};
+
+    // Iterate over each type and determine verified or not
+    for (const type of docTypes) {
+      const verifiedField = `${type}_verified`;
+      const value = candidateKycDetails?.[verifiedField];
+
+      const isVerified = value === true ? true : false;
+
+      // Add verified status to result like { pan_verified: true }
+      kycResult[verifiedField] = isVerified;
+    }
+
+    console.log("Here is my all KYC Results: ", kycResult);
+
     const pdfBuffer = await generateResumePDF({
       user,
       education,
@@ -533,6 +566,7 @@ export const getResume = async (req, res) => {
       projectDetails,
       preferenceDetails,
       userPersonalDetails,
+      kycResult
     });
 
     res.setHeader("Content-Type", "application/pdf");

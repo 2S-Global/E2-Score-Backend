@@ -16,6 +16,13 @@ const generateResumePDF = async (data) => {
   const page = await browser.newPage();
   await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
+  // 🕒 Get the current date in a readable format
+  const generatedDate = new Date().toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
   const pdfBuffer = await page.pdf({
     format: "A4",
     margin: {
@@ -27,12 +34,23 @@ const generateResumePDF = async (data) => {
     printBackground: true,
     displayHeaderFooter: true,
     footerTemplate: `
-    <div style="width: 100%; font-size: 10px; padding: 5px 0; text-align: center; color: #666;">
-      Page <span class="pageNumber"></span> of <span class="totalPages"></span>
+    <div style="
+      width: 100%;
+      font-size: 10px;
+      padding: 5px 30px;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 0.5px solid #ccc;
+    ">
+      <div>Generated on: ${generatedDate}</div>
+      <div>Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>
     </div>
   `,
     headerTemplate: `<div></div>` // empty header
   });
+  await page.close();
   await browser.close();
   return pdfBuffer;
 };

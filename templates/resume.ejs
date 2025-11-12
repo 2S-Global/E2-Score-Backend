@@ -13,7 +13,8 @@
     html,
     body {
       margin: 0;
-      padding: 0;
+      /* padding: 0; */
+      padding: 0 0 80px 0; /* creates space before footer */
       height: 100%;
       font-family: Arial, sans-serif;
       background-color: white;
@@ -73,6 +74,7 @@
     .info-table {
       width: 100%;
       border-collapse: collapse;
+      table-layout: fixed;
     }
 
     .info-table td,
@@ -157,6 +159,21 @@
     ul a {
       color: #61c2f4
     }
+
+    /* Below CSS is only for KYC Details Section */
+
+    .check {
+      color: #0b8a3e;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .cross {
+      color: #d23b3b;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
   </style>
 </head>
 
@@ -177,10 +194,14 @@
         </p>
         <p>Email: <%= user.email %> | Phone: <%= user.phone_number %>
         </p>
+        <p>
+        Current Location:
         <% if (candidateDetails?.currentLocation) { %>
-          <p>Address: <%= candidateDetails.currentLocation %>
-          </p>
+          <%= candidateDetails.currentLocation %>
+        <% } else { %>
+          N/A
         <% } %>
+</p>
       </div>
     </div>
 
@@ -236,6 +257,96 @@
               </td>
             </tr>
 
+            <!-- Father Name -->
+             <tr>
+              <td class="left-column"><strong>Father's Name</strong></td>
+              <td>
+                <% if (candidateDetails?.fatherName) { %>
+                  <%= candidateDetails.fatherName %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+            </tr>
+            <!--Mother Name -->
+             <tr>
+              <td class="left-column"><strong>Mother's Name</strong></td>
+              <td>
+                <% if (candidateDetails?.motherName) { %>
+                  <%= candidateDetails.motherName %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+            </tr>
+
+            <!-- Total Experience -->
+            <tr>
+              <td class="left-column"><strong>Total Experience</strong></td>
+              <td>
+                <% 
+                  const years = candidateDetails?.totalExperience?.year || 0;
+                  const months = candidateDetails?.totalExperience?.month || 0;
+                %>
+
+                <% if (years > 0 || months > 0) { %>
+                  <%= years > 0 ? years + ' year' + (years > 1 ? 's' : '') : '' %>
+                  <%= years > 0 && months > 0 ? ' ' : '' %>
+                  <%= months > 0 ? months + ' month' + (months > 1 ? 's' : '') : '' %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+            </tr>
+
+            <!-- Current Salary -->
+            <tr>
+              <td class="left-column"><strong>Current Salary</strong></td>
+              <td>
+                <% 
+                  const currency = candidateDetails?.currentSalary?.currency;
+                  const salary = candidateDetails?.currentSalary?.salary;
+                %>
+
+                <% if (salary) { %>
+                  <% 
+                    const currencySymbol = currency === 'INR' ? '₹' 
+                                          : currency === 'USD' ? '$' 
+                                          : currency === 'EUR' ? '€' 
+                                          : currency === 'GBP' ? '£'                      
+                                          : currency || ''; 
+                  %>
+                  <%= currencySymbol %><%= salary.toLocaleString('en-IN') %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+            </tr>
+
+            <!-- Country -->
+             <tr>
+              <td class="left-column"><strong>Country</strong></td>
+              <td>
+                <% if (candidateDetails?.countryName) { %>
+                  <%= candidateDetails.countryName %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+            </tr>
+
+            <!-- Hometown -->
+             <tr>
+              <td class="left-column"><strong>Hometown</strong></td>
+              <td>
+                <% if (candidateDetails?.hometown) { %>
+                  <%= candidateDetails.hometown %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+            </tr>
+
             <!-- Marital Status -->
             <tr>
               <td class="left-column"><strong>Marital Status</strong></td>
@@ -247,28 +358,21 @@
                 <% } %>
               </td>
             </tr>
-            <!-- Father Name -->
-             <tr>
-              <td class="left-column"><strong>Father's Name</strong></td>
-              <td>
-                <% if (candidateDetails?.father_name) { %>
-                  <%= candidateDetails.father_name %>
-                <% } else { %>
-                  N/A
-                <% } %>
-              </td>
-            </tr>
-            <!--Mother Name -->
-             <tr>
-              <td class="left-column"><strong>Mother's Name</strong></td>
-              <td>
-                <% if (candidateDetails?.mother_name) { %>
-                  <%= candidateDetails.mother_name %>
-                <% } else { %>
-                  N/A
-                <% } %>
-              </td>
-            </tr>
+
+            <!-- Partner Name -->
+            <% if (userPersonalDetails && (userPersonalDetails.maritalStatusName === 'Married' ||
+            userPersonalDetails.maritalStatusName === 'Civil partnership')) { %>
+              <tr>
+                <td class="left-column"><strong>Partner Name</strong></td>
+                <td>
+                  <% if (userPersonalDetails?.partnerName) { %>
+                    <%= userPersonalDetails.partnerName %>
+                  <% } else { %>
+                    N/A
+                  <% } %>
+                </td>
+              </tr>
+            <% } %>
 
             <!-- Additional Information -->
             <tr>
@@ -278,28 +382,70 @@
               </td>
             </tr>
 
-            <!-- Career Break -->
-            <tr>
-            <td class="left-column"><strong>Career Break</strong></td>
-            <td>
-              <% if (userPersonalDetails.reasonName) { %>
-                Yes – <%= userPersonalDetails.reasonName %><br>
-                From:
-              <%= new Date(2000, userPersonalDetails.startMonth - 1).toLocaleString('default', { month: 'long' }) %>
-                  <%= userPersonalDetails.startYear %><br>
-                    <% if (userPersonalDetails.endMonth && userPersonalDetails.endYear) { %>
-                      To:
-                      <%= new Date(2000, userPersonalDetails.endMonth - 1).toLocaleString('default', { month: 'long' })
-                        %>
-                        <%= userPersonalDetails.endYear %>
-                          <% } else { %>
-                            To: Present
-                            <% } %>
-                              <% } else { %>
-                                No
-                                <% } %>
+            <!-- Career Break section Updated -->
+             <tr>
+              <td class="left-column"><strong>Career Break</strong></td>
+              <td>
+                <% if (userPersonalDetails && userPersonalDetails.careerBreak) { %>
+                  <%= userPersonalDetails.careerBreak %>
+                <% } else { %>
+                  N/A
+                <% } %>
               </td>
             </tr>
+
+            <!-- Career Break Reason Section -->
+             <% if (userPersonalDetails && userPersonalDetails.careerBreak === 'Yes') { %>
+              <tr>
+                <td class="left-column"><strong>Career Break Reason</strong></td>
+                <td>
+                  <% if (userPersonalDetails.reasonName) { %>
+                    <%= userPersonalDetails.reasonName %>
+                  <% } else { %>
+                    N/A
+                  <% } %>
+                </td>
+              </tr>
+
+              <!-- Career Break Duration -->
+              <tr>
+                <td class="left-column"><strong>Career Break Duration</strong></td>
+                <td>
+                  <% 
+                    const startMonth = userPersonalDetails.startMonth;
+                    const startYear = userPersonalDetails.startYear;
+                    const endMonth = userPersonalDetails.endMonth;
+                    const endYear = userPersonalDetails.endYear;
+                    const currentlyOnCareerBreak = userPersonalDetails.currentlyOnCareerBreak;
+                    
+                    if (startMonth && startYear) {
+                      const startDate = new Date(2000, startMonth - 1).toLocaleString('default', { month: 'long' }) + ' ' + startYear;
+                      
+                      if (currentlyOnCareerBreak) {
+                        // If currently on break, show Present
+                        %>
+                        <%= startDate %> – Present
+                        <%
+                      } else if (endMonth && endYear) {
+                        // If end date is available
+                        const endDate = new Date(2000, endMonth - 1).toLocaleString('default', { month: 'long' }) + ' ' + endYear;
+                        %>
+                        <%= startDate %> – <%= endDate %>
+                        <%
+                      } else {
+                        // Missing end date but not currently on break
+                        %>
+                        <%= startDate %> – N/A
+                        <%
+                      }
+                    } else {
+                      // No start date
+                      %> N/A <% 
+                    }
+                  %>
+                </td>
+              </tr>
+            <% } %>
 
             <!-- Category -->
             <tr>
@@ -313,64 +459,189 @@
               </td>
             </tr>
 
-            <!-- Work Permit -->
+            <!-- Updated Work Permit for USA -->
             <tr>
-              <td class="left-column"><strong>Work Permit</strong></td>
+              <td class="left-column"><strong>Work Permit for USA</strong></td>
               <td>
-                <%= userPersonalDetails.usaPermitName %><br>
-                  <%= userPersonalDetails.workPermitOtherNames?.join(' , ') || "N/A" %>
+                <% if (userPersonalDetails?.have_usa_visa === true) { %>
+                  Yes
+                <% } else { %>
+                  N/A
+                <% } %>
               </td>
             </tr>
+
+            <% if (userPersonalDetails?.have_usa_visa === true) { %>
+              <tr>
+                <td class="left-column"><strong>Visa Type</strong></td>
+                <td>
+                  <% if (userPersonalDetails?.usaPermitName) { %>
+                    <%= userPersonalDetails.usaPermitName %>
+                  <% } else { %>
+                    N/A
+                  <% } %>
+                </td>
+              </tr>
+            <% } %>
+
+            <!-- Work Permit for Other Countries -->
+            <tr>
+              <td class="left-column"><strong>Work Permit for Other Countries</strong></td>
+              <% if (userPersonalDetails?.workPermitOtherNames) { %>
+                <td>
+                  <%= userPersonalDetails.workPermitOtherNames?.join(' , ') || "N/A" %>
+                </td>
+              <% } %>
+            </tr>
+
 
             <!-- Address -->
             <tr>
-              <td class="left-column"><strong>Address</strong></td>
+              <td class="left-column"><strong>Permanent Address</strong></td>
               <td>
                 <% if (userPersonalDetails?.permanentAddress) { %>
                   <%= userPersonalDetails.permanentAddress %>
-                  <% if (userPersonalDetails?.pincode) { %>, <%= userPersonalDetails.pincode %><% } %>
                 <% } else { %>
                   N/A
                 <% } %>
               </td>
             </tr>
 
-            <!-- Disability -->
+            <!-- Pincode -->
             <tr>
-              <td class="left-column"><strong>Differently Abled</strong></td>
+              <td class="left-column"><strong>Pincode</strong></td>
               <td>
-                <% if (userPersonalDetails?.differentlyAble === 'Yes') { %>
-                  Yes
-                  <% if (userPersonalDetails?.disabilityTypeName) { %>, <%= userPersonalDetails.disabilityTypeName %><% } %>
-                  <% if (userPersonalDetails?.other_disability_type) { %>, <%= userPersonalDetails.other_disability_type %><% } %>
-                  <% if (userPersonalDetails?.workplace_assistance) { %>, <%= userPersonalDetails.workplace_assistance %><% } %>
-                <% } else if (userPersonalDetails?.differentlyAble === 'No') { %>
-                  No
+                <% if (userPersonalDetails?.pincode) { %>
+                  <%= userPersonalDetails.pincode %>
                 <% } else { %>
                   N/A
                 <% } %>
               </td>
             </tr>
+
+            <!-- Disability Updated Section -->
+            <tr>
+              <td class="left-column"><strong>Differently Abled</strong></td>
+              <td>
+                <% if (userPersonalDetails?.differentlyAble) { %>
+                  <%= userPersonalDetails.differentlyAble %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+            </tr>
+
+            <% if (userPersonalDetails?.differentlyAble === 'Yes') { %>
+              <!-- Disability Type Row -->
+              <tr>
+                <td class="left-column"><strong>Disability Type</strong></td>
+                <td>
+                  <% if (userPersonalDetails?.disabilityTypeName) { %>
+                    <%= userPersonalDetails.disabilityTypeName %>
+                  <% } else { %>
+                    N/A
+                  <% } %>
+                </td>
+              </tr>
+
+              <!-- Workplace Assistance Row -->
+              <tr>
+                <td class="left-column"><strong>Workplace Assistance</strong></td>
+                <td>
+                  <% if (userPersonalDetails?.workplace_assistance) { %>
+                    <%= userPersonalDetails.workplace_assistance %>
+                  <% } else { %>
+                    N/A
+                  <% } %>
+                </td>
+              </tr>
+            <% } %>
 
           </table>
         </div>
 
+        <!-- KYC Details Starts here -->
+
+        <div class="section">
+          <h3>KYC Information</h3>
+          <table class="info-table">
+            <tr>
+              <td class="left-column"><strong>PAN Card</strong></td>
+              <td>
+                <% if (kycResult?.pan_verified === true) { %>
+                  <span class="check">Verified &#10004;</span>
+                <% } else { %>
+                  <span class="cross">Not Verified &#10008;</span>
+                <% } %>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="left-column"><strong>EPIC Card</strong></td>
+              <td>
+                <% if (kycResult?.epic_verified === true) { %>
+                  <span class="check">Verified &#10004;</span>
+                <% } else { %>
+                  <span class="cross">Not Verified &#10008;</span>
+                <% } %>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="left-column"><strong>Aadhar Card</strong></td>
+              <td>
+                <% if (kycResult?.aadhar_verified === true) { %>
+                  <span class="check">Verified &#10004;</span>
+                <% } else { %>
+                  <span class="cross">Not Verified &#10008;</span>
+                <% } %>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="left-column"><strong>Driving License</strong></td>
+              <td>
+                <% if (kycResult?.dl_verified === true) { %>
+                  <span class="check">Verified &#10004;</span>
+                <% } else { %>
+                  <span class="cross">Not Verified &#10008;</span>
+                <% } %>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="left-column"><strong>Passport</strong></td>
+              <td>
+                <% if (kycResult?.passport_verified === true) { %>
+                  <span class="check">Verified &#10004;</span>
+                <% } else { %>
+                  <span class="cross">Not Verified &#10008;</span>
+                <% } %>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+
+
+        <!-- KYC Details Ends here -->
+
     <!-- Personal Details Section End -->
 
-    <% if (userPersonalDetails.skillsResolved && userPersonalDetails.skillsResolved.length > 0) { 
-      const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
-      const formattedSkills = userPersonalDetails.skillsResolved.map(skill => {
-        return skill
-          .split(' ')
-          .map(capitalize)
-          .join(' ');
-      }).join(' , ');
-      %>
-      <div class="section">
-        <h3 class="border-content">Skills</h3>
-        <p><%= formattedSkills %></p>
-      </div>
-   <% } %>
+        <% if (userPersonalDetails.skillsResolved && userPersonalDetails.skillsResolved.length > 0) { 
+          const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
+          const formattedSkills = userPersonalDetails.skillsResolved.map(skill => {
+            return skill
+              .split(' ')
+              .map(capitalize)
+              .join(' ');
+          }).join(' , ');
+          %>
+          <div class="section">
+            <h3 class="border-content">Skills</h3>
+            <p><%= formattedSkills %></p>
+          </div>
+      <% } %>
 
 
     
