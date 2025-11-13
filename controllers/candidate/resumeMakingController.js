@@ -45,8 +45,8 @@ import list_non_tech_skill from "../../models/monogo_query/nonTechSkillModel.js"
 import mongoose from "mongoose";
 
 /// Import PDF generation utility
-import generateResumePDF from "../../services/pdfGenerator.js"; //for local testing
-// import generateResumePDF from "../../services/pdfGenerator_server.js"; //for vps production
+//import generateResumePDF from "../../services/pdfGenerator.js"; //for local testing
+import generateResumePDF from "../../services/pdfGenerator_server.js"; //for vps production
 
 const getUniqueIds = (arr, field) => [
   ...new Set(arr.map((e) => e[field]).filter(Boolean)),
@@ -75,7 +75,7 @@ export const getResume = async (req, res) => {
       nonItSkills,
       userProjects,
       careerProfile,
-      candidateKycDetails
+      candidateKycDetails,
     ] = await Promise.all([
       User.findById(userId).lean(),
       usereducation.find({ userId, isDel: false }).lean(),
@@ -198,7 +198,9 @@ export const getResume = async (req, res) => {
       candidateDetailsCountryName,
     ] = await Promise.all([
       Array.isArray(universityIds) && universityIds.length > 0
-        ? list_university_univercities.find({ id: { $in: universityIds } }).lean()
+        ? list_university_univercities
+            .find({ id: { $in: universityIds } })
+            .lean()
         : Promise.resolve([]),
       Array.isArray(instituteIds) && instituteIds.length > 0
         ? list_university_colleges.find({ id: { $in: instituteIds } }).lean()
@@ -221,88 +223,88 @@ export const getResume = async (req, res) => {
       //For Employments
       Array.isArray(companyIds) && companyIds.length > 0
         ? companylist
-          .find({
-            _id: {
-              $in: companyIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: companyIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .lean()
         : Promise.resolve([]),
       // For Online Profiles
       Array.isArray(socialProfileIds) && socialProfileIds.length > 0
         ? list_social_profile
-          .find({
-            _id: {
-              $in: socialProfileIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-            is_del: 0,
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: socialProfileIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+              is_del: 0,
+            })
+            .lean()
         : Promise.resolve([]),
       // skill name value from personal details
       Array.isArray(userDetails.skills) && userDetails.skills.length > 0
         ? list_key_skill
-          .find({
-            _id: {
-              $in: userDetails.skills.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: userDetails.skills.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .lean()
         : Promise.resolve([]),
       Array.isArray(itSkillIds) && itSkillIds.length > 0
         ? list_tech_skill
-          .find({
-            _id: {
-              $in: itSkillIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .select("name")
-          .lean()
+            .find({
+              _id: {
+                $in: itSkillIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       Array.isArray(nonItSkillIds) && nonItSkillIds.length > 0
         ? list_non_tech_skill
-          .find({
-            _id: {
-              $in: nonItSkillIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .select("name")
-          .lean()
+            .find({
+              _id: {
+                $in: nonItSkillIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Getting taggedwithName  from user projects
       Array.isArray(taggedWithIds) && taggedWithIds.length > 0
         ? list_project_tag
-          .find({
-            _id: {
-              $in: taggedWithIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: taggedWithIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .lean()
         : Promise.resolve([]),
       //Getting Current Industry
       userPref?.CurrentIndustry
         ? list_industries
-          .findOne({ id: userPref.CurrentIndustry })
-          .select("job_industry")
-          .lean()
+            .findOne({ id: userPref.CurrentIndustry })
+            .select("job_industry")
+            .lean()
         : Promise.resolve([]),
       userPref?.CurrentDepartment
         ? list_department
-          .findOne({ id: userPref.CurrentDepartment })
-          .select("job_department")
-          .lean()
+            .findOne({ id: userPref.CurrentDepartment })
+            .select("job_department")
+            .lean()
         : Promise.resolve([]),
       userPref?.JobRole
         ? list_job_role.findById(userPref.JobRole).select("job_role").lean()
@@ -310,95 +312,97 @@ export const getResume = async (req, res) => {
       // Getting Locations
       userPref?.location
         ? list_india_cities
-          .find({ _id: { $in: userPref.location } })
-          .select("city_name")
-          .lean()
+            .find({ _id: { $in: userPref.location } })
+            .select("city_name")
+            .lean()
         : Promise.resolve([]),
       // Getting Language Name
       languageIds?.length
         ? list_language
-          .find({ _id: { $in: languageIds } })
-          .select("name")
-          .lean()
+            .find({ _id: { $in: languageIds } })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       //Getting Language Proficiency
       Array.isArray(userDetails.languageProficiencyIds) &&
-        userDetails.languageProficiencyIds.length > 0
+      userDetails.languageProficiencyIds.length > 0
         ? list_language_proficiency
-          .find({
-            _id: {
-              $in: userDetails.languageProficiencyIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .select("name")
-          .lean()
+            .find({
+              _id: {
+                $in: userDetails.languageProficiencyIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Getting work permit other name
-      Array.isArray(userDetails.workPermitOther) && userDetails.workPermitOther.length > 0
+      Array.isArray(userDetails.workPermitOther) &&
+      userDetails.workPermitOther.length > 0
         ? list_tbl_countrie
-          .find({
-            id: {
-              $in: userDetails.workPermitOther
-                .map((id) => Number(id))
-                .filter((id) => !isNaN(id)), // ✅ keep only valid numbers
-            },
-          })
-          .select("id name")
-          .lean()
+            .find({
+              id: {
+                $in: userDetails.workPermitOther
+                  .map((id) => Number(id))
+                  .filter((id) => !isNaN(id)), // ✅ keep only valid numbers
+              },
+            })
+            .select("id name")
+            .lean()
         : Promise.resolve([]),
       // Getting Category Name
       userDetails.category &&
-        mongoose.Types.ObjectId.isValid(userDetails.category)
+      mongoose.Types.ObjectId.isValid(userDetails.category)
         ? list_category
-          .find({ _id: userDetails.category })
-          .select("category_name")
-          .lean()
+            .find({ _id: userDetails.category })
+            .select("category_name")
+            .lean()
         : Promise.resolve([]),
       // Get Disability Type Name
       userDetails.disability_type &&
-        mongoose.Types.ObjectId.isValid(userDetails.disability_type)
+      mongoose.Types.ObjectId.isValid(userDetails.disability_type)
         ? list_disability_type
-          .find({ _id: userDetails.disability_type })
-          .select("name")
-          .lean()
+            .find({ _id: userDetails.disability_type })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Get Career break reason
       userDetails.reason && mongoose.Types.ObjectId.isValid(userDetails.reason)
         ? list_career_break_reason
-          .find({ _id: userDetails.reason })
-          .select("name")
-          .lean()
+            .find({ _id: userDetails.reason })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Get Marital Status Name
       userDetails.maritialStatus &&
-        mongoose.Types.ObjectId.isValid(userDetails.maritialStatus)
+      mongoose.Types.ObjectId.isValid(userDetails.maritialStatus)
         ? list_marital_status
-          .findById(userDetails.maritialStatus)
-          .select("status")
-          .lean()
+            .findById(userDetails.maritialStatus)
+            .select("status")
+            .lean()
         : Promise.resolve([]),
       // Get visa type name or usa Permit name
       userDetails.usaPermit &&
-        mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
+      mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
         ? list_visa_type
-          .findById(userDetails.usaPermit)
-          .select("visa_name")
-          .lean()
+            .findById(userDetails.usaPermit)
+            .select("visa_name")
+            .lean()
         : Promise.resolve([]),
       // Get all Additional Information Name
-      Array.isArray(userDetails.additionalInformation) && userDetails.additionalInformation.length > 0
+      Array.isArray(userDetails.additionalInformation) &&
+      userDetails.additionalInformation.length > 0
         ? list_more_information
-          .find({
-            _id: {
-              $in: userDetails.additionalInformation.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .select("name")
-          .lean()
+            .find({
+              _id: {
+                $in: userDetails.additionalInformation.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Get Gender name from id
       user?.gender
@@ -406,9 +410,9 @@ export const getResume = async (req, res) => {
         : Promise.resolve([]),
       candidateDetails?.country_id
         ? list_tbl_countrie
-          .findOne({ id: Number(candidateDetails.country_id) })
-          .select("name")
-          .lean()
+            .findOne({ id: Number(candidateDetails.country_id) })
+            .select("name")
+            .lean()
         : Promise.resolve(null),
     ]);
 
@@ -509,17 +513,19 @@ export const getResume = async (req, res) => {
 
     // console.log("--Here is my raw employments: --", employmentsRaw);
     // Here is the modified employments
-    const formattedEmployment = (employmentsRaw || []).map((emp) => {
-      const joiningYear = emp.joiningDate?.year;
-      const leavingYear = emp.leavingDate?.year;
-      const companyName = companyMap[emp.companyName?.toString()] || "Unknown Company";
-      return {
-        ...emp,
-        companyName: companyName,
-        joiningYear: joiningYear || "",
-        leavingYear: leavingYear || "",
-      };
-    })
+    const formattedEmployment = (employmentsRaw || [])
+      .map((emp) => {
+        const joiningYear = emp.joiningDate?.year;
+        const leavingYear = emp.leavingDate?.year;
+        const companyName =
+          companyMap[emp.companyName?.toString()] || "Unknown Company";
+        return {
+          ...emp,
+          companyName: companyName,
+          joiningYear: joiningYear || "",
+          leavingYear: leavingYear || "",
+        };
+      })
       .sort((a, b) => {
         // If "Present" job (no leavingYear), it should come first
         if (!a.leavingYear && b.leavingYear) return -1;
@@ -569,7 +575,8 @@ export const getResume = async (req, res) => {
       .map((proj) => {
         const startYear = proj.workedFrom?.year;
         const endYear = proj.workedTill?.year;
-        const taggedWithName = taggedWithMap[proj.taggedWith?.toString()] || "Not Found";
+        const taggedWithName =
+          taggedWithMap[proj.taggedWith?.toString()] || "Not Found";
 
         return {
           ...proj,
@@ -592,7 +599,6 @@ export const getResume = async (req, res) => {
         // If same end year, sort by startYear descending
         return (b.startYear || 0) - (a.startYear || 0);
       });
-
 
     console.log("--Here is my raw projects: --", userProjects);
 
@@ -655,10 +661,10 @@ export const getResume = async (req, res) => {
       shift: userPref?.PreferredShift || "",
       expected_salary: userPref?.expectedSalary?.salary
         ? new Intl.NumberFormat("en-IN", {
-          style: "currency",
-          currency: userPref?.expectedSalary?.currency || "INR",
-          maximumFractionDigits: 0
-        }).format(userPref.expectedSalary.salary)
+            style: "currency",
+            currency: userPref?.expectedSalary?.currency || "INR",
+            maximumFractionDigits: 0,
+          }).format(userPref.expectedSalary.salary)
         : "",
       preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
     };
@@ -683,7 +689,7 @@ export const getResume = async (req, res) => {
       preferenceDetails,
       userPersonalDetails,
       kycResult,
-      candidateCareerProfile
+      candidateCareerProfile,
     });
 
     res.setHeader("Content-Type", "application/pdf");
@@ -835,7 +841,9 @@ export const AdmingetResume123 = async (req, res) => {
       userGender,
     ] = await Promise.all([
       Array.isArray(universityIds) && universityIds.length > 0
-        ? list_university_univercities.find({ id: { $in: universityIds } }).lean()
+        ? list_university_univercities
+            .find({ id: { $in: universityIds } })
+            .lean()
         : Promise.resolve([]),
       Array.isArray(instituteIds) && instituteIds.length > 0
         ? list_university_colleges.find({ id: { $in: instituteIds } }).lean()
@@ -858,76 +866,76 @@ export const AdmingetResume123 = async (req, res) => {
       //For Employments
       Array.isArray(companyIds) && companyIds.length > 0
         ? companylist
-          .find({
-            _id: {
-              $in: companyIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: companyIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .lean()
         : Promise.resolve([]),
       // For Online Profiles
       Array.isArray(socialProfileIds) && socialProfileIds.length > 0
         ? list_social_profile
-          .find({
-            _id: {
-              $in: socialProfileIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-            is_del: 0,
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: socialProfileIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+              is_del: 0,
+            })
+            .lean()
         : Promise.resolve([]),
       // skill name value from personal details
       Array.isArray(userDetails.skills) && userDetails.skills.length > 0
         ? list_key_skill
-          .find({
-            _id: {
-              $in: userDetails.skills.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: userDetails.skills.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .lean()
         : Promise.resolve([]),
       Array.isArray(itSkillIds) && itSkillIds.length > 0
         ? list_tech_skill
-          .find({
-            _id: {
-              $in: itSkillIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .select("name")
-          .lean()
+            .find({
+              _id: {
+                $in: itSkillIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Getting taggedwithName  from user projects
       Array.isArray(taggedWithIds) && taggedWithIds.length > 0
         ? list_project_tag
-          .find({
-            _id: {
-              $in: taggedWithIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: taggedWithIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .lean()
         : Promise.resolve([]),
       //Getting Current Industry
       userPref?.CurrentIndustry
         ? list_industries
-          .findOne({ id: userPref.CurrentIndustry })
-          .select("job_industry")
-          .lean()
+            .findOne({ id: userPref.CurrentIndustry })
+            .select("job_industry")
+            .lean()
         : Promise.resolve([]),
       userPref?.CurrentDepartment
         ? list_department
-          .findOne({ id: userPref.CurrentDepartment })
-          .select("job_department")
-          .lean()
+            .findOne({ id: userPref.CurrentDepartment })
+            .select("job_department")
+            .lean()
         : Promise.resolve([]),
       userPref?.JobRole
         ? list_job_role.findById(userPref.JobRole).select("job_role").lean()
@@ -935,89 +943,89 @@ export const AdmingetResume123 = async (req, res) => {
       // Getting Locations
       userPref?.location
         ? list_india_cities
-          .find({ _id: { $in: userPref.location } })
-          .select("city_name")
-          .lean()
+            .find({ _id: { $in: userPref.location } })
+            .select("city_name")
+            .lean()
         : Promise.resolve([]),
       // Getting Language Name
       languageIds?.length
         ? list_language
-          .find({ _id: { $in: languageIds } })
-          .select("name")
-          .lean()
+            .find({ _id: { $in: languageIds } })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       //Getting Language Proficiency
       Array.isArray(userDetails.languageProficiencyIds) &&
-        userDetails.languageProficiencyIds.length > 0
+      userDetails.languageProficiencyIds.length > 0
         ? list_language_proficiency
-          .find({
-            _id: {
-              $in: userDetails.languageProficiencyIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .select("name")
-          .lean()
+            .find({
+              _id: {
+                $in: userDetails.languageProficiencyIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Getting work permit other name
       Array.isArray(userDetails.workPermitOther) &&
-        userDetails.workPermitOther.length > 0
+      userDetails.workPermitOther.length > 0
         ? list_tbl_countrie
-          .find({
-            _id: userDetails.workPermitOther.filter((id) =>
-              mongoose.Types.ObjectId.isValid(id)
-            ),
-          })
-          .select("name")
-          .lean()
+            .find({
+              _id: userDetails.workPermitOther.filter((id) =>
+                mongoose.Types.ObjectId.isValid(id)
+              ),
+            })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Getting Category Name
       userDetails.category &&
-        mongoose.Types.ObjectId.isValid(userDetails.category)
+      mongoose.Types.ObjectId.isValid(userDetails.category)
         ? list_category
-          .find({ _id: userDetails.category })
-          .select("category_name")
-          .lean()
+            .find({ _id: userDetails.category })
+            .select("category_name")
+            .lean()
         : Promise.resolve([]),
       // Get Disability Type Name
       userDetails.disability_type &&
-        mongoose.Types.ObjectId.isValid(userDetails.disability_type)
+      mongoose.Types.ObjectId.isValid(userDetails.disability_type)
         ? list_disability_type
-          .find({ _id: userDetails.disability_type })
-          .select("name")
-          .lean()
+            .find({ _id: userDetails.disability_type })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Get Career break reason
       userDetails.reason && mongoose.Types.ObjectId.isValid(userDetails.reason)
         ? list_career_break_reason
-          .find({ _id: userDetails.reason })
-          .select("name")
-          .lean()
+            .find({ _id: userDetails.reason })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Get Marital Status Name
       userDetails.maritialStatus &&
-        mongoose.Types.ObjectId.isValid(userDetails.maritialStatus)
+      mongoose.Types.ObjectId.isValid(userDetails.maritialStatus)
         ? list_marital_status
-          .findById(userDetails.maritialStatus)
-          .select("status")
-          .lean()
+            .findById(userDetails.maritialStatus)
+            .select("status")
+            .lean()
         : Promise.resolve([]),
       // Get visa type name or usa Permit name
       userDetails.usaPermit &&
-        mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
+      mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
         ? list_visa_type
-          .findById(userDetails.usaPermit)
-          .select("visa_name")
-          .lean()
+            .findById(userDetails.usaPermit)
+            .select("visa_name")
+            .lean()
         : Promise.resolve([]),
       // Get all Additional Information Name
       userDetails.additionalInformation &&
-        mongoose.Types.ObjectId.isValid(userDetails.additionalInformation)
+      mongoose.Types.ObjectId.isValid(userDetails.additionalInformation)
         ? list_more_information
-          .find({ _id: { $in: userDetails.additionalInformation } })
-          .select("name")
-          .lean()
+            .find({ _id: { $in: userDetails.additionalInformation } })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Get Gender name from id
       user?.gender
@@ -1329,7 +1337,9 @@ export const AdmingetResume = async (req, res) => {
       userGender,
     ] = await Promise.all([
       Array.isArray(universityIds) && universityIds.length > 0
-        ? list_university_univercities.find({ id: { $in: universityIds } }).lean()
+        ? list_university_univercities
+            .find({ id: { $in: universityIds } })
+            .lean()
         : Promise.resolve([]),
       Array.isArray(instituteIds) && instituteIds.length > 0
         ? list_university_colleges.find({ id: { $in: instituteIds } }).lean()
@@ -1352,76 +1362,76 @@ export const AdmingetResume = async (req, res) => {
       //For Employments
       Array.isArray(companyIds) && companyIds.length > 0
         ? companylist
-          .find({
-            _id: {
-              $in: companyIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: companyIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .lean()
         : Promise.resolve([]),
       // For Online Profiles
       Array.isArray(socialProfileIds) && socialProfileIds.length > 0
         ? list_social_profile
-          .find({
-            _id: {
-              $in: socialProfileIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-            is_del: 0,
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: socialProfileIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+              is_del: 0,
+            })
+            .lean()
         : Promise.resolve([]),
       // skill name value from personal details
       Array.isArray(userDetails.skills) && userDetails.skills.length > 0
         ? list_key_skill
-          .find({
-            _id: {
-              $in: userDetails.skills.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: userDetails.skills.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .lean()
         : Promise.resolve([]),
       Array.isArray(itSkillIds) && itSkillIds.length > 0
         ? list_tech_skill
-          .find({
-            _id: {
-              $in: itSkillIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .select("name")
-          .lean()
+            .find({
+              _id: {
+                $in: itSkillIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Getting taggedwithName  from user projects
       Array.isArray(taggedWithIds) && taggedWithIds.length > 0
         ? list_project_tag
-          .find({
-            _id: {
-              $in: taggedWithIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .lean()
+            .find({
+              _id: {
+                $in: taggedWithIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .lean()
         : Promise.resolve([]),
       //Getting Current Industry
       userPref?.CurrentIndustry
         ? list_industries
-          .findOne({ id: userPref.CurrentIndustry })
-          .select("job_industry")
-          .lean()
+            .findOne({ id: userPref.CurrentIndustry })
+            .select("job_industry")
+            .lean()
         : Promise.resolve([]),
       userPref?.CurrentDepartment
         ? list_department
-          .findOne({ id: userPref.CurrentDepartment })
-          .select("job_department")
-          .lean()
+            .findOne({ id: userPref.CurrentDepartment })
+            .select("job_department")
+            .lean()
         : Promise.resolve([]),
       userPref?.JobRole
         ? list_job_role.findById(userPref.JobRole).select("job_role").lean()
@@ -1429,95 +1439,97 @@ export const AdmingetResume = async (req, res) => {
       // Getting Locations
       userPref?.location
         ? list_india_cities
-          .find({ _id: { $in: userPref.location } })
-          .select("city_name")
-          .lean()
+            .find({ _id: { $in: userPref.location } })
+            .select("city_name")
+            .lean()
         : Promise.resolve([]),
       // Getting Language Name
       languageIds?.length
         ? list_language
-          .find({ _id: { $in: languageIds } })
-          .select("name")
-          .lean()
+            .find({ _id: { $in: languageIds } })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       //Getting Language Proficiency
       Array.isArray(userDetails.languageProficiencyIds) &&
-        userDetails.languageProficiencyIds.length > 0
+      userDetails.languageProficiencyIds.length > 0
         ? list_language_proficiency
-          .find({
-            _id: {
-              $in: userDetails.languageProficiencyIds.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .select("name")
-          .lean()
+            .find({
+              _id: {
+                $in: userDetails.languageProficiencyIds.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Getting work permit other name
-      Array.isArray(userDetails.workPermitOther) && userDetails.workPermitOther.length > 0
+      Array.isArray(userDetails.workPermitOther) &&
+      userDetails.workPermitOther.length > 0
         ? list_tbl_countrie
-          .find({
-            id: {
-              $in: userDetails.workPermitOther
-                .map((id) => Number(id))
-                .filter((id) => !isNaN(id)), // ✅ keep only valid numbers
-            },
-          })
-          .select("id name")
-          .lean()
+            .find({
+              id: {
+                $in: userDetails.workPermitOther
+                  .map((id) => Number(id))
+                  .filter((id) => !isNaN(id)), // ✅ keep only valid numbers
+              },
+            })
+            .select("id name")
+            .lean()
         : Promise.resolve([]),
       // Getting Category Name
       userDetails.category &&
-        mongoose.Types.ObjectId.isValid(userDetails.category)
+      mongoose.Types.ObjectId.isValid(userDetails.category)
         ? list_category
-          .find({ _id: userDetails.category })
-          .select("category_name")
-          .lean()
+            .find({ _id: userDetails.category })
+            .select("category_name")
+            .lean()
         : Promise.resolve([]),
       // Get Disability Type Name
       userDetails.disability_type &&
-        mongoose.Types.ObjectId.isValid(userDetails.disability_type)
+      mongoose.Types.ObjectId.isValid(userDetails.disability_type)
         ? list_disability_type
-          .find({ _id: userDetails.disability_type })
-          .select("name")
-          .lean()
+            .find({ _id: userDetails.disability_type })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Get Career break reason
       userDetails.reason && mongoose.Types.ObjectId.isValid(userDetails.reason)
         ? list_career_break_reason
-          .find({ _id: userDetails.reason })
-          .select("name")
-          .lean()
+            .find({ _id: userDetails.reason })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Get Marital Status Name
       userDetails.maritialStatus &&
-        mongoose.Types.ObjectId.isValid(userDetails.maritialStatus)
+      mongoose.Types.ObjectId.isValid(userDetails.maritialStatus)
         ? list_marital_status
-          .findById(userDetails.maritialStatus)
-          .select("status")
-          .lean()
+            .findById(userDetails.maritialStatus)
+            .select("status")
+            .lean()
         : Promise.resolve([]),
       // Get visa type name or usa Permit name
       userDetails.usaPermit &&
-        mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
+      mongoose.Types.ObjectId.isValid(userDetails.usaPermit)
         ? list_visa_type
-          .findById(userDetails.usaPermit)
-          .select("visa_name")
-          .lean()
+            .findById(userDetails.usaPermit)
+            .select("visa_name")
+            .lean()
         : Promise.resolve([]),
       // Get all Additional Information Name
-      Array.isArray(userDetails.additionalInformation) && userDetails.additionalInformation.length > 0
+      Array.isArray(userDetails.additionalInformation) &&
+      userDetails.additionalInformation.length > 0
         ? list_more_information
-          .find({
-            _id: {
-              $in: userDetails.additionalInformation.filter((id) =>
-                mongoose.Types.ObjectId.isValid(id)
-              ),
-            },
-          })
-          .select("name")
-          .lean()
+            .find({
+              _id: {
+                $in: userDetails.additionalInformation.filter((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                ),
+              },
+            })
+            .select("name")
+            .lean()
         : Promise.resolve([]),
       // Get Gender name from id
       user?.gender
