@@ -40,6 +40,8 @@ import list_more_information from "../../models/monogo_query/moreInformationMode
 import list_gender from "../../models/monogo_query/genderModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
 import CandidateKYC from "../../models/CandidateKYCModel.js";
+import Otherskill from "../../models/OtherSkillModel.js";
+import list_non_tech_skill from "../../models/monogo_query/nonTechSkillModel.js";
 import mongoose from "mongoose";
 
 /// Import PDF generation utility
@@ -70,6 +72,7 @@ export const getResume = async (req, res) => {
       userPatents,
       userCertifications,
       userItSkills,
+      nonItSkills,
       userProjects,
       careerProfile,
       candidateKycDetails
@@ -86,6 +89,7 @@ export const getResume = async (req, res) => {
       UserPatent.find({ userId, isDel: false }).lean(),
       UserCertification.find({ userId, isDel: false }).lean(),
       Itskill.find({ userId, is_del: false }).lean(),
+      Otherskill.find({ userId, is_del: false }).lean(),
       ProjectDetails.find({ userId, isDel: false }).lean(),
       UserCareer.find({ userId, isDel: false }).lean(),
       CandidateKYC.findOne({ userId }).lean(),
@@ -94,7 +98,7 @@ export const getResume = async (req, res) => {
     const userDetails = userDetailsArr[0] || {};
     const candidateDetails = candidateDetailsArr[0] || {};
 
-    // console.log("--Here I am getting all candidate KYC details--", candidateKycDetails);
+    // console.log("--Here I am getting all nonItSkills --", nonItSkills);
 
     const universityIds = educationRaw?.length
       ? getUniqueIds(educationRaw, "universityName")
@@ -139,6 +143,13 @@ export const getResume = async (req, res) => {
       ? getUniqueIds(userItSkills, "skillSearch")
       : [];
 
+    // For Other Skills
+    const nonItSkillIds = nonItSkills?.length
+      ? getUniqueIds(nonItSkills, "skillSearch")
+      : [];
+
+    // console.log("Here I am getting all non IT skills unique Id: ", nonItSkillIds);
+
     // For Project Details
     const taggedWithIds = userProjects?.length
       ? getUniqueIds(userProjects, "taggedWith")
@@ -168,6 +179,7 @@ export const getResume = async (req, res) => {
       socialProfiles,
       skills,
       itSkillNameList,
+      nonItSkillNameList,
       taggedWithNames,
       currentIndustry,
       currentDepartment,
@@ -248,6 +260,18 @@ export const getResume = async (req, res) => {
           .find({
             _id: {
               $in: itSkillIds.filter((id) =>
+                mongoose.Types.ObjectId.isValid(id)
+              ),
+            },
+          })
+          .select("name")
+          .lean()
+        : Promise.resolve([]),
+      Array.isArray(nonItSkillIds) && nonItSkillIds.length > 0
+        ? list_non_tech_skill
+          .find({
+            _id: {
+              $in: nonItSkillIds.filter((id) =>
                 mongoose.Types.ObjectId.isValid(id)
               ),
             },
@@ -388,6 +412,8 @@ export const getResume = async (req, res) => {
         : Promise.resolve(null),
     ]);
 
+    // console.log("Here is my non-IT skill name List: ", nonItSkillNameList);
+
     user.gender_name = userGender?.name || "";
     candidateDetails.countryName = candidateDetailsCountryName?.name || "";
 
@@ -409,7 +435,9 @@ export const getResume = async (req, res) => {
     const socialMap = createMap(socialProfiles, "_id", "name");
     // For IT skills Name
     const itSkillMap = createMap(itSkillNameList, "_id", "name");
-
+    // For Non IT Skills Name
+    const nonItSkillMap = createMap(nonItSkillNameList, "_id", "name");
+    // console.log("Here I am getting all non IT skill Name in the form of map: ", nonItSkillMap);
     // For Tagged with name
     const taggedWithMap = createMap(taggedWithNames, "_id", "name");
     // For Language
@@ -494,6 +522,14 @@ export const getResume = async (req, res) => {
       skillName: itSkillMap[data.skillSearch.toString()] || "Not Found",
     }));
 
+    // Modify Non IT Skill Result
+    const nonTtSkills = (nonItSkills || []).map((data) => ({
+      ...data,
+      skillName: nonItSkillMap[data.skillSearch.toString()] || "Not Found",
+    }));
+
+    // console.log("----Here is my all actual non-IT skills: ----", nonTtSkills);
+
     // Modify Project Details For getting tagged with map
     const projectDetails = (userProjects || []).map((data) => ({
       ...data,
@@ -548,7 +584,26 @@ export const getResume = async (req, res) => {
       kycResult[verifiedField] = isVerified;
     }
 
-    console.log("Here is my all KYC Results: ", kycResult);
+    // console.log("Here is my all KYC Results: ", kycResult);
+
+    const candidateCareerProfile = {
+      industry_name: currentIndustry?.job_industry || "",
+      department_name: currentDepartment?.job_department || "",
+      job_role_name: jobRole?.job_role || "",
+      job_type: userPref?.DesiredJob || "",
+      employment_type: userPref?.DesiredEmployment || "",
+      shift: userPref?.PreferredShift || "",
+      expected_salary: userPref?.expectedSalary?.salary
+        ? new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: userPref?.expectedSalary?.currency || "INR",
+          maximumFractionDigits: 0
+        }).format(userPref.expectedSalary.salary)
+        : "",
+      preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
+    };
+
+    // console.log("Here is my Candidate Career Profiles: ", candidateCareerProfile);
 
     const pdfBuffer = await generateResumePDF({
       user,
@@ -563,10 +618,12 @@ export const getResume = async (req, res) => {
       userPatents,
       userCertifications,
       itSkills,
+      nonTtSkills,
       projectDetails,
       preferenceDetails,
       userPersonalDetails,
-      kycResult
+      kycResult,
+      candidateCareerProfile
     });
 
     res.setHeader("Content-Type", "application/pdf");
