@@ -252,9 +252,9 @@
           <td>
             <% if (candidateDetails?.dob) { 
               const dob = new Date(candidateDetails.dob);
-              const day = dob.getDate();
-              const month = dob.toLocaleString('default', { month: 'long' });
-              const year = dob.getFullYear();
+              const day = dob.toLocaleString('en-IN', { day: '2-digit', timeZone: 'Asia/Kolkata' });
+              const month = dob.toLocaleString('en-IN', { month: 'long', timeZone: 'Asia/Kolkata' });
+              const year = dob.toLocaleString('en-IN', { year: 'numeric', timeZone: 'Asia/Kolkata' });
 
               function getOrdinal(n) {
                 const s = ["th", "st", "nd", "rd"],
@@ -262,12 +262,13 @@
                 return n + (s[(v - 20) % 10] || s[v] || s[0]);
               }
 
-              const formattedDOB = `${getOrdinal(day)} ${month} ${year}`;
+              const formattedDOB = `${getOrdinal(parseInt(day))} ${month} ${year}`;
             %>
               <%= formattedDOB %>
             <% } else { %>
-                N/A
+              N/A
             <% } %>
+
           </td>
         </tr>
 

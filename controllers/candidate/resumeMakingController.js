@@ -45,8 +45,8 @@ import list_non_tech_skill from "../../models/monogo_query/nonTechSkillModel.js"
 import mongoose from "mongoose";
 
 /// Import PDF generation utility
-//import generateResumePDF from "../../services/pdfGenerator.js"; //for local testing
-import generateResumePDF from "../../services/pdfGenerator_server.js"; //for vps production
+import generateResumePDF from "../../services/pdfGenerator.js"; //for local testing
+// import generateResumePDF from "../../services/pdfGenerator_server.js"; //for vps production
 
 const getUniqueIds = (arr, field) => [
   ...new Set(arr.map((e) => e[field]).filter(Boolean)),
@@ -420,6 +420,7 @@ export const getResume = async (req, res) => {
 
     user.gender_name = userGender?.name || "";
     candidateDetails.countryName = candidateDetailsCountryName?.name || "";
+    
 
     const locationNames =
       locations?.map((city) => city.city_name).join(", ") || "";
@@ -668,6 +669,8 @@ export const getResume = async (req, res) => {
         : "",
       preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
     };
+
+
 
     // console.log("Here is my Candidate Career Profiles: ", candidateCareerProfile);
 
