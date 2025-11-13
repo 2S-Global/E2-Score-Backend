@@ -500,12 +500,40 @@ export const getResume = async (req, res) => {
       })
       .sort((a, b) => Number(b.levelId) - Number(a.levelId)); // 👈 this line sorts descending;
 
-    // Modify Employments result
-    const employment = (employmentsRaw || []).map((job) => ({
-      ...job,
-      companyName:
-        companyMap[job.companyName.toString()] || "Company Name Not Found",
-    }));
+    // Modify Employments result (--------Here is my actual employments----------)
+    // const employment = (employmentsRaw || []).map((job) => ({
+    //   ...job,
+    //   companyName:
+    //     companyMap[job.companyName.toString()] || "Company Name Not Found",
+    // }));
+
+    // console.log("--Here is my raw employments: --", employmentsRaw);
+    // Here is the modified employments
+    const formattedEmployment = (employmentsRaw || []).map((emp) => {
+      const joiningYear = emp.joiningDate?.year;
+      const leavingYear = emp.leavingDate?.year;
+      const companyName = companyMap[emp.companyName?.toString()] || "Unknown Company";
+      return {
+        ...emp,
+        companyName: companyName,
+        joiningYear: joiningYear || "",
+        leavingYear: leavingYear || "",
+      };
+    })
+      .sort((a, b) => {
+        // If "Present" job (no leavingYear), it should come first
+        if (!a.leavingYear && b.leavingYear) return -1;
+        if (a.leavingYear && !b.leavingYear) return 1;
+
+        // Otherwise, sort by leavingYear descending
+        const leaveA = a.leavingYear || 0;
+        const leaveB = b.leavingYear || 0;
+
+        if (leaveA !== leaveB) return leaveB - leaveA;
+
+        // If same leaving year, sort by joiningYear descending
+        return (b.joiningYear || 0) - (a.joiningYear || 0);
+      });
 
     // Modify Online Profile Result
     const onlineProfiles = (onlineProfilesRaw || []).map((p) => ({
@@ -530,11 +558,43 @@ export const getResume = async (req, res) => {
 
     // console.log("----Here is my all actual non-IT skills: ----", nonTtSkills);
 
-    // Modify Project Details For getting tagged with map
+    // This is actual Projects (It's raw projects)
+    /*
     const projectDetails = (userProjects || []).map((data) => ({
       ...data,
       taggedWithName: taggedWithMap[data.taggedWith.toString()] || "Not Found",
-    }));
+    }));  */
+
+    const formattedProjects = (userProjects || [])
+      .map((proj) => {
+        const startYear = proj.workedFrom?.year;
+        const endYear = proj.workedTill?.year;
+        const taggedWithName = taggedWithMap[proj.taggedWith?.toString()] || "Not Found";
+
+        return {
+          ...proj,
+          taggedWithName,
+          startYear: startYear || "",
+          endYear: endYear || "",
+        };
+      })
+      .sort((a, b) => {
+        // If "Present" project (no endYear), it should come first
+        if (!a.endYear && b.endYear) return -1;
+        if (a.endYear && !b.endYear) return 1;
+
+        // Otherwise, sort by endYear descending
+        const endA = a.endYear || 0;
+        const endB = b.endYear || 0;
+
+        if (endA !== endB) return endB - endA;
+
+        // If same end year, sort by startYear descending
+        return (b.startYear || 0) - (a.startYear || 0);
+      });
+
+
+    console.log("--Here is my raw projects: --", userProjects);
 
     //Modify Candidate Profile Details
     const preferenceDetails = (careerProfile || []).map((data) => ({
@@ -608,7 +668,7 @@ export const getResume = async (req, res) => {
     const pdfBuffer = await generateResumePDF({
       user,
       education,
-      employment,
+      employment: formattedEmployment,
       userDetails,
       candidateDetails,
       onlineProfiles,
@@ -619,7 +679,7 @@ export const getResume = async (req, res) => {
       userCertifications,
       itSkills,
       nonTtSkills,
-      projectDetails,
+      projectDetails: formattedProjects,
       preferenceDetails,
       userPersonalDetails,
       kycResult,

@@ -18,7 +18,8 @@ app.use(cors());
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use("/images", express.static(path.join(__dirname, "public", "images")));
+// app.use("/images", express.static(path.join(__dirname, "public", "images")));
+app.use("/images", express.static(path.join(__dirname, "public/images")));
 
 // Import routes
 import AuthRouter from "./routes/AuthRoutes.js";

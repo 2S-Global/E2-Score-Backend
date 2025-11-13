@@ -9,52 +9,35 @@ const __dirname = path.dirname(__filename);
 
 const generateResumePDF = async (data) => {
 
-  // ✅ make sure to include your server base URL
-  const baseUrl = process.env.CLIENT_BASE_URL || `http://localhost:${process.env.PORT || 8080}`;
-
   const templatePath = path.join(__dirname, "../templates/resume.ejs");
 
-  // extra thing added start
-  // in your PDF generator
+  // Added Today Started
   const defaultImagePath = path.join(__dirname, "../public/images/no_user.png");
   const defaultImageBase64 = fs.readFileSync(defaultImagePath).toString("base64");
   const defaultImageDataUrl = `data:image/png;base64,${defaultImageBase64}`;
-
+ 
   const htmlContent = await ejs.renderFile(templatePath, {
     ...data,
     defaultImageDataUrl,
   });
-  // extra thing added end
+  // Added Today Ended
 
-  // const htmlContent = await ejs.renderFile(templatePath, { ...data, baseUrl });
-
-
-  // const html = await ejs.renderFile(
-  //   path.join(__dirname, "views", "resume-template.ejs"),
-  //   { user, baseUrl }
-  // );
+  // const htmlContent = await ejs.renderFile(templatePath, { ...data });
 
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
-  // ✅ Wait for all <img> elements to be fully loaded
-  await page.evaluate(async () => {
-    const imgs = Array.from(document.images);
-    await Promise.all(imgs.map(img => {
-      if (img.complete) return;
-      return new Promise((resolve, reject) => {
-        img.addEventListener('load', resolve);
-        img.addEventListener('error', resolve);
-      });
-    }));
-  });
-
   // 🕒 Get the current date in a readable format
-  const generatedDate = new Date().toLocaleDateString("en-IN", {
+  const generatedDate = new Date().toLocaleString("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true, // show AM/PM
+    timeZone: "Asia/Kolkata"
   });
 
   const pdfBuffer = await page.pdf({

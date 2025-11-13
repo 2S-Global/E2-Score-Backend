@@ -190,17 +190,24 @@
       <div class="photo">
         <!-- <img src="<%= user.profilePicture %>" alt="Profile Photo"
           style="width: 100%; height: 100%; object-fit: cover;" /> -->
-        <img 
-          src="<%= user && user.profilePicture ? user.profilePicture : baseUrl + '/images/no_user.png' %>" 
-          alt="Profile Photo" 
-          style="width: 100%; height: 100%; object-fit: cover;" 
-        />
+        <!-- <img 
+        src="<%= user && user.profilePicture ? user.profilePicture : 'https://api.geisil.com/images/no_user.png' %>" 
+        alt="Profile Photo" 
+        style="width: 100%; height: 100%; object-fit: cover;" 
+      /> -->
+      <% const photoUrl = user && user.profilePicture ? user.profilePicture : defaultImageDataUrl %>
+      <img 
+        src="<%= photoUrl %>" 
+        alt="Profile Photo" 
+        style="width: 100%; height: 100%; object-fit: cover;" 
+      />
+
+
       </div>
 
       <div class="header-content">
         <h2>
           <%= user.name %>
-          <p><%= baseUrl + '/images/no_user.png' %></p>
         </h2>
         <p style="color: #61c2f4">
           <% if (userDetails.resumeHeadline) { %>

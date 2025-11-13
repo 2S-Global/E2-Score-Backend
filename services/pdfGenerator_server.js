@@ -2,7 +2,6 @@
 import ejs from "ejs";
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "fs";
 
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
