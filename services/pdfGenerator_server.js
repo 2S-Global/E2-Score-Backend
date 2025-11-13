@@ -6,8 +6,8 @@ import { fileURLToPath } from "url";
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 
-import path from "path";
-import { fileURLToPath } from "url";
+//import path from "path";
+//import { fileURLToPath } from "url";
 import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
