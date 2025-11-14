@@ -7,13 +7,14 @@
   <title>Resume</title>
   <style>
     @page {
-      margin: 40px 30px 40px 30px;
+      margin: 40px 30px 60px 30px;
     }
 
     html,
     body {
       margin: 0;
-      padding: 0;
+      /* padding: 0; */
+      padding: 0 0 80px 0; /* creates space before footer */
       height: 100%;
       font-family: Arial, sans-serif;
       background-color: white;
@@ -73,6 +74,7 @@
     .info-table {
       width: 100%;
       border-collapse: collapse;
+      table-layout: fixed;
     }
 
     .info-table td,
@@ -103,19 +105,23 @@
       margin-bottom: 8px;
     }
 
-    .page-break-group-education {
+    /* .page-break-group-education {
       page-break-before: always;
       page-break-inside: avoid;
       font-size: 13px;
-    }
+    } */
 
     .page-break-group-education {
+      /* page-break-before: always; */
+      /* page-break-inside: avoid; */
+      font-size: 13px;
       page-break-before: auto;
     }
 
     .page-break-group-employments {
-      page-break-before: always;
-      page-break-inside: avoid;
+      /* page-break-before: always; */
+      page-break-before: auto;
+      /* page-break-inside: avoid; */
     }
 
     .page-break-group-employment {
@@ -123,8 +129,9 @@
     }
 
     .page-break-group-projects {
-      page-break-before: always;
-      page-break-inside: avoid;
+      /* page-break-before: always; */
+      /* page-break-inside: avoid; */
+      page-break-before: auto;
     }
 
     .page-break-group-projects {
@@ -132,8 +139,9 @@
     }
 
     .page-break-group-others {
-      page-break-before: always;
-      page-break-inside: avoid;
+      /* page-break-before: always; */
+      /* page-break-inside: avoid; */
+      page-break-before: auto;
     }
 
     .page-break-group-others:first-child {
@@ -146,8 +154,9 @@
 
 
     .page-break-group-presentations {
-      page-break-before: always;
-      page-break-inside: avoid;
+      /* page-break-before: always; */
+      /* page-break-inside: avoid; */
+      page-break-before: auto;
     }
 
     .page-break-group-presentations {
@@ -157,6 +166,21 @@
     ul a {
       color: #61c2f4
     }
+
+    /* Below CSS is only for KYC Details Section */
+
+    .check {
+      color: #0b8a3e;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .cross {
+      color: #d23b3b;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
   </style>
 </head>
 
@@ -164,8 +188,21 @@
   <div class="container">
     <div class="header">
       <div class="photo">
-        <img src="<%= user.profilePicture %>" alt="Profile Photo"
-          style="width: 100%; height: 100%; object-fit: cover;" />
+        <!-- <img src="<%= user.profilePicture %>" alt="Profile Photo"
+          style="width: 100%; height: 100%; object-fit: cover;" /> -->
+        <!-- <img 
+        src="<%= user && user.profilePicture ? user.profilePicture : 'https://api.geisil.com/images/no_user.png' %>" 
+        alt="Profile Photo" 
+        style="width: 100%; height: 100%; object-fit: cover;" 
+      /> -->
+      <% const photoUrl = user && user.profilePicture ? user.profilePicture : defaultImageDataUrl %>
+      <img 
+        src="<%= photoUrl %>" 
+        alt="Profile Photo" 
+        style="width: 100%; height: 100%; object-fit: cover;" 
+      />
+
+
       </div>
 
       <div class="header-content">
@@ -173,185 +210,533 @@
           <%= user.name %>
         </h2>
         <p style="color: #61c2f4">
-          <%= userDetails.resumeHeadline %>
+          <% if (userDetails.resumeHeadline) { %>
+           <%= userDetails.resumeHeadline %>
+          <% } else { %>
+            Resume Headline: N/A
+          <% } %>
         </p>
         <p>Email: <%= user.email %> | Phone: <%= user.phone_number %>
         </p>
+        <p>
+        Current Location:
         <% if (candidateDetails?.currentLocation) { %>
-          <p>Address: <%= candidateDetails.currentLocation %>
-          </p>
+          <%= candidateDetails.currentLocation %>
+        <% } else { %>
+          N/A
         <% } %>
+</p>
       </div>
     </div>
 
-    <% if (userDetails.profileSummary) { %>
-      <div class="section">
-        <h3>About Me</h3>
+    <div class="section">
+      <h3>About Me</h3>
+      <% if (userDetails.profileSummary) { %>
         <p style="text-align: justify; line-height: 22px;">
           <%= userDetails.profileSummary %>
         </p>
-      </div>
+      <% } else { %>
+        <p>N/A</p>
       <% } %>
+    </div>
 
-        <!-- Personal Details Section Start -->
+    <!-- Personal Details Section Start -->
 
-        <%
-          // Check if any field inside userPersonalDetails or candidateDetails has data
-          const hasPersonalDetails =
-            (candidateDetails?.dob) ||
-            (user?.gender_name) ||
-            (userPersonalDetails?.maritalStatusName) ||
-            (userPersonalDetails?.additionalInformationNames?.length > 0) ||
-            (userPersonalDetails?.reasonName) ||
-            (userPersonalDetails?.categoryName) ||
-            (userPersonalDetails?.usaPermitName) ||
-            (userPersonalDetails?.workPermitOtherNames?.length > 0) ||
-            (userPersonalDetails?.permanentAddress) ||
-            (userPersonalDetails?.pincode) ||
-            (userPersonalDetails?.disabilityTypeName);
-        %>
+    <div class="section">
+      <h3>Personal Details</h3>
+      <table class="info-table">
 
-        <% if (hasPersonalDetails) { %>
-          <div class="section">
-            <h3>Personal Details</h3>
-            <table class="info-table">
+        <!-- Date of Birth -->
+        <tr>
+          <td class="left-column"><strong>Date of Birth</strong></td>
+          <td>
+            <% if (candidateDetails?.dob) { 
+              const dob = new Date(candidateDetails.dob);
+              const day = dob.toLocaleString('en-IN', { day: '2-digit', timeZone: 'Asia/Kolkata' });
+              const month = dob.toLocaleString('en-IN', { month: 'long', timeZone: 'Asia/Kolkata' });
+              const year = dob.toLocaleString('en-IN', { year: 'numeric', timeZone: 'Asia/Kolkata' });
 
-              <!-- Date of Birth -->
-              <% if (candidateDetails?.dob) { %>
-                <tr>
-                  <td class="left-column"><strong>Date of Birth</strong></td>
-                  <td>
-                    <% const dob=new Date(candidateDetails.dob); const day=dob.getDate(); const
-                      month=dob.toLocaleString('default', { month: 'long' }); const year=dob.getFullYear(); function
-                      getOrdinal(n) { const s=["th", "st" , "nd" , "rd" ], v=n % 100; return n + (s[(v - 20) % 10] || s[v]
-                      || s[0]); } const formattedDOB=`${getOrdinal(day)} ${month} ${year}`; %>
-                      <%= formattedDOB %>
-                  </td>
-                </tr>
+              function getOrdinal(n) {
+                const s = ["th", "st", "nd", "rd"],
+                      v = n % 100;
+                return n + (s[(v - 20) % 10] || s[v] || s[0]);
+              }
+
+              const formattedDOB = `${getOrdinal(parseInt(day))} ${month} ${year}`;
+            %>
+              <%= formattedDOB %>
+            <% } else { %>
+              N/A
+            <% } %>
+
+          </td>
+        </tr>
+
+        <!-- Gender -->
+        <tr>
+          <td class="left-column"><strong>Gender</strong></td>
+          <td>
+            <% if (user?.gender_name) { %>
+              <%= user.gender_name %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <!-- Father Name -->
+          <tr>
+          <td class="left-column"><strong>Father's Name</strong></td>
+          <td>
+            <% if (candidateDetails?.fatherName) { %>
+              <%= candidateDetails.fatherName %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+        <!--Mother Name -->
+          <tr>
+          <td class="left-column"><strong>Mother's Name</strong></td>
+          <td>
+            <% if (candidateDetails?.motherName) { %>
+              <%= candidateDetails.motherName %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <!-- Total Experience -->
+        <tr>
+          <td class="left-column"><strong>Total Experience</strong></td>
+          <td>
+            <% 
+              const years = candidateDetails?.totalExperience?.year || 0;
+              const months = candidateDetails?.totalExperience?.month || 0;
+            %>
+
+            <% if (years > 0 || months > 0) { %>
+              <%= years > 0 ? years + ' year' + (years > 1 ? 's' : '') : '' %>
+              <%= years > 0 && months > 0 ? ' ' : '' %>
+              <%= months > 0 ? months + ' month' + (months > 1 ? 's' : '') : '' %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <!-- Current Salary -->
+        <tr>
+          <td class="left-column"><strong>Current Salary</strong></td>
+          <td>
+            <% 
+              const currency = candidateDetails?.currentSalary?.currency;
+              const salary = candidateDetails?.currentSalary?.salary;
+            %>
+
+            <% if (salary) { %>
+              <% 
+                const currencySymbol = currency === 'INR' ? '₹' 
+                                      : currency === 'USD' ? '$' 
+                                      : currency === 'EUR' ? '€' 
+                                      : currency === 'GBP' ? '£'                      
+                                      : currency || ''; 
+              %>
+              <%= currencySymbol %><%= salary.toLocaleString('en-IN') %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <!-- Country -->
+          <tr>
+          <td class="left-column"><strong>Country</strong></td>
+          <td>
+            <% if (candidateDetails?.countryName) { %>
+              <%= candidateDetails.countryName %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <!-- Hometown -->
+          <tr>
+          <td class="left-column"><strong>Hometown</strong></td>
+          <td>
+            <% if (candidateDetails?.hometown) { %>
+              <%= candidateDetails.hometown %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <!-- Marital Status -->
+        <tr>
+          <td class="left-column"><strong>Marital Status</strong></td>
+          <td>
+            <% if (userPersonalDetails?.maritalStatusName) { %>
+              <%= userPersonalDetails.maritalStatusName %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <!-- Partner Name -->
+        <% if (userPersonalDetails && (userPersonalDetails.maritalStatusName === 'Married' ||
+        userPersonalDetails.maritalStatusName === 'Civil partnership')) { %>
+          <tr>
+            <td class="left-column"><strong>Partner Name</strong></td>
+            <td>
+              <% if (userPersonalDetails?.partnerName) { %>
+                <%= userPersonalDetails.partnerName %>
+              <% } else { %>
+                N/A
               <% } %>
-
-              <!-- Gender -->
-              <% if (user?.gender_name) { %>
-                <tr>
-                  <td class="left-column"><strong>Gender</strong></td>
-                  <td>
-                    <%= user.gender_name %>
-                  </td>
-                </tr>
-              <% } %>
-
-              <!-- Marital Status -->
-              <% if (userPersonalDetails?.maritalStatusName) { %>
-                <tr>
-                  <td class="left-column"><strong>Marital Status</strong></td>
-                  <td>
-                    <%= userPersonalDetails.maritalStatusName %>
-                  </td>
-                </tr>
-              <% } %>
-
-              <!-- Additional Information -->
-              <% if (userPersonalDetails?.additionalInformationNames?.length > 0) { %>
-                <tr>
-                  <td class="left-column"><strong>Additional Information</strong></td>
-                  <td>
-                    <%= userPersonalDetails.additionalInformationNames?.join(', ') || "N/A" %>
-                  </td>
-                </tr>
-              <% } %>
-
-              <!-- Career Break -->
-              <% if (userPersonalDetails?.reasonName) { %>
-                <tr>
-                <td class="left-column"><strong>Career Break</strong></td>
-                <td>
-                  <% if (userPersonalDetails.reasonName) { %>
-                    Yes – <%= userPersonalDetails.reasonName %><br>
-                    From:
-                  <%= new Date(2000, userPersonalDetails.startMonth - 1).toLocaleString('default', { month: 'long' }) %>
-                      <%= userPersonalDetails.startYear %><br>
-                        <% if (userPersonalDetails.endMonth && userPersonalDetails.endYear) { %>
-                          To:
-                          <%= new Date(2000, userPersonalDetails.endMonth - 1).toLocaleString('default', { month: 'long' })
-                            %>
-                            <%= userPersonalDetails.endYear %>
-                              <% } else { %>
-                                To: Present
-                                <% } %>
-                                  <% } else { %>
-                                    No
-                                    <% } %>
-                  </td>
-                </tr>
-              <% } %>
-
-              <!-- Category -->
-              <% if (userPersonalDetails?.categoryName) { %>
-                <tr>
-                  <td class="left-column"><strong>Category</strong></td>
-                  <td>
-                    <%= userPersonalDetails.categoryName %>
-                  </td>
-                </tr>
-              <% } %>
-
-              <!-- Work Permit -->
-              <% if (userPersonalDetails?.usaPermitName || userPersonalDetails?.workPermitOtherNames?.length > 0) { %>
-                <tr>
-                  <td class="left-column"><strong>Work Permit</strong></td>
-                  <td>
-                    <%= userPersonalDetails.usaPermitName %><br>
-                      <%= userPersonalDetails.workPermitOtherNames?.join(' , ') || "N/A" %>
-                  </td>
-                </tr>
-              <% } %>
-
-              <!-- Address -->
-              <% if (userPersonalDetails?.permanentAddress) { %>
-                <tr>
-                  <td class="left-column"><strong>Address</strong></td>
-                  <td><%= userPersonalDetails.permanentAddress %><% if (userPersonalDetails?.pincode) { %>, <%= userPersonalDetails.pincode %><% }%></td>
-                </tr>
-              <% } %>
-
-              <!-- Disability -->
-              <% if (userPersonalDetails?.differentlyAble) { %>
-                <tr>
-                  <td class="left-column"><strong>Differently Abled</strong></td>
-                  <td>
-                    <% if (userPersonalDetails.differentlyAble === 'Yes') { %>
-                      Yes, <%= userPersonalDetails.disabilityTypeName %>
-                      <% if (userPersonalDetails?.other_disability_type) { %>
-                      , <%= userPersonalDetails.other_disability_type %>
-                      <% } %>,
-                      <%= userPersonalDetails.workplace_assistance %>
-                    <% } else if (userPersonalDetails.differentlyAble === 'No') { %>
-                      No
-                    <% } %>
-                  </td>
-                </tr>
-              <% } %>
-
-            </table>
-          </div>
+            </td>
+          </tr>
         <% } %>
+
+        <!-- Additional Information -->
+        <tr>
+          <td class="left-column"><strong>Additional Information</strong></td>
+          <td>
+            <%= userPersonalDetails.additionalInformationNames?.join(', ') || "N/A" %>
+          </td>
+        </tr>
+
+        <!-- Career Break section Updated -->
+          <tr>
+          <td class="left-column"><strong>Career Break</strong></td>
+          <td>
+            <% if (userPersonalDetails && userPersonalDetails.careerBreak) { %>
+              <%= userPersonalDetails.careerBreak %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <!-- Career Break Reason Section -->
+          <% if (userPersonalDetails && userPersonalDetails.careerBreak === 'Yes') { %>
+          <tr>
+            <td class="left-column"><strong>Career Break Reason</strong></td>
+            <td>
+              <% if (userPersonalDetails.reasonName) { %>
+                <%= userPersonalDetails.reasonName %>
+              <% } else { %>
+                N/A
+              <% } %>
+            </td>
+          </tr>
+
+          <!-- Career Break Duration -->
+          <tr>
+            <td class="left-column"><strong>Career Break Duration</strong></td>
+            <td>
+              <% 
+                const startMonth = userPersonalDetails.startMonth;
+                const startYear = userPersonalDetails.startYear;
+                const endMonth = userPersonalDetails.endMonth;
+                const endYear = userPersonalDetails.endYear;
+                const currentlyOnCareerBreak = userPersonalDetails.currentlyOnCareerBreak;
+                
+                if (startMonth && startYear) {
+                  const startDate = new Date(2000, startMonth - 1).toLocaleString('default', { month: 'long' }) + ' ' + startYear;
+                  
+                  if (currentlyOnCareerBreak) {
+                    // If currently on break, show Present
+                    %>
+                    <%= startDate %> – Present
+                    <%
+                  } else if (endMonth && endYear) {
+                    // If end date is available
+                    const endDate = new Date(2000, endMonth - 1).toLocaleString('default', { month: 'long' }) + ' ' + endYear;
+                    %>
+                    <%= startDate %> – <%= endDate %>
+                    <%
+                  } else {
+                    // Missing end date but not currently on break
+                    %>
+                    <%= startDate %> – N/A
+                    <%
+                  }
+                } else {
+                  // No start date
+                  %> N/A <% 
+                }
+              %>
+            </td>
+          </tr>
+        <% } %>
+
+        <!-- Category -->
+        <tr>
+          <td class="left-column"><strong>Caste Category</strong></td>
+          <td>
+            <% if (userPersonalDetails?.categoryName) { %>
+              <%= userPersonalDetails.categoryName %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <!-- Updated Work Permit for USA -->
+        <tr>
+          <td class="left-column"><strong>Work Permit for USA</strong></td>
+          <td>
+            <% if (userPersonalDetails?.have_usa_visa === true) { %>
+              Yes
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <% if (userPersonalDetails?.have_usa_visa === true) { %>
+          <tr>
+            <td class="left-column"><strong>Visa Type</strong></td>
+            <td>
+              <% if (userPersonalDetails?.usaPermitName) { %>
+                <%= userPersonalDetails.usaPermitName %>
+              <% } else { %>
+                N/A
+              <% } %>
+            </td>
+          </tr>
+        <% } %>
+
+        <!-- Work Permit for Other Countries -->
+        <tr>
+          <td class="left-column"><strong>Work Permit for Other Countries</strong></td>
+          <% if (userPersonalDetails?.workPermitOtherNames) { %>
+            <td>
+              <%= userPersonalDetails.workPermitOtherNames?.join(' , ') || "N/A" %>
+            </td>
+          <% } %>
+        </tr>
+
+
+        <!-- Address -->
+        <tr>
+          <td class="left-column"><strong>Permanent Address</strong></td>
+          <td>
+            <% if (userPersonalDetails?.permanentAddress) { %>
+              <%= userPersonalDetails.permanentAddress %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <!-- Pincode -->
+        <tr>
+          <td class="left-column"><strong>Pincode</strong></td>
+          <td>
+            <% if (userPersonalDetails?.pincode) { %>
+              <%= userPersonalDetails.pincode %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <!-- Disability Updated Section -->
+        <tr>
+          <td class="left-column"><strong>Differently Abled</strong></td>
+          <td>
+            <% if (userPersonalDetails?.differentlyAble) { %>
+              <%= userPersonalDetails.differentlyAble %>
+            <% } else { %>
+              N/A
+            <% } %>
+          </td>
+        </tr>
+
+        <% if (userPersonalDetails?.differentlyAble === 'Yes') { %>
+          <!-- Disability Type Row -->
+          <tr>
+            <td class="left-column"><strong>Disability Type</strong></td>
+            <td>
+              <% if (userPersonalDetails?.disabilityTypeName) { %>
+                <%= userPersonalDetails.disabilityTypeName %>
+              <% } else { %>
+                N/A
+              <% } %>
+            </td>
+          </tr>
+
+          <!-- Workplace Assistance Row -->
+          <tr>
+            <td class="left-column"><strong>Workplace Assistance</strong></td>
+            <td>
+              <% if (userPersonalDetails?.workplace_assistance) { %>
+                <%= userPersonalDetails.workplace_assistance %>
+              <% } else { %>
+                N/A
+              <% } %>
+            </td>
+          </tr>
+        <% } %>
+
+      </table>
+    </div>
+
+    <!-- KYC Details Starts here -->
+    <div class="section">
+      <h3>KYC Information</h3>
+      <table class="info-table">
+        <tr>
+          <td class="left-column"><strong>PAN Card</strong></td>
+          <td>
+            <% if (kycResult?.pan_verified === true) { %>
+              <span class="check">Verified &#10004;</span>
+            <% } else { %>
+              <span class="cross">Not Verified &#10008;</span>
+            <% } %>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="left-column"><strong>EPIC Card</strong></td>
+          <td>
+            <% if (kycResult?.epic_verified === true) { %>
+              <span class="check">Verified &#10004;</span>
+            <% } else { %>
+              <span class="cross">Not Verified &#10008;</span>
+            <% } %>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="left-column"><strong>Aadhar Card With OTP</strong></td>
+          <td>
+            <% if (kycResult?.aadhar_verified === true) { %>
+              <span class="check">Verified &#10004;</span>
+            <% } else { %>
+              <span class="cross">Not Verified &#10008;</span>
+            <% } %>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="left-column"><strong>Driving License</strong></td>
+          <td>
+            <% if (kycResult?.dl_verified === true) { %>
+              <span class="check">Verified &#10004;</span>
+            <% } else { %>
+              <span class="cross">Not Verified &#10008;</span>
+            <% } %>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="left-column"><strong>Passport</strong></td>
+          <td>
+            <% if (kycResult?.passport_verified === true) { %>
+              <span class="check">Verified &#10004;</span>
+            <% } else { %>
+              <span class="cross">Not Verified &#10008;</span>
+            <% } %>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <!-- KYC Details Ends here -->
 
     <!-- Personal Details Section End -->
 
-    <% if (userPersonalDetails.skillsResolved && userPersonalDetails.skillsResolved.length > 0) { 
-      const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
-      const formattedSkills = userPersonalDetails.skillsResolved.map(skill => {
-        return skill
-          .split(' ')
-          .map(capitalize)
-          .join(' ');
-      }).join(' , ');
-      %>
+        <% if (userPersonalDetails.skillsResolved && userPersonalDetails.skillsResolved.length > 0) { 
+          const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
+          const formattedSkills = userPersonalDetails.skillsResolved.map(skill => {
+            return skill
+              .split(' ')
+              .map(capitalize)
+              .join(' ');
+          }).join(' , ');
+          %>
+          <div class="section">
+            <h3 class="border-content">Key Skills</h3>
+            <p><%= formattedSkills %></p>
+          </div>
+      <% } else { %>
+        <div class="section">
+          <h3 class="border-content">Skills</h3>
+          <p>N/A</p>
+        </div>
+      <% } %>
+
+
+
+      <!-- Language Section Starts here -->
+
       <div class="section">
-        <h3 class="border-content">Skills</h3>
-        <p><%= formattedSkills %></p>
+        <h3>Languages</h3>
+
+        <% if (userPersonalDetails.languageProficiency && userPersonalDetails.languageProficiency.length > 0) { %>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #f0f0f0;">
+                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Language</th>
+                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Proficiency</th>
+                <th style="text-align: center; padding: 8px; border: 1px solid #ccc;">Read</th>
+                <th style="text-align: center; padding: 8px; border: 1px solid #ccc;">Write</th>
+                <th style="text-align: center; padding: 8px; border: 1px solid #ccc;">Speak</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <% userPersonalDetails.languageProficiency.forEach(lang => { %>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ccc;"><%= lang.languageName || 'N/A' %></td>
+                  <td style="padding: 8px; border: 1px solid #ccc;"><%= lang.proficiencyName || 'N/A' %></td>
+
+                  <!-- Read -->
+                  <td style="padding: 8px; border: 1px solid #ccc; text-align:center;">
+                    <% if (lang.read) { %>
+                      <span style="color: green; font-size: 18px;">&#10003;</span>
+                    <% } else { %>
+                      <span style="color: red; font-size: 18px;">&#10007;</span>
+                    <% } %>
+                  </td>
+
+                  <!-- Write -->
+                  <td style="padding: 8px; border: 1px solid #ccc; text-align:center;">
+                    <% if (lang.write) { %>
+                      <span style="color: green; font-size: 18px;">&#10003;</span>
+                    <% } else { %>
+                      <span style="color: red; font-size: 18px;">&#10007;</span>
+                    <% } %>
+                  </td>
+
+                  <!-- Speak -->
+                  <td style="padding: 8px; border: 1px solid #ccc; text-align:center;">
+                    <% if (lang.speak) { %>
+                      <span style="color: green; font-size: 18px;">&#10003;</span>
+                    <% } else { %>
+                      <span style="color: red; font-size: 18px;">&#10007;</span>
+                    <% } %>
+                  </td>
+
+                </tr>
+              <% }); %>
+            </tbody>
+
+          </table>
+
+        <% } else { %>
+          <p>N/A</p>
+        <% } %>
       </div>
-   <% } %>
+
+
+
+      <!-- Language Section ends here -->
 
 
     
@@ -359,102 +744,143 @@
     
     <!-- Education Details Start -->
       <div class="page-break-group-education">
-       <% if (education && education.length > 0) { %>
           <div class="section">
             <h3>Educational Details</h3>
-            <table class="info-table">
-              <thead>
-                <tr>
-                  <th>Degree / Level</th>
-                  <th>Institute / Board</th>
-                  <th>Year</th>
-                  <th>Marks</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% education.forEach(edu=> { %>
+            <% if (education && education.length > 0) { %>
+              <table class="info-table">
+                <thead>
                   <tr>
-                    <td>
-                      <%= edu.levelName %>
-                    </td>
-                    <td>
-                      <% if (edu.levelId==='1' || edu.levelId==='2' ) { %>
-                    <%= edu.board %>
+                    <th>Degree / Level</th>
+                    <th>Institute / Board</th>
+                    <th>Year</th>
+                    <th>Marks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% education.forEach(edu=> { %>
+                    <tr>
+                      <td>
+                        <%= edu.levelName %>
+                      </td>
+                      <td>
+                        <% if (edu.levelId==='1' || edu.levelId==='2' ) { %>
+                      <%= edu.board %>
+                        <% } else { %>
+                          <%= edu.universityName %>
+                            <% } %>
+                </td>
+                <td>
+                  <% if (edu.levelId==='1' || edu.levelId==='2' ) { %>
+                    <%= edu.year_of_passing %>
                       <% } else { %>
-                        <%= edu.universityName %>
-                          <% } %>
-              </td>
-              <td>
-                <% if (edu.levelId==='1' || edu.levelId==='2' ) { %>
-                  <%= edu.year_of_passing %>
-                    <% } else { %>
-                      <%= edu.from %> - <%= edu.to %>
-                          <% } %>
-              </td>
-              <td>
-                <% if (edu.levelId==='1' || edu.levelId==='2' ) { %>
-                  <%= edu.marks %>%
-                    <% } else { %>
-                      <% if (edu.gradingName && edu.gradingName.includes('Scale')) { %>
-                        <%= edu.marks %> CGPA
-                          <% } else if (edu.gradingName && edu.gradingName.includes('Marks')) { %>
-                            <%= edu.marks %>%
-                              <% } else { %>
-                                <%= edu.marks %>
-                                  <% } %>
+                        <%= edu.from %> - <%= edu.to %>
+                            <% } %>
+                </td>
+                <td>
+                  <% if (edu.levelId==='1' || edu.levelId==='2' ) { %>
+                    <%= edu.marks %>%
+                      <% } else { %>
+                        <% if (edu.gradingName && edu.gradingName.includes('Scale')) { %>
+                          <%= edu.marks %> CGPA
+                            <% } else if (edu.gradingName && edu.gradingName.includes('Marks')) { %>
+                              <%= edu.marks %>%
+                                <% } else { %>
+                                  <%= edu.marks %>
                                     <% } %>
-              </td>
+                                      <% } %>
+                </td>
 
-            </tr>
-            <% }) %>
-              </tbody>
-          </table>
-        </div>
-        <% } %>
+              </tr>
+              <% }) %>
+                </tbody>
+              </table>
+            <% } else { %>
+              <p>N/A</p>
+            <% } %>
+          </div>
           <!-- Education Details End -->
 
           <!-- Start IT Skills -->
 
           <!-- IT SKILLS Section -->
 
-          <% if (itSkills && itSkills.length> 0) { %>
             <div class="section">
-              <h2 class="border-content">IT Skills</h2>
-              <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                  <tr style="background-color: #f0f0f0;">
-                    <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Skill</th>
-                    <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Version</th>
-                    <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Last Used</th>
-                    <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Experience</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% itSkills?.forEach(skill=> { %>
-                    <tr>
-                      <td style="padding: 8px; border: 1px solid #ccc;">
-                        <%= skill.skillName %>
-                      </td>
-                      <td style="padding: 8px; border: 1px solid #ccc;">
-                        <%= skill.version %>
-                      </td>
-                      <td style="padding: 8px; border: 1px solid #ccc;">
-                        <%= skill.lastUsed %>
-                      </td>
-                      <td style="padding: 8px; border: 1px solid #ccc;">
-                        <%= skill.experienceyear %> yr <%= skill.experiencemonth %> mo
-                      </td>
+              <h3>IT Skills</h3>
+              <% if (itSkills && itSkills.length> 0) { %>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background-color: #f0f0f0;">
+                      <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Skill</th>
+                      <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Version</th>
+                      <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Last Used</th>
+                      <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Experience</th>
                     </tr>
-                    <% }) %>
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    <% itSkills?.forEach(skill=> { %>
+                      <tr>
+                        <td style="padding: 8px; border: 1px solid #ccc;">
+                          <%= skill.skillName || 'N/A' %>
+                        </td>
+                        <td style="padding: 8px; border: 1px solid #ccc;">
+                          <%= skill.version || 'N/A' %>
+                        </td>
+                        <td style="padding: 8px; border: 1px solid #ccc;">
+                          <%= skill.lastUsed || 'N/A' %>
+                        </td>
+                        <td style="padding: 8px; border: 1px solid #ccc;">
+                          <% if ((skill.experienceyear && skill.experienceyear !== 0) || (skill.experiencemonth && skill.experiencemonth !== 0)) { %>
+                           <%= skill.experienceyear || 0 %> yr <%= skill.experiencemonth || 0 %> mo
+                          <% } else { %>
+                            N/A
+                          <% } %>
+                        </td>
+                      </tr>
+                      <% }) %>
+                  </tbody>
+                </table>
+              <% } else { %>
+                <p>N/A</p>
+              <% } %>
             </div>
-            <% } %>
+            <!-- End IT Skills -->
 
+            <!-- Start Other Skills Section -->
 
-              <!-- End IT Skills -->
-  </div>
-  
+            <div class="section">
+              <h3>Other Skills</h3>
+              <% if (nonTtSkills && nonTtSkills.length> 0) { %>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background-color: #f0f0f0;">
+                      <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Skill</th>
+                      <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Experience</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% nonTtSkills?.forEach(skill=> { %>
+                      <tr>
+                        <td style="padding: 8px; border: 1px solid #ccc;">
+                          <%= skill.skillName %>
+                        </td>
+                        <td style="padding: 8px; border: 1px solid #ccc;">
+                          <% if ((skill.experienceyear && skill.experienceyear !== 0) || (skill.experiencemonth && skill.experiencemonth !== 0)) { %>
+                           <%= skill.experienceyear || 0 %> yr <%= skill.experiencemonth || 0 %> mo
+                          <% } else { %>
+                            N/A
+                          <% } %>
+                        </td>
+                      </tr>
+                      <% }) %>
+                  </tbody>
+                </table>
+              <% } else { %>
+                <p>N/A</p>
+              <% } %>
+            </div>
+            <!-- End Other Skills Section -->
+      </div>
+
   <!-- <% if (employment && employment.length> 0) { %>
     <div class="page-break-group-employments">
       <div class="section">
@@ -511,290 +937,383 @@
     </div>
     <% } %> -->
 
-    <% if (employment && employment.length > 0) { %>
-      <div class="page-break-group-employments">
-        <div class="section">
-          <h3>Employment History</h3>
-          <ul style="line-height: 22px; list-style-type: disc; padding-left: 20px;">
-            <% employment.forEach(job => { 
-              const monthNames = [
-                "January","February","March","April","May","June",
-                "July","August","September","October","November","December"
-              ];
-              const startMonth = job.joiningDate?.month ? monthNames[job.joiningDate.month - 1] : null;
-              const startYear = job.joiningDate?.year;
-              const endMonth = job.leavingDate?.month ? monthNames[job.leavingDate.month - 1] : null;
-              const endYear = job.leavingDate?.year;
-              const formattedStart = startMonth && startYear ? `${startMonth} ${startYear}` : "Start Date Unknown";
-              const formattedEnd = job.currentEmployment ? "Present" : (endMonth && endYear ? `${endMonth} ${endYear}` : "End Date Unknown");
+        <div class="page-break-group-employments">
+          <div class="section">
+            <h3>Employment History</h3>
+            <% if (employment && employment.length > 0) { %>
+              <ul style="line-height: 22px; list-style-type: disc; padding-left: 20px;">
+                <% employment.forEach(job => { 
+                  const monthNames = [
+                    "January","February","March","April","May","June",
+                    "July","August","September","October","November","December"
+                  ];
+                  const startMonth = job.joiningDate?.month ? monthNames[job.joiningDate.month - 1] : null;
+                  const startYear = job.joiningDate?.year;
+                  const endMonth = job.leavingDate?.month ? monthNames[job.leavingDate.month - 1] : null;
+                  const endYear = job.leavingDate?.year;
+                  const formattedStart = startMonth && startYear ? `${startMonth} ${startYear}` : "Start Date Unknown";
+                  const formattedEnd = job.currentEmployment ? "Present" : (endMonth && endYear ? `${endMonth} ${endYear}` : "End Date Unknown");
 
-              const startDate = job.joiningDate?.year && job.joiningDate?.month ? new Date(job.joiningDate.year, job.joiningDate.month - 1) : null;
-              const endDate = job.currentEmployment ? new Date() : (job.leavingDate?.year && job.leavingDate?.month ? new Date(job.leavingDate.year, job.leavingDate.month - 1) : null);
+                  const startDate = job.joiningDate?.year && job.joiningDate?.month ? new Date(job.joiningDate.year, job.joiningDate.month - 1) : null;
+                  const endDate = job.currentEmployment ? new Date() : (job.leavingDate?.year && job.leavingDate?.month ? new Date(job.leavingDate.year, job.leavingDate.month - 1) : null);
 
-              let durationText = "";
-              if (startDate && endDate) {
-                let years = endDate.getFullYear() - startDate.getFullYear();
-                let months = endDate.getMonth() - startDate.getMonth();
-                if (months < 0) { years--; months += 12; }
-                if (years > 0 || months > 0) {
-                  durationText = ` (${years > 0 ? years + " year" + (years > 1 ? "s" : "") : ""}${years > 0 && months > 0 ? " " : ""}${months > 0 ? months + " month" + (months > 1 ? "s" : "") : ""})`;
-                }
-              }
-            %>
-            <li style="margin-bottom: 12px; text-align: justify;">
-              <strong><%= job.jobTitle %></strong> at <strong><%= job.companyName %></strong><br>
-              <em style="display: inline-block; margin-bottom: 6px;">
-                <%= formattedStart %> – <%= formattedEnd %><%= durationText %>
-              </em><br>
-              <%- job.jobDescription %>
-            </li>
-            <% }) %>
-          </ul>
+                  let durationText = "";
+                  if (startDate && endDate) {
+                    let years = endDate.getFullYear() - startDate.getFullYear();
+                    let months = endDate.getMonth() - startDate.getMonth();
+                    if (months < 0) { years--; months += 12; }
+                    if (years > 0 || months > 0) {
+                      durationText = ` (${years > 0 ? years + " year" + (years > 1 ? "s" : "") : ""}${years > 0 && months > 0 ? " " : ""}${months > 0 ? months + " month" + (months > 1 ? "s" : "") : ""})`;
+                    }
+                  }
+                %>
+                <li style="margin-bottom: 12px; text-align: justify;">
+                  <strong><%= job.jobTitle %></strong> at <strong><%= job.companyName %></strong><br>
+                  <em style="display: inline-block; margin-bottom: 6px;">
+                    <%= formattedStart %> – <%= formattedEnd %><%= durationText %>
+                  </em><br>
+                  <%- job.jobDescription %>
+                </li>
+                <% }) %>
+              </ul>
+            <% } else { %>
+              <p>N/A</p>
+            <% } %>
+          </div>
         </div>
-      </div>
-    <% } %>
+
+        <!-- Start Career Profile Section -->
+        <div class="section">
+          <h3>Career Profile</h3>
+          <table class="info-table">
+
+            <!-- Industry -->
+            <tr>
+              <td class="left-column"><strong>Current Industry</strong></td>
+              <td>
+                <%= candidateCareerProfile?.industry_name || "N/A" %>
+              </td>
+            </tr>
+
+            <!-- Department -->
+            <tr>
+              <td class="left-column"><strong>Department</strong></td>
+              <td>
+                <%= candidateCareerProfile?.department_name || "N/A" %>
+              </td>
+            </tr>
+
+            <!-- Job Role -->
+            <tr>
+              <td class="left-column"><strong>Job Role</strong></td>
+              <td>
+                <%= candidateCareerProfile?.job_role_name || "N/A" %>
+              </td>
+            </tr>
+
+            <!-- Job Type -->
+            <tr>
+              <td class="left-column"><strong>Desired Job Type</strong></td>
+              <td>
+                <%= candidateCareerProfile?.job_type || "N/A" %>
+              </td>
+            </tr>
+
+            <!-- Employment Type -->
+            <tr>
+              <td class="left-column"><strong>Desired Employment Type</strong></td>
+              <td>
+                <%= candidateCareerProfile?.employment_type || "N/A" %>
+              </td>
+            </tr>
+
+            <!-- Shift -->
+            <tr>
+              <td class="left-column"><strong>Preferred Shift</strong></td>
+              <td>
+                <%= candidateCareerProfile?.shift || "N/A" %>
+              </td>
+            </tr>
+
+            <!-- Preferred Locations -->
+            <tr>
+              <td class="left-column"><strong>Preferred Locations</strong></td>
+              <td>
+                <% if (candidateCareerProfile?.preferredLocations) { %>
+                  <%= candidateCareerProfile.preferredLocations %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+            </tr>
+
+            <!-- Expected Salary -->
+            <tr>
+              <td class="left-column"><strong>Preferred Work Location</strong></td>
+              <td>
+                <% if (candidateCareerProfile?.expected_salary) { %>
+                  <%= candidateCareerProfile.expected_salary %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+            </tr>
+
+          </table>
+        </div>
+
+        <!-- End Career Profile Section -->
 
 
-      <% if (projectDetails && projectDetails.length> 0) { %>
         <div class="page-break-group-projects">
           <div class="section projects">
             <h3>Projects</h3>
-            <ul style="line-height: 22px;">
-              <% projectDetails.forEach(proj=> {
-                const fromMonth = new Date(proj.workedFrom.year, proj.workedFrom.month - 1).toLocaleString('default', {
-                month:
-                'long' });
-                const toMonth = new Date(proj.workedTill.year, proj.workedTill.month - 1).toLocaleString('default', {
-                month:
-                'long' });
-                %>
-                <li style="text-align: justify;">
-                  <strong>
-                    <%= proj.projectTitle %>
-                  </strong><br>
-                  <em style="display: inline-block; margin-bottom: 10px;">Duration: <%= fromMonth %>
-                      <%= proj.workedFrom.year %> to <%= toMonth %>
-                          <%= proj.workedTill.year %></em><br>
-                  <%= proj.description %>
-                </li>
-                <% }) %>
-            </ul>
+            <% if (projectDetails && projectDetails.length> 0) { %>
+              <ul style="line-height: 22px;">
+                <% projectDetails.forEach(proj=> {
+                  const fromMonth = new Date(proj.workedFrom.year, proj.workedFrom.month - 1).toLocaleString('default', {
+                  month:
+                  'long' });
+                  const toMonth = new Date(proj.workedTill.year, proj.workedTill.month - 1).toLocaleString('default', {
+                  month:
+                  'long' });
+                  %>
+                  <li style="text-align: justify;">
+                    <strong>
+                      <%= proj.projectTitle %>
+                    </strong><br>
+                    <em style="display: inline-block; margin-bottom: 10px;">Duration: <%= fromMonth %>
+                        <%= proj.workedFrom.year %> to <%= toMonth %>
+                            <%= proj.workedTill.year %></em><br>
+                    <%= proj.description %>
+                  </li>
+                  <% }) %>
+              </ul>
+            <% } else { %>
+              <p>N/A</p>
+            <% } %>
           </div>
         </div>
-        <% } %>
 
 
-          <% if ( (userCertifications && userCertifications.length> 0) ||
-            (onlineProfiles && onlineProfiles.length > 0) ||
-            (workSamples && workSamples.length > 0) ||
-            (researchPublications && researchPublications.length > 0)
-            ) { %>
-            <div class="page-break-group-others">
+          
+        <div class="page-break-group-others">
+            <!-- Certifications -->
+            <div class="section">
+              <h3>Certifications</h3>
               <% if (userCertifications && userCertifications.length> 0) { %>
-                <div class="section">
-                  <h3>Certifications</h3>
-                  <ul style="text-align: justify;">
-                    <% userCertifications.forEach(cert=> {
-                      const monthNames = [
-                      "January", "February", "March", "April", "May", "June",
-                      "July", "August", "September", "October", "November", "December"
-                      ];
-                      const fromMonth = cert.validityFrommonth ? monthNames[cert.validityFrommonth - 1] : null;
-                      const fromYear = cert.validityFromyear;
-                      const toMonth = cert.validityToMonth ? monthNames[cert.validityToMonth - 1] : null;
-                      const toYear = cert.validityToyear;
-                      %>
-                      <li style="margin-bottom: 16px;">
-                        <strong>
-                          <%= cert.title || "Untitled Certification" %>
-                        </strong><br />
+                <ul style="text-align: justify;">
+                  <% userCertifications.forEach(cert=> {
+                    const monthNames = [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                    ];
+                    const fromMonth = cert.validityFrommonth ? monthNames[cert.validityFrommonth - 1] : null;
+                    const fromYear = cert.validityFromyear;
+                    const toMonth = cert.validityToMonth ? monthNames[cert.validityToMonth - 1] : null;
+                    const toYear = cert.validityToyear;
+                    %>
+                    <li style="margin-bottom: 16px;">
+                      <strong>
+                        <%= cert.title || "Untitled Certification" %>
+                      </strong><br />
 
-                        <% if (cert.url) { %>
-                          <a style="margin-top: 8px; padding: 0; display: block;" href="<%= cert.url %>" target="_blank"
-                            rel="noopener noreferrer">
-                            <%= cert.url %>
-                          </a><br />
-                          <% } %>
-
-                            <% if (fromMonth && fromYear) { %>
-                              Valid from: <%= fromMonth %>
-                                <%= fromYear %>.
-                                  <% } %>
-
-                                    <% if (cert.doesNotExpire) { %>
-                                      Does not expire.
-                                      <% } else if (toMonth && toYear) { %>
-                                        Valid till: <%= toMonth %>
-                                          <%= toYear %>.
-                                            <% } %>
-                      </li>
-                      <% }) %>
-                  </ul>
-                </div>
-                <% } %>
-
-
-                  <% if (onlineProfiles && onlineProfiles.length> 0) { %>
-                    <div class="section">
-                      <h3>Online Profiles</h3>
-                      <ul style="margin: 0px 0px 5px 10px; padding: 0;">
-                        <% onlineProfiles?.forEach(profile=> { %>
-                          <li style="margin: 0px 0px 7px 15px; padding: 0;">
-                            <strong>
-                              <%= profile.name %>
-                            </strong><br />
-                            <a style="margin: 5px 0px 0px 0px; padding: 0; display: block;" href="<%= profile.url %>">
-                              <%= profile.url %>
-                            </a>
-                          </li>
-                          <% }) %>
-                      </ul>
-                    </div>
-                    <% } %>
-
-                      <% if (workSamples && workSamples.length> 0) { %>
-                        <div class="section">
-                          <h3>Work Profiles</h3>
-                          <ul style="margin: 0px 0px 5px 10px; padding: 0;">
-                            <% workSamples?.forEach(sample=> { %>
-                              <li style="margin: 0px 0px 7px 15px; padding: 0;">
-                                <strong>
-                                  <%= sample.workTitle %>
-                                </strong><br />
-                                <a style="margin: 5px 0px 0px 0px; padding: 0; display: block;"
-                                  href="<%= sample.url %>">
-                                  <%= sample.url %>
-                                </a><br />
-                                <% const months=[ "January" , "February" , "March" , "April" , "May" , "June" , "July"
-                                  , "August" , "September" , "October" , "November" , "December" ]; const
-                                  fromMonth=months[sample.durationFrom?.month - 1] || "Unknown" ; const
-                                  fromYear=sample.durationFrom?.year || "Unknown" ; const
-                                  toMonth=sample.currentlyWorking ? "Present" : months[sample.durationTo?.month - 1]
-                                  || "Unknown" ; const toYear=sample.currentlyWorking ? "" : sample.durationTo?.year
-                                  || "Unknown" ; %>
-                                  Duration: <%= fromMonth %>
-                                    <%= fromYear %> - <%= toMonth %>
-                                        <%= toYear %>
-                              </li>
-                              <% }) %>
-                          </ul>
-                        </div>
+                      <% if (cert.url) { %>
+                        <a style="margin-top: 8px; padding: 0; display: block;" href="<%= cert.url %>" target="_blank"
+                          rel="noopener noreferrer">
+                          <%= cert.url %>
+                        </a><br />
                         <% } %>
 
-                          <% if (researchPublications && researchPublications.length> 0) { %>
-                            <div class="section">
-                              <h3>Research Publications</h3>
-                              <ul style="margin: 0px 0px 5px 10px; padding: 0;">
-                                <% researchPublications?.forEach(sample=> {
-                                  const hasDate = sample.publishedOn?.month && sample.publishedOn?.year;
-                                  const month = String(sample.publishedOn?.month || "").padStart(2, "0");
-                                  const year = sample.publishedOn?.year || "";
-                                  %>
-                                  <li style="margin-top: 20px; text-align: justify;">
-                                    <strong style="margin-top: 10px;">
-                                      <%= sample.title || "Untitled" %>
-                                    </strong><br />
-                                    <% if (sample.url) { %>
-                                      <a style="margin-top: 7px; margin-bottom: 0px;  display: block;"
-                                        href="<%= sample.url %>">
-                                        <%= sample.url %>
-                                      </a><br />
-                                      <% } %>
-                                        <% if (hasDate) { %>
-                                          Published: <%= month %>/<%= year %>
-                                              <% } %>
-                                                <% if (sample.description) { %>
-                                                  <p style="margin: 5px 0px">
-                                                    <%- sample.description %>
-                                                  </p>
-                                                  <% } %>
-                                  </li>
-                                  <% }) %>
-                              </ul>
+                          <% if (fromMonth && fromYear) { %>
+                            Valid from: <%= fromMonth %>
+                              <%= fromYear %>.
+                                <% } %>
 
-                            </div>
+                                  <% if (cert.doesNotExpire) { %>
+                                    Does not expire.
+                                    <% } else if (toMonth && toYear) { %>
+                                      Valid till: <%= toMonth %>
+                                        <%= toYear %>.
+                                          <% } %>
+                    </li>
+                    <% }) %>
+                </ul>
+              <% } else { %>
+                <p>N/A</p>
+              <% } %>
+            </div>
+
+            <!-- Online Profiles -->
+            <div class="section">
+              <h3>Online Profiles</h3>
+              <% if (onlineProfiles && onlineProfiles.length> 0) { %>
+                <ul style="margin: 0px 0px 5px 10px; padding: 0;">
+                  <% onlineProfiles?.forEach(profile=> { %>
+                    <li style="margin: 0px 0px 7px 15px; padding: 0;">
+                      <strong>
+                        <%= profile.name %>
+                      </strong><br />
+                      <a style="margin: 5px 0px 0px 0px; padding: 0; display: block;" href="<%= profile.url %>">
+                        <%= profile.url %>
+                      </a>
+                    </li>
+                    <% }) %>
+                </ul>
+              <% } else { %>
+                <p>N/A</p>
+                <% } %>
+            </div>
+               
+            <!-- Work Profiles -->
+            <div class="section">
+              <h3>Work Profiles</h3>
+              <% if (workSamples && workSamples.length> 0) { %>
+                <ul style="margin: 0px 0px 5px 10px; padding: 0;">
+                  <% workSamples?.forEach(sample=> { %>
+                    <li style="margin: 0px 0px 7px 15px; padding: 0;">
+                      <strong>
+                        <%= sample.workTitle %>
+                      </strong><br />
+                      <a style="margin: 5px 0px 0px 0px; padding: 0; display: block;"
+                        href="<%= sample.url %>">
+                        <%= sample.url %>
+                      </a><br />
+                      <% const months=[ "January" , "February" , "March" , "April" , "May" , "June" , "July"
+                        , "August" , "September" , "October" , "November" , "December" ]; const
+                        fromMonth=months[sample.durationFrom?.month - 1] || "Unknown" ; const
+                        fromYear=sample.durationFrom?.year || "Unknown" ; const
+                        toMonth=sample.currentlyWorking ? "Present" : months[sample.durationTo?.month - 1]
+                        || "Unknown" ; const toYear=sample.currentlyWorking ? "" : sample.durationTo?.year
+                        || "Unknown" ; %>
+                        Duration: <%= fromMonth %>
+                          <%= fromYear %> - <%= toMonth %>
+                              <%= toYear %>
+                    </li>
+                    <% }) %>
+                </ul>
+              <% } else { %>
+                <p>N/A</p>
+              <% } %>
+            </div>
+    
+            <!-- Research Publications -->
+            <div class="section">
+              <h3>Research Publications</h3>
+              <% if (researchPublications && researchPublications.length> 0) { %>
+                <ul style="margin: 0px 0px 5px 10px; padding: 0;">
+                  <% researchPublications?.forEach(sample=> {
+                    const hasDate = sample.publishedOn?.month && sample.publishedOn?.year;
+                    const month = String(sample.publishedOn?.month || "").padStart(2, "0");
+                    const year = sample.publishedOn?.year || "";
+                    %>
+                    <li style="margin-top: 20px; text-align: justify;">
+                      <strong style="margin-top: 10px;">
+                        <%= sample.title || "Untitled" %>
+                      </strong><br />
+                      <% if (sample.url) { %>
+                        <a style="margin-top: 7px; margin-bottom: 0px;  display: block;"
+                          href="<%= sample.url %>">
+                          <%= sample.url %>
+                        </a><br />
+                        <% } %>
+                          <% if (hasDate) { %>
+                            Published: <%= month %>/<%= year %>
+                                <% } %>
+                                  <% if (sample.description) { %>
+                                    <p style="margin: 5px 0px">
+                                      <%- sample.description %>
+                                    </p>
+                                    <% } %>
+                    </li>
+                    <% }) %>
+                </ul>
+              <% } else { %>
+                <p>N/A</p>
+              <% } %>
+            </div>
+
+            <div class="page-break-group-presentations">
+                <div class="section">
+                  <h3>Presentations</h3>
+                  <% if (userPresentations && userPresentations.length> 0) { %>
+                    <ul style="margin: 0px 0px 5px 10px; padding: 0; text-align: justify;">
+                      <% userPresentations?.forEach(presentation=> {
+                        %>
+                        <li style="margin: 0px 0px 7px 15px; padding: 0;">
+                          <strong>
+                            <%= presentation.title || "Untitled Presentation" %>
+                          </strong><br />
+                          <% if (presentation.url) { %>
+                            <a style="margin: 8px 0px 0px 0px; padding: 0; display: block;"
+                              href="<%= presentation.url %>" target="_blank" rel="noopener noreferrer">
+                              <%= presentation.url %>
+                            </a><br />
+                            <% } %>
+                              <% if (presentation.description) { %>
+                                <p style="margin-top: 0px">
+                                  <%- presentation.description %>
+                                </p>
+                                <% } %>
+                        </li>
+                        <% }) %>
+                    </ul>
+                  <% } else { %>
+                    <p>N/A</p>
+                  <% } %>
+                </div>
+
+                  
+                <div class="section">
+                  <h3>Patents</h3>
+                  <% if (userPatents && userPatents.length> 0) { %>
+                    <ul style="margin: 0px 0px 5px 10px; padding: 0; text-align: justify;">
+                      <% userPatents?.forEach(patent=> {
+                        const hasIssueDate = patent.issue_month && patent.issue_year;
+                        const month = String(patent.issue_month).padStart(2, '0');
+                        const year = patent.issue_year;
+                        %>
+                        <li style="margin: 0px 0px 7px 15px; padding: 0;">
+                          <strong>
+                            <%= patent.title || "Untitled Patent" %>
+                          </strong><br />
+                          <% if (patent.url) { %>
+                            <a style="margin: 8px 0px 0px 0px; padding: 0; display: block;"
+                              href="<%= patent.url %>" target="_blank" rel="noopener noreferrer">
+                              <%= patent.url %>
+                            </a><br />
                             <% } %>
 
-                              <div class="page-break-group-presentations">
-                                <% if (userPresentations && userPresentations.length> 0) { %>
-                                  <div class="section">
-                                    <h3>Presentations</h3>
-                                    <ul style="margin: 0px 0px 5px 10px; padding: 0; text-align: justify;">
-                                      <% userPresentations?.forEach(presentation=> {
-                                        %>
-                                        <li style="margin: 0px 0px 7px 15px; padding: 0;">
-                                          <strong>
-                                            <%= presentation.title || "Untitled Presentation" %>
-                                          </strong><br />
-                                          <% if (presentation.url) { %>
-                                            <a style="margin: 8px 0px 0px 0px; padding: 0; display: block;"
-                                              href="<%= presentation.url %>" target="_blank" rel="noopener noreferrer">
-                                              <%= presentation.url %>
-                                            </a><br />
-                                            <% } %>
-                                              <% if (presentation.description) { %>
-                                                <p style="margin-top: 0px">
-                                                  <%- presentation.description %>
-                                                </p>
-                                                <% } %>
-                                        </li>
-                                        <% }) %>
-                                    </ul>
-                                  </div>
+                              <% if (patent.patent_office) { %>
+                                Patent Office: <%= patent.patent_office %><br />
                                   <% } %>
 
-                                    <% if (userPatents && userPatents.length> 0) { %>
-                                      <div class="section">
-                                        <h3>Patents</h3>
-                                        <ul style="margin: 0px 0px 5px 10px; padding: 0; text-align: justify;">
-                                          <% userPatents?.forEach(patent=> {
-                                            const hasIssueDate = patent.issue_month && patent.issue_year;
-                                            const month = String(patent.issue_month).padStart(2, '0');
-                                            const year = patent.issue_year;
-                                            %>
-                                            <li style="margin: 0px 0px 7px 15px; padding: 0;">
-                                              <strong>
-                                                <%= patent.title || "Untitled Patent" %>
-                                              </strong><br />
-                                              <% if (patent.url) { %>
-                                                <a style="margin: 8px 0px 0px 0px; padding: 0; display: block;"
-                                                  href="<%= patent.url %>" target="_blank" rel="noopener noreferrer">
-                                                  <%= patent.url %>
-                                                </a><br />
-                                                <% } %>
+                                    <% if (patent.status) { %>
+                                      Status: <%= patent.status %><br />
+                                        <% } %>
 
-                                                  <% if (patent.patent_office) { %>
-                                                    Patent Office: <%= patent.patent_office %><br />
+                                          <% if (patent.application_number) { %>
+                                            Application No: <%= patent.application_number %><br />
+                                              <% } %>
+
+                                                <% if (hasIssueDate) { %>
+                                                  Issued On: <%= month %>/<%= year %><br />
                                                       <% } %>
 
-                                                        <% if (patent.status) { %>
-                                                          Status: <%= patent.status %><br />
-                                                            <% } %>
-
-                                                              <% if (patent.application_number) { %>
-                                                                Application No: <%= patent.application_number %><br />
-                                                                  <% } %>
-
-                                                                    <% if (hasIssueDate) { %>
-                                                                      Issued On: <%= month %>/<%= year %><br />
-                                                                          <% } %>
-
-                                                                            <% if (patent.description) { %>
-                                                                              <p>
-                                                                                <%- patent.description %>
-                                                                              </p>
-                                                                              <% } %>
-                                            </li>
-                                            <% }) %>
-                                        </ul>
-
-                                      </div>
-                                      <% } %>
-                              </div>
+                                                        <% if (patent.description) { %>
+                                                          <p>
+                                                            <%- patent.description %>
+                                                          </p>
+                                                          <% } %>
+                        </li>
+                        <% }) %>
+                    </ul>
+                  <% } else { %>
+                    <p>N/A</p>
+                  <% } %>
+                </div>
             </div>
-            <% } %>
-
-
+        </div>
 
 
               </div>
