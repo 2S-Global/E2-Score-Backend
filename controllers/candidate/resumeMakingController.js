@@ -2014,7 +2014,21 @@ export const AdmingetResume = async (req, res) => {
     };
 
     // console.log("Here is my Candidate Career Profiles: ", candidateCareerProfile);
+    const getFormattedDOB = (dob) => {
+      if (!dob) return "";
+      const date = new Date(dob);
+      const options = {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Kolkata", // Force IST conversion
+      };
+      return date.toLocaleDateString("en-GB", options);
+    };
 
+    if (candidateDetails.dob) {
+      candidateDetails.formattedDOB = getFormattedDOB(candidateDetails.dob);
+    }
     const pdfBuffer = await generateResumePDF({
       user,
       education,
