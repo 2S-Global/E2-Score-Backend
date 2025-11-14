@@ -1,7 +1,11 @@
 import express from "express";
 import multer from "multer";
 
-import { Adduser, Updateuser } from "../../controllers/admin/usercontroller.js";
+import {
+  Adduser,
+  Updateuser,
+  importUser,
+} from "../../controllers/admin/usercontroller.js";
 
 //Middleware
 import userAuth from "../../middleware/authMiddleware.js";
@@ -28,6 +32,14 @@ UserAdminRouter.put(
   userAuth,
   adminMiddleware,
   Updateuser
+);
+
+UserAdminRouter.post(
+  "/import_user",
+  upload.single("file"),
+  userAuth,
+  adminMiddleware,
+  importUser
 );
 
 export default UserAdminRouter;
