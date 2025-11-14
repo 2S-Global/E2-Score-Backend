@@ -65,6 +65,9 @@ import InstituteStudentRouter from "./routes/institute/instituteStudentRoute.js"
 // Payment Routes
 import paymentRoutes from "./routes/paymentRoutes.js";
 
+//admin Routes
+import userAdminRouter from "./routes/admin/userRoute.js";
+
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
 // This file is reserved for internal use and should remain untouched.
@@ -116,6 +119,9 @@ app.use("/api/pacakageRoute", pacakageRoute);
 app.use("/api/companyPackageRoute", companyPackageRoute);
 app.use("/api/companyRoutes", companyRoutes);
 app.use("/api/dashboard", dashboardRoute);
+
+//Admin Routes Abhishek Dey
+app.use("/api/useradmin", userAdminRouter);
 
 //company routes
 app.use("/api/companyprofile", CompanyProfileRouter);

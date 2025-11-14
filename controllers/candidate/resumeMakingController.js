@@ -98,6 +98,22 @@ export const getResume = async (req, res) => {
     const userDetails = userDetailsArr[0] || {};
     const candidateDetails = candidateDetailsArr[0] || {};
 
+    const getFormattedDOB = (dob) => {
+      if (!dob) return "";
+      const date = new Date(dob);
+      const options = {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Kolkata", // Force IST conversion
+      };
+      return date.toLocaleDateString("en-GB", options);
+    };
+
+    if (candidateDetails.dob) {
+      candidateDetails.formattedDOB = getFormattedDOB(candidateDetails.dob);
+    }
+
     // console.log("--Here I am getting all nonItSkills --", nonItSkills);
 
     const universityIds = educationRaw?.length
@@ -165,7 +181,7 @@ export const getResume = async (req, res) => {
       ? getUniqueIds(userDetails.languageProficiency, "proficiency")
       : [];
 
-      // console.log("ALL of my languageProficiencyIds: ", languageProficiencyIds);
+    // console.log("ALL of my languageProficiencyIds: ", languageProficiencyIds);
 
     const userPref = careerProfile[0] || {};
 
@@ -421,7 +437,6 @@ export const getResume = async (req, res) => {
 
     user.gender_name = userGender?.name || "";
     candidateDetails.countryName = candidateDetailsCountryName?.name || "";
-    
 
     const locationNames =
       locations?.map((city) => city.city_name).join(", ") || "";
@@ -636,7 +651,10 @@ export const getResume = async (req, res) => {
       ).map((id) => addiInfoNameWithMap[id] || ""),
     };
 
-    console.log("-----Here I am getting userPersonalDetails----------", userPersonalDetails);
+    console.log(
+      "-----Here I am getting userPersonalDetails----------",
+      userPersonalDetails
+    );
 
     // KYC Details
     // Define the document types you want to check
@@ -672,8 +690,6 @@ export const getResume = async (req, res) => {
         : "",
       preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
     };
-
-
 
     // console.log("Here is my Candidate Career Profiles: ", candidateCareerProfile);
 
@@ -1487,7 +1503,7 @@ export const AdmingetResume = async (req, res) => {
       ? getUniqueIds(userDetails.languageProficiency, "proficiency")
       : [];
 
-      // console.log("ALL of my languageProficiencyIds: ", languageProficiencyIds);
+    // console.log("ALL of my languageProficiencyIds: ", languageProficiencyIds);
 
     const userPref = careerProfile[0] || {};
 
@@ -1743,7 +1759,6 @@ export const AdmingetResume = async (req, res) => {
 
     user.gender_name = userGender?.name || "";
     candidateDetails.countryName = candidateDetailsCountryName?.name || "";
-    
 
     const locationNames =
       locations?.map((city) => city.city_name).join(", ") || "";
@@ -1958,7 +1973,10 @@ export const AdmingetResume = async (req, res) => {
       ).map((id) => addiInfoNameWithMap[id] || ""),
     };
 
-    console.log("-----Here I am getting userPersonalDetails----------", userPersonalDetails);
+    console.log(
+      "-----Here I am getting userPersonalDetails----------",
+      userPersonalDetails
+    );
 
     // KYC Details
     // Define the document types you want to check
@@ -1994,8 +2012,6 @@ export const AdmingetResume = async (req, res) => {
         : "",
       preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
     };
-
-
 
     // console.log("Here is my Candidate Career Profiles: ", candidateCareerProfile);
 

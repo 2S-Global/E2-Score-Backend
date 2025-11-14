@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
+      required: true,
     },
     phone_number: {
       type: String,
@@ -93,11 +94,11 @@ const userSchema = new mongoose.Schema(
     },
     company_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'companylist',
+      ref: "companylist",
       // required: true
     },
     isVerified: { type: Boolean, default: false },
-    numberVerified: { type: Boolean, default: false }
+    numberVerified: { type: Boolean, default: false },
   },
   {
     timestamps: true,
