@@ -165,6 +165,8 @@ export const getResume = async (req, res) => {
       ? getUniqueIds(userDetails.languageProficiency, "proficiency")
       : [];
 
+      // console.log("ALL of my languageProficiencyIds: ", languageProficiencyIds);
+
     const userPref = careerProfile[0] || {};
 
     const [
@@ -324,12 +326,11 @@ export const getResume = async (req, res) => {
             .lean()
         : Promise.resolve([]),
       //Getting Language Proficiency
-      Array.isArray(userDetails.languageProficiencyIds) &&
-      userDetails.languageProficiencyIds.length > 0
+      Array.isArray(languageProficiencyIds) && languageProficiencyIds.length > 0
         ? list_language_proficiency
             .find({
               _id: {
-                $in: userDetails.languageProficiencyIds.filter((id) =>
+                $in: languageProficiencyIds.filter((id) =>
                   mongoose.Types.ObjectId.isValid(id)
                 ),
               },
@@ -416,7 +417,7 @@ export const getResume = async (req, res) => {
         : Promise.resolve(null),
     ]);
 
-    // console.log("Here is my non-IT skill name List: ", nonItSkillNameList);
+    // console.log("Here is my proficiencyName name List: ", proficiencyName);
 
     user.gender_name = userGender?.name || "";
     candidateDetails.countryName = candidateDetailsCountryName?.name || "";
@@ -601,7 +602,7 @@ export const getResume = async (req, res) => {
         return (b.startYear || 0) - (a.startYear || 0);
       });
 
-    console.log("--Here is my raw projects: --", userProjects);
+    // console.log("--Here is my raw projects: --", userProjects);
 
     //Modify Candidate Profile Details
     const preferenceDetails = (careerProfile || []).map((data) => ({
@@ -634,6 +635,8 @@ export const getResume = async (req, res) => {
         userDetails?.additionalInformation || []
       ).map((id) => addiInfoNameWithMap[id] || ""),
     };
+
+    console.log("-----Here I am getting userPersonalDetails----------", userPersonalDetails);
 
     // KYC Details
     // Define the document types you want to check
@@ -1769,7 +1772,7 @@ export const AdmingetResume = async (req, res) => {
         return (b.startYear || 0) - (a.startYear || 0);
       });
 
-    console.log("--Here is my raw projects: --", userProjects);
+    // console.log("--Here is my raw projects: --", userProjects);
 
     //Modify Candidate Profile Details
     const preferenceDetails = (careerProfile || []).map((data) => ({

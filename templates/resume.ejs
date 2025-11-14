@@ -672,6 +672,73 @@
       <% } %>
 
 
+
+      <!-- Language Section Starts here -->
+
+      <div class="section">
+        <h3>Languages</h3>
+
+        <% if (userPersonalDetails.languageProficiency && userPersonalDetails.languageProficiency.length > 0) { %>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #f0f0f0;">
+                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Language</th>
+                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Proficiency</th>
+                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Read</th>
+                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Write</th>
+                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Speak</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <% userPersonalDetails.languageProficiency.forEach(lang => { %>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ccc;"><%= lang.languageName || 'N/A' %></td>
+                  <td style="padding: 8px; border: 1px solid #ccc;"><%= lang.proficiencyName || 'N/A' %></td>
+
+                  <!-- Read -->
+                  <td style="padding: 8px; border: 1px solid #ccc; text-align:center;">
+                    <% if (lang.read) { %>
+                      <span style="color: green; font-size: 18px;">&#10003;</span>
+                    <% } else { %>
+                      <span style="color: red; font-size: 18px;">&#10007;</span>
+                    <% } %>
+                  </td>
+
+                  <!-- Write -->
+                  <td style="padding: 8px; border: 1px solid #ccc; text-align:center;">
+                    <% if (lang.write) { %>
+                      <span style="color: green; font-size: 18px;">&#10003;</span>
+                    <% } else { %>
+                      <span style="color: red; font-size: 18px;">&#10007;</span>
+                    <% } %>
+                  </td>
+
+                  <!-- Speak -->
+                  <td style="padding: 8px; border: 1px solid #ccc; text-align:center;">
+                    <% if (lang.speak) { %>
+                      <span style="color: green; font-size: 18px;">&#10003;</span>
+                    <% } else { %>
+                      <span style="color: red; font-size: 18px;">&#10007;</span>
+                    <% } %>
+                  </td>
+
+                </tr>
+              <% }); %>
+            </tbody>
+
+          </table>
+
+        <% } else { %>
+          <p>N/A</p>
+        <% } %>
+      </div>
+
+
+
+      <!-- Language Section ends here -->
+
+
     
 
     
