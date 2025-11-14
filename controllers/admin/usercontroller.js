@@ -144,7 +144,7 @@ export const Adduser = async (req, res) => {
 
     return res.status(201).json({
       message: "User added successfully",
-      debug: { name, email, phone: finalPhone, role, password },
+      success: true,
     });
   } catch (error) {
     console.error(error);
@@ -214,12 +214,7 @@ export const Updateuser = async (req, res) => {
 
     return res.status(200).json({
       message: "User updated successfully",
-      debug: {
-        name,
-        email,
-        phone: finalPhone,
-        role: updatedUser.role,
-      },
+      success: true,
     });
   } catch (error) {
     console.error(error);
