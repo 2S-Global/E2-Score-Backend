@@ -476,7 +476,7 @@
 
         <!-- Category -->
         <tr>
-          <td class="left-column"><strong>Category</strong></td>
+          <td class="left-column"><strong>Caste Category</strong></td>
           <td>
             <% if (userPersonalDetails?.categoryName) { %>
               <%= userPersonalDetails.categoryName %>
@@ -614,7 +614,7 @@
         </tr>
 
         <tr>
-          <td class="left-column"><strong>Aadhar Card</strong></td>
+          <td class="left-column"><strong>Aadhar Card With OTP</strong></td>
           <td>
             <% if (kycResult?.aadhar_verified === true) { %>
               <span class="check">Verified &#10004;</span>
@@ -661,7 +661,7 @@
           }).join(' , ');
           %>
           <div class="section">
-            <h3 class="border-content">Skills</h3>
+            <h3 class="border-content">Key Skills</h3>
             <p><%= formattedSkills %></p>
           </div>
       <% } else { %>
@@ -989,7 +989,7 @@
 
             <!-- Industry -->
             <tr>
-              <td class="left-column"><strong>Industry</strong></td>
+              <td class="left-column"><strong>Current Industry</strong></td>
               <td>
                 <%= candidateCareerProfile?.industry_name || "N/A" %>
               </td>
@@ -1013,7 +1013,7 @@
 
             <!-- Job Type -->
             <tr>
-              <td class="left-column"><strong>Job Type</strong></td>
+              <td class="left-column"><strong>Desired Job Type</strong></td>
               <td>
                 <%= candidateCareerProfile?.job_type || "N/A" %>
               </td>
@@ -1021,7 +1021,7 @@
 
             <!-- Employment Type -->
             <tr>
-              <td class="left-column"><strong>Employment Type</strong></td>
+              <td class="left-column"><strong>Desired Employment Type</strong></td>
               <td>
                 <%= candidateCareerProfile?.employment_type || "N/A" %>
               </td>
@@ -1029,21 +1029,9 @@
 
             <!-- Shift -->
             <tr>
-              <td class="left-column"><strong>Shift</strong></td>
+              <td class="left-column"><strong>Preferred Shift</strong></td>
               <td>
                 <%= candidateCareerProfile?.shift || "N/A" %>
-              </td>
-            </tr>
-
-            <!-- Expected Salary -->
-            <tr>
-              <td class="left-column"><strong>Expected Salary</strong></td>
-              <td>
-                <% if (candidateCareerProfile?.expected_salary) { %>
-                  <%= candidateCareerProfile.expected_salary %>
-                <% } else { %>
-                  N/A
-                <% } %>
               </td>
             </tr>
 
@@ -1053,6 +1041,18 @@
               <td>
                 <% if (candidateCareerProfile?.preferredLocations) { %>
                   <%= candidateCareerProfile.preferredLocations %>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+            </tr>
+
+            <!-- Expected Salary -->
+            <tr>
+              <td class="left-column"><strong>Preferred Work Location</strong></td>
+              <td>
+                <% if (candidateCareerProfile?.expected_salary) { %>
+                  <%= candidateCareerProfile.expected_salary %>
                 <% } else { %>
                   N/A
                 <% } %>
