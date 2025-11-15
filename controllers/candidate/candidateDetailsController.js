@@ -437,12 +437,20 @@ const formattedEmployment = (employmentsRaw || []).map((emp) => {
     const joiningYear = emp.joiningDate?.year;
     const leavingYear = emp.leavingDate?.year;
 
+    const joinMonthName = emp.joiningDate?.month
+      ? monthNames[emp.joiningDate.month - 1]
+      : null;
+
+    const leaveMonthName = emp.leavingDate?.month
+      ? monthNames[emp.leavingDate.month - 1]
+      : null;
+
     let duration = "Not Provided";
 
-    if (joiningYear && leavingYear) {
-        duration = `${joiningYear} - ${leavingYear}`;
-    } else if (joiningYear && !leavingYear) {
-        duration = `${joiningYear} - Present`;
+    if (joinMonthName && joiningYear && leaveMonthName && leavingYear) {
+      duration = `${joinMonthName} ${joiningYear} – ${leaveMonthName} ${leavingYear}`;
+    } else if (joinMonthName && joiningYear && (!leavingYear || !leaveMonthName)) {
+      duration = `${joinMonthName} ${joiningYear} – Present`;
     }
 
     const companyName = companyMap[emp.companyName?.toString()] || "Unknown Company";
