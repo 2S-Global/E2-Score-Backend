@@ -659,7 +659,7 @@ export const loginUser = async (req, res) => {
 
     // Check if user exists
     const user = await User.findOne({
-      email,
+      email: { $regex: new RegExp(`^${email}$`, "i") },
       is_active: true,
       is_del: false,
     });
