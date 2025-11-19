@@ -129,6 +129,7 @@ const userEducationSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+userEducationSchema.index({ userId: 1, isDel: 1, level: -1 });
 
 const usereducation = mongoose.model("usereducation", userEducationSchema);
 

@@ -130,85 +130,89 @@ export const getMoreInfoNames = async (ids) => {
 };
 
 export const formatUserData = (result) => {
-  const getFormattedDOB = (dob) => {
-    if (!dob) return "";
-    const date = new Date(dob);
-    const options = { day: "2-digit", month: "short", year: "numeric" };
-    // return date.toLocaleDateString("en-GB", options); // e.g., "13 Oct 2001"
-    return dob;
+  if (!result) return {};
+
+  // Pre-destructure once (faster)
+  const {
+    usa_visa_type,
+    gender,
+    marital_status,
+    partner_name,
+    more_info,
+    dob,
+    category,
+    differently_abled,
+    disability_type,
+    disability_description,
+    workplace_assistance,
+    work_permit_other_countries,
+    hometown,
+    permanent_address,
+    pincode,
+    languages,
+    career_break,
+    career_break_reason,
+    career_break_start_month,
+    career_break_start_year,
+    career_break_end_month,
+    career_break_end_year,
+    currently_on_career_break,
+  } = result;
+
+  // Faster DOB return — no need to create Date object if you're returning raw
+  const formattedDOB = dob || "";
+
+  // Faster join for More Info
+  const moreinfo =
+    more_info && more_info.length ? more_info.filter(Boolean).join(" , ") : "";
+
+  // Pre-compute address once — avoid regex replace (slow)
+  const addrParts = [hometown, permanent_address, pincode]
+    .filter((v) => v && v !== "")
+    .join(", ");
+
+  // Faster languages mapping
+  const formattedLanguages =
+    Array.isArray(languages) && languages.length
+      ? languages.map((lang) => ({
+          language: lang.language || "",
+          proficiency: lang.proficiency || "",
+          read: !!lang.read,
+          write: !!lang.write,
+          speak: !!lang.speak,
+        }))
+      : [];
+
+  // Precompute career break data (no repeated logic)
+  const careerBreakData = {
+    careerBreak: career_break || "",
+    careerBreakReason: career_break_reason || "",
+    careerBreakStartMonth: career_break_start_month || "",
+    careerBreakStartYear: career_break_start_year || "",
+    careerBreakEndMonth: currently_on_career_break
+      ? ""
+      : career_break_end_month || "",
+    careerBreakEndYear: currently_on_career_break
+      ? ""
+      : career_break_end_year || "",
+    currentlyOnCareerBreak: !!currently_on_career_break,
   };
-
-  const getMoreInfo = (moreInfoArray) => {
-    return (moreInfoArray || []).filter(Boolean).join(" , ");
-  };
-
-  const getDisabilityInfo = (differentlyAbled, type, desc, assistance) => {
-    if (differentlyAbled !== "Yes") return "No";
-    return [differentlyAbled, type, desc, assistance]
-      .filter(Boolean)
-      .join(", ");
-  };
-
-  const getCareerBreakInfo = (
-    status,
-    reason,
-    startMonth,
-    startYear,
-    endMonth,
-    endYear,
-    current
-  ) => {
-    return {
-      careerBreak: status,
-      careerBreakReason: reason || "",
-      careerBreakStartMonth: startMonth || "",
-      careerBreakStartYear: startYear || "",
-      careerBreakEndMonth: current ? "" : endMonth || "",
-      careerBreakEndYear: current ? "" : endYear || "",
-      currentlyOnCareerBreak: current || false,
-    };
-  };
-
-  const formatLanguages = (languages = []) =>
-    languages.map((lang) => ({
-      language: lang.language || "",
-      proficiency: lang.proficiency || "",
-      read: !!lang.read,
-      write: !!lang.write,
-      speak: !!lang.speak,
-    }));
-
-  // Career break formatted separately for spreading into result
-  const careerBreakData = getCareerBreakInfo(
-    result.career_break,
-    result.career_break_reason,
-    result.career_break_start_month,
-    result.career_break_start_year,
-    result.career_break_end_month,
-    result.career_break_end_year,
-    result.currently_on_career_break
-  );
-  // console.log(careerBreakData);
 
   return {
-    usa_visa_type: result.usa_visa_type || "",
-    gender: result.gender || "",
-    maritalStatus: result.marital_status || "",
-    partner_name: result.partner_name || "",
-    moreinfo: getMoreInfo(result.more_info),
-    dob: getFormattedDOB(result.dob),
-    category: result.category || "",
-    differentlyAbled: result.differently_abled || "No",
-    disabilityType: result.disability_type || "",
-    disabilityDescription: result.disability_description || "",
-    workplaceAssistance: result.workplace_assistance || "",
-    workPermit: result.work_permit_other_countries || "",
-    address: `${result.hometown || ""}, ${result.permanent_address || ""}, ${
-      result.pincode || ""
-    }`
-      .replace(/^, |, ,/g, "")
-      .trim(),
-    languages: formatLanguages(result.languages),
+    usa_visa_type: usa_visa_type || "",
+    gender: gender || "",
+    maritalStatus: marital_status || "",
+    partner_name: partner_name || "",
+    moreinfo,
+    dob: formattedDOB,
+    category: category || "",
+    differentlyAbled: differently_abled || "No",
+    disabilityType: disability_type || "",
+    disabilityDescription: disability_description || "",
+    workplaceAssistance: workplace_assistance || "",
+    workPermit: work_permit_other_countries || "",
+    address: addrParts,
+    languages: formattedLanguages,
     ...careerBreakData,
   };
 };

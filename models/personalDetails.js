@@ -7,6 +7,7 @@ const personalSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // Assumes you have a User model
       required: true,
+      index: true,
     },
 
     gender: {
@@ -35,7 +36,7 @@ const personalSchema = new mongoose.Schema(
       type: String,
     },
     additionalInformation: {
-      type: [String]
+      type: [String],
     },
     maritialStatus: {
       type: String,
@@ -141,10 +142,12 @@ const personalSchema = new mongoose.Schema(
         type: String,
       },
     ], */
-    skills: [{
-      type: mongoose.Types.ObjectId,
-      ref: "list_key_skill" // Assuming you have a model for key skills
-    }],
+    skills: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "list_key_skill", // Assuming you have a model for key skills
+      },
+    ],
     have_usa_visa: {
       type: Boolean,
       default: false,
