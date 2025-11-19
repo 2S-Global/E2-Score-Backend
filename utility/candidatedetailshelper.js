@@ -149,8 +149,20 @@ export const getEmploymentDetails = async (candidateId) => {
       user: candidateId,
       isDel: false,
     })
-      .sort({ createdAt: -1 })
+      .sort({ "joiningDate.year": -1, "joiningDate.month": -1 })
+
       .lean();
+
+    /* sort by joiningDate: {
+      year: {
+        type: Number,
+        default: 0,
+      },
+      month: {
+        type: Number,
+        default: 0,
+      }
+    }, */
 
     if (!employmentData.length) return [];
 
