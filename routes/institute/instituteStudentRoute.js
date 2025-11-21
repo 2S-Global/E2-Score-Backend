@@ -7,6 +7,7 @@ import {
   GetverifiedStudents,
   GetstudentDetails,
   UpdatestudentStatus,
+  GetallStudents,
 } from "../../controllers/institute/instituteStudentController.js";
 
 // Middleware
@@ -31,6 +32,13 @@ InstituteStudentRouter.get(
   userAuth,
   Institutemid,
   GetverifiedStudents
+);
+
+InstituteStudentRouter.get(
+  "/get_all_students",
+  userAuth,
+  Institutemid,
+  GetallStudents
 );
 
 InstituteStudentRouter.get(
