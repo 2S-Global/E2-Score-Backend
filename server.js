@@ -58,7 +58,7 @@ import candidateBookmarkRouter from "./routes/admin/candidateBookmarkRoute.js";
 //company Routes
 import CompanyProfileRouter from "./routes/company/CompanyProfileRoute.js";
 import jobPostingDataRouter from "./routes/company/JobPostingDataRoute.js";
-
+import CompanyKycRoute from "./routes/company/companykycRoute.js";
 //Institute Routes
 import InstituteProfileRouter from "./routes/institute/InstituteProfileRoute.js";
 import InstituteStudentRouter from "./routes/institute/instituteStudentRoute.js";
@@ -126,6 +126,7 @@ app.use("/api/useradmin", userAdminRouter);
 //company routes
 app.use("/api/companyprofile", CompanyProfileRouter);
 app.use("/api/jobposting", jobPostingDataRouter);
+app.use("/api/companykyc", CompanyKycRoute);
 
 //Bookmark routes for Admin
 app.use("/api/candidatebookmark", candidateBookmarkRouter);

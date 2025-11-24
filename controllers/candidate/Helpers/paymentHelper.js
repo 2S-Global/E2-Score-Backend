@@ -4,6 +4,7 @@ import KycOrder from "../../../models/KycorderModel.js";
 import axios from "axios";
 
 import CandidateKYC from "../../../models/CandidateKYCModel.js";
+import CompanyKYC from "../../../models/CompanyKYCModel.js";
 import Razorpay from "razorpay";
 
 import {
@@ -12,6 +13,8 @@ import {
   verifyPassportWithZoop,
   verifyDLWithZoop,
   verifyAadhaarWithZoop,
+  verifygstinWithZoop,
+  verifycinWithZoop,
 } from "./verifydoc.js";
 
 const razorpay = new Razorpay({
@@ -105,6 +108,35 @@ export const RunVerificationProcess = async (orderId, userId) => {
     case "aadhar":
       return await verifyAadhaarWithZoop(kyc, Aadhar_URL, aadharKey);
 
+    default:
+      return { success: false, message: "Unknown document type" };
+  }
+};
+
+export const RunVerificationProcesscompany = async (orderId, userId) => {
+  const Zoop_URL = process.env.ZOOP_BASE_URL;
+  const zoopApiKey = process.env.ZOOP_APP_KEY;
+  const zoopAppId = process.env.ZOOP_APP_ID;
+
+  const order = await KycOrder.findOne({ razorpay_order_id: orderId, userId });
+  if (!order) {
+    return { success: false, message: "Order not found" };
+  }
+
+  const kyc = await CompanyKYC.findOne({ userId });
+  if (!kyc) {
+    return { success: false, message: "KYC not found" };
+  }
+
+  switch (order.documentType) {
+    case "pan":
+      return await verifyPanWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
+
+    case "gstin":
+      return await verifygstinWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
+
+    case "cin":
+      return await verifycinWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
     default:
       return { success: false, message: "Unknown document type" };
   }

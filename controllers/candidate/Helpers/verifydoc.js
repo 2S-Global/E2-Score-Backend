@@ -383,3 +383,146 @@ export const verifyAadhaarWithZoop = async (kyc, Aadhar_URL, aadharKey) => {
     };
   }
 };
+
+/**
+ * gstin Verification with Zoop
+ */
+export const verifygstinWithZoop = async (
+  kyc,
+  Zoop_URL,
+  zoopAppId,
+  zoopApiKey
+) => {
+  if (!kyc.gstin_number || !kyc.gstin_name) {
+    return { success: false, message: "GSTIN number or name is missing" };
+  }
+
+  const gstinData = {
+    mode: "sync",
+    data: {
+      business_gstin_number: kyc.gstin_number,
+      consent: "Y",
+      consent_text:
+        "I hereby declare my consent agreement for fetching my information via ZOOP API",
+    },
+    task_id: process.env.GSTIN_TASK_ID,
+  };
+
+  try {
+    const response = await axios.post(
+      `${Zoop_URL}/api/v1/in/merchant/gstin/lite`,
+      gstinData,
+      {
+        headers: {
+          "app-id": zoopAppId,
+          "api-key": zoopApiKey,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    kyc.gstin_response = response.data;
+
+    // Verify PAN name
+    if (
+      response.data?.result?.legal_name?.trim().toLowerCase() ===
+      kyc.gstin_name?.trim().toLowerCase()
+    ) {
+      kyc.gstin_verified = true;
+    } else {
+      kyc.gstin_verified = false;
+    }
+
+    await kyc.save();
+
+    return {
+      success: kyc.gstin_verified,
+      message: kyc.gstin_verified
+        ? " GSTIN verification successful. Provided name matches official records."
+        : " GSTIN verification failed. Provided name does not match official records.",
+      response: response.data,
+    };
+  } catch (error) {
+    kyc.gstin_response = error.response?.data || { error: error.message };
+    kyc.gstin_verified = false;
+    await kyc.save();
+
+    return {
+      success: false,
+      message:
+        "⚠️ GSTIN verification request failed due to a technical error. Please try again later.",
+      error: error.response?.data || error.message,
+    };
+  }
+};
+
+/**
+ * cin Verification with Zoop
+ */
+export const verifycinWithZoop = async (
+  kyc,
+  Zoop_URL,
+  zoopAppId,
+  zoopApiKey
+) => {
+  if (!kyc.cin_number || !kyc.cin_name) {
+    return { success: false, message: "CIN number or name is missing" };
+  }
+
+  const cinData = {
+    mode: "sync",
+    data: {
+      cin_number: kyc.cin_number,
+      consent: "Y",
+      consent_text:
+        "I hereby declare my consent agreement for fetching my information via ZOOP API",
+    },
+    task_id: process.env.CIN_TASK_ID,
+  };
+
+  try {
+    const response = await axios.post(
+      `${Zoop_URL}/api/v1/in/merchant/cin/advance`,
+      cinData,
+      {
+        headers: {
+          "app-id": zoopAppId,
+          "api-key": zoopApiKey,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    kyc.cin_response = response.data;
+
+    const fetchedName =
+      response?.data?.result?.company_info?.company_name ?? "";
+    const inputName = kyc.cin_name ?? "";
+
+    const nameMatches =
+      fetchedName.trim().toLowerCase() === inputName.trim().toLowerCase();
+
+    kyc.cin_verified = nameMatches;
+
+    await kyc.save();
+
+    return {
+      success: kyc.cin_verified,
+      message: kyc.cin_verified
+        ? " CIN verification successful. Provided name matches official records."
+        : " CIN verification failed. Provided name does not match official records.",
+      response: response.data,
+    };
+  } catch (error) {
+    kyc.cin_response = error.response?.data || { error: error.message };
+    kyc.cin_verified = false;
+    await kyc.save();
+
+    return {
+      success: false,
+      message:
+        "⚠️ CIN verification request failed due to a technical error. Please try again later.",
+      error: error.response?.data || error.message,
+    };
+  }
+};
