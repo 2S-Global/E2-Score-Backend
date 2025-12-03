@@ -22,6 +22,7 @@ app.use(express.json());
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 
 // Import routes
+import contactRouter from "./routes/contactRoutes.js";
 import AuthRouter from "./routes/AuthRoutes.js";
 import userSkillsRoutes from "./routes/userSkillsRoutes.js";
 import userProjectsRoutes from "./routes/userProjectsRoutes.js";
@@ -87,6 +88,7 @@ app.use("/api/education", userEducationRoutes);
 app.use("/api/verify", userVerificationRoutes);
 app.use("/api/usercart", userVerificationCartRoutes);
 app.use("/api/pdf", pdfRouter);
+app.use("/api/contacts", contactRouter);
 
 //dropdown routes
 // app.use("/api/sql/dropdown", DropdownRouterouter);
