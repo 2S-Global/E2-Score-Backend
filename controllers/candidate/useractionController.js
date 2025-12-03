@@ -19,7 +19,7 @@ import list_education_boards from "../../models/monogo_query/educationBoardModel
 import list_university_colleges from "../../models/monogo_query/universityCollegesModel.js";
 import list_university_course from "../../models/monogo_query/universityCourseModel.js";
 import list_school_list from "../../models/monogo_query/schoolListModel.js";
-
+import nodemailer from "nodemailer";
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -91,6 +91,58 @@ export const addProfilePicture = async (req, res) => {
       { profilePicture: profilePictureUrl },
       { new: true }
     );
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Your Profile Picture Has Been Updated",
+      html: `
+  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+    
+    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+      <h2 style="color:#fff; margin:0; font-size:20px;">Profile Picture Update Notification</h2>
+    </div>
+
+    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+      <p>Dear <strong>${user.name}</strong>,</p>
+
+      <p>We are writing to inform you that your <strong>profile picture</strong> has been successfully updated on your GEISIL account.</p>
+
+      <p>If you did not make this change or believe this action is unauthorized, please contact our support team immediately.</p>
+
+      <p>You can visit your dashboard anytime by clicking the link below:</p>
+
+      <p>
+        <a href="${process.env.ORIGIN}" 
+           style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+          Visit Dashboard
+        </a>
+      </p>
+
+      <p>If the button above does not work, copy and paste the following URL into your browser:</p>
+      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+
+      <br />
+
+      <p>Sincerely,<br />
+      <strong>Geisil Admin Team</strong><br />
+      Global Employability Information Services India Limited</p>
+
+    </div>
+  </div>
+  `,
+    };
+
+    await transporter.sendMail(mailOptions);
 
     res.status(200).json({
       message: "Profile picture updated successfully",
@@ -123,12 +175,70 @@ export const addResumeHeadline = async (req, res) => {
       return res.status(400).json({ message: "ResumeHeadline are required." });
     }
 
+    const userdtl = await User.findById(user);
+    if (!userdtl) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     // Update the user's profile with the new picture URL
     const updated = await PersonalDetails.findOneAndUpdate(
       { user: user },
       { resumeHeadline: resumeHeadline },
       { new: true, upsert: true }
     );
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Your Resume Headline Has Been Updated",
+      html: `
+  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+    
+    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+      <h2 style="color:#fff; margin:0; font-size:20px;">Resume Headline Update Notification</h2>
+    </div>
+
+    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+      <p>Dear <strong>${userdtl.name}</strong>,</p>
+
+      <p>We are writing to inform you that your <strong>Resume Headline</strong> has been successfully updated on your GEISIL account.</p>
+
+      <p>If you did not make this change or believe this action is unauthorized, please contact our support team immediately.</p>
+
+      <p>You can visit your dashboard anytime by clicking the link below:</p>
+
+      <p>
+        <a href="${process.env.ORIGIN}" 
+           style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+          Visit Dashboard
+        </a>
+      </p>
+
+      <p>If the button above does not work, copy and paste the following URL into your browser:</p>
+      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+
+      <br />
+
+      <p>Sincerely,<br />
+      <strong>Geisil Admin Team</strong><br />
+      Global Employability Information Services India Limited</p>
+
+    </div>
+  </div>
+  `,
+    };
+
+    await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -203,11 +313,17 @@ export const deleteProfileSummary = async (req, res) => {
 export const updateUserDetails = async (req, res) => {
   try {
     const user_id = req.userId;
-    const user = await User.findById(user_id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
 
+    // Fetch old user data
+    const oldUser = await User.findById(user_id).lean();
+    if (!oldUser) return res.status(404).json({ message: "User not found" });
+
+    // Fetch old candidate details
+    const oldDetails = await CandidateDetails.findOne({
+      userId: user_id,
+    }).lean();
+
+    // Request body
     const {
       full_name,
       gender,
@@ -223,47 +339,158 @@ export const updateUserDetails = async (req, res) => {
       experience_months,
     } = req.body;
 
-    console.log("Here I am getting country: ", country);
-
-    const updatedUser = await User.findByIdAndUpdate(user_id, {
+    // Prepare new data
+    const newUserData = {
       name: full_name,
-      gender: gender || "",
+      gender: gender,
+    };
+
+    const newDetailsData = {
+      dob,
+      country_id: country,
+      currentLocation,
+      hometown,
+      fatherName: father_name,
+      motherName: mother_name,
+      currentSalary: { currency, salary },
+      totalExperience: { year: experience_years, month: experience_months },
+    };
+
+    // Field labels for email
+    const labels = {
+      name: "Full Name",
+      gender: "Gender",
+      dob: "Date of Birth",
+      country_id: "Country",
+      currentLocation: "Current Location",
+      hometown: "Hometown",
+      fatherName: "Father’s Name",
+      motherName: "Mother’s Name",
+      currentSalary: "Current Salary",
+      totalExperience: "Total Experience",
+    };
+
+    // ---------- CHANGE DETECTION FUNCTION ----------
+    const getChanged = (oldData, newData) => {
+      const changes = [];
+      for (let key in newData) {
+        if (newData[key] == null) continue;
+
+        const oldVal = oldData?.[key];
+        const newVal = newData[key];
+
+        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+          changes.push({
+            field: labels[key] || key,
+            oldValue: oldVal ?? "-",
+            newValue: newVal ?? "-",
+          });
+        }
+      }
+      return changes;
+    };
+
+    // Detect changes
+    const userChanges = getChanged(oldUser, newUserData);
+    const detailChanges = getChanged(oldDetails || {}, newDetailsData);
+    const allChanges = [...userChanges, ...detailChanges];
+
+    // Update user
+    await User.findByIdAndUpdate(user_id, {
+      ...newUserData,
       updatedAt: new Date(),
     });
 
-    const personalDetails = await CandidateDetails.findOneAndUpdate(
+    // Update details
+    await CandidateDetails.findOneAndUpdate(
       { userId: user_id },
-      {
-        dob: dob,
-        country_id: country,
-        currentLocation: currentLocation,
-        hometown: hometown,
-        fatherName: father_name,
-        motherName: mother_name,
-        currentSalary: {
-          currency: currency,
-          salary: salary,
-        },
-        totalExperience: {
-          year: experience_years,
-          month: experience_months,
-        },
-        updatedAt: new Date(),
-      },
-      {
-        new: true,
-        upsert: true,
-      }
+      { ...newDetailsData, updatedAt: new Date() },
+      { new: true, upsert: true }
     );
 
-    res.status(201).json({
+    // ---------- SEND EMAIL IF CHANGES EXIST ----------
+    if (allChanges.length > 0) {
+      /*  const changeListHTML = allChanges
+        .map(
+          (c) =>
+            `<li><strong>${c.field}</strong>: <span style="color:#d9534f">${c.oldValue}</span> → <span style="color:#5cb85c">${c.newValue}</span></li>`
+        )
+        .join(""); */
+      const changeListHTML = allChanges
+        .map((c) => `<li><strong>${c.field}</strong>`)
+        .join("");
+
+      const htmlEmail = `
+    <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+    
+    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+      <h2 style="color:#fff; margin:0; font-size:20px;">Profile Update Notification</h2>
+    </div>
+
+    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+      <p>Dear <strong>${oldUser.name}</strong>,</p>
+          
+          <p>The following information in your profile was updated:</p>
+          
+          <ul>
+            ${changeListHTML}
+          </ul>
+          <p>If you did not make this change or believe this action is unauthorized, please contact our support team immediately.</p>
+
+      <p>You can visit your dashboard anytime by clicking the link below:</p>
+
+      <p>
+        <a href="${process.env.ORIGIN}" 
+           style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+          Visit Dashboard
+        </a>
+      </p>
+
+      <p>If the button above does not work, copy and paste the following URL into your browser:</p>
+      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+
+      <br />
+
+      <p>Sincerely,<br />
+      <strong>Geisil Admin Team</strong><br />
+      Global Employability Information Services India Limited</p>
+
+    </div>
+  </div>
+      `;
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+        to: oldUser.email,
+        subject: "Profile Update Notification",
+        html: htmlEmail,
+      };
+
+      await transporter.sendMail(mailOptions);
+    }
+
+    // ---------- RESPONSE ----------
+    res.status(200).json({
       success: true,
-      message: "User Details Saved successfully!",
+      message: "User details updated",
+      changedFields: allChanges,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error saving resumeHeadline", error: error.message });
+    console.error("Error updating user details:", error);
+    res.status(500).json({
+      message: "Error updating user details",
+      error: error.message,
+    });
   }
 };
 
@@ -288,6 +515,10 @@ export const addProfileSummary = async (req, res) => {
     if (!user || !profileSummary) {
       return res.status(400).json({ message: "Profile Summary is required." });
     }
+    const userdtl = await User.findById(user);
+    if (!userdtl) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     // Update the user's profile with the new picture URL
     const updated = await PersonalDetails.findOneAndUpdate(
@@ -295,6 +526,59 @@ export const addProfileSummary = async (req, res) => {
       { profileSummary: profileSummary },
       { new: true, upsert: true }
     );
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Your Profile Summary Has Been Updated",
+      html: `
+  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+    
+    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+      <h2 style="color:#fff; margin:0; font-size:20px;">Profile Summary Update Notification</h2>
+    </div>
+
+    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+      <p>Dear <strong>${userdtl.name}</strong>,</p>
+
+      <p>We are writing to inform you that your <strong>Profile Summary</strong> has been successfully updated on your GEISIL account.</p>
+
+      <p>If you did not make this change or believe this action is unauthorized, please contact our support team immediately.</p>
+
+      <p>You can visit your dashboard anytime by clicking the link below:</p>
+
+      <p>
+        <a href="${process.env.ORIGIN}" 
+           style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+          Visit Dashboard
+        </a>
+      </p>
+
+      <p>If the button above does not work, copy and paste the following URL into your browser:</p>
+      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+
+      <br />
+
+      <p>Sincerely,<br />
+      <strong>Geisil Admin Team</strong><br />
+      Global Employability Information Services India Limited</p>
+
+    </div>
+  </div>
+  `,
+    };
+
+    await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -394,6 +678,10 @@ export const addKeySkills = async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: "User ID is missing." });
     }
+    const userdtl = await User.findById(user);
+    if (!userdtl) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     if (!Array.isArray(skills) || skills.length === 0) {
       return res.status(400).json({
@@ -454,6 +742,58 @@ export const addKeySkills = async (req, res) => {
       { skills: skillObjectIds },
       { upsert: true, new: true }
     );
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Your Key Skills Has Been Updated",
+      html: `
+  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+    
+    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+      <h2 style="color:#fff; margin:0; font-size:20px;">Key Skills Update Notification</h2>
+    </div>
+
+    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+      <p>Dear <strong>${userdtl.name}</strong>,</p>
+
+      <p>We are writing to inform you that your <strong>Key Skills</strong> has been successfully updated on your GEISIL account.</p>
+
+      <p>If you did not make this change or believe this action is unauthorized, please contact our support team immediately.</p>
+
+      <p>You can visit your dashboard anytime by clicking the link below:</p>
+
+      <p>
+        <a href="${process.env.ORIGIN}" 
+           style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+          Visit Dashboard
+        </a>
+      </p>
+
+      <p>If the button above does not work, copy and paste the following URL into your browser:</p>
+      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+
+      <br />
+
+      <p>Sincerely,<br />
+      <strong>Geisil Admin Team</strong><br />
+      Global Employability Information Services India Limited</p>
+
+    </div>
+  </div>
+  `,
+    };
+
+    await transporter.sendMail(mailOptions);
 
     return res.status(201).json({
       success: true,
@@ -623,6 +963,8 @@ export const submitUserEducation = async (req, res) => {
     let transcriptUrl = null;
     let certificateUrl = null;
 
+    const userdtl = await User.findById(user);
+
     // Upload transcript file if available
     if (transcript) {
       transcriptUrl = await uploadFileToExternalServer(transcript);
@@ -718,9 +1060,64 @@ export const submitUserEducation = async (req, res) => {
       const newRecord = new UserEducation(educationData);
       savedRecord = await newRecord.save();
     }
+
+    const htmlEmail = `
+  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+    
+    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+      <h2 style="color:#fff; margin:0; font-size:20px;"> Academic Update Notification</h2>
+    </div>
+
+    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+      <p>Dear <strong>${userdtl.name}</strong>,</p>
+          
+      <p>New Academic details have been <strong>added</strong> to your profile.</p>
+          
+      <p>If you did not make this change, please contact support immediately.</p>
+
+      <p>You can access your dashboard using the link below:</p>
+
+      <p>
+        <a href="${process.env.ORIGIN}" 
+          style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+          Visit Dashboard
+        </a>
+      </p>
+
+      <p>If the button does not work, use this link:</p>
+      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+
+      <br />
+
+      <p>Sincerely,<br />
+      <strong>Geisil Admin Team</strong></p>
+    </div>
+  </div>
+  `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+
+    await transporter.sendMail(mailOptions);
+
     res.status(201).json({
-      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-        } successfully`,
+      message: `Education ${
+        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+      } successfully`,
       data: savedRecord,
     });
   } catch (error) {
@@ -766,6 +1163,8 @@ export const updateUserEducation = async (req, res) => {
     if (!edit_id) {
       return res.status(400).json({ message: "Education id is required." });
     }
+
+    const userdtl = await User.findById(user);
     const existingRecord = await UserEducation.findOne({
       _id: edit_id,
       userId: user,
@@ -905,9 +1304,62 @@ export const updateUserEducation = async (req, res) => {
       );
     }
 
+    const htmlEmail = `
+  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+    
+    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+      <h2 style="color:#fff; margin:0; font-size:20px;"> Academic Update Notification</h2>
+    </div>
+
+    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+      <p>Dear <strong>${userdtl.name}</strong>,</p>
+          
+      <p>Your Academic details have been <strong>updated</strong> on your profile.</p>
+          
+      <p>If you did not make this change, please contact support immediately.</p>
+
+      <p>You can access your dashboard using the link below:</p>
+
+      <p>
+        <a href="${process.env.ORIGIN}" 
+          style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+          Visit Dashboard
+        </a>
+      </p>
+
+      <p>If the button does not work, use this link:</p>
+      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+
+      <br />
+
+      <p>Sincerely,<br />
+      <strong>Geisil Admin Team</strong></p>
+    </div>
+  </div>
+  `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(201).json({
-      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-        } successfully`,
+      message: `Education ${
+        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+      } successfully`,
       data: savedRecord,
     });
   } catch (error) {
@@ -940,6 +1392,8 @@ export const deleteUserEducation = async (req, res) => {
       });
     }
 
+    const userdtl = await User.findById(userId);
+
     const educationRecord = await UserEducation.findOne({
       _id: educationId,
       userId: userId,
@@ -955,6 +1409,58 @@ export const deleteUserEducation = async (req, res) => {
     // Soft delete: mark as deleted
     educationRecord.isDel = true;
     await educationRecord.save();
+
+    const htmlEmail = `
+  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+    
+    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+      <h2 style="color:#fff; margin:0; font-size:20px;"> Academic Update Notification</h2>
+    </div>
+
+    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+      <p>Dear <strong>${userdtl.name}</strong>,</p>
+          
+      <p>One of your Academic details have been <strong>Deleted</strong> on your profile.</p>
+          
+      <p>If you did not make this change, please contact support immediately.</p>
+
+      <p>You can access your dashboard using the link below:</p>
+
+      <p>
+        <a href="${process.env.ORIGIN}" 
+          style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+          Visit Dashboard
+        </a>
+      </p>
+
+      <p>If the button does not work, use this link:</p>
+      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+
+      <br />
+
+      <p>Sincerely,<br />
+      <strong>Geisil Admin Team</strong></p>
+    </div>
+  </div>
+  `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
 
     return res.status(200).json({
       message: "Education record deleted successfully.",
@@ -1112,27 +1618,27 @@ export const getCareerProfileBySql = async (req, res) => {
       await Promise.all([
         CurrentIndustry
           ? db_sql.execute("SELECT job_industry FROM industries WHERE id = ?", [
-            CurrentIndustry,
-          ])
+              CurrentIndustry,
+            ])
           : Promise.resolve([[]]),
         CurrentDepartment
           ? db_sql.execute(
-            "SELECT job_department FROM departments WHERE id = ?",
-            [CurrentDepartment]
-          )
+              "SELECT job_department FROM departments WHERE id = ?",
+              [CurrentDepartment]
+            )
           : Promise.resolve([[]]),
         JobRole
           ? db_sql.execute("SELECT job_role FROM job_roles WHERE id = ?", [
-            JobRole,
-          ])
+              JobRole,
+            ])
           : Promise.resolve([[]]),
         locationIds.length > 0
           ? db_sql.execute(
-            `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
-              .map(() => "?")
-              .join(", ")})`,
-            locationIds
-          )
+              `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
+                .map(() => "?")
+                .join(", ")})`,
+              locationIds
+            )
           : Promise.resolve([[]]),
       ]);
 
@@ -1215,24 +1721,24 @@ export const getCareerProfile = async (req, res) => {
       await Promise.all([
         CurrentIndustry
           ? list_industries
-            .findOne({ id: CurrentIndustry })
-            .select("job_industry")
-            .lean()
+              .findOne({ id: CurrentIndustry })
+              .select("job_industry")
+              .lean()
           : null,
         CurrentDepartment
           ? list_department
-            .findOne({ id: CurrentDepartment })
-            .select("job_department")
-            .lean()
+              .findOne({ id: CurrentDepartment })
+              .select("job_department")
+              .lean()
           : null,
         JobRole
           ? list_job_role.findById(JobRole).select("job_role").lean()
           : null,
         locationIds.length > 0
           ? list_india_cities
-            .find({ _id: { $in: locationIds } })
-            .select("city_name")
-            .lean()
+              .find({ _id: { $in: locationIds } })
+              .select("city_name")
+              .lean()
           : [],
       ]);
 

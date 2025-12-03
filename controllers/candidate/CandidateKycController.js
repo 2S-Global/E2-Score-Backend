@@ -16,6 +16,7 @@ import {
   resetVerificationFlags,
   updateKYCFields,
   validateKYCData,
+  Sendemail,
 } from "./Helpers/kycHelpers.js";
 
 import {
@@ -59,6 +60,8 @@ export const addOrUpdateKYC = async (req, res) => {
   let existingKYC = await CandidateKYC.findOne({ userId });
 
   if (existingKYC) {
+    await Sendemail(userExists, existingKYC, newData);
+
     // Reset verification flags if any critical field changed
     resetVerificationFlags(existingKYC, newData);
 
@@ -66,6 +69,7 @@ export const addOrUpdateKYC = async (req, res) => {
     updateKYCFields(existingKYC, newData);
 
     await existingKYC.save();
+
     return res.status(200).json({
       message: "KYC updated successfully",
       /*  kyc: existingKYC, */
@@ -76,6 +80,9 @@ export const addOrUpdateKYC = async (req, res) => {
   // Create new KYC
   const newKYC = new CandidateKYC({ userId, ...newData });
   await newKYC.save();
+
+  await Sendemail(userExists, existingKYC, newData);
+
   return res
     .status(201)
     .json({ message: "KYC created successfully", kyc: newKYC, success: true });

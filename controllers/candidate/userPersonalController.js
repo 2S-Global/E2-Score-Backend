@@ -1,6 +1,8 @@
 import User from "../../models/userModel.js";
 import personalDetails from "../../models/personalDetails.js";
 import candidateDetails from "../../models/CandidateDetailsModel.js";
+
+import nodemailer from "nodemailer";
 export const test = async (req, res) => {
   try {
     res.status(200).json({ message: "Test route is working!" });
@@ -45,6 +47,15 @@ export const submitPersonalDetails = async (req, res) => {
   try {
     const data = req.body;
     const userId = req.userId;
+
+    let changeListHTML = "";
+
+    const user = await User.findById(userId);
+
+    if (user.gender !== data.gender) {
+      changeListHTML += `<li>Gender</li>`;
+    }
+
     if (data.gender !== undefined) {
       await User.findByIdAndUpdate(userId, { gender: data.gender });
     }
@@ -60,7 +71,8 @@ export const submitPersonalDetails = async (req, res) => {
           if (!(lp.read || lp.write || lp.speak)) {
             return res.status(400).json({
               success: false,
-              message: "You have to select atleast one option - read, write or speak",
+              message:
+                "You have to select atleast one option - read, write or speak",
             });
           }
         }
@@ -79,6 +91,15 @@ export const submitPersonalDetails = async (req, res) => {
     if (data.hometown !== undefined) {
       candidateUpdate.hometown = data.hometown;
     }
+    const candidate = await candidateDetails.findOne({ userId: userId });
+    if (candidate && candidate.hometown !== data.hometown) {
+      changeListHTML += `<li>Hometown</li>`;
+    }
+
+    if (new Date(candidate.dob).getTime() !== new Date(data.dob).getTime()) {
+      changeListHTML += `<li>Date of Birth</li>`;
+    }
+
     await candidateDetails.findOneAndUpdate(
       { userId: userId },
       { $set: candidateUpdate },
@@ -117,11 +138,212 @@ export const submitPersonalDetails = async (req, res) => {
       have_usa_visa: data.have_usa_visa || false,
     };
 
+    const existingPersonal = await personalDetails.findOne({ user: userId });
+
+    if (existingPersonal) {
+      if (existingPersonal.category !== personalPayload.category) {
+        changeListHTML += `<li>Category</li>`;
+      }
+
+      if (existingPersonal.careerBreak !== personalPayload.careerBreak) {
+        changeListHTML += `<li>Career Break</li>`;
+      }
+      if (
+        existingPersonal.currentlyOnCareerBreak !==
+        personalPayload.currentlyOnCareerBreak
+      ) {
+        changeListHTML += `<li>Career Break Status</li>`;
+      }
+      if (existingPersonal.startMonth !== personalPayload.startMonth) {
+        changeListHTML += `<li>Career Break Start Month</li>`;
+      }
+      if (existingPersonal.startYear !== personalPayload.startYear) {
+        changeListHTML += `<li>Career Break Start Year</li>`;
+      }
+      if (existingPersonal.endMonth !== personalPayload.endMonth) {
+        changeListHTML += `<li>Career Break End Month</li>`;
+      }
+      if (existingPersonal.endYear !== personalPayload.endYear) {
+        changeListHTML += `<li>Career Break End Year</li>`;
+      }
+      if (existingPersonal.reason !== personalPayload.reason) {
+        changeListHTML += `<li>Career Break Reason</li>`;
+      }
+      if (
+        existingPersonal.differentlyAble !== personalPayload.differentlyAble
+      ) {
+        changeListHTML += `<li>Differently Able</li>`;
+      }
+      if (
+        existingPersonal.disability_type !== personalPayload.disability_type
+      ) {
+        changeListHTML += `<li>Disability Type</li>`;
+      }
+      if (
+        existingPersonal.other_disability_type !==
+        personalPayload.other_disability_type
+      ) {
+        changeListHTML += `<li>Disability Description</li>`;
+      }
+      if (
+        existingPersonal.workplace_assistance !==
+        personalPayload.workplace_assistance
+      ) {
+        changeListHTML += `<li>Workplace Assistance</li>`;
+      }
+      if (existingPersonal.usaPermit !== personalPayload.usaPermit) {
+        changeListHTML += `<li>USA Visa Type</li>`;
+      }
+      const normalize = (v) =>
+        Array.isArray(v) ? v.sort().join(",") : String(v || "");
+
+      if (
+        normalize(existingPersonal.workPermitOther) !==
+        normalize(personalPayload.workPermitOther)
+      ) {
+        changeListHTML += `<li>Work Permit Other Countries</li>`;
+      }
+
+      if (
+        existingPersonal.permanentAddress !== personalPayload.permanentAddress
+      ) {
+        changeListHTML += `<li>Permanent Address</li>`;
+      }
+      if (existingPersonal.pincode !== personalPayload.pincode) {
+        changeListHTML += `<li>Pincode</li>`;
+      }
+      // --- Normalize languages ---
+      const normalizeLanguages = (list) => {
+        if (!Array.isArray(list)) return [];
+
+        return list.map((l) => ({
+          language:
+            typeof l.language === "string"
+              ? l.language
+              : String(l.language || ""),
+          proficiency:
+            typeof l.proficiency === "string"
+              ? l.proficiency
+              : String(l.proficiency || ""),
+          read: !!l.read,
+          write: !!l.write,
+          speak: !!l.speak,
+        }));
+      };
+
+      // --- Sort alphabetically by language for stable comparison ---
+      const sortLanguages = (list) =>
+        [...list].sort((a, b) => a.language.localeCompare(b.language));
+
+      // --- Apply normalization ---
+      const existingLanguages = sortLanguages(
+        normalizeLanguages(existingPersonal.languageProficiency)
+      );
+
+      const newLanguages = sortLanguages(
+        normalizeLanguages(personalPayload.languageProficiency)
+      );
+
+      // --- Deep comparison ---
+      const languagesChanged =
+        existingLanguages.length !== newLanguages.length ||
+        existingLanguages.some((ex, i) => {
+          const nw = newLanguages[i];
+          return (
+            ex.language !== nw.language ||
+            ex.proficiency !== nw.proficiency ||
+            ex.read !== nw.read ||
+            ex.write !== nw.write ||
+            ex.speak !== nw.speak
+          );
+        });
+
+      // --- Add to change log ---
+      if (languagesChanged) {
+        changeListHTML += `<li>Language Proficiency</li>`;
+      }
+
+      if (existingPersonal.maritialStatus !== personalPayload.maritialStatus) {
+        changeListHTML += `<li>Marital Status</li>`;
+      }
+      if (existingPersonal.partnerName !== personalPayload.partnerName) {
+        changeListHTML += `<li>Partner Name</li>`;
+      }
+      if (
+        JSON.stringify(existingPersonal.additionalInformation.sort()) !==
+        JSON.stringify(personalPayload.additionalInformation.sort())
+      ) {
+        changeListHTML += `<li>Additional Information</li>`;
+      }
+      if (existingPersonal.have_usa_visa !== personalPayload.have_usa_visa) {
+        changeListHTML += `<li>USA Visa Status</li>`;
+      }
+    }
+
     await personalDetails.findOneAndUpdate(
       { user: userId },
       { $set: personalPayload },
       { upsert: true, new: true }
     );
+
+    const htmlEmail = `
+  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+    
+    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+      <h2 style="color:#fff; margin:0; font-size:20px;">Personal Details Update Notification</h2>
+    </div>
+
+    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+      <p>Dear <strong>${user.name}</strong>,</p>
+          
+      <p>The following information in your <strong>Personal Details</strong> was updated:</p>
+          
+      <ul>
+        ${changeListHTML}
+      </ul>
+
+      <p>If you did not make this change, please contact support immediately.</p>
+
+      <p>You can access your dashboard using the link below:</p>
+
+      <p>
+        <a href="${process.env.ORIGIN}" 
+          style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+          Visit Dashboard
+        </a>
+      </p>
+
+      <p>If the button does not work, use this link:</p>
+      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+
+      <br />
+
+      <p>Sincerely,<br />
+      <strong>Geisil Admin Team</strong></p>
+    </div>
+  </div>
+  `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+
+    if (changeListHTML !== "") {
+      await transporter.sendMail(mailOptions);
+    }
 
     res.status(200).json({
       message: "Personal details saved successfully",
@@ -182,7 +404,7 @@ export const getPersonalDetails = async (req, res) => {
       marital_status: personal?.maritialStatus || null,
       partner_name: personal?.partnerName || null,
       more_info: personal?.additionalInformation || [],
-      have_usa_visa: personal?.have_usa_visa || false
+      have_usa_visa: personal?.have_usa_visa || false,
     };
 
     res.status(200).json(result);

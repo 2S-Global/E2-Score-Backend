@@ -5,8 +5,9 @@ import UserPresentation from "../../models/PrensentationModel.js";
 import UserPatent from "../../models/PatentModel.js";
 import UserCertification from "../../models/CertificationModel.js";
 import db_sql from "../../config/sqldb.js";
+import User from "../../models/userModel.js";
 import list_social_profile from "../../models/monogo_query/socialProfileModel.js";
-
+import nodemailer from "nodemailer";
 /**
  * @description Add a new online profile for the authenticated user
  * @route POST /api/candidate/accomplishments/add_online_profile
@@ -30,6 +31,8 @@ export const addOnlineProfile = async (req, res) => {
       });
     }
 
+    const userdtl = await User.findById(userId);
+
     const newProfile = new OnlineProfile({
       userId,
       socialProfile,
@@ -38,6 +41,58 @@ export const addOnlineProfile = async (req, res) => {
     });
 
     await newProfile.save();
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Online Profile Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+           <p>New Online Profile details have been <strong>added</strong> to your profile.</p>
+                
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -137,9 +192,7 @@ export const getOnlineProfile = async (req, res) => {
 
     // Get unique socialProfile values
     const socialProfileIds = [
-      ...new Set(
-        profiles.map((p) => p.socialProfile).filter(Boolean)
-      ),
+      ...new Set(profiles.map((p) => p.socialProfile).filter(Boolean)),
     ];
 
     if (socialProfileIds.length === 0) {
@@ -150,11 +203,12 @@ export const getOnlineProfile = async (req, res) => {
     }
 
     // Fetch social profile names using Mongoose
-    const socialRows = await list_social_profile.find({
-      _id: { $in: socialProfileIds },
-      is_del: 0,
-      is_active: 1,
-    })
+    const socialRows = await list_social_profile
+      .find({
+        _id: { $in: socialProfileIds },
+        is_del: 0,
+        is_active: 1,
+      })
       .select("_id name")
       .lean();
 
@@ -228,6 +282,60 @@ export const editOnlineProfile = async (req, res) => {
 
     const updatedProfile = await profile.save();
 
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Online Profile Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+          <p>Your online profile details have been <strong>updated</strong> on your profile.</p>
+              
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Online profile updated successfully!",
@@ -280,6 +388,60 @@ export const deleteOnlineProfile = async (req, res) => {
     profile.updatedAt = new Date();
 
     await profile.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Online Profile Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+         <p>One of your online profile details have been <strong>Deleted</strong> on your profile.</p>
+          
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
 
     res.status(200).json({
       success: true,
