@@ -31,8 +31,6 @@ export const addOnlineProfile = async (req, res) => {
       });
     }
 
-    const userdtl = await User.findById(userId);
-
     const newProfile = new OnlineProfile({
       userId,
       socialProfile,
@@ -41,6 +39,7 @@ export const addOnlineProfile = async (req, res) => {
     });
 
     await newProfile.save();
+    const userdtl = await User.findById(userId);
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
@@ -401,7 +400,7 @@ export const deleteOnlineProfile = async (req, res) => {
         <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
           <p>Dear <strong>${userdtl.name}</strong>,</p>
               
-         <p>One of your online profile details have been <strong>Deleted</strong> on your profile.</p>
+         <p>One of your online profile details have been <strong>Deleted</strong> from your profile.</p>
           
           <p>If you did not make this change, please contact support immediately.</p>
     
@@ -520,6 +519,59 @@ export const addWorkSample = async (req, res) => {
 
     await newWorkSample.save();
 
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Work Profile Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+           <p>New Work Profile details have been <strong>added</strong> to your profile.</p>
+                
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
     res.status(200).json({
       message: "Work sample saved successfully",
       data: newWorkSample,
@@ -700,6 +752,61 @@ export const editWorkSample = async (req, res) => {
 
     const updatedWorkSample = await workSample.save();
 
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Work Profile Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+          <p>Your work profile details have been <strong>updated</strong> on your profile.</p>
+              
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Work sample updated successfully!",
@@ -754,6 +861,60 @@ export const deleteWorkSample = async (req, res) => {
 
     await workSample.save();
 
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Work Profile Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+         <p>One of your work profile details have been <strong>Deleted</strong> from your profile.</p>
+          
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Work sample deleted successfully!",
@@ -804,13 +965,67 @@ export const addResearchPublication = async (req, res) => {
       title: title.trim(),
       url: url.trim(),
       publishedOn: {
-        year: parseInt(publishYear),
-        month: parseInt(publishMonth),
+        year: publishYear ? parseInt(publishYear) : null,
+        month: publishMonth ? parseInt(publishMonth) : null,
       },
       description,
     });
 
     await newResearchModel.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> White Paper / Research Publication / Journal Entry Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+           <p>New White Paper / Research Publication / Journal Entry details have been <strong>added</strong> to your profile.</p>
+                
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
 
     res.status(200).json({
       message: "Research Publication saved successfully",
@@ -941,13 +1156,68 @@ export const updateResearchPublication = async (req, res) => {
     userResearch.title = title;
     userResearch.url = url;
     userResearch.publishedOn = {
-      year: parseInt(publishYear),
-      month: parseInt(publishMonth),
+      year: publishYear ? parseInt(publishYear) : null,
+      month: publishMonth ? parseInt(publishMonth) : null,
     };
     userResearch.description = description;
     userResearch.updatedAt = new Date();
 
     const updatedUserResearch = await userResearch.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;">White Paper / Research Publication / Journal Entry Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+          <p>Your White Paper / Research Publication / Journal Entry details have been <strong>updated</strong> on your profile.</p>
+              
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Research Publication updated successfully!",
@@ -1001,6 +1271,60 @@ export const deleteResearchPublication = async (req, res) => {
 
     await userResearch.save();
 
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> White Paper / Research Publication / Journal Entry Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+         <p>One of your White Paper / Research Publication / Journal Entry details have been <strong>Deleted</strong> from your profile.</p>
+          
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Research Publication deleted successfully!",
@@ -1041,6 +1365,61 @@ export const addpresentaion = async (req, res) => {
       description,
     });
     await newpresentation.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Presentation Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+           <p>New Presentation details have been <strong>added</strong> to your profile.</p>
+                
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(201).json({
       success: true,
       message: "New Presentation added successfully!",
@@ -1095,6 +1474,61 @@ export const updatepresentaion = async (req, res) => {
     userPresentation.url = url;
     userPresentation.description = description;
     await userPresentation.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Presentation Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+          <p>Your presentation details have been <strong>updated</strong> on your profile.</p>
+              
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Presentation updated successfully!",
@@ -1145,6 +1579,61 @@ export const deletepresentaion = async (req, res) => {
     userPresentation.isDel = true;
 
     await userPresentation.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Presentation Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+         <p>One of your presentation details have been <strong>Deleted</strong> from your profile.</p>
+          
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Presentation deleted successfully!",
@@ -1234,6 +1723,61 @@ export const addpatent = async (req, res) => {
       description,
     });
     await newPatent.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Patent Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+           <p>New Patent details have been <strong>added</strong> to your profile.</p>
+                
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Patent added successfully!",
@@ -1284,6 +1828,61 @@ export const deletepatent = async (req, res) => {
     userPatent.isDel = true;
 
     await userPatent.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Patent Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+         <p>One of your patent details have been <strong>Deleted</strong> from your profile.</p>
+          
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Patent deleted successfully!",
@@ -1361,6 +1960,62 @@ export const updatepatent = async (req, res) => {
     userPatent.description = description;
 
     await userPatent.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Patent Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+          <p>Your patent details have been <strong>updated</strong> on your profile.</p>
+              
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Patent updated successfully!",
@@ -1445,6 +2100,61 @@ export const addcertificate = async (req, res) => {
     });
 
     await newCertificate.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Certification Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+           <p>New Certification details have been <strong>added</strong> to your profile.</p>
+                
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Certificate added successfully!",
@@ -1549,6 +2259,60 @@ export const updatecertificate = async (req, res) => {
 
     await userCertificate.save();
 
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;">Certification Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+          <p>Your Certification details have been <strong>updated</strong> on your profile.</p>
+              
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Certificate updated successfully!",
@@ -1595,6 +2359,60 @@ export const deleteCertificate = async (req, res) => {
     // Soft delete: mark as deleted
     userCertificate.isDel = true;
     await userCertificate.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Certification Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+         <p>One of your Certification details have been <strong>Deleted</strong> from your profile.</p>
+          
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
 
     res.status(200).json({
       success: true,

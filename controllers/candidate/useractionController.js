@@ -1506,6 +1506,7 @@ export const addCareerProfile = async (req, res) => {
     } = req.body;
 
     const userId = req.userId;
+    const user = await User.findById(userId);
 
     if (!userId) {
       return res.status(400).json({ message: "User not authenticated" });
@@ -1535,33 +1536,181 @@ export const addCareerProfile = async (req, res) => {
     };
 
     const existing = await UserCareer.findOne({ userId, isDel: false });
+    let htmllist = "";
 
     if (existing) {
+      console.log("Updating existing career profile");
+
+      if (dataToSave.CurrentIndustry != existing.CurrentIndustry) {
+        htmllist += "<li>Current Industry</li>";
+      }
+      if (dataToSave.CurrentDepartment != existing.CurrentDepartment) {
+        htmllist += "<li>Current Department</li>";
+      }
+      if (dataToSave.JobRole != existing.JobRole) {
+        htmllist += "<li>Job Role</li>";
+      }
+      if (dataToSave.DesiredJob != existing.DesiredJob) {
+        htmllist += "<li>Desired Job</li>";
+      }
+      if (dataToSave.DesiredEmployment != existing.DesiredEmployment) {
+        htmllist += "<li>Desired Employment</li>";
+      }
+      if (
+        JSON.stringify(dataToSave.location) !==
+        JSON.stringify(existing.location)
+      ) {
+        htmllist += "<li>Location</li>";
+      }
+      if (
+        dataToSave.expectedSalary.salary != existing.expectedSalary.salary ||
+        dataToSave.expectedSalary.currency != existing.expectedSalary.currency
+      ) {
+        htmllist += "<li>Expected Salary</li>";
+      }
+      if (dataToSave.PreferredShift != existing.PreferredShift) {
+        htmllist += "<li>Preferred Shift</li>";
+      }
+
       const updated = await UserCareer.findOneAndUpdate(
         { userId },
         dataToSave,
         { new: true }
       );
 
+      const htmlEmail = `
+        <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+          
+          <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+            <h2 style="color:#fff; margin:0; font-size:20px;">Career Profile Update Notification</h2>
+          </div>
+      
+          <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+            <p>Dear <strong>${user.name}</strong>,</p>
+                
+            <p>The following information in your <strong>Career Profile</strong> was updated:</p>
+                
+            <ul>
+              ${htmllist}
+            </ul>
+      
+            <p>If you did not make this change, please contact support immediately.</p>
+      
+            <p>You can access your dashboard using the link below:</p>
+      
+            <p>
+              <a href="${process.env.ORIGIN}" 
+                style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+                Visit Dashboard
+              </a>
+            </p>
+      
+            <p>If the button does not work, use this link:</p>
+            <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+      
+            <br />
+      
+            <p>Sincerely,<br />
+            <strong>Geisil Admin Team</strong></p>
+          </div>
+        </div>
+        `;
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: "Profile Update Notification",
+        html: htmlEmail,
+      };
+
+      await transporter.sendMail(mailOptions);
+
       return res.status(200).json({
         message: "Career profile updated successfully",
         data: updated,
         success: true,
       });
+    } else {
+      console.log("Creating new career profile");
+
+      const newCareer = new UserCareer({
+        userId,
+        ...dataToSave,
+      });
+
+      await newCareer.save();
+
+      const htmlEmail = `
+        <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+          
+          <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+            <h2 style="color:#fff; margin:0; font-size:20px;">Career Profile Update Notification</h2>
+          </div>
+      
+          <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+            <p>Dear <strong>${user.name}</strong>,</p>
+                
+            <p>Information in your <strong>Career Profile</strong> was added</p>
+                
+          
+      
+            <p>If you did not make this change, please contact support immediately.</p>
+      
+            <p>You can access your dashboard using the link below:</p>
+      
+            <p>
+              <a href="${process.env.ORIGIN}" 
+                style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+                Visit Dashboard
+              </a>
+            </p>
+      
+            <p>If the button does not work, use this link:</p>
+            <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+      
+            <br />
+      
+            <p>Sincerely,<br />
+            <strong>Geisil Admin Team</strong></p>
+          </div>
+        </div>
+        `;
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: "Profile Update Notification",
+        html: htmlEmail,
+      };
+
+      await transporter.sendMail(mailOptions);
+
+      res.status(200).json({
+        message: "Career profile saved successfully",
+        data: newCareer,
+        success: true,
+      });
     }
-
-    const newCareer = new UserCareer({
-      userId,
-      ...dataToSave,
-    });
-
-    await newCareer.save();
-
-    res.status(200).json({
-      message: "Career profile saved successfully",
-      data: newCareer,
-      success: true,
-    });
   } catch (error) {
     console.error("Error saving Career Profile:", error.message);
     res.status(500).json({

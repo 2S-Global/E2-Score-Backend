@@ -402,6 +402,15 @@ export const addEmploymentDetails = async (req, res) => {
       company_id: companyId,
       is_del: false,
     }).select("email name");
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
     if (existingCompanyUser) {
       const newEmployeeUser = await User.findOne({
@@ -448,15 +457,6 @@ export const addEmploymentDetails = async (req, res) => {
     `;
 
         // Send email
-        const transporter = nodemailer.createTransport({
-          host: process.env.EMAIL_HOST,
-          port: process.env.EMAIL_PORT,
-          secure: true,
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
-        });
 
         const mailOptions = {
           from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
@@ -470,6 +470,48 @@ export const addEmploymentDetails = async (req, res) => {
       // Email is end from here
     }
 
+    const userdtl = await User.findById(userId);
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Employment Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+           <p>New Employment details have been <strong>added</strong> to your profile.</p>
+                
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Geisil Admin Team</strong></p>
+        </div>
+      </div>
+      `;
+
+    const mailOptions2 = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Profile Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions2);
     res.status(201).json({
       success: true,
       message: "Employment Details added successfully!",
