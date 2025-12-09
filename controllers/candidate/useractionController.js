@@ -107,42 +107,51 @@ export const addProfilePicture = async (req, res) => {
       subject: "Your Profile Picture Has Been Updated",
       html: `
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    
-    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-      <h2 style="color:#fff; margin:0; font-size:20px;">Profile Picture Update Notification</h2>
-    </div>
 
-    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-      <p>Dear <strong>${user.name}</strong>,</p>
-
-      <p>We are writing to inform you that your <strong>profile picture</strong> has been successfully updated on your GEISIL account.</p>
-
-      <p>If you did not make this change or believe this action is unauthorized, please contact our support team immediately.</p>
-
-      <p>You can visit your dashboard anytime by clicking the link below:</p>
-
-      <p>
-        <a href="${process.env.ORIGIN}" 
-           style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-          Visit Dashboard
-        </a>
-      </p>
-
-      <p>If the button above does not work, copy and paste the following URL into your browser:</p>
-      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-
-      <br />
-
-      <p>Sincerely,<br />
-      <strong>Geisil Admin Team</strong><br />
-      Global Employability Information Services India Limited</p>
-
-    </div>
+  <!-- Banner Image -->
+  <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changeimage.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
   </div>
+
+  <div style="background:#0052cc; padding:15px 20px;">
+    <h2 style="color:#fff; margin:0; font-size:20px;">Profile Picture Update Notification</h2>
+  </div>
+
+  <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+
+    <p>Dear <strong>${user.name}</strong>,</p>
+
+    <p>We are writing to inform you that your <strong>profile picture</strong> has been successfully updated on your GEISIL account.</p>
+
+    <p>If you did not make this change or believe this action is unauthorized, please contact our support team immediately.</p>
+
+    <p>You can visit your dashboard anytime by clicking the link below:</p>
+
+    <p>
+      <a href="${process.env.ORIGIN}" 
+         style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+        Visit Dashboard
+      </a>
+    </p>
+
+    <p>If the button above does not work, copy and paste the following URL into your browser:</p>
+    <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+
+    <br />
+
+    <p>Sincerely,<br />
+    <strong>Admin Team</strong><br />
+    Global Employability Information Services India Limited</p>
+  </div>
+</div>
+
   `,
     };
 
     await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully");
 
     res.status(200).json({
       message: "Profile picture updated successfully",
@@ -203,7 +212,11 @@ export const addResumeHeadline = async (req, res) => {
       subject: "Your Resume Headline Has Been Updated",
       html: `
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    
+    <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changeresumeheadline.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
     <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
       <h2 style="color:#fff; margin:0; font-size:20px;">Resume Headline Update Notification</h2>
     </div>
@@ -230,7 +243,7 @@ export const addResumeHeadline = async (req, res) => {
       <br />
 
       <p>Sincerely,<br />
-      <strong>Geisil Admin Team</strong><br />
+      <strong>Admin Team</strong><br />
       Global Employability Information Services India Limited</p>
 
     </div>
@@ -278,6 +291,64 @@ export const deleteProfileSummary = async (req, res) => {
       { user: userId },
       { $unset: { profileSummary: "" } }
     );
+
+    const userdtl = await User.findById(userId);
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Your Profile Summary Has Been Deleted",
+      html: `
+  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+     <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changeresumeheadline.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
+    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+      <h2 style="color:#fff; margin:0; font-size:20px;">Profile Summary Update Notification</h2>
+    </div>
+
+    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+      <p>Dear <strong>${userdtl.name}</strong>,</p>
+
+      <p>We are writing to inform you that your <strong>Profile Summary</strong> has been successfully deleted from your GEISIL account.</p>
+
+      <p>If you did not make this change or believe this action is unauthorized, please contact our support team immediately.</p>
+
+      <p>You can visit your dashboard anytime by clicking the link below:</p>
+
+      <p>
+        <a href="${process.env.ORIGIN}" 
+           style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+          Visit Dashboard
+        </a>
+      </p>
+
+      <p>If the button above does not work, copy and paste the following URL into your browser:</p>
+      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+
+      <br />
+
+      <p>Sincerely,<br />
+      <strong>Admin Team</strong><br />
+      Global Employability Information Services India Limited</p>
+
+    </div>
+  </div>
+  `,
+    };
+
+    await transporter.sendMail(mailOptions);
 
     return res.status(200).json({
       success: true,
@@ -356,45 +427,58 @@ export const updateUserDetails = async (req, res) => {
       totalExperience: { year: experience_years, month: experience_months },
     };
 
-    // Field labels for email
-    const labels = {
-      name: "Full Name",
-      gender: "Gender",
-      dob: "Date of Birth",
-      country_id: "Country",
-      currentLocation: "Current Location",
-      hometown: "Hometown",
-      fatherName: "Father’s Name",
-      motherName: "Mother’s Name",
-      currentSalary: "Current Salary",
-      totalExperience: "Total Experience",
-    };
+    let changeListHTML = "";
 
-    // ---------- CHANGE DETECTION FUNCTION ----------
-    const getChanged = (oldData, newData) => {
-      const changes = [];
-      for (let key in newData) {
-        if (newData[key] == null) continue;
+    if (oldUser.name != newUserData.name) {
+      changeListHTML += `<li><strong>Name</strong></li>`;
+    }
 
-        const oldVal = oldData?.[key];
-        const newVal = newData[key];
-
-        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
-          changes.push({
-            field: labels[key] || key,
-            oldValue: oldVal ?? "-",
-            newValue: newVal ?? "-",
-          });
-        }
+    if (oldUser.gender != newUserData.gender) {
+      changeListHTML += `<li><strong>Gender</strong></li>`;
+    }
+    if (oldDetails) {
+      const oldDobDate = new Date(oldDetails.dob);
+      const newDobDate = new Date(dob);
+      if (oldDobDate.getTime() != newDobDate.getTime()) {
+        changeListHTML += `<li><strong>Date of Birth</strong></li>`;
       }
-      return changes;
-    };
-
-    // Detect changes
-    const userChanges = getChanged(oldUser, newUserData);
-    const detailChanges = getChanged(oldDetails || {}, newDetailsData);
-    const allChanges = [...userChanges, ...detailChanges];
-
+      if (oldDetails.country_id != newDetailsData.country_id) {
+        changeListHTML += `<li><strong>Country</strong></li>`;
+      }
+      if (oldDetails.currentLocation != newDetailsData.currentLocation) {
+        changeListHTML += `<li><strong>Current Location</strong></li>`;
+      }
+      if (oldDetails.hometown != newDetailsData.hometown) {
+        changeListHTML += `<li><strong>Hometown</strong></li>`;
+      }
+      if (oldDetails.fatherName != newDetailsData.fatherName) {
+        changeListHTML += `<li><strong>Father Name</strong></li>`;
+      }
+      if (oldDetails.motherName != newDetailsData.motherName) {
+        changeListHTML += `<li><strong>Mother Name</strong></li>`;
+      }
+      if (
+        oldDetails.currentSalary.currency !=
+        newDetailsData.currentSalary.currency
+      ) {
+        changeListHTML += `<li><strong>Current Salary Currency</strong></li>`;
+      }
+      if (
+        oldDetails.currentSalary.salary != newDetailsData.currentSalary.salary
+      ) {
+        changeListHTML += `<li><strong>Current Salary</strong></li>`;
+      }
+      if (
+        oldDetails.totalExperience.year != newDetailsData.totalExperience.year
+      ) {
+        changeListHTML += `<li><strong>Total Experience Years</strong></li>`;
+      }
+      if (
+        oldDetails.totalExperience.month != newDetailsData.totalExperience.month
+      ) {
+        changeListHTML += `<li><strong>Total Experience Months</strong></li>`;
+      }
+    }
     // Update user
     await User.findByIdAndUpdate(user_id, {
       ...newUserData,
@@ -409,20 +493,22 @@ export const updateUserDetails = async (req, res) => {
     );
 
     // ---------- SEND EMAIL IF CHANGES EXIST ----------
-    if (allChanges.length > 0) {
+    if (changeListHTML) {
       /*  const changeListHTML = allChanges
         .map(
           (c) =>
             `<li><strong>${c.field}</strong>: <span style="color:#d9534f">${c.oldValue}</span> → <span style="color:#5cb85c">${c.newValue}</span></li>`
         )
         .join(""); */
-      const changeListHTML = allChanges
-        .map((c) => `<li><strong>${c.field}</strong>`)
-        .join("");
 
       const htmlEmail = `
     <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    
+    <!-- Banner Image -->
+  <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changeheaderdetails.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
     <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
       <h2 style="color:#fff; margin:0; font-size:20px;">Profile Update Notification</h2>
     </div>
@@ -452,7 +538,7 @@ export const updateUserDetails = async (req, res) => {
       <br />
 
       <p>Sincerely,<br />
-      <strong>Geisil Admin Team</strong><br />
+      <strong>Admin Team</strong><br />
       Global Employability Information Services India Limited</p>
 
     </div>
@@ -483,7 +569,7 @@ export const updateUserDetails = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "User details updated",
-      changedFields: allChanges,
+      // changedFields: allChanges,
     });
   } catch (error) {
     console.error("Error updating user details:", error);
@@ -543,7 +629,11 @@ export const addProfileSummary = async (req, res) => {
       subject: "Your Profile Summary Has Been Updated",
       html: `
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    
+     <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changeresumeheadline.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
     <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
       <h2 style="color:#fff; margin:0; font-size:20px;">Profile Summary Update Notification</h2>
     </div>
@@ -570,7 +660,7 @@ export const addProfileSummary = async (req, res) => {
       <br />
 
       <p>Sincerely,<br />
-      <strong>Geisil Admin Team</strong><br />
+      <strong>Admin Team</strong><br />
       Global Employability Information Services India Limited</p>
 
     </div>
@@ -755,18 +845,22 @@ export const addKeySkills = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Your Key Skills Has Been Updated",
+      subject: "Your Key Skill List Has Been Updated",
       html: `
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    
+     <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changekeyskill.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
     <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-      <h2 style="color:#fff; margin:0; font-size:20px;">Key Skills Update Notification</h2>
+      <h2 style="color:#fff; margin:0; font-size:20px;">Key Skill List Update Notification</h2>
     </div>
 
     <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
       <p>Dear <strong>${userdtl.name}</strong>,</p>
 
-      <p>We are writing to inform you that your <strong>Key Skills</strong> has been successfully updated on your GEISIL account.</p>
+      <p>We are writing to inform you that your <strong>Key Skill List</strong> has been successfully updated on your GEISIL account.</p>
 
       <p>If you did not make this change or believe this action is unauthorized, please contact our support team immediately.</p>
 
@@ -785,7 +879,7 @@ export const addKeySkills = async (req, res) => {
       <br />
 
       <p>Sincerely,<br />
-      <strong>Geisil Admin Team</strong><br />
+      <strong>Admin Team</strong><br />
       Global Employability Information Services India Limited</p>
 
     </div>
@@ -1063,7 +1157,11 @@ export const submitUserEducation = async (req, res) => {
 
     const htmlEmail = `
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    
+    <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addacademics.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
     <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
       <h2 style="color:#fff; margin:0; font-size:20px;"> Academic Update Notification</h2>
     </div>
@@ -1090,7 +1188,8 @@ export const submitUserEducation = async (req, res) => {
       <br />
 
       <p>Sincerely,<br />
-      <strong>Geisil Admin Team</strong></p>
+      <strong>Admin Team</strong><br />
+      Global Employability Information Services India Limited</p>
     </div>
   </div>
   `;
@@ -1108,7 +1207,7 @@ export const submitUserEducation = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Academic Details Added Notification",
       html: htmlEmail,
     };
 
@@ -1306,7 +1405,11 @@ export const updateUserEducation = async (req, res) => {
 
     const htmlEmail = `
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    
+    <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editacademic.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
     <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
       <h2 style="color:#fff; margin:0; font-size:20px;"> Academic Update Notification</h2>
     </div>
@@ -1333,7 +1436,8 @@ export const updateUserEducation = async (req, res) => {
       <br />
 
       <p>Sincerely,<br />
-      <strong>Geisil Admin Team</strong></p>
+      <strong>Admin Team</strong><br />
+      Global Employability Information Services India Limited</p>
     </div>
   </div>
   `;
@@ -1351,7 +1455,7 @@ export const updateUserEducation = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Academic Details Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -1412,7 +1516,11 @@ export const deleteUserEducation = async (req, res) => {
 
     const htmlEmail = `
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    
+    <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deleteaccademic.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
     <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
       <h2 style="color:#fff; margin:0; font-size:20px;"> Academic Update Notification</h2>
     </div>
@@ -1439,7 +1547,8 @@ export const deleteUserEducation = async (req, res) => {
       <br />
 
       <p>Sincerely,<br />
-      <strong>Geisil Admin Team</strong></p>
+      <strong>Admin Team</strong><br />
+      Global Employability Information Services India Limited</p>
     </div>
   </div>
   `;
@@ -1457,7 +1566,7 @@ export const deleteUserEducation = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Academic Details Deleted Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -1578,9 +1687,14 @@ export const addCareerProfile = async (req, res) => {
         { new: true }
       );
 
-      const htmlEmail = `
+      if (htmllist) {
+        const htmlEmail = `
         <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-          
+          <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changecareerprofile.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
           <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
             <h2 style="color:#fff; margin:0; font-size:20px;">Career Profile Update Notification</h2>
           </div>
@@ -1611,30 +1725,31 @@ export const addCareerProfile = async (req, res) => {
             <br />
       
             <p>Sincerely,<br />
-            <strong>Geisil Admin Team</strong></p>
+            <strong>Admin Team</strong><br/>
+            Global Employability Information Services India Limited</p>
           </div>
         </div>
         `;
 
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
+        const transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST,
+          port: process.env.EMAIL_PORT,
+          secure: true,
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
 
-      const mailOptions = {
-        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-        to: user.email,
-        subject: "Profile Update Notification",
-        html: htmlEmail,
-      };
+        const mailOptions = {
+          from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+          to: user.email,
+          subject: "Career Profile Update Notification",
+          html: htmlEmail,
+        };
 
-      await transporter.sendMail(mailOptions);
-
+        await transporter.sendMail(mailOptions);
+      }
       return res.status(200).json({
         message: "Career profile updated successfully",
         data: updated,

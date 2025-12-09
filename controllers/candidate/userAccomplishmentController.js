@@ -43,7 +43,11 @@ export const addOnlineProfile = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+         <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addonlineprofile.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Online Profile Update Notification</h2>
         </div>
@@ -70,7 +74,9 @@ export const addOnlineProfile = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br />
+          Global Employability Information Services India Limited
+          </p>
         </div>
       </div>
       `;
@@ -88,7 +94,7 @@ export const addOnlineProfile = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Online Profile Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -285,7 +291,11 @@ export const editOnlineProfile = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+          <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editonlineprofile.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Online Profile Update Notification</h2>
         </div>
@@ -312,7 +322,8 @@ export const editOnlineProfile = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br />
+    Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -330,7 +341,7 @@ export const editOnlineProfile = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Online Profile Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -392,7 +403,11 @@ export const deleteOnlineProfile = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+        <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deleteonlineprofile.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Online Profile Update Notification</h2>
         </div>
@@ -419,7 +434,8 @@ export const deleteOnlineProfile = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br />
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -437,7 +453,7 @@ export const deleteOnlineProfile = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Online Profile Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -523,7 +539,11 @@ export const addWorkSample = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+         <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addworkprofile.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Work Profile Update Notification</h2>
         </div>
@@ -550,7 +570,8 @@ export const addWorkSample = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br />
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -568,7 +589,7 @@ export const addWorkSample = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Work Profile Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -756,7 +777,11 @@ export const editWorkSample = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+        <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editworkprofile.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Work Profile Update Notification</h2>
         </div>
@@ -783,7 +808,8 @@ export const editWorkSample = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br />
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -801,7 +827,7 @@ export const editWorkSample = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Work Profile Update Notification",
       html: htmlEmail,
     };
 
@@ -865,7 +891,11 @@ export const deleteWorkSample = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+         <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deleteworkprofile.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Work Profile Update Notification</h2>
         </div>
@@ -892,7 +922,8 @@ export const deleteWorkSample = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -910,7 +941,7 @@ export const deleteWorkSample = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Work Profile Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -977,7 +1008,11 @@ export const addResearchPublication = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+        <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addonlinepublication.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> White Paper / Research Publication / Journal Entry Update Notification</h2>
         </div>
@@ -1004,7 +1039,8 @@ export const addResearchPublication = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -1025,12 +1061,13 @@ export const addResearchPublication = async (req, res) => {
       subject: "Profile Update Notification",
       html: htmlEmail,
     };
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
 
     res.status(200).json({
       message: "Research Publication saved successfully",
       data: newResearchModel,
       success: true,
+      info: info,
     });
   } catch (error) {
     console.error("Error saving Research Publication:", error.message);
@@ -1168,7 +1205,11 @@ export const updateResearchPublication = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+        <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editonlinepublication.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;">White Paper / Research Publication / Journal Entry Update Notification</h2>
         </div>
@@ -1195,7 +1236,8 @@ export const updateResearchPublication = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -1275,7 +1317,11 @@ export const deleteResearchPublication = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+        <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deleteonlinepublication.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> White Paper / Research Publication / Journal Entry Update Notification</h2>
         </div>
@@ -1302,7 +1348,8 @@ export const deleteResearchPublication = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -1370,7 +1417,11 @@ export const addpresentaion = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+        <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addpresentation.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Presentation Update Notification</h2>
         </div>
@@ -1397,7 +1448,8 @@ export const addpresentaion = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -1415,7 +1467,7 @@ export const addpresentaion = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Presentation Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -1479,7 +1531,11 @@ export const updatepresentaion = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+         <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editpresentation.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Presentation Update Notification</h2>
         </div>
@@ -1506,7 +1562,8 @@ export const updatepresentaion = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -1524,7 +1581,7 @@ export const updatepresentaion = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Presentation Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -1584,7 +1641,11 @@ export const deletepresentaion = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+         <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deletepresentation.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Presentation Update Notification</h2>
         </div>
@@ -1611,7 +1672,8 @@ export const deletepresentaion = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -1629,7 +1691,7 @@ export const deletepresentaion = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Presentation Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -1728,7 +1790,11 @@ export const addpatent = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+         <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addpetent.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Patent Update Notification</h2>
         </div>
@@ -1755,7 +1821,8 @@ export const addpatent = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -1773,7 +1840,7 @@ export const addpatent = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Patent Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -1833,7 +1900,12 @@ export const deletepatent = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+        <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deletepetent.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
+
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Patent Update Notification</h2>
         </div>
@@ -1860,7 +1932,8 @@ export const deletepatent = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -1878,7 +1951,7 @@ export const deletepatent = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Patent Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -1966,6 +2039,11 @@ export const updatepatent = async (req, res) => {
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
         
+        <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editpetent.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Patent Update Notification</h2>
         </div>
@@ -1992,7 +2070,8 @@ export const updatepatent = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -2010,7 +2089,7 @@ export const updatepatent = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Patent Update Notification",
       html: htmlEmail,
     };
 
@@ -2105,7 +2184,11 @@ export const addcertificate = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+       <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addcertification.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>  
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Certification Update Notification</h2>
         </div>
@@ -2132,7 +2215,8 @@ export const addcertificate = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -2150,7 +2234,7 @@ export const addcertificate = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Certification Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -2263,7 +2347,11 @@ export const updatecertificate = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+        <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editcertification.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;">Certification Update Notification</h2>
         </div>
@@ -2290,7 +2378,8 @@ export const updatecertificate = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -2308,7 +2397,7 @@ export const updatecertificate = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Certification Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);
@@ -2364,7 +2453,11 @@ export const deleteCertificate = async (req, res) => {
 
     const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
+        <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deletecertification.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
         <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
           <h2 style="color:#fff; margin:0; font-size:20px;"> Certification Update Notification</h2>
         </div>
@@ -2391,7 +2484,8 @@ export const deleteCertificate = async (req, res) => {
           <br />
     
           <p>Sincerely,<br />
-          <strong>Geisil Admin Team</strong></p>
+          <strong>Admin Team</strong><br/>
+          Global Employability Information Services India Limited</p>
         </div>
       </div>
       `;
@@ -2409,7 +2503,7 @@ export const deleteCertificate = async (req, res) => {
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
-      subject: "Profile Update Notification",
+      subject: "Certification Update Notification",
       html: htmlEmail,
     };
     await transporter.sendMail(mailOptions);

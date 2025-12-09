@@ -2,6 +2,8 @@ import db_sql from "../../config/sqldb.js";
 import ProjectDetails from "../../models/projectModel.js";
 import list_project_tag from "../../models/monogo_query/project_tagModel.js";
 import mongoose from "mongoose";
+import User from "../../models/userModel.js";
+import nodemailer from "nodemailer";
 /**
  * @description Get all project tag from the database
  * @route GET /api/candidate/project/get_project_tag
@@ -86,6 +88,67 @@ export const addProjectDetails = async (req, res) => {
     });
 
     await projectDetails.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+         <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addproject.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Project Details Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+           <p>New project details have been <strong>added</strong> to your profile.</p>
+                
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Admin Team</strong><br />
+          Global Employability Information Services India Limited
+          </p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Project Details Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(201).json({
       success: true,
       message: "Project Details added successfully!",
@@ -176,6 +239,65 @@ export const editProjectDetails = async (req, res) => {
     projectDetails.updatedAt = new Date();
 
     await projectDetails.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+          <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editprojects.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Project Details Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+          <p>Your project details have been <strong>updated</strong> on your profile.</p>
+              
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Admin Team</strong><br />
+    Global Employability Information Services India Limited</p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Project Details Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -322,6 +444,66 @@ export const deleteProjectDetails = async (req, res) => {
     projectDetails.isDel = true;
     projectDetails.updatedAt = new Date();
     await projectDetails.save();
+
+    const userdtl = await User.findById(userId);
+
+    const htmlEmail = `
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deleteprojects.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
+        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+          <h2 style="color:#fff; margin:0; font-size:20px;"> Project Details Update Notification</h2>
+        </div>
+    
+        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
+              
+         <p>One of your project details have been <strong>Deleted</strong> from your profile.</p>
+          
+          <p>If you did not make this change, please contact support immediately.</p>
+    
+          <p>You can access your dashboard using the link below:</p>
+    
+          <p>
+            <a href="${process.env.ORIGIN}" 
+              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
+    
+          <p>If the button does not work, use this link:</p>
+          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+    
+          <br />
+    
+          <p>Sincerely,<br />
+          <strong>Admin Team</strong><br />
+          Global Employability Information Services India Limited</p>
+        </div>
+      </div>
+      `;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: userdtl.email,
+      subject: "Project Details Update Notification",
+      html: htmlEmail,
+    };
+    await transporter.sendMail(mailOptions);
+
     res.status(200).json({
       success: true,
       message: "Project Details deleted successfully!",

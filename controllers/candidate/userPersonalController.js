@@ -288,7 +288,11 @@ export const submitPersonalDetails = async (req, res) => {
 
     const htmlEmail = `
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    
+      <div>
+    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changepersonaldtls.png"
+         alt="GEISIL Banner" 
+         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+  </div>
     <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
       <h2 style="color:#fff; margin:0; font-size:20px;">Personal Details Update Notification</h2>
     </div>
@@ -319,7 +323,8 @@ export const submitPersonalDetails = async (req, res) => {
       <br />
 
       <p>Sincerely,<br />
-      <strong>Geisil Admin Team</strong></p>
+      <strong>Admin Team</strong><br />
+      Global Employability Information Services India Limited</p>
     </div>
   </div>
   `;
