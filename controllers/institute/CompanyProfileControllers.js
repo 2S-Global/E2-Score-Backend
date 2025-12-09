@@ -112,7 +112,7 @@ export const AddorUpdateCompany = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Company details updated successfully.",
+      message: "Institute details updated successfully.",
       links: {
         logo: logoResult?.secure_url || null,
         cover: coverResult?.secure_url || null,
@@ -184,7 +184,7 @@ export const Deletecoverphoto = async (req, res) => {
     if (!company) {
       return res
         .status(404)
-        .json({ success: false, message: "Company not found." });
+        .json({ success: false, message: "Institute not found." });
     }
 
     // Delete from Cloudinary if cover exists
@@ -222,7 +222,7 @@ export const GetAccountDetails = async (req, res) => {
   try {
     const company = await User.findById(req.userId);
     if (!company) {
-      return res.status(404).json({ message: "Company not found." });
+      return res.status(404).json({ message: "Institute not found." });
     }
 
     const companyDetails = await CompanyDetails.findOne(
@@ -266,7 +266,7 @@ export const updateAccountDetails = async (req, res) => {
     if (!company) {
       return res
         .status(404)
-        .json({ success: false, message: "Company not found." });
+        .json({ success: false, message: "Institute not found." });
     }
 
     company.name = companyname;

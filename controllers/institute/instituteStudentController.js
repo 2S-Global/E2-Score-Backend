@@ -152,7 +152,7 @@ export const GetallStudents = async (req, res) => {
         success: true,
         total: 0,
         data: [],
-        message: "No unverified students found.",
+        message: "No students found.",
       });
     }
 
