@@ -4,6 +4,28 @@ import User from "../../models/userModel.js";
 import uploadToCloudinary from "../../utility/uploadToCloudinary.js";
 import deleteImageByUrl from "../../utility/deleteImageByUrl.js";
 import list_industries from "../../models/monogo_query/industryModel.js";
+
+import CompanyType from "../../models/company_Models/companyTypeModel.js";
+
+export const GetCompanyTypes = async (req, res) => {
+  try {
+    /* i want _id Legal_Structure */
+    const companyTypes = await CompanyType.find({
+      is_active: true,
+      is_del: false,
+    })
+      .select("_id Legal_Structure Has_CIN")
+      .lean();
+    return res.status(200).json({
+      success: true,
+      data: companyTypes,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 /**
  * @description Search company by CIN number
  * @route POST /api/companyprofile/search_company_by_cin
@@ -71,6 +93,7 @@ export const SearchCompanybyCin = async (req, res) => {
 export const AddorUpdateCompany = async (req, res) => {
   try {
     const {
+      company_type,
       cin_id,
       cin,
       name,
@@ -100,7 +123,10 @@ export const AddorUpdateCompany = async (req, res) => {
     }
 
     // 1. Check if CIN already exists in companylist
-    let companyExist = await companylist.findOne({ cinnumber: cin, isDel: false });
+    let companyExist = await companylist.findOne({
+      cinnumber: cin,
+      isDel: false,
+    });
 
     if (!companyExist) {
       companyExist = await companylist.create({
@@ -125,10 +151,10 @@ export const AddorUpdateCompany = async (req, res) => {
         : null,
       cover
         ? uploadToCloudinary(
-          cover.buffer,
-          "e2score/cover",
-          `cover-${Date.now()}`
-        )
+            cover.buffer,
+            "e2score/cover",
+            `cover-${Date.now()}`
+          )
         : null,
     ]);
 
@@ -137,6 +163,7 @@ export const AddorUpdateCompany = async (req, res) => {
       { userId },
       {
         userId,
+        company_type: company_type?.trim(),
         cin_id: companyExist._id,
         cin: cin?.trim(),
         name: name?.trim(),
@@ -155,7 +182,7 @@ export const AddorUpdateCompany = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // update in user table 
+    // update in user table
     const updateUser = await User.findOneAndUpdate(
       { _id: userId },
       {
@@ -200,7 +227,10 @@ export const GetCompanyDetails = async (req, res) => {
 
     let industryName = "Not specified";
     if (company?.industry_type) {
-      const industryDoc = await list_industries.findOne({ id: company.industry_type }).select("job_industry").lean();
+      const industryDoc = await list_industries
+        .findOne({ id: company.industry_type })
+        .select("job_industry")
+        .lean();
       company.industryName = industryDoc?.job_industry || industryName;
     }
 

@@ -7,6 +7,10 @@ const Schema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    company_type: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "list_company_types",
+    },
     cin_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "companylist",

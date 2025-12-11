@@ -8,7 +8,8 @@ import {
   GetCompanyDetails,
   Deletecoverphoto,
   GetAccountDetails,
-  updateAccountDetails
+  updateAccountDetails,
+  GetCompanyTypes,
 } from "../../controllers/company/CompanyProfileControllers.js";
 
 import {
@@ -32,7 +33,7 @@ import {
   getUserAssociatedWithCompany,
   getMultipleEmployeeDetails,
   addEmployeeVerificationDetails,
-  getVerifiedUser
+  getVerifiedUser,
 } from "../../controllers/company/CompanyBranchControllers.js";
 
 // Middleware
@@ -49,6 +50,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Search Company by CIN
 CompanyProfileRouter.post("/search_company_by_cin", SearchCompanybyCin);
+
+// Get Company Types
+CompanyProfileRouter.get("/get_company_types", GetCompanyTypes);
 
 // Add or Update Company Profile
 CompanyProfileRouter.post(
@@ -172,15 +176,36 @@ CompanyProfileRouter.delete(
 CompanyProfileRouter.get("/get_branches", userAuth, Companymid, getBranches);
 
 // Get User Profile
-CompanyProfileRouter.get("/get_user_associated_with_company", userAuth, Companymid, getUserAssociatedWithCompany);
+CompanyProfileRouter.get(
+  "/get_user_associated_with_company",
+  userAuth,
+  Companymid,
+  getUserAssociatedWithCompany
+);
 
 // Get Employee Details who are associated with company
-CompanyProfileRouter.get("/get_employee_details", userAuth, Companymid, getMultipleEmployeeDetails);
+CompanyProfileRouter.get(
+  "/get_employee_details",
+  userAuth,
+  Companymid,
+  getMultipleEmployeeDetails
+);
 
 // Add Employee Verification Details By Company
-CompanyProfileRouter.post("/add_employee_verification_details", upload.none(), userAuth, Companymid, addEmployeeVerificationDetails);
+CompanyProfileRouter.post(
+  "/add_employee_verification_details",
+  upload.none(),
+  userAuth,
+  Companymid,
+  addEmployeeVerificationDetails
+);
 
 // Get User Profile who is verified with company
-CompanyProfileRouter.get("/get_verified_user", userAuth, Companymid, getVerifiedUser);
+CompanyProfileRouter.get(
+  "/get_verified_user",
+  userAuth,
+  Companymid,
+  getVerifiedUser
+);
 
 export default CompanyProfileRouter;
