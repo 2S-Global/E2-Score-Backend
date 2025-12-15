@@ -120,7 +120,10 @@ export const getUser = async (req, res) => {
     }
 
     const personalData = await candidateDetails
-      .findOne({ userId: user_id }, "dob country_id currentLocation hometown fatherName motherName currentSalary totalExperience")
+      .findOne(
+        { userId: user_id },
+        "dob country_id currentLocation hometown fatherName motherName currentSalary totalExperience"
+      )
       .lean();
 
     // Format phone number for display
@@ -153,10 +156,9 @@ export const getUser = async (req, res) => {
     }
 
     // Fetch all UserEducation records for the user and get the max level
-    const educations = await usereducation.find(
-      { userId: user_id, isDel: false },
-      "level isPrimary"
-    ).lean();
+    const educations = await usereducation
+      .find({ userId: user_id, isDel: false }, "level isPrimary")
+      .lean();
 
     let selectedLevel = null;
     if (educations.length) {
@@ -344,18 +346,22 @@ export const getcandidateskills = async (req, res) => {
       return res.status(404).json({ message: "User skills not found" });
     }
 
-    const uniqueSkillIds = [...new Set(candidate.skills.map(id => id.toString()))].map(id => new mongoose.Types.ObjectId(id));
+    const uniqueSkillIds = [
+      ...new Set(candidate.skills.map((id) => id.toString())),
+    ].map((id) => new mongoose.Types.ObjectId(id));
 
     if (uniqueSkillIds.length === 0) {
       return res.status(200).json([]);
     }
 
-    const skills = await list_key_skill.find(
-      { _id: { $in: uniqueSkillIds }, is_del: 0, is_active: 1 },
-      { Skill: 1, _id: 0 }
-    ).lean();
+    const skills = await list_key_skill
+      .find(
+        { _id: { $in: uniqueSkillIds }, is_del: 0, is_active: 1 },
+        { Skill: 1, _id: 0 }
+      )
+      .lean();
 
-    const skillNames = skills.map(skill => skill.Skill);
+    const skillNames = skills.map((skill) => skill.Skill);
 
     res.status(200).json(skillNames);
   } catch (error) {
@@ -375,7 +381,6 @@ export const getcandidateskills = async (req, res) => {
  * @returns {object} 404 - User data not found
  * @returns {object} 500 - Error fetching education records
  */
-
 
 export const getUserEducationBySql = async (req, res) => {
   try {
@@ -466,10 +471,11 @@ export const getUserEducation = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const educationRecords = await usereducation.find({
-      userId,
-      isDel: false,
-    })
+    const educationRecords = await usereducation
+      .find({
+        userId,
+        isDel: false,
+      })
       .sort({ level: -1 })
       .lean();
 
@@ -503,37 +509,57 @@ export const getUserEducation = async (req, res) => {
       gradingSystems,
       mediums,
       boards,
-      schools
+      schools,
     ] = await Promise.all([
       levelIds.length
-        ? list_education_level.find({ id: { $in: levelIds } }, { id: 1, level: 1, _id: 0 }).lean()
+        ? list_education_level
+            .find({ id: { $in: levelIds } }, { id: 1, level: 1, _id: 0 })
+            .lean()
         : [],
       stateIds.length
-        ? list_university_state.find({ id: { $in: stateIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        ? list_university_state
+            .find({ id: { $in: stateIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       universityIds.length
-        ? list_university_univercities.find({ id: { $in: universityIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        ? list_university_univercities
+            .find({ id: { $in: universityIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       instituteIds.length
-        ? list_university_colleges.find({ id: { $in: instituteIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        ? list_university_colleges
+            .find({ id: { $in: instituteIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       courseIds.length
-        ? list_university_course.find({ id: { $in: courseIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        ? list_university_course
+            .find({ id: { $in: courseIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       courseTypeIds.length
-        ? list_course_type.find({ id: { $in: courseTypeIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        ? list_course_type
+            .find({ id: { $in: courseTypeIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       gradingSystemIds.length
-        ? list_grading_system.find({ id: { $in: gradingSystemIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        ? list_grading_system
+            .find({ id: { $in: gradingSystemIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       mediumIds.length
-        ? list_medium_of_education.find({ id: { $in: mediumIds } }, { id: 1, name: 1, _id: 0 }).lean()
+        ? list_medium_of_education
+            .find({ id: { $in: mediumIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       boardIds.length
-        ? list_education_boards.find({ id: { $in: boardIds } }, { id: 1, board_name: 1, _id: 0 }).lean()
+        ? list_education_boards
+            .find({ id: { $in: boardIds } }, { id: 1, board_name: 1, _id: 0 })
+            .lean()
         : [],
       schoolIds.length
-        ? list_school_list.find({ id: { $in: schoolIds } }, { id: 1, school_name: 1, _id: 0 }).lean()
+        ? list_school_list
+            .find({ id: { $in: schoolIds } }, { id: 1, school_name: 1, _id: 0 })
+            .lean()
         : [],
     ]);
 
@@ -557,17 +583,21 @@ export const getUserEducation = async (req, res) => {
       school_name: createMap(schools, "school_name"),
     };
 
-    const responseData = educationRecords.map(record => ({
+    const responseData = educationRecords.map((record) => ({
       ...record,
       level_id: record.level,
       level: maps.level[record.level] || record.level,
       state: maps.state[record.state] || record.state,
-      universityName: maps.university[record.universityName] || record.universityName,
-      instituteName: maps.institute[record.instituteName] || record.instituteName,
+      universityName:
+        maps.university[record.universityName] || record.universityName,
+      instituteName:
+        maps.institute[record.instituteName] || record.instituteName,
       courseName: maps.course[record.courseName] || record.courseName,
       courseType: maps.courseType[record.courseType] || record.courseType,
-      gradingSystem: maps.gradingSystem[record.gradingSystem] || record.gradingSystem,
-      medium_of_education: maps.medium[record.medium_of_education] || record.medium_of_education,
+      gradingSystem:
+        maps.gradingSystem[record.gradingSystem] || record.gradingSystem,
+      medium_of_education:
+        maps.medium[record.medium_of_education] || record.medium_of_education,
       board: maps.board[record.board] || record.board,
       school_name: maps.school_name[record.school_name] || record.school_name,
     }));
@@ -632,10 +662,12 @@ export const getUserLevelDetails = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const userEducations = await usereducation.find({
-      userId,
-      isDel: false,
-    }).lean();
+    const userEducations = await usereducation
+      .find({
+        userId,
+        isDel: false,
+      })
+      .lean();
 
     const levels = userEducations.map((e) => e.level?.toString());
 
@@ -651,19 +683,20 @@ export const getUserLevelDetails = async (req, res) => {
       }
     }
 
-    const rows = await list_education_level.find(baseQuery, {
-      id: 1,
-      level: 1,
-      duration: 1,
-      type: 1,
-      _id: 0,
-    }).lean();
+    const rows = await list_education_level
+      .find(baseQuery, {
+        id: 1,
+        level: 1,
+        duration: 1,
+        type: 1,
+        _id: 0,
+      })
+      .lean();
 
     return res.status(200).json({
       message: "Fetched education level data",
       data: rows,
     });
-
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
@@ -757,7 +790,6 @@ export const getEditUserDataBySql = async (req, res) => {
   }
 };
 
-
 export const getEditUserData = async (req, res) => {
   try {
     const userId = req.userId;
@@ -781,34 +813,55 @@ export const getEditUserData = async (req, res) => {
     }
 
     const responseData = { ...userEducation._doc };
-    const { level, board, school_name, universityName, courseName, instituteName } =
-      userEducation;
+    const {
+      level,
+      board,
+      school_name,
+      universityName,
+      courseName,
+      instituteName,
+    } = userEducation;
 
     if (level === "1" || level === "2") {
       const [boardVal, school_nameVal] = await Promise.all([
         board
-          ? list_education_boards.findOne({ id: board }, { board_name: 1, _id: 0 }).lean().then(doc => doc?.board_name || "")
+          ? list_education_boards
+              .findOne({ id: board }, { board_name: 1, _id: 0 })
+              .lean()
+              .then((doc) => doc?.board_name || "")
           : Promise.resolve(""),
         school_name
-          ? list_school_list.findOne({ id: school_name }, { school_name: 1, _id: 0 }).lean().then(doc => doc?.school_name || "")
+          ? list_school_list
+              .findOne({ id: school_name }, { school_name: 1, _id: 0 })
+              .lean()
+              .then((doc) => doc?.school_name || "")
           : Promise.resolve(""),
       ]);
 
       responseData.board = boardVal;
       responseData.school_name = school_nameVal;
-
     } else {
-      const [universityNameVal, courseNameVal, instituteNameVal] = await Promise.all([
-        universityName
-          ? list_university_univercities.findOne({ id: universityName }, { name: 1, _id: 0 }).lean().then(doc => doc?.name || "")
-          : Promise.resolve(""),
-        courseName
-          ? list_university_course.findOne({ id: courseName }, { name: 1, _id: 0 }).lean().then(doc => doc?.name || "")
-          : Promise.resolve(""),
-        instituteName
-          ? list_university_colleges.findOne({ id: instituteName }, { name: 1, _id: 0 }).lean().then(doc => doc?.name || "")
-          : Promise.resolve(""),
-      ]);
+      const [universityNameVal, courseNameVal, instituteNameVal] =
+        await Promise.all([
+          universityName
+            ? list_university_univercities
+                .findOne({ id: universityName }, { name: 1, _id: 0 })
+                .lean()
+                .then((doc) => doc?.name || "")
+            : Promise.resolve(""),
+          courseName
+            ? list_university_course
+                .findOne({ id: courseName }, { name: 1, _id: 0 })
+                .lean()
+                .then((doc) => doc?.name || "")
+            : Promise.resolve(""),
+          instituteName
+            ? list_university_colleges
+                .findOne({ id: instituteName }, { name: 1, _id: 0 })
+                .lean()
+                .then((doc) => doc?.name || "")
+            : Promise.resolve(""),
+        ]);
 
       responseData.universityName = universityNameVal;
       responseData.courseName = courseNameVal;
@@ -817,8 +870,10 @@ export const getEditUserData = async (req, res) => {
 
     const levelType = level
       ? (
-        await list_education_level.findOne({ id: level }, { level: 1, _id: 0 }).lean()
-      )?.level || ""
+          await list_education_level
+            .findOne({ id: level }, { level: 1, _id: 0 })
+            .lean()
+        )?.level || ""
       : "";
 
     return res.status(200).json({
@@ -881,7 +936,9 @@ export const getCandidateInfo = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const user = await User.findOne({ _id: user_id }).select("name phone_number email");
+    const user = await User.findOne({ _id: user_id }).select(
+      "name phone_number email"
+    );
 
     if (!user) {
       return res.status(404).json({ message: "No user found" });
@@ -908,8 +965,8 @@ export const getCandidateInfo = async (req, res) => {
         _id: user._id,
         name: user.name || "N/A",
         email: user.email || "N/A",
-        phone_number: displayPhone || "N/A"
-      }
+        phone_number: displayPhone || "N/A",
+      },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -939,7 +996,9 @@ export const getCandidateImg = async (req, res) => {
     }
 
     if (!user.profilePicture || user.profilePicture.trim() === "") {
-      return res.status(404).json({ success: false, message: "User Profile Picture not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User Profile Picture not found" });
     }
 
     res.status(200).json({ success: true, data: user });
@@ -955,6 +1014,8 @@ function generateOtp() {
 }
 
 //Candidate Phone Number Verify
+
+import { exec } from "child_process";
 export const candidatePhoneNumberVerify = async (req, res) => {
   try {
     const user_id = req.userId;
@@ -969,14 +1030,17 @@ export const candidatePhoneNumberVerify = async (req, res) => {
       return res.status(404).json({ message: "No user found" });
     }
 
-    let phoneVerification = await PhoneNumberVerify.findOne({ userId: user_id });
+    let phoneVerification = await PhoneNumberVerify.findOne({
+      userId: user_id,
+    });
 
     const now = new Date();
 
     if (phoneVerification && phoneVerification.otpExpiresAt > now) {
       return res.status(200).json({
         success: true,
-        message: "OTP already sent and still valid. Please wait before requesting again.",
+        message:
+          "OTP already sent and still valid. Please wait before requesting again.",
       });
     }
 
@@ -999,73 +1063,39 @@ export const candidatePhoneNumberVerify = async (req, res) => {
     // save to DB
     await phoneVerification.save();
 
-    // Email configuration starts here
+    // send OTP via SMS
+    const link = "https://api.mylogin.co.in";
+    const sms_key = process.env.SMS_KEY;
+    const sms_clientId = process.env.SMS_CLIENT_ID;
 
-    // 3. Send OTP via Email
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    const mobile = user.phone_number;
+    const phoneNumber = parsePhoneNumberFromString(mobile, "IN");
 
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "OTP Verification - Geisil",
-      html: `
-        <p>Dear <strong>${user.name || "User"}</strong>,</p>
-        <p>Your OTP for verification is: <strong>${otp}</strong></p>
-        <p>This OTP will expire in 5 minutes.</p>
-        <br/>
-        <p>Regards,<br/>Team Geisil</p>
-      `,
-    };
+    if (phoneNumber && phoneNumber.isValid()) {
+      const formattedMobile =
+        phoneNumber.countryCallingCode + phoneNumber.nationalNumber;
 
-    await transporter.sendMail(mailOptions);
+      const message = encodeURIComponent(
+        `Dear User, Use OTP : ${otp} to verify your mobile number for GEISIL. This code is valid for 2 minutes. Global Employability Information Services India Limited.`
+      );
 
-    try {
-      await transporter.sendMail(mailOptions);
-      console.log("✅ Email sent successfully");
-    } catch (err) {
-      console.error("❌ Email sending failed:", err);
+      const curlCommand = `curl -X GET "${link}/api/v2/SendSMS?SenderId=GEISIL&Message=${message}&MobileNumbers=${formattedMobile}&ApiKey=${sms_key}&ClientId=${sms_clientId}" -H "accept: text/plain"`;
+
+      exec(curlCommand, (error, stdout, stderr) => {
+        if (error) {
+          //console.error("❌ CURL Error:", error.message);
+          return;
+        }
+
+        if (stderr) {
+          // console.error("⚠️ CURL STDERR:", stderr);
+          return;
+        }
+
+        // console.log("✅ SMS API Response:", stdout);
+      });
     }
 
-    // Email configuration ends here
-
-
-    // PhoneNumberVerify.otp = otp;
-    // PhoneNumberVerify.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
-    // await PhoneNumberVerify.save();
-
-    // 🔑 SMS Gateway details
-    /*
-    const username = process.env.SMS_USERNAME;
-    const password = process.env.SMS_PASSWORD;
-    const sender   = process.env.SMS_SENDER;
-    const templateId = process.env.SMS_TEMPLATE_ID;
-    */
-
-    /*
-    const username = "ARFOA2021";
-    const password = "2249746";
-    const sender = "ARCAOA";
-    const templateId = '1507162960790862342';
-
-    const message = `Dear User, Your OTP for verification is ${otp}. Regards, ARCAOA`;
-
-    // Build SMS gateway URL
-    const url = `https://login.bulksmsgateway.in/sendmessage.php?user=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&mobile=${encodeURIComponent(mobile)}&sender=${encodeURIComponent(sender)}&message=${encodeURIComponent(message)}&type=3&template_id=${encodeURIComponent(templateId)}`;
-
-    // Call SMS API
-    const response = await axios.get(url);
-
-    */
-
-    // res.json({ success: true, message: "OTP sent successfully", gatewayResponse: response.data });
     res.json({ success: true, message: "OTP sent successfully" });
   } catch (error) {
     console.error("Error in send-otp:", error.message);
@@ -1085,13 +1115,21 @@ export const candidateVerifyOtp = async (req, res) => {
     const { otp } = req.body;
 
     if (!otp) {
-      return res.status(400).json({ success: false, message: "Mobile and OTP required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Mobile and OTP required" });
     }
 
     const verifyDetails = await PhoneNumberVerify.findOne({ userId: user_id });
 
-    if (!verifyDetails || verifyDetails.otp !== otp || verifyDetails.otpExpiresAt < new Date()) {
-      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+    if (
+      !verifyDetails ||
+      verifyDetails.otp !== otp ||
+      verifyDetails.otpExpiresAt < new Date()
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid or expired OTP" });
     }
 
     verifyDetails.isVerified = true;
