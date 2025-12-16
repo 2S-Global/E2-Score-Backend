@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import nodemailer from "nodemailer";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import dotenv from "dotenv";
+import CompanyDetails from "../models/company_Models/companydetails.js";
 dotenv.config();
 
 /**
@@ -303,12 +304,14 @@ export const registerInstituteft = async (req, res) => {
 // Register a new company
 export const registerCompany = async (req, res) => {
   try {
-    const { name, email, password, phone_number, cin_id, cin } = req.body;
+    const { name, email, password, phone_number, cin_id, cin, company_type } =
+      req.body;
     const role = 2;
     // Validate required fields
-    if (!name || !email || !password || !phone_number || !cin) {
+    if (!name || !email || !password || !phone_number || !company_type) {
       return res.status(400).json({
-        message: "Name, email, and password, phone_number cin are required",
+        message:
+          "Name , Email, Password, Phone Number and Company Type are required",
       });
     }
 
@@ -362,10 +365,23 @@ export const registerCompany = async (req, res) => {
       phone_number,
       password: hashedPassword,
       role,
-      cin_number: cin,
-      company_id: cin_id,
+
+      /* cin_number: cin,
+      company_id: cin_id, */
     });
     await newUser.save();
+
+    const companydetails = new CompanyDetails({
+      userId: newUser._id,
+      company_type: company_type,
+      /*   cin_id: cin_id,
+      cin: cin, */
+      name: name,
+      email: email,
+      phone: phone_number,
+    });
+    await companydetails.save();
+
     const token = jwt.sign(
       { userId: newUser._id, companyId: newUser.company_id },
       process.env.JWT_SECRET,
