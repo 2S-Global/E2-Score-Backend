@@ -9,7 +9,7 @@ const Schema = new mongoose.Schema(
     },
     company_type: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "list_company_types",
+      ref: "CompanyType",
     },
     cin_id: {
       type: mongoose.Schema.Types.ObjectId,

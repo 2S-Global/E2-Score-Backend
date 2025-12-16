@@ -705,6 +705,24 @@ export const loginUser = async (req, res) => {
       });
     }
 
+    let not_dashboard = false;
+    if (user.role === 2) {
+      const companydetails = await CompanyDetails.findOne({
+        userId: user._id,
+      }).populate({
+        path: "company_type",
+        select: "name Has_CIN",
+      });
+
+      console.log("companydetails", companydetails.company_type.Has_CIN);
+
+      if (companydetails.company_type.Has_CIN === true) {
+        if (!companydetails.cin_id || companydetails.cin_id === null) {
+          not_dashboard = true;
+        }
+      }
+    }
+
     // Build payload
     // let payload = { userId: user._id };
 
@@ -728,8 +746,10 @@ export const loginUser = async (req, res) => {
       token,
       data: user,
       role: user.role,
+      not_dashboard,
     });
   } catch (error) {
+    console.log(error);
     res
       .status(500)
       .json({ message: "Error logging in user", error: error.message });
