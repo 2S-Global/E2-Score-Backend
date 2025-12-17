@@ -436,49 +436,73 @@ export const updateUserDetails = async (req, res) => {
     if (oldUser.gender != newUserData.gender) {
       changeListHTML += `<li><strong>Gender</strong></li>`;
     }
-    if (oldDetails) {
-      const oldDobDate = new Date(oldDetails.dob);
-      const newDobDate = new Date(dob);
-      if (oldDobDate.getTime() != newDobDate.getTime()) {
-        changeListHTML += `<li><strong>Date of Birth</strong></li>`;
-      }
-      if (oldDetails.country_id != newDetailsData.country_id) {
-        changeListHTML += `<li><strong>Country</strong></li>`;
-      }
-      if (oldDetails.currentLocation != newDetailsData.currentLocation) {
-        changeListHTML += `<li><strong>Current Location</strong></li>`;
-      }
-      if (oldDetails.hometown != newDetailsData.hometown) {
-        changeListHTML += `<li><strong>Hometown</strong></li>`;
-      }
-      if (oldDetails.fatherName != newDetailsData.fatherName) {
-        changeListHTML += `<li><strong>Father Name</strong></li>`;
-      }
-      if (oldDetails.motherName != newDetailsData.motherName) {
-        changeListHTML += `<li><strong>Mother Name</strong></li>`;
-      }
-      if (
-        oldDetails.currentSalary.currency !=
-        newDetailsData.currentSalary.currency
-      ) {
-        changeListHTML += `<li><strong>Current Salary Currency</strong></li>`;
-      }
-      if (
-        oldDetails.currentSalary.salary != newDetailsData.currentSalary.salary
-      ) {
-        changeListHTML += `<li><strong>Current Salary</strong></li>`;
-      }
-      if (
-        oldDetails.totalExperience.year != newDetailsData.totalExperience.year
-      ) {
-        changeListHTML += `<li><strong>Total Experience Years</strong></li>`;
-      }
-      if (
-        oldDetails.totalExperience.month != newDetailsData.totalExperience.month
-      ) {
-        changeListHTML += `<li><strong>Total Experience Months</strong></li>`;
-      }
+    /*  if (oldDetails) { */
+    // DOB comparison (safe)
+    const oldDobTime = oldDetails?.dob
+      ? new Date(oldDetails.dob).getTime()
+      : null;
+
+    const newDobTime = dob ? new Date(dob).getTime() : null;
+
+    if (oldDobTime !== newDobTime) {
+      changeListHTML += `<li><strong>Date of Birth</strong></li>`;
     }
+
+    // Basic fields
+    if ((oldDetails?.country_id ?? null) !== newDetailsData.country_id) {
+      changeListHTML += `<li><strong>Country</strong></li>`;
+    }
+
+    if (
+      (oldDetails?.currentLocation ?? null) !== newDetailsData.currentLocation
+    ) {
+      changeListHTML += `<li><strong>Current Location</strong></li>`;
+    }
+
+    if ((oldDetails?.hometown ?? null) !== newDetailsData.hometown) {
+      changeListHTML += `<li><strong>Hometown</strong></li>`;
+    }
+
+    if ((oldDetails?.fatherName ?? null) !== newDetailsData.fatherName) {
+      changeListHTML += `<li><strong>Father Name</strong></li>`;
+    }
+
+    if ((oldDetails?.motherName ?? null) !== newDetailsData.motherName) {
+      changeListHTML += `<li><strong>Mother Name</strong></li>`;
+    }
+
+    // Current Salary (nested-safe)
+    if (
+      (oldDetails?.currentSalary?.currency ?? null) !==
+      newDetailsData?.currentSalary?.currency
+    ) {
+      changeListHTML += `<li><strong>Current Salary Currency</strong></li>`;
+    }
+
+    if (
+      (oldDetails?.currentSalary?.salary ?? null) !==
+      newDetailsData?.currentSalary?.salary
+    ) {
+      changeListHTML += `<li><strong>Current Salary</strong></li>`;
+    }
+
+    // Total Experience (nested-safe)
+    if (
+      (oldDetails?.totalExperience?.year ?? null) !==
+      newDetailsData?.totalExperience?.year
+    ) {
+      changeListHTML += `<li><strong>Total Experience Years</strong></li>`;
+    }
+
+    if (
+      (oldDetails?.totalExperience?.month ?? null) !==
+      newDetailsData?.totalExperience?.month
+    ) {
+      changeListHTML += `<li><strong>Total Experience Months</strong></li>`;
+    }
+
+    /*  } */
+
     // Update user
     await User.findByIdAndUpdate(user_id, {
       ...newUserData,

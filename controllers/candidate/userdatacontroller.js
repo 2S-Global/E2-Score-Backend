@@ -316,14 +316,15 @@ export const getUserDetails = async (req, res) => {
       hometown: personalData?.hometown || "",
       father_name: personalData?.fatherName || "",
       mother_name: personalData?.motherName || "",
-      currency: personalData.currentSalary?.currency || "",
-      salary: personalData.currentSalary?.salary || 0,
-      experience_years: personalData.totalExperience?.year || "",
-      experience_months: personalData.totalExperience?.month || "",
+      currency: personalData?.currentSalary?.currency || "",
+      salary: personalData?.currentSalary?.salary || 0,
+      experience_years: personalData?.totalExperience?.year || "",
+      experience_months: personalData?.totalExperience?.month || "",
     };
 
     res.status(200).json(result);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: error.message });
   }
 };

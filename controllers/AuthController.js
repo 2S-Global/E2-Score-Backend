@@ -127,7 +127,7 @@ export const registerUser = async (req, res) => {
           <li><strong>Password:</strong> ${password}</li>
         </ul>
       
-       <p>Click the link  to verify your email: <a href="${process.env.CLIENT_BASE_URL}/api/auth/verify-email/${token}">Verify Email</a></p>
+       <p>Click the link  to verify your email: <a href="${process.env.BACKEND_URL}/api/auth/verify-email/${token}">Verify Email</a></p>
       
         <p><strong>Key Features and Benefits of Geisil:</strong></p>
         <ul>
