@@ -714,9 +714,9 @@ export const loginUser = async (req, res) => {
         select: "name Has_CIN",
       });
 
-      console.log("companydetails", companydetails.company_type.Has_CIN);
+      //console.log("companydetails", companydetails.company_type.Has_CIN);
 
-      if (companydetails.company_type.Has_CIN === true) {
+      if (companydetails?.company_type?.Has_CIN === true) {
         if (!companydetails.cin_id || companydetails.cin_id === null) {
           not_dashboard = true;
         }
