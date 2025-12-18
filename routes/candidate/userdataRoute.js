@@ -2,6 +2,7 @@ import exprss from "express";
 
 //controller
 import {
+  getScore,
   getUser,
   getResumeHeadline,
   getProfileSummary,
@@ -64,5 +65,7 @@ userdataRouter.post("/verify-otp", userAuth, upload.none(), candidateVerifyOtp);
 
 //Get Name By Token
 // userdataRouter.get("/get_name_by_token", userAuth, getNameByToken);
+//get Score 
+userdataRouter.get("/getscore", userAuth, getScore);
 
 export default userdataRouter;

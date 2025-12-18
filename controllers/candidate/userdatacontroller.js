@@ -1180,3 +1180,16 @@ export const getNameByToken = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+//Get scores
+export const getScore = async (req, res) => {
+  try {
+    const user_id = req.userId;
+    const GeisilScore =  90;
+    const CibilScore = 80
+
+   
+    res.status(200).json({  success: true, GeisilScore , CibilScore });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
