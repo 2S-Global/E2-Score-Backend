@@ -11,28 +11,67 @@ import JobPosting from "../../models/company_Models/JobPostingModel.js";
 import CompanyDetails from "../../models/company_Models/companydetails.js";
 import list_industries from "../../models/monogo_query/industryModel.js";
 import list_key_skill from "../../models/monogo_query/keySkillModel.js";
+import JobTitleModel from "../../models/JobTitleModel.js";
 import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
+
+
 dayjs.extend(relativeTime);
+
+
+export const AllJobTitles = async (req, res) => {
+  try {
+    const searchText = req.query.q || ""; // text user typed
+
+    const jobTitles = await JobTitleModel.find({
+      isDel: false,
+      title: { $regex: searchText, $options: "i" }, // case-insensitive match
+    })
+      .sort({ title: 1 })
+      .limit(20); // prevent large DB load
+
+    return res.status(200).json({
+      success: true,
+      count: jobTitles.length,
+      data: jobTitles,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching job titles",
+      error: error.message,
+    });
+  }
+};
+
 
 // List Job Specializations
 export const AllJobSpecialization = async (req, res) => {
   try {
-    const Specializations = await list_job_specialization.find(
-      { isDel: false, isActive: true, isFlag: false },
+    const { query } = req.query; // search text from frontend
+
+    const specializations = await list_job_specialization.find(
+      {
+        isDel: false,
+        isActive: true,
+        name: { $regex: query || "", $options: "i" },
+      },
       { _id: 1, name: 1 }
     );
 
     res.status(200).json({
       success: true,
-      data: Specializations,
-      message: "All Speacializations",
+      data: specializations,
+      message: "Specializations fetched successfully",
     });
   } catch (error) {
+    console.log("ERROR:", error);
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
+
+
 
 // List Job Types
 export const AllJobTypes = async (req, res) => {

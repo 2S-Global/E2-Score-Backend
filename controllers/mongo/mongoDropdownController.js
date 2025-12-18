@@ -28,7 +28,7 @@ import list_grading_system from "../../models/monogo_query/gradingSystemModel.js
 import list_school_list from "../../models/monogo_query/schoolListModel.js";
 import ListVerificationList from "../../models/monogo_query/verificationListModel.js";
 import list_non_it_skills from "../../models/monogo_query/nonTechSkillModel.js";
-
+import list_tbl_state from "../../models/monogo_query/StatesModel.js";
 //Get Courses for search
 
 /**
@@ -157,25 +157,61 @@ export const AddCourse = async (req, res) => {
 export const All_country = async (req, res) => {
   try {
     const countries = await list_tbl_countrie.find(
-      { is_del: 0, is_active: 1 },
-      { _id: 1, id: 1, name: 1 }
+      {
+        is_del: 0,
+        is_active: 1,
+        name: "India", // exact match only
+      },
+      { _id: 0, id: 1, name: 1 }
     );
-
-    // Transform _id to id
-    const formattedCountries = countries.map((country) => ({
-      id: country.id,
-      name: country.name,
-    }));
 
     res.status(200).json({
       success: true,
-      data: formattedCountries,
-      message: "All country",
+      data: countries,
+      message: "Country India",
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Database query failed" });
+    res.status(500).json({
+      success: false,
+      message: "Database query failed",
+    });
   }
 };
+
+export const All_state = async (req, res) => {
+  try {
+    const countryId = 102; // ✅ hard-coded
+
+    const states = await list_tbl_state.find(
+      {
+        is_del: 0,
+        is_active: 1,
+        countryId: countryId, // numeric match
+      },
+      {
+        _id: 0,
+        id: 1,
+        name: 1,
+        stateCode: 1,
+        countryId: 1,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: states,
+      message: "State list for India",
+    });
+  } catch (error) {
+    console.error("All_state error:", error); // 👈 ADD THIS
+
+    res.status(500).json({
+      success: false,
+      message: error.message, // 👈 show real reason
+    });
+  }
+};
+
 
 /**
  * @description Get all genders from the database
@@ -861,15 +897,16 @@ export const getMaritalStatus = async (req, res) => {
       status: items.status,
     }));
 
-
-    const marriedCivilIds = await list_marital_status.find({
-      is_del: 0, is_active: 1,
-      status: { $in: ["Civil partnership", "Married"] }
-    },
+    const marriedCivilIds = await list_marital_status.find(
+      {
+        is_del: 0,
+        is_active: 1,
+        status: { $in: ["Civil partnership", "Married"] },
+      },
       { _id: 1, status: 1 }
     );
 
-    const hasPartner = marriedCivilIds.map((items) => (items._id));
+    const hasPartner = marriedCivilIds.map((items) => items._id);
 
     res.status(200).json({
       success: true,
@@ -1283,11 +1320,21 @@ export const getJobRoles = async (req, res) => {
  */
 export const getIndiaCities = async (req, res) => {
   try {
+    const { stateId } = req.query;
+
+    if (!stateId) {
+      return res.status(400).json({
+        success: false,
+        message: "stateId is required",
+      });
+    }
+
     const cities = await list_india_cities.aggregate([
       {
         $match: {
           is_del: 0,
           is_active: 1,
+          stateId: { $in: [Number(stateId), stateId] }, // ✅ safe match
         },
       },
       {
@@ -1315,29 +1362,28 @@ export const getIndiaCities = async (req, res) => {
       },
       {
         $project: {
-          _id: 1,
+          id: 1,
           city_name: 1,
           popular_location: 1,
         },
       },
     ]);
 
-    const formattedCities = cities.map((items) => ({
-      id: items._id,
-      city_name: items.city_name,
-      popular_location: items.popular_location,
-    }));
-
     res.status(200).json({
       success: true,
-      data: formattedCities,
-      message: "All Indian country",
+      data: cities,
+      message: "Cities by state",
     });
   } catch (error) {
     console.error("MongoDB error →", error);
-    res.status(500).json({ success: false, message: "Database query failed" });
+    res.status(500).json({
+      success: false,
+      message: "Database query failed",
+    });
   }
 };
+
+
 
 /**
  * @description Get all tech skills from the database

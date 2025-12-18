@@ -1,6 +1,7 @@
 import express from "express";
 import {
   All_country,
+  All_state,
   All_gender,
   getSkill,
   getMatchingSkill,
@@ -43,6 +44,7 @@ MongoDropdownRouter.get("/CourcesSearch", GetCourcesSearch);
 MongoDropdownRouter.post("/add_course", AddCourse);
 //all Country
 MongoDropdownRouter.get("/All_contry", All_country);
+MongoDropdownRouter.get("/All_states", All_state);
 
 //all Gender
 MongoDropdownRouter.get("/All_gender", All_gender);
