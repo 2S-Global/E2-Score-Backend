@@ -1,0 +1,25 @@
+{
+  "maxScorePerExam": 10,
+  "yearGapPenalty": -2,
+
+  "percentageScoreMap": [
+    { "min": 1, "max": 10, "score": 0 },
+    { "min": 11, "max": 20, "score": 0 },
+    { "min": 21, "max": 30, "score": 0 },
+    { "min": 31, "max": 40, "score": 0 },
+    { "min": 41, "max": 50, "score": 5 },
+    { "min": 51, "max": 60, "score": 6 },
+    { "min": 61, "max": 70, "score": 7 },
+    { "min": 71, "max": 80, "score": 8 },
+    { "min": 81, "max": 90, "score": 9 },
+    { "min": 91, "max": 100, "score": 10 }
+  ],
+
+  "examTypes": [
+    "10th",
+    "12th",
+    "3yrs_diploma",
+    "3yrs_graduation",
+    "4yrs_graduation"
+  ]
+}
