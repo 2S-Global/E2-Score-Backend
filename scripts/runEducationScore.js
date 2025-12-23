@@ -14,7 +14,7 @@ const run = async () => {
     console.log("DB connected");
 
     // 🔹 PASS USER ID HERE
-    const userId = "6937bc0115b0e2b4b04389fd";
+    const userId = "6948f31cb5fd9d7c8ae88bcd";
 
     // Call function
     const result = await calculateEducationScoreByUserId(userId);

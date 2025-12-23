@@ -19,6 +19,13 @@ import list_school_list from "../../models/monogo_query/schoolListModel.js";
 import mongoose from "mongoose";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import PhoneNumberVerify from "../../models/phoneNumberVerifyModel.js";
+import { calculateEducationScoreByUserId } from "../Helpers/calculateScore.js";
+
+import { calculateStudyPeriodScoreByUserId } from "../Helpers/calculateStudyPeriodScoreByUserId.js";
+import kycCalculation from "../Helpers/kycCalculation.js";
+
+
+
 import axios from "axios";
 import nodemailer from "nodemailer";
 /**
@@ -1183,13 +1190,45 @@ export const getNameByToken = async (req, res) => {
 //Get scores
 export const getScore = async (req, res) => {
   try {
-    const user_id = req.userId;
-    const GeisilScore =  90;
-    const CibilScore = 80
+    const userId = req.userId;
 
-   
-    res.status(200).json({  success: true, GeisilScore , CibilScore });
+    /* -----------------------------------
+       CALL ALL HELPERS
+    ----------------------------------- */
+    const [educationResult, studyResult, kycResult] = await Promise.all([
+      calculateEducationScoreByUserId(userId),
+      calculateStudyPeriodScoreByUserId(userId),
+      kycCalculation(userId),
+    ]);
+
+    /* -----------------------------------
+       DIRECT SCORE SUM (NO MAX)
+    ----------------------------------- */
+    const GeisilScore =
+      (educationResult?.totalScore || 0) +
+      (studyResult?.score || 0) +
+      (kycResult?.totalScore || 0);
+
+    /* -----------------------------------
+       OPTIONAL: CIBIL
+    ----------------------------------- */
+    const CibilScore = 80;
+
+    res.status(200).json({
+      success: true,
+      GeisilScore,
+      CibilScore,
+      breakdown: {
+        education: educationResult,
+        studyPeriod: studyResult,
+        kyc: kycResult,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Score calculation error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
