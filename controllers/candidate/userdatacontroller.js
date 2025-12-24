@@ -20,6 +20,7 @@ import mongoose from "mongoose";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import PhoneNumberVerify from "../../models/phoneNumberVerifyModel.js";
 import { calculateEducationScoreByUserId } from "../Helpers/calculateScore.js";
+import { calculateEducationGapPenalty } from "../Helpers/calculateGap.js";
 
 import { calculateStudyPeriodScoreByUserId } from "../Helpers/calculateStudyPeriodScoreByUserId.js";
 import kycCalculation from "../Helpers/kycCalculation.js";
@@ -1193,21 +1194,33 @@ export const getScore = async (req, res) => {
     const userId = req.userId;
 
     /* -----------------------------------
-       CALL ALL HELPERS
+       CALL ALL HELPERS (INCLUDING GAP)
     ----------------------------------- */
-    const [educationResult, studyResult, kycResult] = await Promise.all([
-      calculateEducationScoreByUserId(userId),
-      calculateStudyPeriodScoreByUserId(userId),
-      kycCalculation(userId),
-    ]);
+    const [educationResult, studyResult, kycResult, gapResult] =
+      await Promise.all([
+        calculateEducationScoreByUserId(userId),
+        calculateStudyPeriodScoreByUserId(userId),
+        kycCalculation(userId),
+        calculateEducationGapPenalty(userId), // ✅ IMPORTANT
+      ]);
 
     /* -----------------------------------
-       DIRECT SCORE SUM (NO MAX)
+       BASE SCORE (SUM)
     ----------------------------------- */
-    const GeisilScore =
+    const baseScore =
       (educationResult?.totalScore || 0) +
       (studyResult?.score || 0) +
       (kycResult?.totalScore || 0);
+
+    /* -----------------------------------
+       GAP PENALTY
+    ----------------------------------- */
+    const gapPenalty = gapResult?.gapPenalty || 0;
+
+    /* -----------------------------------
+       FINAL SCORE (AFTER PENALTY)
+    ----------------------------------- */
+    const GeisilScore = Math.max(0, baseScore - gapPenalty);
 
     /* -----------------------------------
        OPTIONAL: CIBIL
@@ -1218,10 +1231,13 @@ export const getScore = async (req, res) => {
       success: true,
       GeisilScore,
       CibilScore,
+      baseScore,
+      gapPenalty,
       breakdown: {
         education: educationResult,
         studyPeriod: studyResult,
         kyc: kycResult,
+        educationGap: gapResult,
       },
     });
   } catch (error) {
