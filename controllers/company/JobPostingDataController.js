@@ -269,51 +269,68 @@ export const AddJobPostingDetails = async (req, res) => {
     };
     console.log("hello I am here !");
 
-    // Iterrate Skills from name to array starts from here  --- 31th october
-
+    // new block of code for skills started
     if (!Array.isArray(jobSkills) || jobSkills.length === 0) {
       return res.status(400).json({
         message: "Skills must be a non-empty array of strings.",
       });
     }
 
-    // Case: If skills came as a string from form-data
-    let parsedSkills = jobSkills;
-    if (typeof jobSkills === "string") {
-      try {
-        parsedSkills = JSON.parse(jobSkills);
-      } catch (e) {
-        return res.status(400).json({ message: "Invalid skills format." });
-      }
-    }
-
-    const allStrings = parsedSkills.every((skill) => typeof skill === "string");
-    if (!allStrings) {
-      return res.status(400).json({ message: "All skills must be strings." });
-    }
-
-    // Find matching skills in MongoDB
-    const matchedSkills = await list_key_skill.find({
-      Skill: { $in: parsedSkills },
-      is_del: 0,
-      is_active: 1,
-    }, "_id Skill");
-
-    const skillMap = {};
-    matchedSkills.forEach((row) => {
-      skillMap[row.Skill] = row._id;
-    });
-
-    const missingSkills = parsedSkills.filter((skill) => !skillMap[skill]);
-    if (missingSkills.length > 0) {
+    if (!jobSkills.every(skill => typeof skill === "string")) {
       return res.status(400).json({
-        success: false,
-        message: "Some skills not found in the database.",
-        missingSkills,
+        message: "All skills must be strings.",
       });
     }
+    // new block of code for skills ended
 
-    const skillObjectIds = parsedSkills.map((skill) => skillMap[skill]);
+    /*
+  // Iterrate Skills from name to array starts from here  --- 31th october
+
+  if (!Array.isArray(jobSkills) || jobSkills.length === 0) {
+    return res.status(400).json({
+      message: "Skills must be a non-empty array of strings.",
+    });
+  }
+
+  // Case: If skills came as a string from form-data
+  let parsedSkills = jobSkills;
+  if (typeof jobSkills === "string") {
+    try {
+      parsedSkills = JSON.parse(jobSkills);
+    } catch (e) {
+      return res.status(400).json({ message: "Invalid skills format." });
+    }
+  }
+
+  const allStrings = parsedSkills.every((skill) => typeof skill === "string");
+  if (!allStrings) {
+    return res.status(400).json({ message: "All skills must be strings." });
+  }
+
+  // Find matching skills in MongoDB
+
+  const matchedSkills = await list_key_skill.find({
+    Skill: { $in: parsedSkills },
+    is_del: 0,
+    is_active: 1,
+  }, "_id Skill");
+
+  const skillMap = {};
+  matchedSkills.forEach((row) => {
+    skillMap[row.Skill] = row._id;
+  });
+
+  const missingSkills = parsedSkills.filter((skill) => !skillMap[skill]);
+  if (missingSkills.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Some skills not found in the database.",
+      missingSkills,
+    });
+  }
+
+  const skillObjectIds = parsedSkills.map((skill) => skillMap[skill]);
+  */
 
 
     // Iterrate Skills from name to array ends here   -- 31th october
@@ -325,7 +342,8 @@ export const AddJobPostingDetails = async (req, res) => {
       jobDescription,
       getApplicationUpdateEmail,
       specialization: parseToArray(specialization).map(id => mongoose.Types.ObjectId(id)),
-      jobSkills: skillObjectIds,
+      // jobSkills: skillObjectIds,
+      jobSkills: jobSkills,
       jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
       positionAvailable,
       showBy,
