@@ -120,14 +120,23 @@ const jobPostingSchema = new mongoose.Schema(
             type: String,
             enum: ["remote", "on-site", "hybrid"]
         },
+        // country: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: "list_tbl_countrie"
+        // },
         country: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "list_tbl_countrie"
+            type: Number,
         },
+        // city: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     // ref: "list_tbl_cities"
+        //     ref: "list_india_cities"
+        // },
         city: {
-            type: mongoose.Schema.Types.ObjectId,
-            // ref: "list_tbl_cities"
-            ref: "list_india_cities"
+            type: Number,
+        },
+        state: {
+            type: Number,
         },
         branch: {
             type: mongoose.Schema.Types.ObjectId,

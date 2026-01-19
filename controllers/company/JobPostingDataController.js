@@ -243,6 +243,7 @@ export const AddJobPostingDetails = async (req, res) => {
       jobLocationType,
       country,
       city,
+      state,
       branch,
       address,
       advertiseCity,
@@ -384,8 +385,11 @@ export const AddJobPostingDetails = async (req, res) => {
       industry,
       qualification: parseToArray(qualification).map(id => mongoose.Types.ObjectId(id)),
       jobLocationType,
-      country: country ? mongoose.Types.ObjectId(country) : null,
-      city: city ? mongoose.Types.ObjectId(city) : null,
+      // country: country ? mongoose.Types.ObjectId(country) : null,
+      country: country ? country : null,
+      // city: city ? mongoose.Types.ObjectId(city) : null,
+      city: city ? city : null,
+      state: state ? state : null,
       branch: branch ? mongoose.Types.ObjectId(branch) : null,
       address,
       advertiseCity,
@@ -502,6 +506,7 @@ export const EditJobPostingDetails = async (req, res) => {
       jobLocationType,
       country,
       city,
+      state,
       branch,
       address,
       advertiseCity,
@@ -649,8 +654,11 @@ export const EditJobPostingDetails = async (req, res) => {
         industry,
         qualification: parseToArray(qualification).map(id => mongoose.Types.ObjectId(id)),
         jobLocationType,
-        country: country ? mongoose.Types.ObjectId(country) : null,
-        city: city ? mongoose.Types.ObjectId(city) : null,
+        // country: country ? mongoose.Types.ObjectId(country) : null,
+        // city: city ? mongoose.Types.ObjectId(city) : null,
+        country: country ? country : null,
+        city: city ? city : null,
+        state: state ? state : null,
         branch: branch ? mongoose.Types.ObjectId(branch) : null,
         address,
         advertiseCity,
@@ -990,6 +998,26 @@ export const applyJobPosting = async (req, res) => {
   try {
     const userId = req.userId;
     const { jobId } = req.query;
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID is required",
+      });
+    }
+
+    // 🔍 Check if already applied
+    const alreadyApplied = await JobApplication.findOne({
+      jobId,
+      userId,
+    });
+
+    if (alreadyApplied) {
+      return res.status(409).json({
+        success: false,
+        message: "You have already applied for this job",
+      });
+    }
 
     // Create application directly
     await JobApplication.create({
