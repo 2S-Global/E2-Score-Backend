@@ -283,6 +283,20 @@ export const AddJobPostingDetails = async (req, res) => {
     }
     // new block of code for skills ended
 
+    // new block of code for skills started
+    if (!Array.isArray(specialization) || specialization.length === 0) {
+      return res.status(400).json({
+        message: "Specialization must be a non-empty array of strings.",
+      });
+    }
+
+    if (!specialization.every(spec => typeof spec === "string")) {
+      return res.status(400).json({
+        message: "All specializations must be strings.",
+      });
+    }
+    // new block of code for skills ended
+
     /*
   // Iterrate Skills from name to array starts from here  --- 31th october
 
@@ -341,7 +355,8 @@ export const AddJobPostingDetails = async (req, res) => {
       jobTitle,
       jobDescription,
       getApplicationUpdateEmail,
-      specialization: parseToArray(specialization).map(id => mongoose.Types.ObjectId(id)),
+      // specialization: parseToArray(specialization).map(id => mongoose.Types.ObjectId(id)),
+      specialization: specialization,
       // jobSkills: skillObjectIds,
       jobSkills: jobSkills,
       jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),

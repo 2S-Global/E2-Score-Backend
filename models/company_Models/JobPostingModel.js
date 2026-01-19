@@ -19,10 +19,14 @@ const jobPostingSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        specialization: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "list_job_specialization",
-        }],
+        // specialization: [{
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: "list_job_specialization",
+        // }],
+        specialization: {
+            type: [String],
+            required: true
+        },
         // jobSkills: [{
         //     type: mongoose.Schema.Types.ObjectId,
         //     ref: "list_key_skill",
