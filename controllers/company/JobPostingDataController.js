@@ -13,6 +13,9 @@ import list_industries from "../../models/monogo_query/industryModel.js";
 import list_key_skill from "../../models/monogo_query/keySkillModel.js";
 import JobTitleModel from "../../models/JobTitleModel.js";
 import JobApplication from "../../models/jobApplicationModel.js";
+import list_tbl_countrie from "../../models/monogo_query/countriesModel.js";
+import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
+import list_tbl_state from "../../models/monogo_query/StatesModel.js";
 import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
@@ -428,11 +431,13 @@ export const GetJobPostingDetails = async (req, res) => {
       return res.status(404).json({ message: "Company not found." });
     }
 
-    console.log("Here is the Company Details", company);
+    // console.log("Here is the Company Details", company);
 
     // Find job by id, status, and userId
     let job = await JobPosting.findOne({ _id: jobId, userId, status: { $in: ["draft", "completed"] } })
       .populate("specialization jobType benefits careerLevel experienceLevel gender qualification country city branch jobSkills").lean();  // 👈 important;
+
+    console.log("Here is my Job Posting Details", job);
 
     if (!job) {
       return res.status(404).json({
@@ -440,6 +445,21 @@ export const GetJobPostingDetails = async (req, res) => {
         message: "Job not found, status mismatch, or not authorized."
       });
     }
+
+    const [countryDoc, stateDoc, cityDoc] = await Promise.all([
+      job.country
+        ? list_tbl_countrie.findOne({ id: job.country }).select("name").lean()
+        : null,
+
+      job.state
+        ? list_tbl_state.findOne({ id: job.state }).select("name").lean()
+        : null,
+
+      job.city
+        ? list_india_cities.findOne({ id: job.city }).select("city_name").lean()
+        : null,
+    ]);
+
 
     // Fetch industry name (if applicable)
     let industryName = "Not specified";
@@ -450,6 +470,10 @@ export const GetJobPostingDetails = async (req, res) => {
 
     job.companyName = company.name;
     job.phoneNumber = company.phone_number;
+    job.countryName = countryDoc?.name || null;
+    job.stateName = stateDoc?.name || null;
+    job.cityName = cityDoc?.city_name || null;
+
 
     console.log("Here is the fetch Job Details", company.name);
 
