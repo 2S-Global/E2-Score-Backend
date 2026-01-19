@@ -134,6 +134,7 @@ app.use("/api/companykyc", CompanyKycRoute);
 app.use("/api/candidatebookmark", candidateBookmarkRouter);
 
 //institute routes
+//Testing
 app.use("/api/instituteprofile", InstituteProfileRouter);
 app.use("/api/institutestudent", InstituteStudentRouter);
 
