@@ -12,6 +12,7 @@ import CompanyDetails from "../../models/company_Models/companydetails.js";
 import list_industries from "../../models/monogo_query/industryModel.js";
 import list_key_skill from "../../models/monogo_query/keySkillModel.js";
 import JobTitleModel from "../../models/JobTitleModel.js";
+import JobApplication from "../../models/jobApplicationModel.js";
 import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
@@ -528,6 +529,36 @@ export const EditJobPostingDetails = async (req, res) => {
     console.log("hello I am here EditJobPosting API !");
     console.log("Id type is : ", typeof jobId, jobId);
 
+    // new block of code for skills started
+    if (!Array.isArray(jobSkills) || jobSkills.length === 0) {
+      return res.status(400).json({
+        message: "Skills must be a non-empty array of strings.",
+      });
+    }
+
+    if (!jobSkills.every(skill => typeof skill === "string")) {
+      return res.status(400).json({
+        message: "All skills must be strings.",
+      });
+    }
+    // new block of code for skills ended
+
+    // new block of code for Specialization started
+    if (!Array.isArray(specialization) || specialization.length === 0) {
+      return res.status(400).json({
+        message: "Specialization must be a non-empty array of strings.",
+      });
+    }
+
+    if (!specialization.every(spec => typeof spec === "string")) {
+      return res.status(400).json({
+        message: "All specializations must be strings.",
+      });
+    }
+    // new block of code for Specialization ended
+
+
+    /*
     // Iterrate Skills from name to array starts from here  --- 31th october
 
     if (!Array.isArray(jobSkills) || jobSkills.length === 0) {
@@ -578,6 +609,8 @@ export const EditJobPostingDetails = async (req, res) => {
 
     console.log("Here is my all skill object IDS --", skillObjectIds);
 
+    */
+
 
     // Iterrate Skills from name to array ends here   -- 31th october
 
@@ -588,8 +621,10 @@ export const EditJobPostingDetails = async (req, res) => {
         jobTitle,
         jobDescription,
         getApplicationUpdateEmail,
-        specialization: parseToArray(specialization).map(id => mongoose.Types.ObjectId(id)),
-        jobSkills: skillObjectIds,
+        // specialization: parseToArray(specialization).map(id => mongoose.Types.ObjectId(id)),
+        specialization: specialization,
+        // jobSkills: skillObjectIds,
+        jobSkills: jobSkills,
         jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
         positionAvailable,
         showBy,
@@ -946,6 +981,28 @@ export const getJobPreviewDetails = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching job listings:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Apply to Job Posting API (Candidate)
+export const applyJobPosting = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { jobId } = req.query;
+
+    // Create application directly
+    await JobApplication.create({
+      jobId,
+      userId,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Job applied successfully",
+    });
+  } catch (error) {
+    console.error("Error creating job posting:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

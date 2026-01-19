@@ -18,6 +18,7 @@ import {
   deleteJobPosting,
   getJobPreviewDetails,
   AllJobTitles,
+  applyJobPosting
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -116,6 +117,14 @@ jobPostingDataRouter.get(
   "/get_job_preview_details",
   userAuth,
   getJobPreviewDetails
+);
+
+// Applied job API - from employee end
+jobPostingDataRouter.post(
+  "/apply-job-application",
+  upload.none(),
+  userAuth,
+  applyJobPosting
 );
 
 export default jobPostingDataRouter;
