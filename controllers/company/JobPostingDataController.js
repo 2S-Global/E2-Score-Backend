@@ -772,7 +772,8 @@ export const getAllJobListing = async (req, res) => {
     // Fetch jobs for this user where status is "completed" and expiryDate is not passed
     const jobs = await JobPosting.find({
       userId,
-      status: "completed",
+      // status: "completed",
+      status: { $in: ["completed", "draft"] },
       is_del: false
     })
       .populate("jobType", "name")
@@ -784,6 +785,31 @@ export const getAllJobListing = async (req, res) => {
       .lean();
 
     // console.log("Here is my all Job List", jobs)
+
+    // Get all job IDs
+    const jobIds = jobs.map(job => job._id);
+
+    // Aggregate application counts
+    const applicationCounts = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+          isDel: false
+        }
+      },
+      {
+        $group: {
+          _id: "$jobId",
+          appliedCount: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Convert to lookup map
+    const applicationCountMap = {};
+    applicationCounts.forEach(item => {
+      applicationCountMap[item._id.toString()] = item.appliedCount;
+    });
 
     // Build response
     const jobList = jobs.map((job) => {
@@ -827,6 +853,7 @@ export const getAllJobListing = async (req, res) => {
         expiryDate: formatDate(job.jobExpiryDate),
         isActive: !job.jobExpiryDate || new Date(job.jobExpiryDate) >= today,
         logo,
+        appliedCount: applicationCountMap[job._id.toString()] || 0,
       };
     });
 
