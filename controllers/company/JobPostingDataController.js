@@ -780,7 +780,7 @@ export const getAllJobListing = async (req, res) => {
       .populate("country", "name")
       .populate("city", "city_name")
       .populate("branch", "name")
-      .select("_id jobTitle jobType jobLocationType advertiseCity advertiseCityName country city branch createdAt jobExpiryDate")
+      .select("_id jobTitle jobType jobLocationType advertiseCity advertiseCityName country city branch createdAt jobExpiryDate status")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -854,6 +854,7 @@ export const getAllJobListing = async (req, res) => {
         isActive: !job.jobExpiryDate || new Date(job.jobExpiryDate) >= today,
         logo,
         appliedCount: applicationCountMap[job._id.toString()] || 0,
+        status: job.status,
       };
     });
 
