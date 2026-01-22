@@ -18,7 +18,8 @@ import {
   deleteJobPosting,
   getJobPreviewDetails,
   AllJobTitles,
-  applyJobPosting
+  applyJobPosting,
+  getAppliedCandidatesByJob
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -125,6 +126,14 @@ jobPostingDataRouter.post(
   upload.none(),
   userAuth,
   applyJobPosting
+);
+
+// Get All Job Listing API
+jobPostingDataRouter.get(
+  "/get_all_job_related_candidates",
+  userAuth,
+  Companymid,
+  getAppliedCandidatesByJob
 );
 
 export default jobPostingDataRouter;

@@ -14,6 +14,32 @@ const jobApplicationSchema = new mongoose.Schema(
             required: true,
         },
 
+        // user additional information started
+        noticePeriod: {
+            type: String,
+            required: true,
+        },
+        preferredTime: {
+            type: String,
+            required: true,
+        },
+        availabilityOnSaturday: {
+            type: String,
+            required: true,
+        },
+        willingToRelocate: {
+            type: String,
+            required: true,
+        },
+        description: {
+            type: String,
+        },
+        acceptedTerms: {
+            type: Boolean,
+            required: true,
+        },
+        // user additional information ended
+
         appliedAt: {
             type: Date,
             default: Date.now,
