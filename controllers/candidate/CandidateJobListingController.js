@@ -196,7 +196,7 @@ export const saveJob = async (req, res) => {
     }
 
     /* Validate job */
-    const job = await Job.findById(jobId);
+    const job = await JobPosting.findById(jobId);
     if (!job || job.is_del) {
       return res.status(404).json({
         success: false,
