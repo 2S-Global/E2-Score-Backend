@@ -6,6 +6,9 @@ import multer from "multer";
 import {
   getAllJobList,
   jobsearchFilters,
+  saveJob,
+  removeSavedJob,
+  getMySavedJobs,
 } from "../../controllers/candidate/CandidateJobListingController.js";
 
 //import middleware
@@ -31,6 +34,28 @@ CandidateJobListingRouter.get(
   userAuth,
   Candimid,
   getAllJobList
+);
+
+CandidateJobListingRouter.get(
+  "/save_job",
+  userAuth,
+  Candimid,
+  saveJob
+);
+
+
+CandidateJobListingRouter.get(
+  "/remove_saved_job",
+  userAuth,
+  Candimid,
+  removeSavedJob
+);
+
+CandidateJobListingRouter.get(
+  "/get_saved_job",
+  userAuth,
+  Candimid,
+  getMySavedJobs
 );
 
 CandidateJobListingRouter.post(
