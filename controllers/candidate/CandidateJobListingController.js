@@ -232,14 +232,13 @@ export const saveJob = async (req, res) => {
 };
 
 
-
 export const removeSavedJob = async (req, res) => {
   try {
     const userId = req.userId;
-    const { savedJobId } = req.params;
+    const { savedJobId } = req.body;
 
     const savedJob = await SavedJob.findOne({
-      _id: savedJobId,
+      jobId: savedJobId,
       userId,
     });
 
@@ -250,7 +249,10 @@ export const removeSavedJob = async (req, res) => {
       });
     }
 
-    await SavedJob.deleteOne({ _id: savedJobId });
+    await SavedJob.deleteOne({
+      jobId: savedJobId,
+      userId,
+    });
 
     return res.json({
       success: true,
