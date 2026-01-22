@@ -36,7 +36,7 @@ CandidateJobListingRouter.get(
   getAllJobList
 );
 
-CandidateJobListingRouter.get(
+CandidateJobListingRouter.post(
   "/save_job",
   userAuth,
   Candimid,
@@ -44,7 +44,7 @@ CandidateJobListingRouter.get(
 );
 
 
-CandidateJobListingRouter.get(
+CandidateJobListingRouter.post(
   "/remove_saved_job",
   userAuth,
   Candimid,
