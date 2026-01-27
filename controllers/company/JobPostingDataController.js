@@ -1268,3 +1268,32 @@ export const getAppliedCandidatesByJob = async (req, res) => {
     });
   }
 };
+
+
+export const getMyAppliedJobs = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID missing" });
+    }
+
+    const applications = await JobApplication.find({
+      userId,
+      isDel: false
+    })
+      .sort({ appliedAt: -1 }); // latest first
+
+    return res.status(200).json({
+      success: true,
+      count: applications.length,
+      data: applications
+    });
+
+  } catch (error) {
+    console.error("getMyAppliedJobs error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+

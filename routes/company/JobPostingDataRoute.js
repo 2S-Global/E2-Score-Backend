@@ -19,7 +19,8 @@ import {
   getJobPreviewDetails,
   AllJobTitles,
   applyJobPosting,
-  getAppliedCandidatesByJob
+  getAppliedCandidatesByJob,
+  getMyAppliedJobs
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -134,6 +135,13 @@ jobPostingDataRouter.get(
   userAuth,
   Companymid,
   getAppliedCandidatesByJob
+);
+
+// Get All Job Listing API
+jobPostingDataRouter.get(
+  "/get_all_my_applied_job",
+  userAuth,
+  getMyAppliedJobs
 );
 
 export default jobPostingDataRouter;
