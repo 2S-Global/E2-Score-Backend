@@ -10,113 +10,128 @@ dayjs.extend(relativeTime);
 import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
 
 export const getAllJobList = async (req, res) => {
-  const userId = req.userId;
-  const user = await User.findById(userId);
+  try {
+    const userId = req.userId;
 
-  if (!user) {
-    return res.status(404).json({
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const today = new Date();
+
+    /* ===============================
+       STEP 1: FETCH JOBS
+    =============================== */
+    const jobs = await JobPosting.find({
+      status: "completed",
+      is_del: false,
+      jobExpiryDate: { $gte: today },
+    })
+      .populate("jobType", "name")
+      .populate("country", "name")
+      .populate("city", "city_name")
+      .populate("branch", "name")
+      .populate("experienceLevel", "name")
+      .select(
+        "_id userId jobTitle jobType jobLocationType advertiseCity advertiseCityName country city branch createdAt jobExpiryDate salary experienceLevel",
+      )
+      .sort({ createdAt: -1 })
+      .lean();
+
+    /* ===============================
+       STEP 2: FETCH SAVED JOBS
+    =============================== */
+    const jobIds = jobs.map((job) => job._id);
+
+    const savedJobs = await SavedJob.find({
+      userId,
+      jobId: { $in: jobIds },
+    })
+      .select("jobId")
+      .lean();
+
+    // Convert saved job IDs to Set for fast lookup
+    const savedJobSet = new Set(savedJobs.map((item) => item.jobId.toString()));
+
+    /* ===============================
+       STEP 3: FETCH COMPANIES
+    =============================== */
+    const employerIds = [...new Set(jobs.map((job) => job.userId?.toString()))];
+
+    const companies = await CompanyDetails.find({
+      userId: { $in: employerIds },
+    })
+      .select("userId name logo")
+      .lean();
+
+    const companyMap = {};
+    companies.forEach((company) => {
+      companyMap[company.userId.toString()] = {
+        companyName: company.name || "",
+        logo: company.logo || "",
+      };
+    });
+
+    /* ===============================
+       STEP 4: BUILD RESPONSE
+    =============================== */
+    const jobList = jobs.map((job) => {
+      const companyInfo = companyMap[job.userId?.toString()] || {
+        companyName: user?.name || "",
+        logo: "",
+      };
+
+      let location = "";
+      let advertiseCityName = "";
+
+      // Remote
+      if (job.jobLocationType === "remote") {
+        location = "Remote";
+        advertiseCityName =
+          job.advertiseCity === "Yes" ? job.advertiseCityName || "" : "";
+      }
+
+      // On-site
+      if (job.jobLocationType === "on-site") {
+        const country = job.country?.name || "";
+        const city = job.city?.city_name || "";
+        location = [city, country].filter(Boolean).join(", ");
+      }
+
+      return {
+        _id: job._id,
+        jobTitle: job.jobTitle,
+        jobType: job.jobType.map((t) => t.name),
+        jobExperienceLevel: job?.experienceLevel?.name || "",
+        jobLocationType: job.jobLocationType,
+        location,
+        advertiseCityName,
+        salary: job.salary || "",
+        createdAgo: dayjs(job.createdAt).fromNow(),
+        companyName: companyInfo.companyName,
+        logo: companyInfo.logo,
+
+        // ✅ BOOKMARK FLAG
+        isBookmarked: savedJobSet.has(job._id.toString()),
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Job listing fetched successfully.",
+      data: jobList,
+    });
+  } catch (error) {
+    console.error("Job List Error:", error);
+    res.status(500).json({
       success: false,
-      message: "User not found",
+      message: "Something went wrong",
     });
   }
-
-  const today = new Date();
-
-  // Fetch jobs for this user where status is "completed" and expiryDate is not passed
-  const jobs = await JobPosting.find({
-    status: "completed",
-    is_del: false,
-    jobExpiryDate: { $gte: today },
-  })
-    .populate("jobType", "name")
-    .populate("country", "name")
-    .populate("city", "city_name")
-    .populate("branch", "name")
-    .populate("experienceLevel", "name")
-    .select(
-      "_id userId jobTitle jobType jobLocationType advertiseCity advertiseCityName country city branch createdAt jobExpiryDate salary"
-    )
-    .sort({ createdAt: -1 })
-    .lean();
-
-  // Step 2: Extract all unique userIds from jobs
-  const employerIds = [...new Set(jobs.map((job) => job.userId?.toString()))];
-
-  // Step 3: Fetch company details for all those userIds at once
-  const companies = await CompanyDetails.find({
-    userId: { $in: employerIds },
-  })
-    .select("userId name logo")
-    .lean();
-
-  // Step 4: Build a quick lookup map for company info
-  const companyMap = {};
-  companies.forEach((company) => {
-    companyMap[company.userId.toString()] = {
-      companyName: company.name || "",
-      logo: company.logo || "",
-    };
-  });
-
-  // Build response
-  const jobList = jobs.map((job) => {
-    const companyInfo = companyMap[job.userId?.toString()] || {
-      companyName: user?.name || "",
-      logo: "",
-    };
-
-    let location = "";
-    let advertiseCityName = "";
-
-    // Remote job logic
-    if (job.jobLocationType === "remote") {
-      location = "Remote";
-      advertiseCityName =
-        job.advertiseCity === "Yes" ? job.advertiseCityName || "" : "";
-    }
-
-    // On-site job logic
-    else if (job.jobLocationType === "on-site") {
-      const country = job.country?.name || "";
-      const city = job.city?.city_name || "";
-      const branch = job.branch?.name || "";
-
-      location = [city, country].filter(Boolean).join(", ");
-    }
-
-    // Format date to "October 27, 2017"
-    const formatDate = (date) => {
-      if (!date) return "";
-      return new Date(date).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    };
-
-    return {
-      _id: job._id,
-      jobTitle: job.jobTitle,
-      jobType: job.jobType.map((item) => item.name),
-      jobExperienceLevel: job?.experienceLevel?.name || "",
-      jobLocationType: job.jobLocationType,
-      location,
-      advertiseCityName,
-      salary: job.salary || "",
-      // createdAt: formatDate(job.createdAt),
-      // expiryDate: formatDate(job.jobExpiryDate),
-      createdAgo: dayjs(job.createdAt).fromNow(),
-      // isActive: !job.jobExpiryDate || new Date(job.jobExpiryDate) >= today,
-      companyName: companyInfo.companyName || "",
-      logo: companyInfo.logo || "",
-    };
-  });
-
-  res.status(200).json({
-    success: true,
-    message: "Job listing fetched successfully.",
-    data: jobList,
-  });
 };
 
 export const jobsearchFilters = async (req, res) => {
@@ -273,16 +288,28 @@ export const getMySavedJobs = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const savedJobs = await SavedJob.find({ userId })
-      .populate("jobId")
-      .sort({ savedAt: -1 });
+const savedJobs = await SavedJob.find({ userId })
+  .populate({
+    path: "jobId",
+    populate: [
+      { path: "jobType", select: "name" },
+      { path: "experienceLevel", select: "name" },
+      { path: "branch", select: "name" },
+    ],
+  })
+  .sort({ savedAt: -1 })
+  .lean();
 
     return res.json({
       success: true,
-      data: savedJobs.map(item => ({
+      data: savedJobs.map((item) => ({
         savedJobId: item._id,
         savedAt: item.savedAt,
-        job: item.jobId,
+        job: {
+          ...item.jobId,
+          jobType: item.jobId.jobType?.map((t) => t.name) || [],
+          jobExperienceLevel: item.jobId.experienceLevel?.name || "",
+        },
       })),
     });
   } catch (error) {
