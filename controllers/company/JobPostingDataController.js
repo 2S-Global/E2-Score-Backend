@@ -1137,6 +1137,158 @@ export const getAppliedCandidatesByJob = async (req, res) => {
         $match: {
           jobId: new mongoose.Types.ObjectId(jobId),
           isDel: false,
+          status: "applied",
+        },
+      },
+
+      // 2️⃣ Join User collection
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+
+      // 3️⃣ Join Personal Details (skills)
+      {
+        $lookup: {
+          from: "personaldetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "personalDetails",
+        },
+      },
+      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+
+      // 4️⃣ Join Candidate Details (location)
+      {
+        $lookup: {
+          from: "candidatedetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "candidateDetails",
+        },
+      },
+      { $unwind: { path: "$candidateDetails", preserveNullAndEmptyArrays: true } },
+
+      // 5️⃣ Join User Career (job role & salary)
+      {
+        $lookup: {
+          from: "usercareers",
+          localField: "userId",
+          foreignField: "userId",
+          as: "career",
+        },
+      },
+      { $unwind: { path: "$career", preserveNullAndEmptyArrays: true } },
+
+      // 🔴 FIX: Convert JobRole string → ObjectId
+      {
+        $addFields: {
+          jobRoleObjectId: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$career.JobRole", null] },
+                  { $ne: ["$career.JobRole", ""] },
+                ],
+              },
+              then: { $toObjectId: "$career.JobRole" },
+              else: null,
+            },
+          },
+        },
+      },
+
+      // 6️⃣ Join Job Role master
+      // {
+      //   $lookup: {
+      //     from: "list_job_roles",
+      //     localField: "career.JobRole",
+      //     foreignField: "_id",
+      //     as: "jobRoleData",
+      //   },
+      // },
+      // {
+      //   $unwind: {
+      //     path: "$jobRoleData",
+      //     preserveNullAndEmptyArrays: true,
+      //   },
+      // },
+
+      // 6️⃣ Lookup Job Role master
+      {
+        $lookup: {
+          from: "list_job_roles",
+          localField: "jobRoleObjectId",
+          foreignField: "_id",
+          as: "jobRoleData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobRoleData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+
+      // 6️⃣ Final response shape
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          status: 1,
+          noticePeriod: 1,
+
+          candidateName: "$user.name",
+          profilePicture: "$user.profilePicture",
+
+          skills: "$personalDetails.skills",
+          currentLocation: "$candidateDetails.currentLocation",
+
+          jobRole: "$jobRoleData.job_role",
+          expectedSalary: "$career.expectedSalary",
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: appliedCandidates.length,
+      data: appliedCandidates,
+    });
+  } catch (error) {
+    console.error("Error fetching applied candidates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Get all shortlisted candidates for a job
+export const getShortlistedCandidatesByJob = async (req, res) => {
+  try {
+    const { jobId } = req.query;
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID is required",
+      });
+    }
+
+    const appliedCandidates = await JobApplication.aggregate([
+      // 1️⃣ Match jobId and non-deleted records
+      {
+        $match: {
+          jobId: new mongoose.Types.ObjectId(jobId),
+          isDel: false,
+          status: "shortlisted",
         },
       },
 
@@ -1262,6 +1414,350 @@ export const getAppliedCandidatesByJob = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching applied candidates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Get all offer sent candidates for a job
+export const getOfferSentCandidatesByJob = async (req, res) => {
+  try {
+    const { jobId } = req.query;
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID is required",
+      });
+    }
+
+    const appliedCandidates = await JobApplication.aggregate([
+      // 1️⃣ Match jobId and non-deleted records
+      {
+        $match: {
+          jobId: new mongoose.Types.ObjectId(jobId),
+          isDel: false,
+          status: "offer_sent",
+        },
+      },
+
+      // 2️⃣ Join User collection
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+
+      // 3️⃣ Join Personal Details (skills)
+      {
+        $lookup: {
+          from: "personaldetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "personalDetails",
+        },
+      },
+      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+
+      // 4️⃣ Join Candidate Details (location)
+      {
+        $lookup: {
+          from: "candidatedetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "candidateDetails",
+        },
+      },
+      { $unwind: { path: "$candidateDetails", preserveNullAndEmptyArrays: true } },
+
+      // 5️⃣ Join User Career (job role & salary)
+      {
+        $lookup: {
+          from: "usercareers",
+          localField: "userId",
+          foreignField: "userId",
+          as: "career",
+        },
+      },
+      { $unwind: { path: "$career", preserveNullAndEmptyArrays: true } },
+
+      // 🔴 FIX: Convert JobRole string → ObjectId
+      {
+        $addFields: {
+          jobRoleObjectId: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$career.JobRole", null] },
+                  { $ne: ["$career.JobRole", ""] },
+                ],
+              },
+              then: { $toObjectId: "$career.JobRole" },
+              else: null,
+            },
+          },
+        },
+      },
+
+      // 6️⃣ Join Job Role master
+      // {
+      //   $lookup: {
+      //     from: "list_job_roles",
+      //     localField: "career.JobRole",
+      //     foreignField: "_id",
+      //     as: "jobRoleData",
+      //   },
+      // },
+      // {
+      //   $unwind: {
+      //     path: "$jobRoleData",
+      //     preserveNullAndEmptyArrays: true,
+      //   },
+      // },
+
+      // 6️⃣ Lookup Job Role master
+      {
+        $lookup: {
+          from: "list_job_roles",
+          localField: "jobRoleObjectId",
+          foreignField: "_id",
+          as: "jobRoleData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobRoleData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+
+      // 6️⃣ Final response shape
+      {
+        $project: {
+          _id: 0,
+          userId: 1,
+          status: 1,
+          noticePeriod: 1,
+
+          candidateName: "$user.name",
+          profilePicture: "$user.profilePicture",
+
+          skills: "$personalDetails.skills",
+          currentLocation: "$candidateDetails.currentLocation",
+
+          jobRole: "$jobRoleData.job_role",
+          expectedSalary: "$career.expectedSalary",
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: appliedCandidates.length,
+      data: appliedCandidates,
+    });
+  } catch (error) {
+    console.error("Error fetching applied candidates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Get all Invitation sent candidates for a job
+export const getInvitationSentCandidatesByJob = async (req, res) => {
+  try {
+    const { jobId } = req.query;
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID is required",
+      });
+    }
+
+    const appliedCandidates = await JobApplication.aggregate([
+      // 1️⃣ Match jobId and non-deleted records
+      {
+        $match: {
+          jobId: new mongoose.Types.ObjectId(jobId),
+          isDel: false,
+          status: "invitation_sent",
+        },
+      },
+
+      // 2️⃣ Join User collection
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+
+      // 3️⃣ Join Personal Details (skills)
+      {
+        $lookup: {
+          from: "personaldetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "personalDetails",
+        },
+      },
+      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+
+      // 4️⃣ Join Candidate Details (location)
+      {
+        $lookup: {
+          from: "candidatedetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "candidateDetails",
+        },
+      },
+      { $unwind: { path: "$candidateDetails", preserveNullAndEmptyArrays: true } },
+
+      // 5️⃣ Join User Career (job role & salary)
+      {
+        $lookup: {
+          from: "usercareers",
+          localField: "userId",
+          foreignField: "userId",
+          as: "career",
+        },
+      },
+      { $unwind: { path: "$career", preserveNullAndEmptyArrays: true } },
+
+      // 🔴 FIX: Convert JobRole string → ObjectId
+      {
+        $addFields: {
+          jobRoleObjectId: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$career.JobRole", null] },
+                  { $ne: ["$career.JobRole", ""] },
+                ],
+              },
+              then: { $toObjectId: "$career.JobRole" },
+              else: null,
+            },
+          },
+        },
+      },
+
+      // 6️⃣ Join Job Role master
+      // {
+      //   $lookup: {
+      //     from: "list_job_roles",
+      //     localField: "career.JobRole",
+      //     foreignField: "_id",
+      //     as: "jobRoleData",
+      //   },
+      // },
+      // {
+      //   $unwind: {
+      //     path: "$jobRoleData",
+      //     preserveNullAndEmptyArrays: true,
+      //   },
+      // },
+
+      // 6️⃣ Lookup Job Role master
+      {
+        $lookup: {
+          from: "list_job_roles",
+          localField: "jobRoleObjectId",
+          foreignField: "_id",
+          as: "jobRoleData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobRoleData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+
+      // 6️⃣ Final response shape
+      {
+        $project: {
+          _id: 0,
+          userId: 1,
+          status: 1,
+          noticePeriod: 1,
+
+          candidateName: "$user.name",
+          profilePicture: "$user.profilePicture",
+
+          skills: "$personalDetails.skills",
+          currentLocation: "$candidateDetails.currentLocation",
+
+          jobRole: "$jobRoleData.job_role",
+          expectedSalary: "$career.expectedSalary",
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: appliedCandidates.length,
+      data: appliedCandidates,
+    });
+  } catch (error) {
+    console.error("Error fetching applied candidates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Reject Job Application Status API
+export const rejectJobApplicationStatus = async (req, res) => {
+  try {
+    const { applicationId } = req.body;
+
+    // 1️⃣ Validate input
+    if (!applicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Application ID is required",
+      });
+    }
+
+    // 3️⃣ Update status
+    const updatedApplication = await JobApplication.findByIdAndUpdate(
+      applicationId,
+      { status: "rejected" },
+      { new: true }
+    );
+
+    if (!updatedApplication) {
+      return res.status(404).json({
+        success: false,
+        message: "Job application not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Application status updated to rejected",
+      data: updatedApplication,
+    });
+
+  } catch (error) {
+    console.error("Update Job Application Status Error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

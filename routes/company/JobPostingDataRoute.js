@@ -20,7 +20,11 @@ import {
   AllJobTitles,
   applyJobPosting,
   getAppliedCandidatesByJob,
-  getMyAppliedJobs
+  getMyAppliedJobs,
+  getShortlistedCandidatesByJob,
+  getOfferSentCandidatesByJob,
+  getInvitationSentCandidatesByJob,
+  rejectJobApplicationStatus,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -135,6 +139,39 @@ jobPostingDataRouter.get(
   userAuth,
   Companymid,
   getAppliedCandidatesByJob
+);
+
+// Get All Job related shortlisted candidates API
+jobPostingDataRouter.get(
+  "/get_all_job_related_shortlisted_candidates",
+  userAuth,
+  Companymid,
+  getShortlistedCandidatesByJob
+);
+
+// Get All Job related offer_sent candidates API
+jobPostingDataRouter.get(
+  "/get_all_job_related_offer_sent_candidates",
+  userAuth,
+  Companymid,
+  getOfferSentCandidatesByJob
+);
+
+// Get All Job related invitation_sent candidates API
+jobPostingDataRouter.get(
+  "/get_all_job_related_invitation_sent_candidates",
+  userAuth,
+  Companymid,
+  getInvitationSentCandidatesByJob
+);
+
+// Reject Job Application API
+jobPostingDataRouter.patch(
+  "/reject_job_application_status",
+  upload.none(),
+  userAuth,
+  Companymid,
+  rejectJobApplicationStatus
 );
 
 // Get All Job Listing API
