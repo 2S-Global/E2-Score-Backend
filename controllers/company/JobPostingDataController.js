@@ -19,6 +19,7 @@ import list_tbl_state from "../../models/monogo_query/StatesModel.js";
 import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
+import nodemailer from "nodemailer";
 
 
 dayjs.extend(relativeTime);
@@ -1057,6 +1058,7 @@ export const applyJobPosting = async (req, res) => {
       willingToRelocate,
       description,
       acceptedTerms,
+      experienceLevel
     } = req.body;
 
     if (!jobId) {
@@ -1077,7 +1079,8 @@ export const applyJobPosting = async (req, res) => {
       !noticePeriod ||
       !preferredTime ||
       !availabilityOnSaturday ||
-      !willingToRelocate
+      !willingToRelocate ||
+      !experienceLevel
     ) {
       return res.status(400).json({
         success: false,
@@ -1108,6 +1111,7 @@ export const applyJobPosting = async (req, res) => {
       willingToRelocate,
       description,
       acceptedTerms,
+      experienceLevel,
     });
 
     res.status(200).json({
@@ -1243,6 +1247,7 @@ export const getAppliedCandidatesByJob = async (req, res) => {
           userId: 1,
           status: 1,
           noticePeriod: 1,
+          experienceLevel: 1,
 
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
@@ -1394,6 +1399,7 @@ export const getShortlistedCandidatesByJob = async (req, res) => {
           userId: 1,
           status: 1,
           noticePeriod: 1,
+          experienceLevel: 1,
 
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
@@ -1545,6 +1551,7 @@ export const getOfferSentCandidatesByJob = async (req, res) => {
           userId: 1,
           status: 1,
           noticePeriod: 1,
+          experienceLevel: 1,
 
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
@@ -1696,6 +1703,7 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
           userId: 1,
           status: 1,
           noticePeriod: 1,
+          experienceLevel: 1,
 
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
@@ -1765,6 +1773,113 @@ export const rejectJobApplicationStatus = async (req, res) => {
   }
 };
 
+// Accept Job Application Status API
+export const acceptJobApplicationStatus = async (req, res) => {
+  try {
+    const { applicationId } = req.body;
+
+    // 1️⃣ Validate input
+    if (!applicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Application ID is required",
+      });
+    }
+
+    console.log("Here is applicationId:", applicationId);
+
+    // 2️⃣ Find application first (optional but recommended)
+    const application = await JobApplication.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Job application not found",
+      });
+    }
+
+    // 3️⃣ Validate current status (only allow applied → shortlisted)
+    if (application.status !== "applied") {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot shortlist application with status '${application.status}'`,
+      });
+    }
+
+    // 4️⃣ Update status
+    application.status = "shortlisted";
+    await application.save();
+
+    // 5️⃣ Fetch candidate details
+    const user = await User.findById(application.userId).select("email name");
+
+    // 🔹 NEW: Fetch job details using application.jobId
+    const job = await JobPosting.findById(application.jobId).select(
+      "jobTitle userId"
+    );
+
+    // 🔹 NEW: Fetch company name from company user (job.userId)
+    const companyUser = await User.findById(job.userId).select("name");
+
+    const companyName =
+      companyUser?.name || "our organization";
+
+    const designation =
+      job?.jobTitle || "the applied position";
+
+    console.log("Here is my Sender User mail:", user.email);
+
+    // Send email with login credentials
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"HR Team" <${process.env.EMAIL_USER}>`,
+      to: "chandrasarkar2sglobal@gmail.com",
+      subject: "You have been shortlisted 🎉",
+      html: `
+          <p>Dear ${user.name || "Candidate"},</p>
+
+          <p>
+            We are pleased to inform you that you have been
+            <strong>shortlisted</strong> for the next stage of our recruitment process
+            for the position of <strong>${designation}</strong> at
+            <strong>${companyName}</strong>.
+          </p>
+
+          <p>Our team will reach out to you shortly with further details.</p>
+
+          <br />
+          <p>Best regards,</p>
+          <p><strong>HR Team</strong></p>
+          `,
+    };
+
+    if (user?.email) {
+      await transporter.sendMail(mailOptions);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Application status updated to shortlisted",
+      data: application,
+    });
+
+  } catch (error) {
+    console.error("Accept Job Application Status Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
 export const getMyAppliedJobs = async (req, res) => {
   try {
@@ -1791,5 +1906,3 @@ export const getMyAppliedJobs = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-

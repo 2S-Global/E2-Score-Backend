@@ -34,6 +34,9 @@ const jobApplicationSchema = new mongoose.Schema(
         description: {
             type: String,
         },
+        experienceLevel: {
+            type: String,
+        },
         acceptedTerms: {
             type: Boolean,
             required: true,

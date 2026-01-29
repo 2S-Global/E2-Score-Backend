@@ -25,6 +25,7 @@ import {
   getOfferSentCandidatesByJob,
   getInvitationSentCandidatesByJob,
   rejectJobApplicationStatus,
+  acceptJobApplicationStatus,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -172,6 +173,15 @@ jobPostingDataRouter.patch(
   userAuth,
   Companymid,
   rejectJobApplicationStatus
+);
+
+// Accept Job Application API
+jobPostingDataRouter.patch(
+  "/accept_job_application_status",
+  upload.none(),
+  userAuth,
+  Companymid,
+  acceptJobApplicationStatus
 );
 
 // Get All Job Listing API
