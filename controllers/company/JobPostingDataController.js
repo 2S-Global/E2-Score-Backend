@@ -1842,7 +1842,7 @@ export const acceptJobApplicationStatus = async (req, res) => {
 
     const mailOptions = {
       from: `"HR Team" <${process.env.EMAIL_USER}>`,
-      to: "chandrasarkar2sglobal@gmail.com",
+      to: user.email,
       subject: "You have been shortlisted 🎉",
       html: `
           <p>Dear ${user.name || "Candidate"},</p>
