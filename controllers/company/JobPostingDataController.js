@@ -1553,6 +1553,10 @@ export const getOfferSentCandidatesByJob = async (req, res) => {
           status: 1,
           noticePeriod: 1,
           experienceLevel: 1,
+          offer_letter_designation: 1,
+          offer_letter_joining_date: 1,
+          offer_letter_salary: 1,
+          offer_letter_message: 1,
 
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
