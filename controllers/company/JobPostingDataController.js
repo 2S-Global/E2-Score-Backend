@@ -2161,16 +2161,25 @@ export const getMyAppliedJobs = async (req, res) => {
 
     const applications = await JobApplication.find({
       userId,
-      isDel: false
+      isDel: false,
     })
-      .sort({ appliedAt: -1 }); // latest first
+      .sort({ appliedAt: -1 }) // latest first
+
+      // 🔹 Populate Job Details
+      .populate({
+        path: "jobId",
+        match: { is_del: false },
+        populate: {
+          path: "userId", // 🔹 Employer details
+          select: "name email profilePicture company_id role",
+        },
+      });
 
     return res.status(200).json({
       success: true,
       count: applications.length,
-      data: applications
+      data: applications,
     });
-
   } catch (error) {
     console.error("getMyAppliedJobs error:", error);
     res.status(500).json({ message: "Server error" });
