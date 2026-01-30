@@ -43,6 +43,33 @@ const jobApplicationSchema = new mongoose.Schema(
         },
         // user additional information ended
 
+        // interview details started
+        interviewDate: {
+            type: Date, // e.g. 2026-02-05
+        },
+        interviewTime: {
+            type: String, // e.g. "10:30 AM"
+        },
+        designation: {
+            type: String, // e.g. "Web Developer"
+        },
+        // interview details ended
+
+        // offer letter details started
+        offer_letter_designation: {
+            type: String, // e.g. "Software Engineer"
+        },
+        offer_letter_joining_date: {
+            type: Date, // e.g. 2026-03-01
+        },
+        offer_letter_salary: {
+            type: Number, // e.g. 600000
+        },
+        offer_letter_message: {
+            type: String, // custom offer message
+        },
+        // offer letter details ended
+
         appliedAt: {
             type: Date,
             default: Date.now,
@@ -50,7 +77,7 @@ const jobApplicationSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: ["applied", "shortlisted", "rejected"],
+            // enum: ["applied", "shortlisted", "rejected"],
             default: "applied",
         },
 

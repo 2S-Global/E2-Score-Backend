@@ -26,6 +26,8 @@ import {
   getInvitationSentCandidatesByJob,
   rejectJobApplicationStatus,
   acceptJobApplicationStatus,
+  acceptShortlistedCandidates,
+  sentOfferToCandidates,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -182,6 +184,24 @@ jobPostingDataRouter.patch(
   userAuth,
   Companymid,
   acceptJobApplicationStatus
+);
+
+// Accept Shortlisted Candidates API
+jobPostingDataRouter.patch(
+  "/accept_shortlisted_candidates",
+  upload.none(),
+  userAuth,
+  Companymid,
+  acceptShortlistedCandidates
+);
+
+// Sent Offer to Candidates API
+jobPostingDataRouter.patch(
+  "/sent_offer_to_candidates",
+  upload.none(),
+  userAuth,
+  Companymid,
+  sentOfferToCandidates
 );
 
 // Get All Job Listing API

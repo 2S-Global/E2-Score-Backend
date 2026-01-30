@@ -1881,6 +1881,275 @@ export const acceptJobApplicationStatus = async (req, res) => {
   }
 };
 
+// Accept Shortlisted Application Status API
+export const acceptShortlistedCandidates = async (req, res) => {
+  try {
+    const {
+      applicationId,
+      interviewDate,
+      interviewTime,
+      formDesignation,
+    } = req.body;
+
+    // 1️⃣ Validate input
+    if (!applicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Application ID is required",
+      });
+    }
+
+    console.log("Here is applicationId:", applicationId);
+
+    // 2️⃣ Find application first (optional but recommended)
+    const application = await JobApplication.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Job application not found",
+      });
+    }
+
+    // 3️⃣ Validate current status (only allow applied → shortlisted)
+    if (application.status !== "shortlisted") {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot sent interview invitation with status '${application.status}'`,
+      });
+    }
+
+    // 4️⃣ Update status and interview details
+    application.status = "invitation_sent";
+    application.interviewDate = interviewDate;
+    application.interviewTime = interviewTime;
+    application.designation = formDesignation;
+    await application.save();
+
+    // 5️⃣ Fetch candidate details
+    const user = await User.findById(application.userId).select("email name");
+
+    // 🔹 NEW: Fetch job details using application.jobId
+    const job = await JobPosting.findById(application.jobId).select(
+      "jobTitle userId"
+    );
+
+    // 🔹 NEW: Fetch company name from company user (job.userId)
+    const companyUser = await User.findById(job.userId).select("name");
+
+    const companyName =
+      companyUser?.name || "our organization";
+
+    const designation =
+      job?.jobTitle || "the applied position";
+
+    console.log("Here is my Sender User mail:", user.email);
+
+    // Send email with login credentials
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"HR Team" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      // to: "avik@2sglobal.co",
+      subject: `Interview Invitation – ${formDesignation} at ${companyName}`,
+      html: `
+        <p>Dear ${user.name || "Candidate"},</p>
+
+        <p>
+          As discussed earlier, we would like to invite you to attend an interview for the position of
+          <strong>${designation}</strong> at <strong>${companyName}</strong>.
+        </p>
+
+        <p>
+          <strong>Interview Details:</strong><br />
+          <strong>Position:</strong> ${designation}<br />
+          <strong>Date:</strong> ${new Date(interviewDate).toDateString()}<br />
+          <strong>Time:</strong> ${interviewTime}
+        </p>
+
+        <p>
+          The interview will focus on assessing your technical skills, experience, and overall suitability for the role.
+          Kindly ensure your availability at the scheduled time.
+        </p>
+
+        <p>
+          If you have any questions or require any clarification, please feel free to reply to this email.
+          We request you to confirm your availability by responding to this invitation.
+        </p>
+
+        <p>We look forward to speaking with you.</p>
+
+        <br />
+        <p>Best regards,</p>
+        <p><strong>HR Team</strong></p>
+      `
+
+    };
+
+    if (user?.email) {
+      await transporter.sendMail(mailOptions);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Application status updated to invitation_sent",
+      data: application,
+    });
+
+  } catch (error) {
+    console.error("Accept Job Application Status Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Sent Offer to Candidates API
+export const sentOfferToCandidates = async (req, res) => {
+  try {
+    const {
+      applicationId,
+      offer_letter_designation,
+      offer_letter_joining_date,
+      offer_letter_salary,
+      offer_letter_message,
+    } = req.body;
+
+    // 1️⃣ Validate input
+    if (!applicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Application ID is required",
+      });
+    }
+
+    console.log("Here is applicationId:", applicationId);
+
+    // 2️⃣ Find application first (optional but recommended)
+    const application = await JobApplication.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Job application not found",
+      });
+    }
+
+    // 3️⃣ Validate current status (only allow applied → shortlisted)
+    if (application.status !== "invitation_sent") {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot sent offer letter with status '${application.status}'`,
+      });
+    }
+
+    // 4️⃣ Update status and offer letter details
+    application.status = "offer_sent";
+    application.offer_letter_designation = offer_letter_designation;
+    application.offer_letter_joining_date = offer_letter_joining_date;
+    application.offer_letter_salary = offer_letter_salary;
+    application.offer_letter_message = offer_letter_message;
+    await application.save();
+
+    // 5️⃣ Fetch candidate details
+    const user = await User.findById(application.userId).select("email name");
+
+    // 🔹 NEW: Fetch job details using application.jobId
+    const job = await JobPosting.findById(application.jobId).select(
+      "jobTitle userId"
+    );
+
+    // 🔹 NEW: Fetch company name from company user (job.userId)
+    const companyUser = await User.findById(job.userId).select("name");
+
+    const companyName =
+      companyUser?.name || "our organization";
+
+    const designation =
+      job?.jobTitle || "the applied position";
+
+    console.log("Here is my Sender User mail:", user.email);
+
+    // Send email with login credentials
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"HR Team" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      // to: "avik@2sglobal.co",
+      subject: `Offer Letter – ${offer_letter_designation}`,
+      html: `
+        <p>Dear ${user.name || "Candidate"},</p>
+
+        <p>
+          We are pleased to extend an offer of employment to you for the position of
+          <strong>${offer_letter_designation}</strong> at <strong>${companyName}</strong>.
+        </p>
+
+        <p>
+          <strong>Offer Details:</strong><br />
+          <strong>Designation:</strong> ${offer_letter_designation}<br />
+          <strong>Proposed Joining Date:</strong> ${new Date(
+        offer_letter_joining_date
+      ).toDateString()}<br />
+          <strong>Salary:</strong> ₹${offer_letter_salary}
+        </p>
+
+        ${offer_letter_message
+          ? `<p>${offer_letter_message}</p>`
+          : ""
+        }
+
+        <p>
+          Kindly confirm your acceptance of this offer by replying to this email.
+          Further onboarding details will be shared upon confirmation.
+        </p>
+
+        <br />
+        <p>Best regards,</p>
+        <p><strong>HR Team</strong></p>
+        <p>${companyName}</p>
+      `
+
+    };
+
+    if (user?.email) {
+      await transporter.sendMail(mailOptions);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Application status updated to invitation_sent",
+      data: application,
+    });
+
+  } catch (error) {
+    console.error("Accept Job Application Status Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 export const getMyAppliedJobs = async (req, res) => {
   try {
     const userId = req.userId;
