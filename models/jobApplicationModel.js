@@ -63,7 +63,7 @@ const jobApplicationSchema = new mongoose.Schema(
             type: Date, // e.g. 2026-03-01
         },
         offer_letter_salary: {
-            type: Number, // e.g. 600000
+            type: String, // e.g. 600000
         },
         offer_letter_message: {
             type: String, // custom offer message

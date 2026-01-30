@@ -28,6 +28,7 @@ import {
   acceptJobApplicationStatus,
   acceptShortlistedCandidates,
   sentOfferToCandidates,
+  submitInterviewFeedback,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -202,6 +203,15 @@ jobPostingDataRouter.patch(
   userAuth,
   Companymid,
   sentOfferToCandidates
+);
+
+// Save Interview Feedback API
+jobPostingDataRouter.post(
+  "/save_interview_feedback",
+  upload.none(),
+  userAuth,
+  Companymid,
+  submitInterviewFeedback
 );
 
 // Get All Job Listing API

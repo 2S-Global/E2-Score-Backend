@@ -16,6 +16,7 @@ import JobApplication from "../../models/jobApplicationModel.js";
 import list_tbl_countrie from "../../models/monogo_query/countriesModel.js";
 import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
 import list_tbl_state from "../../models/monogo_query/StatesModel.js";
+import InterviewFeedback from "../../models/InterviewFeedbackModel.js";
 import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
@@ -2001,7 +2002,7 @@ export const acceptShortlistedCandidates = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Application status updated to invitation_sent",
+      message: "Application status updated to Invitation Sent",
       data: application,
     });
 
@@ -2137,7 +2138,7 @@ export const sentOfferToCandidates = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Application status updated to invitation_sent",
+      message: "Application status updated to Offer Sent",
       data: application,
     });
 
@@ -2173,5 +2174,52 @@ export const getMyAppliedJobs = async (req, res) => {
   } catch (error) {
     console.error("getMyAppliedJobs error:", error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Save Interview Feedback API
+export const submitInterviewFeedback = async (req, res) => {
+  try {
+    const {
+      applicationId,
+      communicationSkillScore,
+      technicalSkillScore,
+      aptitudeScore,
+      overallScore,
+      message,
+    } = req.body;
+
+    // interviewerId comes from auth middleware
+    const interviewerId = req.userId;
+
+    if (!applicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Application ID is required",
+      });
+    }
+
+    const feedback = await InterviewFeedback.create({
+      applicationId,
+      interviewerId,
+      communicationSkillScore,
+      technicalSkillScore,
+      aptitudeScore,
+      overallScore,
+      message,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Interview feedback submitted successfully",
+      data: feedback,
+    });
+
+  } catch (error) {
+    console.error("Submit Interview Feedback Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
