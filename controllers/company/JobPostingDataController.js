@@ -1395,7 +1395,7 @@ export const getShortlistedCandidatesByJob = async (req, res) => {
       // 6️⃣ Final response shape
       {
         $project: {
-          _id: 0,
+          _id: 1,
           userId: 1,
           status: 1,
           noticePeriod: 1,
@@ -1547,7 +1547,7 @@ export const getOfferSentCandidatesByJob = async (req, res) => {
       // 6️⃣ Final response shape
       {
         $project: {
-          _id: 0,
+          _id: 1,
           userId: 1,
           status: 1,
           noticePeriod: 1,
@@ -1699,7 +1699,7 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
       // 6️⃣ Final response shape
       {
         $project: {
-          _id: 0,
+          _id: 1,
           userId: 1,
           status: 1,
           noticePeriod: 1,
