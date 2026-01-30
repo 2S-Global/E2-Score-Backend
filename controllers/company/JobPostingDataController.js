@@ -2156,7 +2156,7 @@ export const sentOfferToCandidates = async (req, res) => {
   }
 };
 
-import CompanyDetails from "../models/company_Models/companydetails.js";
+
 
 export const getMyAppliedJobs = async (req, res) => {
   try {
