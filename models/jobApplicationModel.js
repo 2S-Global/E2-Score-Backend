@@ -70,6 +70,11 @@ const jobApplicationSchema = new mongoose.Schema(
         },
         // offer letter details ended
 
+        isInterviewFeedbackSubmitted: {
+            type: Boolean,
+            default: false,
+        },
+
         appliedAt: {
             type: Date,
             default: Date.now,

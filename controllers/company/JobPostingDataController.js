@@ -1709,6 +1709,7 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
           status: 1,
           noticePeriod: 1,
           experienceLevel: 1,
+          isInterviewFeedbackSubmitted: 1,
 
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
@@ -2212,6 +2213,19 @@ export const submitInterviewFeedback = async (req, res) => {
       });
     }
 
+    // 1️⃣ Check if feedback already exists for this application & interviewer
+    const existingFeedback = await InterviewFeedback.findOne({
+      applicationId,
+      interviewerId,
+    });
+
+    if (existingFeedback) {
+      return res.status(409).json({
+        success: false,
+        message: "Interview feedback has already been submitted",
+      });
+    }
+
     const feedback = await InterviewFeedback.create({
       applicationId,
       interviewerId,
@@ -2221,6 +2235,15 @@ export const submitInterviewFeedback = async (req, res) => {
       overallScore,
       message,
     });
+
+    // 2️⃣ Update JobApplication to mark feedback as submitted
+    await JobApplication.findByIdAndUpdate(
+      applicationId,
+      {
+        $set: { isInterviewFeedbackSubmitted: true },
+      },
+      { new: true }
+    );
 
     return res.status(201).json({
       success: true,
