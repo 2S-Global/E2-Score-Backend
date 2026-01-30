@@ -21,7 +21,7 @@ import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
 import nodemailer from "nodemailer";
-
+import CompanyDetails from "../models/company_Models/companydetails.js";
 
 dayjs.extend(relativeTime);
 
@@ -2156,6 +2156,8 @@ export const sentOfferToCandidates = async (req, res) => {
   }
 };
 
+import CompanyDetails from "../models/company_Models/companydetails.js";
+
 export const getMyAppliedJobs = async (req, res) => {
   try {
     const userId = req.userId;
@@ -2169,16 +2171,46 @@ export const getMyAppliedJobs = async (req, res) => {
       isDel: false,
     })
       .sort({ appliedAt: -1 }) // latest first
-
-      // 🔹 Populate Job Details
       .populate({
         path: "jobId",
         match: { is_del: false },
         populate: {
-          path: "userId", // 🔹 Employer details
+          path: "userId", // Employer details
           select: "name email profilePicture company_id role",
         },
       });
+
+    /* ================= ADD START ================= */
+
+    // 🔹 Collect employer userIds
+    const employerUserIds = applications
+      .map((app) => app?.jobId?.userId?._id)
+      .filter(Boolean);
+
+    // 🔹 Fetch company logos
+    const companies = await CompanyDetails.find({
+      userId: { $in: employerUserIds },
+      isDel: false,
+    }).select("userId logo");
+
+    // 🔹 Create lookup map
+    const companyLogoMap = {};
+    companies.forEach((c) => {
+      companyLogoMap[c.userId.toString()] = c.logo;
+    });
+
+    // 🔹 Attach logo without changing existing structure
+    applications.forEach((app) => {
+      if (app?.jobId?.userId?._id) {
+        app.jobId.userId = {
+          ...app.jobId.userId.toObject(),
+          companyLogo:
+            companyLogoMap[app.jobId.userId._id.toString()] || null,
+        };
+      }
+    });
+
+    /* ================= ADD END ================= */
 
     return res.status(200).json({
       success: true,
@@ -2190,6 +2222,7 @@ export const getMyAppliedJobs = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // Save Interview Feedback API
 export const submitInterviewFeedback = async (req, res) => {
