@@ -4,7 +4,7 @@ const jobApplicationSchema = new mongoose.Schema(
     {
         jobId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "JobPosting",
+            ref: "JobPostingList",
             required: true,
         },
 
@@ -92,5 +92,6 @@ const jobApplicationSchema = new mongoose.Schema(
 );
 
 const JobApplication = mongoose.model("JobApplication", jobApplicationSchema);
+
 
 export default JobApplication;
