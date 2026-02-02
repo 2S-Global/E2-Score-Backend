@@ -1144,7 +1144,7 @@ export const getAppliedCandidatesByJob = async (req, res) => {
         $match: {
           jobId: new mongoose.Types.ObjectId(jobId),
           isDel: false,
-          status: "applied",
+      
         },
       },
 
