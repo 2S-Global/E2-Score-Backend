@@ -796,7 +796,9 @@ export const getAllJobListing = async (req, res) => {
       {
         $match: {
           jobId: { $in: jobIds },
-          isDel: false
+          isDel: false,  
+          status: { $ne: "rejected" } 
+          
         }
       },
       {
