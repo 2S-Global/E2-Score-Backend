@@ -21,7 +21,7 @@ import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
 import nodemailer from "nodemailer";
-import CompanyDetails from "../models/company_Models/companydetails.js";
+//import CompanyDetails from "../../models/company_Models/companydetails.js";
 
 dayjs.extend(relativeTime);
 
@@ -2235,6 +2235,8 @@ export const submitInterviewFeedback = async (req, res) => {
       technicalSkillScore,
       aptitudeScore,
       overallScore,
+      lastDrawnSalary,
+      expectedSalary,
       message,
     } = req.body;
 
@@ -2268,6 +2270,8 @@ export const submitInterviewFeedback = async (req, res) => {
       technicalSkillScore,
       aptitudeScore,
       overallScore,
+      lastDrawnSalary,
+      expectedSalary,
       message,
     });
 
