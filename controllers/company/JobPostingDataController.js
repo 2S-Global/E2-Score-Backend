@@ -1920,12 +1920,12 @@ export const acceptShortlistedCandidates = async (req, res) => {
     }
 
     // 3️⃣ Validate current status (only allow applied → shortlisted)
-    if (application.status !== "shortlisted") {
+/*     if (application.status !== "shortlisted") {
       return res.status(400).json({
         success: false,
         message: `Cannot sent interview invitation with status '${application.status}'`,
       });
-    }
+    } */
 
     // 4️⃣ Update status and interview details
     application.status = "invitation_sent";
