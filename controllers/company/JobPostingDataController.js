@@ -1103,7 +1103,7 @@ export const ConfirmLiveJobPostingDetails123 = async (req, res) => {
 export const ConfirmLiveJobPostingDetails = async (req, res) => {
   try {
     const userId = req.userId;
-    const { tempId } = req.body;
+    const { tempId } = req.query;
 
     if (!tempId) {
       return res.status(400).json({
