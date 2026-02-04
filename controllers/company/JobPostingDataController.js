@@ -1251,6 +1251,10 @@ export const getAppliedCandidatesByJob = async (req, res) => {
           status: 1,
           noticePeriod: 1,
           experienceLevel: 1,
+          preferredTime: 1,
+          availabilityOnSaturday: 1,
+          willingToRelocate: 1,
+          experienceLevel: 1,
 
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
@@ -1403,6 +1407,10 @@ export const getShortlistedCandidatesByJob = async (req, res) => {
           status: 1,
           noticePeriod: 1,
           experienceLevel: 1,
+          availabilityOnSaturday: 1,
+          willingToRelocate: 1,
+          experienceLevel: 1,
+          preferredTime: 1,
 
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
@@ -1587,7 +1595,7 @@ export const getOfferSentCandidatesByJob = async (req, res) => {
 };
 
 // Get all Invitation sent candidates for a job
-export const getInvitationSentCandidatesByJob = async (req, res) => {
+export const getInvitationSentCandidatesByJob_ORIGINAL = async (req, res) => {
   try {
     const { jobId } = req.query;
 
@@ -1738,6 +1746,195 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
     });
   }
 };
+
+
+export const getInvitationSentCandidatesByJob = async (req, res) => {
+  try {
+    const { jobId } = req.query;
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID is required",
+      });
+    }
+
+    const appliedCandidates = await JobApplication.aggregate([
+      // 1️⃣ Match jobId + invitation_sent
+      {
+        $match: {
+          jobId: new mongoose.Types.ObjectId(jobId),
+          status: "invitation_sent",
+          isDel: false,
+        },
+      },
+
+      // 2️⃣ User
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+
+      // 3️⃣ Personal Details (skills)
+      {
+        $lookup: {
+          from: "personaldetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "personalDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$personalDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 4️⃣ Candidate Details (location)
+      {
+        $lookup: {
+          from: "candidatedetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "candidateDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 5️⃣ User Career
+      {
+        $lookup: {
+          from: "usercareers",
+          localField: "userId",
+          foreignField: "userId",
+          as: "career",
+        },
+      },
+      {
+        $unwind: {
+          path: "$career",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 6️⃣ Convert JobRole string → ObjectId
+      {
+        $addFields: {
+          jobRoleObjectId: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$career.JobRole", null] },
+                  { $ne: ["$career.JobRole", ""] },
+                ],
+              },
+              then: { $toObjectId: "$career.JobRole" },
+              else: null,
+            },
+          },
+        },
+      },
+
+      // 7️⃣ Job Role Master
+      {
+        $lookup: {
+          from: "list_job_roles",
+          localField: "jobRoleObjectId",
+          foreignField: "_id",
+          as: "jobRoleData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobRoleData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 8️⃣ Interview Feedback
+      {
+        $lookup: {
+          from: "interviewfeedbacks", // confirm name
+          localField: "_id",
+          foreignField: "applicationId",
+          as: "feedback",
+        },
+      },
+      {
+        $unwind: {
+          path: "$feedback",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 9️⃣ Final Response
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          status: 1,
+          noticePeriod: 1,
+          experienceLevel: 1,
+          designation: 1,
+          isInterviewFeedbackSubmitted: 1,
+
+          candidateName: "$user.name",
+          profilePicture: "$user.profilePicture",
+
+          skills: "$personalDetails.skills",
+          currentLocation: "$candidateDetails.currentLocation",
+
+          jobRole: "$jobRoleData.job_role",
+          expectedSalary: "$career.expectedSalary",
+
+          // 🗓 Interview info (DIRECT from JobApplication)
+          interviewDate: 1,
+          interviewTime: 1,
+
+          // 📝 Feedback details
+          feedback: {
+            communicationSkillScore:
+              "$feedback.communicationSkillScore",
+            technicalSkillScore: "$feedback.technicalSkillScore",
+            aptitudeScore: "$feedback.aptitudeScore",
+            overallScore: "$feedback.overallScore",
+            lastDrawnSalary: "$feedback.lastDrawnSalary",
+            expectedSalary: "$feedback.expectedSalary",
+            message: "$feedback.message",
+            createdAt: "$feedback.createdAt",
+          },
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: appliedCandidates.length,
+      data: appliedCandidates,
+    });
+  } catch (error) {
+    console.error("Error fetching applied candidates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+
+
 
 // Reject Job Application Status API
 export const rejectJobApplicationStatus = async (req, res) => {
