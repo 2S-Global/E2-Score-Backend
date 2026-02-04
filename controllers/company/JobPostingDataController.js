@@ -17,6 +17,7 @@ import list_tbl_countrie from "../../models/monogo_query/countriesModel.js";
 import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
 import list_tbl_state from "../../models/monogo_query/StatesModel.js";
 import InterviewFeedback from "../../models/InterviewFeedbackModel.js";
+import JobPostingTemp from "../../models/company_Models/JobPostingTempModel.js";
 import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
@@ -198,7 +199,7 @@ export const AllCompanyBranches = async (req, res) => {
 
     const companyBranches = await CompanyBranch.find(
       { userId: req.userId, is_del: false },
-      { name: 1, email: 1,phone: 1,address: 1 }
+      { name: 1, email: 1, phone: 1, address: 1 }
     ).lean();
 
     res.status(200).json({
@@ -490,6 +491,92 @@ export const GetJobPostingDetails = async (req, res) => {
   }
 };
 
+// Get Temp Job Posting Details API
+export const GetTempJobPostingDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { tempId } = req.query; // this is TEMP job _id
+
+    // console.log("User ID:", userId, "Temp Job ID:", jobId);
+
+    const company = await User.findById(userId);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found." });
+    }
+
+    // 🔹 Find TEMP job by id, status, and userId
+    let job = await JobPostingTemp.findOne({
+      _id: tempId,
+      userId,
+      status: "preview",
+    })
+      .populate(
+        "specialization jobType benefits careerLevel experienceLevel gender qualification country city branch jobSkills"
+      )
+      .lean(); // 👈 SAME as live API
+
+    console.log("Here is my Temp Job Posting Details", job);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Temp job not found, status mismatch, or not authorized.",
+      });
+    }
+
+    // 🔹 Fetch country / state / city names (SAME LOGIC)
+    const [countryDoc, stateDoc, cityDoc] = await Promise.all([
+      job.country
+        ? list_tbl_countrie.findOne({ id: job.country }).select("name").lean()
+        : null,
+
+      job.state
+        ? list_tbl_state.findOne({ id: job.state }).select("name").lean()
+        : null,
+
+      job.city
+        ? list_india_cities.findOne({ id: job.city }).select("city_name").lean()
+        : null,
+    ]);
+
+    // 🔹 Fetch industry name (SAME LOGIC)
+    let industryName = "Not specified";
+    if (job.industry) {
+      const industryDoc = await list_industries
+        .findOne({ id: job.industry })
+        .select("job_industry")
+        .lean();
+
+      job.industryName = industryDoc?.job_industry || industryName;
+    }
+
+    // 🔹 Attach company info (SAME)
+    job.companyName = company.name;
+    job.phoneNumber = company.phone_number;
+    job.countryName = countryDoc?.name || null;
+    job.stateName = stateDoc?.name || null;
+    job.cityName = cityDoc?.city_name || null;
+
+    // 🔹 Add preview metadata
+    job.isPreview = true;
+
+    res.status(200).json({
+      success: true,
+      message: "Temp job fetched successfully",
+      data: job,
+    });
+
+  } catch (error) {
+    console.error("Error fetching temp job posting:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+
 // Edit Job Posting Details API
 export const EditJobPostingDetails = async (req, res) => {
   try {
@@ -752,6 +839,7 @@ export const ConfirmJobPostingDetails = async (req, res) => {
 };
 
 // Edit Live Job Posting Details API
+// EditLiveJobPostingDetails
 export const EditLiveJobPostingDetails = async (req, res) => {
   try {
 
@@ -769,9 +857,10 @@ export const EditLiveJobPostingDetails = async (req, res) => {
       return res.status(404).json({ message: "Company not found." });
     }
 
-    // 🔒 ensure job is already posted
+    // 🔒 Ensure job is live
     const liveJob = await JobPosting.findOne({
       _id: jobId,
+      userId,
       status: "completed",
     });
 
@@ -918,65 +1007,67 @@ export const EditLiveJobPostingDetails = async (req, res) => {
 
     // Iterrate Skills from name to array ends here   -- 31th october
 
-    const tempJob = await JobPostingTemp.findOneAndUpdate(
+    const updatedJob = await JobPostingTemp.findOneAndUpdate(
       { originalJobId: jobId },
       {
+        userId,
         originalJobId: jobId,
-        companyId: userId,
-        jobData: {
-          userId,
-          jobTitle,
-          jobDescription,
-          getApplicationUpdateEmail,
-          specialization: specialization,
-          jobSkills: jobSkills,
-          jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
-          positionAvailable,
-          showBy,
-          expectedHours,
-          fromHours: finalFromHours,
-          toHours: finalToHours,
-          contractLength,
-          contractPeriod,
-          jobExpiryDate: jobExpiryDate ? new Date(jobExpiryDate) : null,
-          salary: {
-            structure: salary?.structure || " ",
-            currency: salary?.currency || " ",
-            min: salary?.min ? Number(salary.min) : null,
-            max: salary?.max ? Number(salary.max) : null,
-            amount: salary?.amount ? Number(salary.amount) : null,
-            rate: salary?.rate || "per year",
-          },
-          benefits: parseToArray(benefits).map(id => mongoose.Types.ObjectId(id)),
-          careerLevel: careerLevel ? mongoose.Types.ObjectId(careerLevel) : null,
-          experienceLevel: experienceLevel ? mongoose.Types.ObjectId(experienceLevel) : null,
-          gender: parseToArray(gender).map(id => mongoose.Types.ObjectId(id)),
-          industry,
-          qualification: parseToArray(qualification).map(id => mongoose.Types.ObjectId(id)),
-          jobLocationType,
-          country: country ? country : null,
-          city: city ? city : null,
-          state: state ? state : null,
-          branch: branch ? mongoose.Types.ObjectId(branch) : null,
-          address,
-          advertiseCity,
-          advertiseCityName,
-          resumeRequired: resumeRequired || false,
+        jobTitle,
+        jobDescription,
+        getApplicationUpdateEmail,
+        // specialization: parseToArray(specialization).map(id => mongoose.Types.ObjectId(id)),
+        specialization: specialization,
+        // jobSkills: skillObjectIds,
+        jobSkills: jobSkills,
+        jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
+        positionAvailable,
+        showBy,
+        expectedHours,
+        fromHours: finalFromHours,
+        toHours: finalToHours,
+        contractLength,
+        contractPeriod,
+        jobExpiryDate: jobExpiryDate ? new Date(jobExpiryDate) : null,
+        salary: {
+          structure: salary?.structure || " ",
+          currency: salary?.currency || " ",
+          min: salary?.min ? Number(salary.min) : null,
+          max: salary?.max ? Number(salary.max) : null,
+          amount: salary?.amount ? Number(salary.amount) : null,
+          rate: salary?.rate || "per year",
         },
+        benefits: parseToArray(benefits).map(id => mongoose.Types.ObjectId(id)),
+        careerLevel: careerLevel ? mongoose.Types.ObjectId(careerLevel) : null,
+        experienceLevel: experienceLevel ? mongoose.Types.ObjectId(experienceLevel) : null,
+        gender: parseToArray(gender).map(id => mongoose.Types.ObjectId(id)),
+        industry,
+        qualification: parseToArray(qualification).map(id => mongoose.Types.ObjectId(id)),
+        jobLocationType,
+        // country: country ? mongoose.Types.ObjectId(country) : null,
+        // city: city ? mongoose.Types.ObjectId(city) : null,
+        country: country ? country : null,
+        city: city ? city : null,
+        state: state ? state : null,
+        branch: branch ? mongoose.Types.ObjectId(branch) : null,
+        address,
+        advertiseCity,
+        advertiseCityName,
+        resumeRequired: resumeRequired || false,
         status: "preview",
+        // status: "draft"
       },
       { upsert: true, new: true }
     );
 
-    // console.log("New Job Object:", updatedJob);
+    console.log("New Job Object:", updatedJob);
 
     // const savedJob = await newJob.save();
 
     res.status(200).json({
       success: true,
-      message: "Job Saved job preview",
-      tempId: tempJob._id,
-      data: tempJob,
+      message: "Job posting created successfully",
+      jobId: updatedJob._id,
+      data: updatedJob,
     });
   } catch (error) {
     console.error("Error creating job posting:", error);
@@ -985,7 +1076,7 @@ export const EditLiveJobPostingDetails = async (req, res) => {
 };
 
 // Confirm Live Job Posting Details API
-export const ConfirmLiveJobPostingDetails = async (req, res) => {
+export const ConfirmLiveJobPostingDetails123 = async (req, res) => {
   const { tempId } = req.body;
 
   const tempJob = await JobPostingTemp.findById(tempId);
@@ -1008,6 +1099,83 @@ export const ConfirmLiveJobPostingDetails = async (req, res) => {
     message: "Job updated successfully",
   });
 };
+
+export const ConfirmLiveJobPostingDetails = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { tempId } = req.body;
+
+    if (!tempId) {
+      return res.status(400).json({
+        success: false,
+        message: "tempId is required",
+      });
+    }
+
+    // 🔹 Fetch temp job
+    const tempJob = await JobPostingTemp.findOne({
+      _id: tempId,
+      userId,
+      status: "preview",
+    }).lean();
+
+    if (!tempJob) {
+      return res.status(404).json({
+        success: false,
+        message: "Temp job not found or not authorized",
+      });
+    }
+
+    // 🔹 Ensure live job exists
+    const liveJob = await JobPosting.findOne({
+      _id: tempJob.originalJobId,
+      userId,
+    });
+
+    if (!liveJob) {
+      return res.status(404).json({
+        success: false,
+        message: "Live job not found",
+      });
+    }
+
+    // ❌ Remove TEMP-ONLY fields (IMPORTANT)
+    const {
+      _id,              // temp _id
+      originalJobId,    // ❌ must NOT go into JobPosting
+      status,           // preview
+      createdAt,
+      updatedAt,
+      __v,
+      ...jobData        // ✅ only real job fields remain
+    } = tempJob;
+
+    // ✅ Update live job
+    await JobPosting.findByIdAndUpdate(
+      originalJobId,
+      {
+        ...jobData,
+        status: "completed",
+      }
+    );
+
+    // ✅ Delete temp record after successful update
+    await JobPostingTemp.findByIdAndDelete(tempId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Job updated successfully",
+    });
+
+  } catch (error) {
+    console.error("Error confirming live job posting:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 
 // Get All Job Listing API
 export const getAllJobListing = async (req, res) => {
@@ -1054,9 +1222,9 @@ export const getAllJobListing = async (req, res) => {
       {
         $match: {
           jobId: { $in: jobIds },
-          isDel: false,  
-          status: { $ne: "rejected" } 
-          
+          isDel: false,
+          status: { $ne: "rejected" }
+
         }
       },
       {
@@ -1130,6 +1298,7 @@ export const getAllJobListing = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // Delete Job Posting API
 export const deleteJobPosting = async (req, res) => {
@@ -1402,7 +1571,7 @@ export const getAppliedCandidatesByJob = async (req, res) => {
         $match: {
           jobId: new mongoose.Types.ObjectId(jobId),
           isDel: false,
-      
+
         },
       },
 
@@ -1507,7 +1676,7 @@ export const getAppliedCandidatesByJob = async (req, res) => {
           _id: 1,
           userId: 1,
           status: 1,
-          noticePeriod: 1, 
+          noticePeriod: 1,
           experienceLevel: 1,
           preferredTime: 1,
           availabilityOnSaturday: 1,
@@ -2375,12 +2544,12 @@ export const acceptShortlistedCandidates = async (req, res) => {
     }
 
     // 3️⃣ Validate current status (only allow applied → shortlisted)
-/*     if (application.status !== "shortlisted") {
-      return res.status(400).json({
-        success: false,
-        message: `Cannot sent interview invitation with status '${application.status}'`,
-      });
-    } */
+    /*     if (application.status !== "shortlisted") {
+          return res.status(400).json({
+            success: false,
+            message: `Cannot sent interview invitation with status '${application.status}'`,
+          });
+        } */
 
     // 4️⃣ Update status and interview details
     application.status = "invitation_sent";

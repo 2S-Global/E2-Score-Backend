@@ -31,6 +31,7 @@ import {
   submitInterviewFeedback,
   EditLiveJobPostingDetails,
   ConfirmLiveJobPostingDetails,
+  GetTempJobPostingDetails,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -87,6 +88,14 @@ jobPostingDataRouter.get(
   userAuth,
   Companymid,
   GetJobPostingDetails
+);
+
+// Get Temp Job Posting Details API
+jobPostingDataRouter.get(
+  "/get_temp_job_posting_details",
+  userAuth,
+  Companymid,
+  GetTempJobPostingDetails
 );
 
 // Edit Job Posting Details API
