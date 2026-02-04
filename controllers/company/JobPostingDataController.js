@@ -1437,6 +1437,7 @@ export const getJobPreviewDetails = async (req, res) => {
       title: job.jobTitle,
       jobDescription: job.jobDescription,
       industry: industryName,
+      jobSkills: job.jobSkills,
       specialization: job.specialization?.map(sp => sp.name) || [],
       jobType: job.jobType?.map(jt => jt.name) || [],
       expectedHours: hasExpectedHours && isPartTime ? job.expectedHours : "",
