@@ -858,6 +858,7 @@ export const EditLiveJobPostingDetails = async (req, res) => {
     }
 
     // 🔒 Ensure job is live
+    /*
     const liveJob = await JobPosting.findOne({
       _id: jobId,
       userId,
@@ -869,6 +870,7 @@ export const EditLiveJobPostingDetails = async (req, res) => {
         message: "Only completed jobs can be edited",
       });
     }
+    */
 
     const {
       jobTitle,
@@ -1127,6 +1129,7 @@ export const ConfirmLiveJobPostingDetails = async (req, res) => {
     }
 
     // 🔹 Ensure live job exists
+    /*
     const liveJob = await JobPosting.findOne({
       _id: tempJob.originalJobId,
       userId,
@@ -1138,6 +1141,7 @@ export const ConfirmLiveJobPostingDetails = async (req, res) => {
         message: "Live job not found",
       });
     }
+      */
 
     // ❌ Remove TEMP-ONLY fields (IMPORTANT)
     const {
@@ -1323,7 +1327,7 @@ export const deleteJobPosting = async (req, res) => {
     const job = await JobPosting.findOne({
       _id: jobId,
       userId,
-      status: "completed",
+      // status: "completed",
       is_del: false
     });
 
