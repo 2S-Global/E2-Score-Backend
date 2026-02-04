@@ -29,6 +29,8 @@ import {
   acceptShortlistedCandidates,
   sentOfferToCandidates,
   submitInterviewFeedback,
+  EditLiveJobPostingDetails,
+  ConfirmLiveJobPostingDetails,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -103,6 +105,24 @@ jobPostingDataRouter.post(
   userAuth,
   Companymid,
   ConfirmJobPostingDetails
+);
+
+// Edit Live Job Posting Details API
+jobPostingDataRouter.post(
+  "/edit_live_job_posting_details",
+  upload.none(),
+  userAuth,
+  Companymid,
+  EditLiveJobPostingDetails
+);
+
+// Confirm Live Job Posting Details API
+jobPostingDataRouter.post(
+  "/confirm_live_job_posting_details",
+  upload.none(),
+  userAuth,
+  Companymid,
+  ConfirmLiveJobPostingDetails
 );
 
 // Get All Job Listing API

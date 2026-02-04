@@ -751,6 +751,264 @@ export const ConfirmJobPostingDetails = async (req, res) => {
   }
 };
 
+// Edit Live Job Posting Details API
+export const EditLiveJobPostingDetails = async (req, res) => {
+  try {
+
+    const userId = req.userId;
+
+    const { jobId } = req.query;
+    if (!jobId) {
+      return res.status(404).json({ message: "jobId not provided in query parameter." });
+    }
+
+    // const id = mongoose.Types.ObjectId(jobId);
+
+    const company = await User.findById(req.userId);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found." });
+    }
+
+    // 🔒 ensure job is already posted
+    const liveJob = await JobPosting.findOne({
+      _id: jobId,
+      status: "completed",
+    });
+
+    if (!liveJob) {
+      return res.status(404).json({
+        message: "Only completed jobs can be edited",
+      });
+    }
+
+    const {
+      jobTitle,
+      jobDescription,
+      getApplicationUpdateEmail,
+      specialization,
+      jobType,
+      positionAvailable,
+      showBy,
+      expectedHours,
+      fromHours,
+      toHours,
+      contractLength,
+      contractPeriod,
+      jobExpiryDate,
+      salary,
+      benefits,
+      careerLevel,
+      experienceLevel,
+      gender,
+      industry,
+      qualification,
+      jobLocationType,
+      country,
+      city,
+      state,
+      branch,
+      address,
+      advertiseCity,
+      advertiseCityName,
+      resumeRequired,
+      jobSkills
+    } = req.body;
+
+    console.log("Here is the body data", req.body);
+    // ------------------- ADD HERE -------------------
+    let finalFromHours = fromHours;
+    let finalToHours = toHours;
+
+    if (showBy !== "range") {
+      finalFromHours = "";
+      finalToHours = "";
+    }
+    // -------------------------------------------------
+
+    // Convert repeated fields to arrays if sent as string
+    const parseToArray = (field) => {
+      if (!field) return [];
+      return Array.isArray(field) ? field : [field];
+    };
+    console.log("hello I am here EditJobPosting API !");
+    console.log("Id type is : ", typeof jobId, jobId);
+
+    // new block of code for skills started
+    if (!Array.isArray(jobSkills) || jobSkills.length === 0) {
+      return res.status(400).json({
+        message: "Skills must be a non-empty array of strings.",
+      });
+    }
+
+    if (!jobSkills.every(skill => typeof skill === "string")) {
+      return res.status(400).json({
+        message: "All skills must be strings.",
+      });
+    }
+    // new block of code for skills ended
+
+    // new block of code for Specialization started
+    if (!Array.isArray(specialization) || specialization.length === 0) {
+      return res.status(400).json({
+        message: "Specialization must be a non-empty array of strings.",
+      });
+    }
+
+    if (!specialization.every(spec => typeof spec === "string")) {
+      return res.status(400).json({
+        message: "All specializations must be strings.",
+      });
+    }
+    // new block of code for Specialization ended
+
+
+    /*
+    // Iterrate Skills from name to array starts from here  --- 31th october
+
+    if (!Array.isArray(jobSkills) || jobSkills.length === 0) {
+      return res.status(400).json({
+        message: "Skills must be a non-empty array of strings.",
+      });
+    }
+
+    // Case: If skills came as a string from form-data
+    let parsedSkills = jobSkills;
+    if (typeof jobSkills === "string") {
+      try {
+        parsedSkills = JSON.parse(jobSkills);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid skills format." });
+      }
+    }
+
+    const allStrings = parsedSkills.every((skill) => typeof skill === "string");
+    if (!allStrings) {
+      return res.status(400).json({ message: "All skills must be strings." });
+    }
+
+    // Find matching skills in MongoDB
+    const matchedSkills = await list_key_skill.find({
+      Skill: { $in: parsedSkills },
+      is_del: 0,
+      is_active: 1,
+    }, "_id Skill");
+
+    const skillMap = {};
+    matchedSkills.forEach((row) => {
+      skillMap[row.Skill] = row._id;
+    });
+
+    const missingSkills = parsedSkills.filter((skill) => !skillMap[skill]);
+    if (missingSkills.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Some skills not found in the database.",
+        missingSkills,
+      });
+    }
+
+    const skillObjectIds = parsedSkills.map((skill) => skillMap[skill]);
+
+
+
+    console.log("Here is my all skill object IDS --", skillObjectIds);
+
+    */
+
+
+    // Iterrate Skills from name to array ends here   -- 31th october
+
+    const tempJob = await JobPostingTemp.findOneAndUpdate(
+      { originalJobId: jobId },
+      {
+        originalJobId: jobId,
+        companyId: userId,
+        jobData: {
+          userId,
+          jobTitle,
+          jobDescription,
+          getApplicationUpdateEmail,
+          specialization: specialization,
+          jobSkills: jobSkills,
+          jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
+          positionAvailable,
+          showBy,
+          expectedHours,
+          fromHours: finalFromHours,
+          toHours: finalToHours,
+          contractLength,
+          contractPeriod,
+          jobExpiryDate: jobExpiryDate ? new Date(jobExpiryDate) : null,
+          salary: {
+            structure: salary?.structure || " ",
+            currency: salary?.currency || " ",
+            min: salary?.min ? Number(salary.min) : null,
+            max: salary?.max ? Number(salary.max) : null,
+            amount: salary?.amount ? Number(salary.amount) : null,
+            rate: salary?.rate || "per year",
+          },
+          benefits: parseToArray(benefits).map(id => mongoose.Types.ObjectId(id)),
+          careerLevel: careerLevel ? mongoose.Types.ObjectId(careerLevel) : null,
+          experienceLevel: experienceLevel ? mongoose.Types.ObjectId(experienceLevel) : null,
+          gender: parseToArray(gender).map(id => mongoose.Types.ObjectId(id)),
+          industry,
+          qualification: parseToArray(qualification).map(id => mongoose.Types.ObjectId(id)),
+          jobLocationType,
+          country: country ? country : null,
+          city: city ? city : null,
+          state: state ? state : null,
+          branch: branch ? mongoose.Types.ObjectId(branch) : null,
+          address,
+          advertiseCity,
+          advertiseCityName,
+          resumeRequired: resumeRequired || false,
+        },
+        status: "preview",
+      },
+      { upsert: true, new: true }
+    );
+
+    // console.log("New Job Object:", updatedJob);
+
+    // const savedJob = await newJob.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Job Saved job preview",
+      tempId: tempJob._id,
+      data: tempJob,
+    });
+  } catch (error) {
+    console.error("Error creating job posting:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Confirm Live Job Posting Details API
+export const ConfirmLiveJobPostingDetails = async (req, res) => {
+  const { tempId } = req.body;
+
+  const tempJob = await JobPostingTemp.findById(tempId);
+  if (!tempJob) {
+    return res.status(404).json({ message: "Temp job not found" });
+  }
+
+  await JobPosting.findByIdAndUpdate(
+    tempJob.originalJobId,
+    {
+      ...tempJob.jobData,
+      status: "completed",
+    }
+  );
+
+  await JobPostingTemp.findByIdAndDelete(tempId);
+
+  res.json({
+    success: true,
+    message: "Job updated successfully",
+  });
+};
+
 // Get All Job Listing API
 export const getAllJobListing = async (req, res) => {
   try {
@@ -1249,7 +1507,7 @@ export const getAppliedCandidatesByJob = async (req, res) => {
           _id: 1,
           userId: 1,
           status: 1,
-          noticePeriod: 1,
+          noticePeriod: 1, 
           experienceLevel: 1,
           preferredTime: 1,
           availabilityOnSaturday: 1,
