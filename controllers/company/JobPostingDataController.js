@@ -198,7 +198,7 @@ export const AllCompanyBranches = async (req, res) => {
 
     const companyBranches = await CompanyBranch.find(
       { userId: req.userId, is_del: false },
-      { name: 1 }
+      { name: 1, email: 1,phone: 1,address: 1 }
     ).lean();
 
     res.status(200).json({
