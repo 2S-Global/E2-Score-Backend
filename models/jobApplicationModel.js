@@ -76,7 +76,7 @@ const jobApplicationSchema = new mongoose.Schema(
         },
         interviewInvitationAccepted: {
             type: Boolean,
-            default: false,
+            // default: false,
         },
         appliedAt: {
             type: Date,
