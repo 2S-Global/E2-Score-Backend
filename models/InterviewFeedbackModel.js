@@ -47,16 +47,21 @@ const interviewFeedbackSchema = new mongoose.Schema(
 
         // Interviewer remarks
         lastDrawnSalary: {
-        type: String,
-        trim: true,
+            type: String,
+            trim: true,
         },
 
         // Interviewer remarks
         expectedSalary: {
-        type: String,
-        trim: true,
+            type: String,
+            trim: true,
         },
 
+        appeared: {
+            type: String,
+            trim: true,
+        },
+        
         // Interviewer remarks
         message: {
             type: String,
