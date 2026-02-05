@@ -33,6 +33,7 @@ import {
   ConfirmLiveJobPostingDetails,
   GetTempJobPostingDetails,
   acceptInterviewInvitation,
+  checkJobApplicationStatus,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -255,9 +256,14 @@ jobPostingDataRouter.get(
 jobPostingDataRouter.post(
   "/accept_interview_invitation",
   upload.none(),
-  userAuth,
-  Companymid,
   acceptInterviewInvitation
+);
+
+// Get check-application-status API
+jobPostingDataRouter.get(
+  "/check-application-status",
+  userAuth,
+  checkJobApplicationStatus
 );
 
 export default jobPostingDataRouter;

@@ -1398,7 +1398,7 @@ export const getJobPreviewDetails = async (req, res) => {
     }
 
     // Fetch company logo & cover
-    const companyDetails = await CompanyDetails.findOne({ userId: job.userId }).select("logo cover website").lean();
+    const companyDetails = await CompanyDetails.findOne({ userId: job.userId }).select("name logo cover website").lean();
     const logoImage = companyDetails?.logo || null;
     const coverImage = companyDetails?.cover || null;
     const companyWebsite = companyDetails?.website || null;
@@ -1459,7 +1459,7 @@ export const getJobPreviewDetails = async (req, res) => {
       logoImage: logoImage,
       coverImage: coverImage,
       companyWebsite: companyWebsite,
-      companyName: company?.name || "",
+      companyName: companyDetails?.name || "",
       // company: {
       //   name: company.name,
       //   phoneNumber: company.phone_number,
@@ -2607,6 +2607,22 @@ export const acceptShortlistedCandidates = async (req, res) => {
         </p>
 
         <p>
+          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=accept"
+            style="display:inline-block;padding:12px 20px;margin-right:10px;
+                    background-color:#28a745;color:#ffffff;text-decoration:none;
+                    border-radius:4px;font-weight:bold;">
+            Accept Interview Invitation
+          </a>
+ 
+          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reject"
+            style="display:inline-block;padding:12px 20px;
+                    background-color:#dc3545;color:#ffffff;text-decoration:none;
+                    border-radius:4px;font-weight:bold;">
+            Reject Interview Invitation
+          </a>
+        </p>
+
+        <p>
           <strong>Interview Details:</strong><br />
           <strong>Position:</strong> ${designation}<br />
           <strong>Date:</strong> ${new Date(interviewDate).toDateString()}<br />
@@ -2980,6 +2996,55 @@ export const acceptInterviewInvitation = async (req, res) => {
 
   } catch (error) {
     console.error("Interview decision error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Get check-application-status API
+export const checkJobApplicationStatus = async (req, res) => {
+  try {
+    const userId = req.userId;   // from token
+    const { jobId } = req.query;
+
+    console.log("Check application status called with userId:", userId, "and jobId:", jobId);
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "jobId is required",
+      });
+    }
+
+    // Check if application already exists
+    const application = await JobApplication.findOne({
+      jobId,
+      userId,
+      isDel: false,
+    }).select("_id status");
+
+    console.log("Check application status result:", application);
+
+    if (application) {
+      return res.status(200).json({
+        success: true,
+        alreadyApplied: true,
+        applicationId: application._id,
+        status: application.status,
+        message: "User has already applied for this job",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      alreadyApplied: false,
+      message: "User has not applied for this job",
+    });
+
+  } catch (error) {
+    console.error("Check application status error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
