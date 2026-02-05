@@ -21,28 +21,28 @@ const interviewFeedbackSchema = new mongoose.Schema(
             type: Number,
             min: 0,
             max: 10,
-            required: true,
+            // required: true,
         },
 
         technicalSkillScore: {
             type: Number,
             min: 0,
             max: 10,
-            required: true,
+            // required: true,
         },
 
         aptitudeScore: {
             type: Number,
             min: 0,
             max: 10,
-            required: true,
+            // required: true,
         },
 
         overallScore: {
             type: Number,
             min: 0,
             max: 10,
-            required: true,
+            // required: true,
         },
 
         // Interviewer remarks

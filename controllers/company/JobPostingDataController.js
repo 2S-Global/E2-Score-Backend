@@ -2619,6 +2619,26 @@ export const acceptShortlistedCandidates = async (req, res) => {
         </p>
 
         <p>
+          <strong>Please confirm your availability by selecting one of the options below:</strong>
+        </p>
+
+        <p>
+          <a href="${process.env.BACKEND_URL}/api/auth/accept-or-reject-interview-invitation/${token}"
+            style="display:inline-block;padding:12px 20px;margin-right:10px;
+                    background-color:#28a745;color:#ffffff;text-decoration:none;
+                    border-radius:4px;font-weight:bold;">
+            Accept Interview Invitation
+          </a>
+
+          <a href=""
+            style="display:inline-block;padding:12px 20px;
+                    background-color:#dc3545;color:#ffffff;text-decoration:none;
+                    border-radius:4px;font-weight:bold;">
+            Reject Interview Invitation
+          </a>
+        </p>
+
+        <p>
           If you have any questions or require any clarification, please feel free to reply to this email.
           We request you to confirm your availability by responding to this invitation.
         </p>
@@ -2867,6 +2887,7 @@ export const submitInterviewFeedback = async (req, res) => {
       lastDrawnSalary,
       expectedSalary,
       message,
+      appeared,
     } = req.body;
 
     // interviewerId comes from auth middleware
@@ -2902,6 +2923,7 @@ export const submitInterviewFeedback = async (req, res) => {
       lastDrawnSalary,
       expectedSalary,
       message,
+      appeared,
     });
 
     // 2️⃣ Update JobApplication to mark feedback as submitted
@@ -2921,6 +2943,59 @@ export const submitInterviewFeedback = async (req, res) => {
 
   } catch (error) {
     console.error("Submit Interview Feedback Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Accept or Reject Interview Invitation API
+export const acceptInterviewInvitation = async (req, res) => {
+  try {
+    const { applicationId, accept } = req.body;
+
+    // 1️⃣ Validate input
+    if (!applicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "applicationId is required",
+      });
+    }
+
+    // accept must be boolean
+    if (typeof accept !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "accept must be true or false",
+      });
+    }
+
+    // 2️⃣ Find application
+    const application = await JobApplication.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+    // 3️⃣ Update DB field
+    application.interviewInvitationAccepted = accept; // true or false
+    await application.save();
+
+    // 4️⃣ Response
+    return res.status(200).json({
+      success: true,
+      message: accept
+        ? "Interview invitation accepted"
+        : "Interview invitation rejected",
+      data: application,
+    });
+
+  } catch (error) {
+    console.error("Interview decision error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

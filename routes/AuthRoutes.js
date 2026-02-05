@@ -10,7 +10,8 @@ import {
   validtoken,
   registerInstitute,
   registerInstituteft,
-  verifyEmail
+  verifyEmail,
+  acceptRejectInterviewInvitation,
 } from "../controllers/AuthController.js"; // Adjust the path according to your project structure
 // Initialize dotenv to load environment variables
 dotenv.config();
@@ -44,5 +45,8 @@ AuthRouter.post("/forgotpass", upload.none(), forgotPassword);
 AuthRouter.get("/validtoken", userAuth, validtoken);
 // Validate email
 AuthRouter.get("/verify-email/:token", verifyEmail);
+
+// Accept or Reject Interview Invitation
+AuthRouter.get("/accept-or-reject-interview-invitation/:token", acceptRejectInterviewInvitation);
 
 export default AuthRouter;

@@ -956,3 +956,130 @@ export const verifyEmail = async (req, res) => {
       );
   }
 };
+
+// Accept or Reject Interview Invitation
+export const acceptRejectInterviewInvitation = async (req, res) => {
+  const { token } = req.params;
+  console.log("This is Token", token);
+
+  const generateHTML = (title, heading, message, color) => `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>${title}</title>
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: #f4f4f9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+        }
+        .container {
+          max-width: 500px;
+          width: 90%;
+          padding: 30px;
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          text-align: center;
+        }
+        .logo {
+          max-width: 150px;
+          margin-bottom: 20px;
+        }
+        h1 {
+          color: ${color};
+          font-size: 24px;
+          margin-bottom: 10px;
+        }
+        p {
+          font-size: 16px;
+          color: #333;
+        }
+        @media (max-width: 600px) {
+          .container {
+            padding: 20px;
+          }
+          h1 {
+            font-size: 20px;
+          }
+          p {
+            font-size: 14px;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+       
+        <h1>${heading}</h1>
+        <p>${message}</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { userId } = decoded;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .send(
+          generateHTML(
+            "Verification Failed",
+            "User Not Found",
+            "The user associated with this token does not exist.",
+            "red"
+          )
+        );
+    }
+
+    if (user.isVerified) {
+      return res
+        .status(200)
+        .send(
+          generateHTML(
+            "Email Already Verified",
+            "You're Already Verified!",
+            "Your email address has already been verified. You can log in now.",
+            "green"
+          )
+        );
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    return res
+      .status(200)
+      .send(
+        generateHTML(
+          "Email Verified",
+          "Success!",
+          "Your email has been verified successfully. You can now access all features.",
+          "#28a745"
+        )
+      );
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(400)
+      .send(
+        generateHTML(
+          "Invalid or Expired Token",
+          "Verification Failed",
+          "The verification link is invalid or has expired. Please try again or contact support.",
+          "red"
+        )
+      );
+  }
+};

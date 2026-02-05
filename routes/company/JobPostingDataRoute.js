@@ -32,6 +32,7 @@ import {
   EditLiveJobPostingDetails,
   ConfirmLiveJobPostingDetails,
   GetTempJobPostingDetails,
+  acceptInterviewInvitation,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -248,6 +249,15 @@ jobPostingDataRouter.get(
   "/get_all_my_applied_job",
   userAuth,
   getMyAppliedJobs
+);
+
+// Accept or Reject Interview Invitation API
+jobPostingDataRouter.post(
+  "/accept_interview_invitation",
+  upload.none(),
+  userAuth,
+  Companymid,
+  acceptInterviewInvitation
 );
 
 export default jobPostingDataRouter;
