@@ -2623,22 +2623,6 @@ export const acceptShortlistedCandidates = async (req, res) => {
         </p>
 
         <p>
-          <a href="${process.env.BACKEND_URL}/api/auth/accept-or-reject-interview-invitation/${token}"
-            style="display:inline-block;padding:12px 20px;margin-right:10px;
-                    background-color:#28a745;color:#ffffff;text-decoration:none;
-                    border-radius:4px;font-weight:bold;">
-            Accept Interview Invitation
-          </a>
-
-          <a href=""
-            style="display:inline-block;padding:12px 20px;
-                    background-color:#dc3545;color:#ffffff;text-decoration:none;
-                    border-radius:4px;font-weight:bold;">
-            Reject Interview Invitation
-          </a>
-        </p>
-
-        <p>
           If you have any questions or require any clarification, please feel free to reply to this email.
           We request you to confirm your availability by responding to this invitation.
         </p>
