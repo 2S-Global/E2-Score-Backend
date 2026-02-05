@@ -2981,6 +2981,15 @@ export const acceptInterviewInvitation = async (req, res) => {
       });
     }
 
+    // 3️⃣ Check if response already recorded
+    // IMPORTANT: checking for both true and false
+    if (typeof application.interviewInvitationAccepted === "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "Your response already recorded",
+      });
+    }
+
     // 3️⃣ Update DB field
     application.interviewInvitationAccepted = accept; // true or false
     await application.save();
