@@ -34,6 +34,7 @@ import {
   GetTempJobPostingDetails,
   acceptInterviewInvitation,
   checkJobApplicationStatus,
+  rescheduleInterview,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -218,13 +219,22 @@ jobPostingDataRouter.patch(
   acceptJobApplicationStatus
 );
 
-// Accept Shortlisted Candidates API
+// Accept Shortlisted Candidates (Interview Schedule) API
 jobPostingDataRouter.patch(
   "/accept_shortlisted_candidates",
   upload.none(),
   userAuth,
   Companymid,
   acceptShortlistedCandidates
+);
+
+// Accept Shortlisted Candidates (Interview Reschedule) API
+jobPostingDataRouter.patch(
+  "/accept_shortlisted_candidates_reschedule",
+  upload.none(),
+  userAuth,
+  Companymid,
+  rescheduleInterview
 );
 
 // Sent Offer to Candidates API

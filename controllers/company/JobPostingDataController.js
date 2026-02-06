@@ -2640,6 +2640,13 @@ export const acceptShortlistedCandidates = async (req, res) => {
                     border-radius:4px;font-weight:bold;">
             Reject Interview Invitation
           </a>
+
+          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reschedule"
+            style="display:inline-block;padding:12px 20px;
+                    background-color:#28a745;color:#ffffff;text-decoration:none;
+                    border-radius:4px;font-weight:bold;">
+            Reschedule Interview
+          </a>
         </p>
 
         <p>
@@ -2690,6 +2697,153 @@ export const acceptShortlistedCandidates = async (req, res) => {
     });
   }
 };
+
+// Interview Rescheduled API
+export const rescheduleInterview = async (req, res) => {
+  try {
+    const {
+      applicationId,
+      interviewDate,
+      interviewTime,
+      formDesignation,
+    } = req.body;
+
+    // 1️⃣ Validate input
+    if (!applicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Application ID is required",
+      });
+    }
+
+    // 2️⃣ Find application
+    const application = await JobApplication.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Job application not found",
+      });
+    }
+
+    // 3️⃣ Allow reschedule only if interview was already sent
+    if (application.status !== "invitation_sent") {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot reschedule interview with status '${application.status}'`,
+      });
+    }
+
+    // 4️⃣ Update interview details
+    // application.status = "invitation_rescheduled";
+    application.interviewDate = interviewDate;
+    application.interviewTime = interviewTime;
+    application.designation = formDesignation;
+
+    // 🔴 Reset candidate response
+    // application.interviewInvitationAccepted = null;
+
+    await application.save();
+
+    // 5️⃣ Fetch candidate
+    const user = await User.findById(application.userId).select("email name");
+
+    // 6️⃣ Fetch job & company
+    const job = await JobPosting.findById(application.jobId).select(
+      "jobTitle userId"
+    );
+
+    const companyUser = await User.findById(job.userId).select("name");
+
+    const companyName = companyUser?.name || "our organization";
+    const designation = job?.jobTitle || "the applied position";
+
+    // 7️⃣ Email setup
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"HR Team" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `Interview Rescheduled – ${formDesignation} at ${companyName}`,
+      html: `
+        <p>Dear ${user.name || "Candidate"},</p>
+
+        <p>
+          We would like to inform you that your interview for the position of
+          <strong>${designation}</strong> at <strong>${companyName}</strong>
+          has been <strong>rescheduled</strong>.
+        </p>
+
+        <p>
+          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=accept"
+            style="display:inline-block;padding:12px 20px;margin-right:10px;
+                    background-color:#28a745;color:#ffffff;text-decoration:none;
+                    border-radius:4px;font-weight:bold;">
+            Accept Rescheduled Interview
+          </a>
+
+          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reject"
+            style="display:inline-block;padding:12px 20px;
+                    background-color:#dc3545;color:#ffffff;text-decoration:none;
+                    border-radius:4px;font-weight:bold;">
+            Reject Interview
+          </a>
+
+          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reschedule"
+            style="display:inline-block;padding:12px 20px;
+                    background-color:#28a745;color:#ffffff;text-decoration:none;
+                    border-radius:4px;font-weight:bold;">
+            Reschedule Interview
+          </a>
+
+        </p>
+
+        <p>
+          <strong>Updated Interview Details:</strong><br />
+          <strong>Position:</strong> ${designation}<br />
+          <strong>Date:</strong> ${new Date(interviewDate).toDateString()}<br />
+          <strong>Time:</strong> ${interviewTime}
+        </p>
+
+        <p>
+          Kindly confirm your availability by selecting one of the options above.
+        </p>
+
+        <p>We look forward to your response.</p>
+
+        <br />
+        <p>Best regards,</p>
+        <p><strong>HR Team</strong></p>
+      `,
+    };
+
+    if (user?.email) {
+      await transporter.sendMail(mailOptions);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Interview rescheduled successfully",
+      data: application,
+    });
+
+  } catch (error) {
+    console.error("Reschedule Interview Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 
 // Sent Offer to Candidates API
 export const sentOfferToCandidates = async (req, res) => {
