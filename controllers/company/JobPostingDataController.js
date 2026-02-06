@@ -2310,6 +2310,25 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
         },
       },
 
+      {
+        $addFields: {
+          interviewInvitationStatus: {
+            $cond: {
+              if: { $eq: ["$interviewInvitationAccepted", true] },
+              then: "accepted",
+              else: {
+                $cond: {
+                  if: { $eq: ["$interviewInvitationAccepted", false] },
+                  then: "rejected",
+                  else: "pending",
+                },
+              },
+            },
+          },
+        },
+      },
+
+
       // 9️⃣ Final Response
       {
         $project: {
@@ -2320,6 +2339,7 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
           experienceLevel: 1,
           designation: 1,
           isInterviewFeedbackSubmitted: 1,
+          interviewInvitationStatus: 1,
 
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
