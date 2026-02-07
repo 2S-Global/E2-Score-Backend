@@ -21,6 +21,8 @@ app.use(express.json());
 // app.use("/images", express.static(path.join(__dirname, "public", "images")));
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 
+app.use("/upload", express.static(path.join(process.cwd(), "upload")));
+
 // Import routes
 import contactRouter from "./routes/contactRoutes.js";
 import AuthRouter from "./routes/AuthRoutes.js";
