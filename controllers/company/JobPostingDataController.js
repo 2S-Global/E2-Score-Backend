@@ -2538,6 +2538,16 @@ export const acceptJobApplicationStatus = async (req, res) => {
   }
 };
 
+const formatTimeTo12Hour = (time24) => {
+  if (!time24) return "";
+
+  const [hours, minutes] = time24.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const hour12 = hours % 12 || 12;
+
+  return `${hour12}:${minutes.toString().padStart(2, "0")} ${period}`;
+};
+
 // Accept Shortlisted Application Status API
 export const acceptShortlistedCandidates = async (req, res) => {
   try {
@@ -2576,6 +2586,8 @@ export const acceptShortlistedCandidates = async (req, res) => {
           });
         } */
 
+    const formattedInterviewTime = formatTimeTo12Hour(interviewTime);
+
     // 4️⃣ Update status and interview details
     application.status = "invitation_sent";
     application.interviewDate = interviewDate;
@@ -2588,7 +2600,7 @@ export const acceptShortlistedCandidates = async (req, res) => {
 
     // 🔹 NEW: Fetch job details using application.jobId
     const job = await JobPosting.findById(application.jobId).select(
-      "jobTitle userId"
+      "jobTitle userId jobLocationType address advertiseCity advertiseCityName"
     );
 
     // 🔹 NEW: Fetch company name from company user (job.userId)
@@ -2599,6 +2611,18 @@ export const acceptShortlistedCandidates = async (req, res) => {
 
     const designation =
       job?.jobTitle || "the applied position";
+
+    let interviewLocation = "Remote";
+
+    if (job?.jobLocationType === "on-site") {
+      interviewLocation = job.address || "Office Location";
+    } else if (job?.jobLocationType === "remote") {
+      if (job.advertiseCity === true && job.advertiseCityName) {
+        interviewLocation = `Remote (${job.advertiseCityName})`;
+      } else {
+        interviewLocation = "Remote";
+      }
+    }
 
     console.log("Here is my Sender User mail:", user.email);
 
@@ -2736,11 +2760,8 @@ export const acceptShortlistedCandidates = async (req, res) => {
 
                     <p>
                       <strong>Date:</strong> ${new Date(interviewDate).toDateString()}<br />
-                      <strong>Time:</strong> ${interviewTime}<br />
-                      <strong>Location:</strong> 2S Global Technologies Ltd, Kolkata Office,<br />
-                      Unit-404, Webel IT Park (Phase-II), DH Block, Action Area 1D,<br />
-                      New Town, Kolkata-700160<br />
-                      <em>(Nearest Bus Stop – Unitech Gate 2)</em>
+                      <strong>Time:</strong> ${formattedInterviewTime}<br />
+                      <strong>Location:</strong> ${interviewLocation}
                     </p>
 
                     <h3 style="margin-top:20px;">Action Required</h3>
@@ -2880,6 +2901,8 @@ export const rescheduleInterview = async (req, res) => {
       });
     }
 
+    const formattedInterviewTime = formatTimeTo12Hour(interviewTime);
+
     // 4️⃣ Update interview details
     // application.status = "invitation_rescheduled";
     application.interviewDate = interviewDate;
@@ -2896,13 +2919,26 @@ export const rescheduleInterview = async (req, res) => {
 
     // 6️⃣ Fetch job & company
     const job = await JobPosting.findById(application.jobId).select(
-      "jobTitle userId"
+      "jobTitle userId jobLocationType address advertiseCity advertiseCityName"
     );
 
     const companyUser = await User.findById(job.userId).select("name");
 
     const companyName = companyUser?.name || "our organization";
     const designation = job?.jobTitle || "the applied position";
+
+    let interviewLocation = "Remote";
+
+    if (job?.jobLocationType === "on-site") {
+      interviewLocation = job.address || "Office Location";
+    } else if (job?.jobLocationType === "remote") {
+      if (job.advertiseCity === true && job.advertiseCityName) {
+        interviewLocation = `Remote (${job.advertiseCityName})`;
+      } else {
+        interviewLocation = "Remote";
+      }
+    }
+
 
     // 7️⃣ Email setup
     const transporter = nodemailer.createTransport({
@@ -3010,11 +3046,8 @@ export const rescheduleInterview = async (req, res) => {
 
                     <p>
                       <strong>Date:</strong> ${new Date(interviewDate).toDateString()}<br />
-                      <strong>Time:</strong> ${interviewTime}<br />
-                      <strong>Location:</strong> 2S Global Technologies Ltd, Kolkata Office,<br />
-                      Unit-404, Webel IT Park (Phase-II), DH Block, Action Area 1D,<br />
-                      New Town, Kolkata-700160<br />
-                      <em>(Nearest Bus Stop – Unitech Gate 2)</em>
+                      <strong>Time:</strong> ${formattedInterviewTime}<br />
+                      <strong>Location:</strong> ${interviewLocation}<br />
                     </p>
 
                   </td>
