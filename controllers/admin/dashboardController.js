@@ -3,7 +3,8 @@ import User from "../../models/userModel.js";
 import UserVerification from "../../models/userVerificationModel.js";
 import mongoose from "mongoose";
 import CompanyPackage from "../../models/companyPackageModel.js";
-
+import JobApplication from "../../models/jobApplicationModel.js";
+import Job from "../../models/company_Models/JobPostingModel.js";
 
 /**
  * @route POST /api/dashboard/getTotal
@@ -619,3 +620,220 @@ export const getMonthlyUserVerificationsFrontend = async (req, res) => {
   }
 };
 
+export const getLatestApplicants = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // 1️⃣ Get jobs posted by logged-in user
+    const myJobs = await Job.find(
+      { userId: userId, is_del: false },
+      { _id: 1 }
+    );
+
+    if (!myJobs.length) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: [],
+      });
+    }
+
+    const jobIds = myJobs.map(job => job._id);
+
+    // 2️⃣ Get applicants for those jobs
+    const appliedCandidates = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+           status: "applied", // ✅ only applied candidates
+          isDel: false,
+        },
+      },
+  // ✅ ADD THIS
+  {
+    $sort: { appliedAt: -1 },
+  },
+
+
+      // 🔹 User
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+
+      // 🔹 Personal Details
+      {
+        $lookup: {
+          from: "personaldetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "personalDetails",
+        },
+      },
+      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+
+      // 🔹 Candidate Details
+      {
+        $lookup: {
+          from: "candidatedetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "candidateDetails",
+        },
+      },
+      { $unwind: { path: "$candidateDetails", preserveNullAndEmptyArrays: true } },
+
+      // 🔹 Career
+      {
+        $lookup: {
+          from: "usercareers",
+          localField: "userId",
+          foreignField: "userId",
+          as: "career",
+        },
+      },
+      { $unwind: { path: "$career", preserveNullAndEmptyArrays: true } },
+
+      // 🔹 Convert JobRole string → ObjectId
+      {
+        $addFields: {
+          jobRoleObjectId: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$career.JobRole", null] },
+                  { $ne: ["$career.JobRole", ""] },
+                ],
+              },
+              then: { $toObjectId: "$career.JobRole" },
+              else: null,
+            },
+          },
+        },
+      },
+
+      // 🔹 Job Role Master
+      {
+        $lookup: {
+          from: "list_job_roles",
+          localField: "jobRoleObjectId",
+          foreignField: "_id",
+          as: "jobRoleData",
+        },
+      },
+      { $unwind: { path: "$jobRoleData", preserveNullAndEmptyArrays: true } },
+
+      // ✅ SAME RESPONSE AS BEFORE
+      {
+        $project: {
+          _id: 1,
+          jobId: 1,
+          userId: 1,
+          status: 1,
+          noticePeriod: 1,
+          experienceLevel: 1,
+          preferredTime: 1,
+          availabilityOnSaturday: 1,
+          willingToRelocate: 1,
+
+          candidateName: "$user.name",
+          profilePicture: "$user.profilePicture",
+
+          skills: "$personalDetails.skills",
+          currentLocation: "$candidateDetails.currentLocation",
+
+          jobRole: "$jobRoleData.job_role",
+          expectedSalary: "$career.expectedSalary",
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: appliedCandidates.length,
+      data: appliedCandidates,
+    });
+  } catch (error) {
+    console.error("Error fetching applied candidates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+
+export const getEmployerDashboardStats = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // 1️⃣ Total jobs posted by me
+    const totalJobs = await Job.countDocuments({
+      userId: userId,
+      is_del: false,
+    });
+
+    // Get my job IDs
+    const myJobs = await Job.find(
+      { userId: userId, is_del: false },
+      { _id: 1 }
+    );
+
+    const jobIds = myJobs.map(job => job._id);
+
+    // If no jobs, return zero stats
+    if (!jobIds.length) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          totalJobs: 0,
+          totalApplicants: 0,
+          totalShortlisted: 0,
+          totalRejected: 0,
+        },
+      });
+    }
+
+    // 2️⃣ Total applicants for my jobs
+    const totalApplicants = await JobApplication.countDocuments({
+      jobId: { $in: jobIds },
+      isDel: false,
+    });
+
+    // 3️⃣ Total shortlisted candidates
+    const totalShortlisted = await JobApplication.countDocuments({
+      jobId: { $in: jobIds },
+      isDel: false,
+      status: "shortlisted",
+    });
+
+    // 4️⃣ Total rejected candidates
+    const totalRejected = await JobApplication.countDocuments({
+      jobId: { $in: jobIds },
+      isDel: false,
+      status: "rejected",
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalJobs,
+        totalApplicants,
+        totalShortlisted,
+        totalRejected,
+      },
+    });
+  } catch (error) {
+    console.error("Dashboard stats error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
