@@ -2613,7 +2613,7 @@ export const acceptShortlistedCandidates = async (req, res) => {
       },
     });
 
-    const mailOptions = {
+    const mailOptions123 = {
       from: `"HR Team" <${process.env.EMAIL_USER}>`,
       to: user.email,
       // to: "avik@2sglobal.co",
@@ -2626,28 +2626,47 @@ export const acceptShortlistedCandidates = async (req, res) => {
           <strong>${designation}</strong> at <strong>${companyName}</strong>.
         </p>
 
-        <p>
-          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=accept"
-            style="display:inline-block;padding:12px 20px;margin-right:10px;
-                    background-color:#28a745;color:#ffffff;text-decoration:none;
-                    border-radius:4px;font-weight:bold;">
-            Accept Interview Invitation
-          </a>
- 
-          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reject"
-            style="display:inline-block;padding:12px 20px;
-                    background-color:#dc3545;color:#ffffff;text-decoration:none;
-                    border-radius:4px;font-weight:bold;">
-            Reject Interview Invitation
-          </a>
+        <table role="presentation" cellspacing="0" cellpadding="0" align="center" width="100%" style="margin-top:20px;">
+          <tr>
+            <td align="center" style="padding-bottom:12px;">
+              <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=accept"
+                style="display:block;width:100%;max-width:300px;
+                        background-color:#28a745;color:#ffffff;
+                        padding:14px 0;text-decoration:none;
+                        border-radius:4px;font-weight:bold;
+                        text-align:center;">
+                Accept Interview
+              </a>
+            </td>
+          </tr>
 
-          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reschedule"
-            style="display:inline-block;padding:12px 20px;
-                    background-color:#28a745;color:#ffffff;text-decoration:none;
-                    border-radius:4px;font-weight:bold;">
-            Reschedule Interview
-          </a>
-        </p>
+          <tr>
+            <td align="center" style="padding-bottom:12px;">
+              <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reschedule"
+                style="display:block;width:100%;max-width:300px;
+                        background-color:#007bff;color:#ffffff;
+                        padding:14px 0;text-decoration:none;
+                        border-radius:4px;font-weight:bold;
+                        text-align:center;">
+                Reschedule Interview
+              </a>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center">
+              <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reject"
+                style="display:block;width:100%;max-width:300px;
+                        background-color:#dc3545;color:#ffffff;
+                        padding:14px 0;text-decoration:none;
+                        border-radius:4px;font-weight:bold;
+                        text-align:center;">
+                Reject Interview
+              </a>
+            </td>
+          </tr>
+        </table>
+
 
         <p>
           <strong>Interview Details:</strong><br />
@@ -2678,6 +2697,133 @@ export const acceptShortlistedCandidates = async (req, res) => {
       `
 
     };
+
+    const mailOptions = {
+      from: `"HR Team" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `Interview Invitation – ${designation} at ${companyName}`,
+      html: `
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="https://api.geisil.com/upload/invited_interview.jpg" alt="Banner" style="width: 100%; height: auto;" />
+        </div>
+
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+              style="font-family:Arial,Helvetica,sans-serif;background-color:#f4f4f4;padding:20px;">
+          <tr>
+            <td align="center">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+                    style="max-width:600px;background:#ffffff;padding:24px;border-radius:6px;color:#333;">
+
+                <tr>
+                  <td>
+                    <p>Dear ${user.name || "Candidate"},</p>
+
+                    <p>
+                      Thank you for your interest in the
+                      <strong>${designation}</strong> position at
+                      <strong>${companyName}</strong>.
+                      After reviewing your application and profile, we are pleased to invite you
+                      for an interview at our Kolkata office.
+                    </p>
+
+                    <p>
+                      This interview will be an opportunity for us to discuss your technical
+                      expertise in greater detail and for you to learn more about our team
+                      and the exciting projects we are currently driving.
+                    </p>
+
+                    <h3 style="margin-top:20px;">Interview Details</h3>
+
+                    <p>
+                      <strong>Date:</strong> ${new Date(interviewDate).toDateString()}<br />
+                      <strong>Time:</strong> ${interviewTime}<br />
+                      <strong>Location:</strong> 2S Global Technologies Ltd, Kolkata Office,<br />
+                      Unit-404, Webel IT Park (Phase-II), DH Block, Action Area 1D,<br />
+                      New Town, Kolkata-700160<br />
+                      <em>(Nearest Bus Stop – Unitech Gate 2)</em>
+                    </p>
+
+                    <h3 style="margin-top:20px;">Action Required</h3>
+
+                    <p>
+                      To finalise the schedule, please confirm your availability by selecting
+                      one of the options below.
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- BUTTONS -->
+                <tr>
+                  <td align="center" style="padding:20px 0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+
+                      <tr>
+                        <td align="center" style="padding-bottom:10px;">
+                          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=accept"
+                            style="display:block;width:100%;max-width:320px;
+                                    background:#28a745;color:#ffffff;
+                                    padding:14px 0;text-decoration:none;
+                                    border-radius:4px;font-weight:bold;text-align:center;">
+                            Confirm Interview
+                          </a>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td align="center" style="padding-bottom:10px;">
+                          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reschedule"
+                            style="display:block;width:100%;max-width:320px;
+                                    background:#007bff;color:#ffffff;
+                                    padding:14px 0;text-decoration:none;
+                                    border-radius:4px;font-weight:bold;text-align:center;">
+                            Request Reschedule
+                          </a>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td align="center">
+                          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reject"
+                            style="display:block;width:100%;max-width:320px;
+                                    background:#dc3545;color:#ffffff;
+                                    padding:14px 0;text-decoration:none;
+                                    border-radius:4px;font-weight:bold;text-align:center;">
+                            Decline Interview
+                          </a>
+                        </td>
+                      </tr>
+
+                    </table>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <p>
+                      Please remember to carry a physical copy of your updated resume
+                      and a valid photo ID.
+                    </p>
+
+                    <p>
+                      We look forward to meeting you and exploring the possibility of
+                      you joining our technical team.
+                    </p>
+
+                    <p style="margin-top:24px;">
+                      Thanks &amp; Regards,<br />
+                      <strong>Hiring Team</strong><br />
+                      ${companyName}
+                    </p>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+        </table>
+      `
+    };
+
 
     if (user?.email) {
       await transporter.sendMail(mailOptions);
@@ -2769,11 +2915,14 @@ export const rescheduleInterview = async (req, res) => {
       },
     });
 
-    const mailOptions = {
+    const mailOptions123 = {
       from: `"HR Team" <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: `Interview Rescheduled – ${formDesignation} at ${companyName}`,
       html: `
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="https://api.geisil.com/upload/rescheduling_interview.jpg" alt="Banner" style="width: 100%; height: auto;" />
+        </div>
         <p>Dear ${user.name || "Candidate"},</p>
 
         <p>
@@ -2823,6 +2972,79 @@ export const rescheduleInterview = async (req, res) => {
         <p>Best regards,</p>
         <p><strong>HR Team</strong></p>
       `,
+    };
+
+    const mailOptions = {
+      from: `"HR Team" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `Interview Rescheduled – ${designation} at ${companyName}`,
+      html: `
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="https://api.geisil.com/upload/rescheduling_interview.jpg" alt="Banner" style="width: 100%; height: auto;" />
+        </div>
+
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+              style="font-family:Arial,Helvetica,sans-serif;background-color:#f4f4f4;padding:20px;">
+          <tr>
+            <td align="center">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+                    style="max-width:600px;background:#ffffff;padding:24px;border-radius:6px;color:#333;">
+
+                <tr>
+                  <td>
+                    <p>Dear ${user.name || "Candidate"},</p>
+
+                    <p>
+                      We would like to inform you that your interview for the position of
+                      <strong>${designation}</strong> at <strong>${companyName}</strong>
+                      has been <strong>rescheduled</strong>.
+                    </p>
+
+                    <p>
+                      This interview will be an opportunity for us to discuss your technical
+                      expertise in greater detail and for you to learn more about our team
+                      and the exciting projects we are currently driving.
+                    </p>
+
+                    <h3 style="margin-top:20px;">Interview Details</h3>
+
+                    <p>
+                      <strong>Date:</strong> ${new Date(interviewDate).toDateString()}<br />
+                      <strong>Time:</strong> ${interviewTime}<br />
+                      <strong>Location:</strong> 2S Global Technologies Ltd, Kolkata Office,<br />
+                      Unit-404, Webel IT Park (Phase-II), DH Block, Action Area 1D,<br />
+                      New Town, Kolkata-700160<br />
+                      <em>(Nearest Bus Stop – Unitech Gate 2)</em>
+                    </p>
+
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <p>
+                      Please remember to carry a physical copy of your updated resume
+                      and a valid photo ID.
+                    </p>
+
+                    <p>
+                      We look forward to meeting you and exploring the possibility of
+                      you joining our technical team.
+                    </p>
+
+                    <p style="margin-top:24px;">
+                      Thanks &amp; Regards,<br />
+                      <strong>Hiring Team</strong><br />
+                      ${companyName}
+                    </p>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+        </table>
+      `
     };
 
     if (user?.email) {
@@ -2928,6 +3150,10 @@ export const sentOfferToCandidates = async (req, res) => {
       // to: "avik@2sglobal.co",
       subject: `Offer Letter – ${offer_letter_designation}`,
       html: `
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="https://api.geisil.com/upload/job_offer.jpg" alt="Banner" style="width: 100%; height: auto;" />
+        </div>
+ 
         <p>Dear ${user.name || "Candidate"},</p>
 
         <p>

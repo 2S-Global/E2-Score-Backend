@@ -58,7 +58,10 @@ const Schema = new mongoose.Schema(
     cover: {
       type: String,
     },
-
+    isSubmitted: {
+      type: Boolean,
+      default: false,
+    },
     isDel: {
       type: Boolean,
       default: false,

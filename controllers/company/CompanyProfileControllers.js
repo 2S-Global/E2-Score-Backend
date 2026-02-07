@@ -173,6 +173,7 @@ export const AddorUpdateCompany = async (req, res) => {
         website: website?.trim(),
         established,
         teamsize,
+        isSubmitted: true,
         industry_type: industry_type?.trim(),
         allowinsearch: !!allowinsearch,
         about: about?.trim(),
