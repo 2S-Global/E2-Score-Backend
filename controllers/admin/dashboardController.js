@@ -837,3 +837,100 @@ export const getEmployerDashboardStats = async (req, res) => {
     });
   }
 };
+
+
+export const getMonthlyApplicantsStats = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // 1️⃣ Build last 6 months array
+    const months = [];
+    const monthNames = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+
+    const now = new Date();
+    now.setDate(1); // normalize
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now);
+      d.setMonth(d.getMonth() - i);
+
+      months.push({
+        key: `${d.getFullYear()}-${d.getMonth() + 1}`,
+        month: `${monthNames[d.getMonth()]} ${d.getFullYear()}`,
+        totalApplicants: 0,
+      });
+    }
+
+    // 2️⃣ Get employer job IDs
+    const jobs = await Job.find(
+      { userId: userId, is_del: false },
+      { _id: 1 }
+    );
+
+    const jobIds = jobs.map(job => job._id);
+
+    if (!jobIds.length) {
+      return res.status(200).json({
+        success: true,
+        data: months.map(({ month, totalApplicants }) => ({
+          month,
+          totalApplicants,
+        })),
+      });
+    }
+
+    // 3️⃣ Aggregate real data
+    const startDate = new Date(months[0].key + "-01");
+
+    const stats = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+          isDel: false,
+          appliedAt: { $gte: startDate },
+        },
+      },
+      {
+        $addFields: {
+          appliedDate: { $ifNull: ["$appliedAt", "$createdAt"] },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$appliedDate" },
+            month: { $month: "$appliedDate" },
+          },
+          totalApplicants: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // 4️⃣ Merge aggregation result with months list
+    stats.forEach(item => {
+      const key = `${item._id.year}-${item._id.month}`;
+      const index = months.findIndex(m => m.key === key);
+      if (index !== -1) {
+        months[index].totalApplicants = item.totalApplicants;
+      }
+    });
+
+    // 5️⃣ Final response
+    return res.status(200).json({
+      success: true,
+      data: months.map(({ month, totalApplicants }) => ({
+        month,
+        totalApplicants,
+      })),
+    });
+  } catch (error) {
+    console.error("Monthly applicants stats error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
