@@ -70,6 +70,7 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 
 //admin Routes
 import userAdminRouter from "./routes/admin/userRoute.js";
+import CandidateListVerifiedRoute from "./routes/admin/adminVerifyRoute.js";
 
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
@@ -123,6 +124,7 @@ app.use("/api/pacakageRoute", pacakageRoute);
 app.use("/api/companyPackageRoute", companyPackageRoute);
 app.use("/api/companyRoutes", companyRoutes);
 app.use("/api/dashboard", dashboardRoute);
+app.use("/api/admin/cart", CandidateListVerifiedRoute);
 
 //Admin Routes Abhishek Dey
 app.use("/api/useradmin", userAdminRouter);
@@ -140,7 +142,7 @@ app.use("/api/candidatebookmark", candidateBookmarkRouter);
 app.use("/api/instituteprofile", InstituteProfileRouter);
 app.use("/api/institutestudent", InstituteStudentRouter);
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3015;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
