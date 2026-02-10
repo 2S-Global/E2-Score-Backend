@@ -2790,17 +2790,17 @@ export const acceptShortlistedCandidates = async (req, res) => {
                         </td>
                       </tr>
 
-                      <tr>
-                        <td align="center" style="padding-bottom:10px;">
-                          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reschedule"
-                            style="display:block;width:100%;max-width:320px;
-                                    background:#007bff;color:#ffffff;
-                                    padding:14px 0;text-decoration:none;
-                                    border-radius:4px;font-weight:bold;text-align:center;">
-                            Request Reschedule
-                          </a>
-                        </td>
-                      </tr>
+                      // <tr>
+                      //   <td align="center" style="padding-bottom:10px;">
+                      //     <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reschedule"
+                      //       style="display:block;width:100%;max-width:320px;
+                      //               background:#007bff;color:#ffffff;
+                      //               padding:14px 0;text-decoration:none;
+                      //               border-radius:4px;font-weight:bold;text-align:center;">
+                      //       Request Reschedule
+                      //     </a>
+                      //   </td>
+                      // </tr>
 
                       <tr>
                         <td align="center">
