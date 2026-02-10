@@ -2665,14 +2665,13 @@ export const acceptShortlistedCandidates = async (req, res) => {
           </tr>
 
           <tr>
-            <td align="center" style="padding-bottom:12px;">
+            <td align="center" style="padding-bottom:10px;">
               <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reschedule"
-                style="display:block;width:100%;max-width:300px;
-                        background-color:#007bff;color:#ffffff;
+                style="display:block;width:100%;max-width:320px;
+                        background:#007bff;color:#ffffff;
                         padding:14px 0;text-decoration:none;
-                        border-radius:4px;font-weight:bold;
-                        text-align:center;">
-                Reschedule Interview
+                        border-radius:4px;font-weight:bold;text-align:center;">
+                Request Reschedule
               </a>
             </td>
           </tr>
@@ -2790,18 +2789,6 @@ export const acceptShortlistedCandidates = async (req, res) => {
                         </td>
                       </tr>
 
-                      // <tr>
-                      //   <td align="center" style="padding-bottom:10px;">
-                      //     <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reschedule"
-                      //       style="display:block;width:100%;max-width:320px;
-                      //               background:#007bff;color:#ffffff;
-                      //               padding:14px 0;text-decoration:none;
-                      //               border-radius:4px;font-weight:bold;text-align:center;">
-                      //       Request Reschedule
-                      //     </a>
-                      //   </td>
-                      // </tr>
-
                       <tr>
                         <td align="center">
                           <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reject"
@@ -2844,7 +2831,6 @@ export const acceptShortlistedCandidates = async (req, res) => {
         </table>
       `
     };
-
 
     if (user?.email) {
       await transporter.sendMail(mailOptions);
