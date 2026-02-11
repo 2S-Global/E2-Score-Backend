@@ -12,6 +12,7 @@ import {
   registerInstituteft,
   verifyEmail,
   acceptRejectInterviewInvitation,
+  listCompaniesAll,
 } from "../controllers/AuthController.js"; // Adjust the path according to your project structure
 // Initialize dotenv to load environment variables
 dotenv.config();

@@ -8,6 +8,7 @@ import nodemailer from "nodemailer";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import dotenv from "dotenv";
 import CompanyDetails from "../models/company_Models/companydetails.js";
+import UserVerification from "../models/userVerificationModel.js";
 dotenv.config();
 
 /**
@@ -1089,7 +1090,7 @@ export const listCompaniesAll = async (req, res) => {
     // Get all companies (role: 1 and is_del: false)
     const companies = await User.find({
       is_del: false,
-      role: 1,
+      role: 2,
     }).select("-password");
 
     if (!companies.length) {
