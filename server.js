@@ -71,6 +71,7 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 //admin Routes
 import userAdminRouter from "./routes/admin/userRoute.js";
 import CandidateListVerifiedRoute from "./routes/admin/adminVerifyRoute.js";
+import fieldsRouts from "./routes/additionalFieldsRoutes.js";
 
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
@@ -133,6 +134,7 @@ app.use("/api/useradmin", userAdminRouter);
 app.use("/api/companyprofile", CompanyProfileRouter);
 app.use("/api/jobposting", jobPostingDataRouter);
 app.use("/api/companykyc", CompanyKycRoute);
+app.use("/api/fields", fieldsRouts);
 
 //Bookmark routes for Admin
 app.use("/api/candidatebookmark", candidateBookmarkRouter);
