@@ -22,6 +22,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 import userAuth from "../middleware/authMiddleware.js";
+import adminMiddleware from "../middleware/adminMiddleware.js";
 
 // Initialize router
 const AuthRouter = express.Router();
@@ -48,5 +49,12 @@ AuthRouter.get("/verify-email/:token", verifyEmail);
 
 // Accept or Reject Interview Invitation
 AuthRouter.get("/accept-or-reject-interview-invitation/:token", acceptRejectInterviewInvitation);
+
+AuthRouter.post(
+  "/list-companies_all",
+  userAuth,
+  adminMiddleware,
+  listCompaniesAll
+);
 
 export default AuthRouter;
