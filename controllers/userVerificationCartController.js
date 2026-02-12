@@ -1,5 +1,9 @@
 import UserCartVerification from "../models/userVerificationCartModel.js";
 import UserVerification from "../models/userVerificationModel.js";
+import User from "../models/userModel.js";
+import UserCartVerificationAadhatOTP from "../models/userVerificationCartAadhatOTPModel.js";
+import CompanyPackage from "../models/companyPackageModel.js";
+import freeVerificationDetail from "../models/freeVerificationDetailsModel.js";
 import mongoose from "mongoose";
 // Register a new user
 
@@ -326,6 +330,270 @@ export const deleteUser = async (req, res) => {
     }
 };
 
+export const getCartDetailsAadhatOTP = async (req, res) => {
+  try {
+    const employer_id = req.userId;
+    const employer = await User.findOne({
+      _id: employer_id,
+      is_del: false,
+    });
+    if (!employer) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Employer not found" });
+    }
+    const userCarts = await UserCartVerificationAadhatOTP.find({
+      employer_id,
+      is_del: false,
+    });
 
+    // starts from here
 
+    let verificationCharge = 0;
 
+    if (employer.role === 3) {
+      // Skip CompanyPackage if role = 3
+      verificationCharge = parseFloat(userCarts[0]?.amount_for_demo_user) || 0; // or 50 (set default price if needed)
+    } else {
+      // Use company package for all other roles
+      const discountPercentData = await CompanyPackage.findOne({
+        companyId: employer_id,
+      });
+
+      verificationCharge = parseFloat(discountPercentData?.aadhar_price || 0);
+    }
+
+    // my code ends here
+
+    /*
+    const discountPercentData = await CompanyPackage.findOne({
+      companyId: employer_id,
+    });
+ 
+    const verificationCharge = parseFloat(
+      discountPercentData.aadhar_price || 0
+    );
+    */
+
+    // it will end here
+
+    const gstPercent = 18 / 100;
+
+    let totalVerifications = 0;
+    // const verificationCharge = 50;
+
+    // Process each user's cart
+
+    console.log("Verification Charge ==>", verificationCharge);
+    const userData = userCarts.map((cart) => {
+      let payFor = [];
+
+      if (cart.aadhar_number) {
+        totalVerifications++;
+        payFor.push("Aadhar With OTP");
+      }
+
+      return {
+        ...cart._doc, // Spread existing user cart data
+        selected_verifications: payFor.join(","), // Add pay_for to each user entry
+      };
+    });
+
+    const subtotal = totalVerifications * verificationCharge;
+
+    const gstAmount = subtotal * gstPercent;
+    const total = subtotal + gstAmount;
+
+    const cgst = gstAmount / 2;
+    const sgst = gstAmount / 2;
+
+    res.status(200).json({
+      success: true,
+      data: userData, // Updated user list with pay_for field
+      billing: {
+        total_verifications: totalVerifications,
+        wallet_amount: employer.wallet_amount || "0.00",
+        fund_status: "NA",
+        subtotal: subtotal.toFixed(2),
+        discount: "0.00",
+        discount_percent: "0.00",
+        cgst: cgst.toFixed(2),
+        cgst_percent: (gstPercent * 50).toFixed(2),
+        sgst: sgst.toFixed(2),
+        sgst_percent: (gstPercent * 50).toFixed(2),
+        total: total.toFixed(2),
+      },
+    });
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      message: "Error fetching user verification carts",
+      error: error.message,
+    });
+  }
+};
+
+export const addUserToCartAadharOTP = async (req, res) => {
+  try {
+    const user_id = req.userId;
+    if (!user_id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const user = await User.findOne({
+      _id: user_id,
+      is_del: false,
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "User Not Found" });
+    }
+
+    // Skip package check for role 3
+    if (user.role !== 3) {
+      const companyPackage = await CompanyPackage.findOne({
+        companyId: user_id,
+        is_del: false,
+      });
+
+      if (!companyPackage || companyPackage.aadhar_otp !== "enable") {
+        return res.status(200).json({
+          success: false,
+          message: "Aadhar OTP verification is not enabled for this company.",
+        });
+      }
+    }
+
+    // Check for existing unpaid cart
+    const existingCart = await UserCartVerificationAadhatOTP.findOne({
+      employer_id: user_id,
+      is_paid: 0,
+    });
+
+    if (existingCart) {
+      return res.status(200).json({
+        success: false,
+        message:
+          "A cart already exists for this user. Please complete the payment before adding a new one.",
+      });
+    }
+
+    // Clean owner_id before destructuring
+    if (req.body.owner_id === "null" || req.body.owner_id === "") {
+      delete req.body.owner_id;
+    }
+
+    const {
+      name,
+      email,
+      phone,
+      dob,
+      address,
+      gender,
+      aadhar_name,
+      aadhar_number,
+      aadhaardoc,
+      owner_id, // this will be undefined if deleted above
+    } = req.body;
+
+    const aadharImageUrl = req.files?.aadhaardoc
+      ? await uploadToCloudinary(
+          req.files.aadhaardoc[0].buffer,
+          req.files.aadhaardoc[0].originalname,
+          req.files.aadhaardoc[0].mimetype
+        )
+      : null;
+
+    // Special case for Demo User (role 3)
+    let docType = "";
+    let docNumber = "";
+    let docFile = null;
+    if (req.body.aadhar_number) {
+      docType = "AADHAR";
+      docNumber = req.body.aadhar_number;
+      docFile = req.body.aadhaardoc;
+    }
+    const FREE_VERIFICATION_LIMIT = 1;
+    let amount_for_demo_user = 0;
+    if (user.role === 3) {
+      const usedFree = await freeVerificationDetail.countDocuments({
+        userId: user_id,
+        free: true,
+      });
+
+      // Role 3 → Ignore package/plan, allow free verification
+      if (usedFree < FREE_VERIFICATION_LIMIT) {
+        await freeVerificationDetail.create({
+          userId: user_id,
+          docType,
+          docNumber,
+          free: true,
+          status: "success",
+        });
+      } else {
+        const verificationCartDetailsAadhar =
+          await UserCartVerificationAadhatOTP.findOne({
+            employer_id: user_id,
+            is_del: false,
+          });
+
+        const verificationCartDetails = await UserCartVerification.findOne({
+          employer_id: user_id,
+          is_del: false,
+        });
+
+        if (
+          (verificationCartDetailsAadhar &&
+            verificationCartDetailsAadhar.is_paid === 0) ||
+          (verificationCartDetails && verificationCartDetails.is_paid === 0)
+        ) {
+          const cartAmountAadhar = verificationCartDetailsAadhar
+            ? parseInt(verificationCartDetailsAadhar.amount_for_demo_user, 10)
+            : null;
+
+          const cartAmount = verificationCartDetails
+            ? parseInt(verificationCartDetails.amount, 10)
+            : null;
+
+          if (cartAmountAadhar === 0 || cartAmount === 0) {
+            return res.status(200).json({
+              success: false,
+              message:
+                "You already have a pending order. Please complete the payment for your current order (free trial) before adding a new one.",
+            });
+          }
+        }
+        amount_for_demo_user = parseFloat(user.demoUserAmount || 0);
+      }
+    }
+
+    const newUserCart = new UserCartVerificationAadhatOTP({
+      employer_id: user_id,
+      candidate_name: name,
+      candidate_email: email,
+      candidate_mobile: phone,
+      candidate_dob: dob,
+      candidate_address: address,
+      candidate_gender: gender,
+      aadhar_name: aadhar_name,
+      aadhar_number: aadhar_number,
+      aadhar_image: aadharImageUrl,
+      amount_for_demo_user: amount_for_demo_user,
+      ...(owner_id && { owner_id }), // ✅ only include if exists
+    });
+
+    await newUserCart.save();
+    res.status(201).json({
+      success: true,
+      message: "User verification cart added successfully",
+      data: newUserCart,
+    });
+  } catch (error) {
+    console.error("Error adding user to cart:", error);
+    res.status(401).json({
+      success: false,
+      message: "Error adding user verification cart",
+      error: error.message,
+    });
+  }
+};

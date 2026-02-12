@@ -6,7 +6,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import {
     addUserToCart,
     getUserVerificationCartByEmployer,
-    getUserVerificationCartByEmployerAll,getPaidUserVerificationCartByEmployer,deleteUser 
+    getUserVerificationCartByEmployerAll, getPaidUserVerificationCartByEmployer, deleteUser, getCartDetailsAadhatOTP,
+    addUserToCartAadharOTP
 } from '../controllers/userVerificationCartController.js'; // Adjust the path according to your project structure
 
 //Middleware
@@ -37,5 +38,10 @@ userRouter.get('/list_user_cart', upload.none(), userAuth, Companymid, getUserVe
 userRouter.get('/list_user_cart_all', upload.none(), userAuth, Companymid, getUserVerificationCartByEmployerAll);
 userRouter.post('/getPaidUserVerificationCartByEmployer', upload.none(), userAuth, Companymid, getPaidUserVerificationCartByEmployer);
 userRouter.post('/deleteUser', upload.none(), userAuth, Companymid, deleteUser);
+userRouter.get('/list_user_cart_aadhar_otp', upload.none(), userAuth, Companymid,
+    getCartDetailsAadhatOTP);
+userRouter.post('/add_user_cart_aadhao_otp', upload.fields([
+    { name: 'aadhaardoc', maxCount: 1 }
+]), userAuth, Companymid, addUserToCartAadharOTP);
 
 export default userRouter;
