@@ -7,7 +7,7 @@ import {
     addUserToCart,
     getUserVerificationCartByEmployer,
     getUserVerificationCartByEmployerAll, getPaidUserVerificationCartByEmployer, deleteUser, getCartDetailsAadhatOTP,
-    addUserToCartAadharOTP
+    addUserToCartAadharOTP, deleteUserAadharOTP
 } from '../controllers/userVerificationCartController.js'; // Adjust the path according to your project structure
 
 //Middleware
@@ -43,5 +43,6 @@ userRouter.get('/list_user_cart_aadhar_otp', upload.none(), userAuth, Companymid
 userRouter.post('/add_user_cart_aadhao_otp', upload.fields([
     { name: 'aadhaardoc', maxCount: 1 }
 ]), userAuth, Companymid, addUserToCartAadharOTP);
+userRouter.post('/deleteUserAadharOTP', upload.none(), userAuth, Companymid, deleteUserAadharOTP);
 
 export default userRouter;

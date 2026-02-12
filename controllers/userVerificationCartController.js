@@ -597,3 +597,91 @@ export const addUserToCartAadharOTP = async (req, res) => {
     });
   }
 };
+
+export const deleteUserAadharOTP = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const user_id = req.userId;
+
+    // Validate ID
+    if (!id) {
+      return res.status(400).json({ message: "ID is required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
+
+    // starts here
+
+    const verificationCartDetails = await UserCartVerificationAadhatOTP.findOne(
+      {
+        employer_id: user_id,
+        is_del: false,
+        is_paid: 0,
+      }
+    );
+
+    if (verificationCartDetails && verificationCartDetails.is_paid === 0) {
+      console.log("For deleting purpose I am inside if block: ");
+      const cartAmount = verificationCartDetails
+        ? parseInt(verificationCartDetails.amount_for_demo_user, 10)
+        : 0;
+
+      console.log(
+        "For deleting purpose I am inside if block:   amoutn==> ",
+        cartAmount
+      );
+
+      if (cartAmount === 0) {
+        console.log("I am inside delete happen block");
+        const deletedFreeVerification =
+          await freeVerificationDetail.findOneAndDelete({ userId: user_id });
+      }
+    }
+
+    // ends here
+
+    // Delete user from database
+    const deletedUser = await UserCartVerificationAadhatOTP.findByIdAndDelete(
+      id
+    );
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Added: Check if employer/user exists before updating
+    const user = await User.findOne({ _id: user_id, is_del: false });
+
+    if (user) {
+      await User.findByIdAndUpdate(user._id, {
+        $set: { freeVerificationUsed: false },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: [],
+      overall_billing: {
+        total_verifications: 0,
+        wallet_amount: "0.00",
+        fund_status: "0",
+        subtotal: "0.00",
+        discount: "0.00",
+        discount_percent: "0.00",
+        cgst: "0.00",
+        cgst_percent: "0.00",
+        sgst: "0.00",
+        sgst_percent: "0.00",
+        total: "0.00",
+      },
+      message: "No unpaid verification cart items found.",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error deleting user",
+      error: error.message,
+    });
+  }
+};

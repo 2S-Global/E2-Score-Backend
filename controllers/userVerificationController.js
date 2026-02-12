@@ -4,8 +4,13 @@ import mongoose from "mongoose";
 import axios from "axios";
 import CandidateVerification from "../models/candidateVerificationModel.js";
 import CandidateDetails from "../models/CandidateDetailsModel.js";
-
+import User from "../models/userModel.js";
+// import allOrdersData from "../models/allOrders.js";
+import allOrdersDataEmployer from "../models/allOrdersEmployerModel.js";
+import UserCartVerificationAadhatOTP from "../models/userVerificationCartAadhatOTPModel.js";
+import getowneridhelper from "./Helpers/getowneridhelper.js";
 import Transaction from "../models/transactionModel.js";
+import generateInvoiceNo from "./Helpers/generateInvoiceno.js";
 // Register a new user
 export const listUserVerifiedList = async (req, res) => {
   try {
@@ -480,7 +485,7 @@ export const paynow = async (req, res) => {
     await UserCartVerification.deleteMany({ employer_id: employer_id, is_paid: 1 });
     // Save transaction
     const transaction = new Transaction({
-      employer_id: employer_id,
+      candidate_id: employer_id,
       transactionId: razorpay_response.razorpay_payment_id,
       amount: amount,
       paymentids: paymentIds,
@@ -808,3 +813,222 @@ export const verifyEpfo = async (req, res) => {
   }
 };
 
+export const paynowAadharOTP = async (req, res) => {
+  try {
+    const employer_id = req.userId;
+
+    if (!employer_id) {
+      return res.status(400).json({ error: "User ID is missing." });
+    }
+
+    const {
+      razorpay_response,
+      amount,
+      paymentIds,
+      payment_method,
+      overall_billing,
+    } = req.body;
+
+    if (!amount || !payment_method) {
+      return res.status(400).json({ error: "Payment details are incomplete." });
+    }
+
+    const parsedAmount = parseFloat(amount);
+
+    const user = await User.findById(employer_id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    if (payment_method === "Wallet") {
+      const walletAmount = Number(user.wallet_amount || 0);
+      const paymentAmount = Number(amount);
+
+      if (walletAmount < paymentAmount) {
+        return res.status(400).json({ error: "Insufficient wallet balance." });
+      }
+
+      // Always a number
+      user.wallet_amount = Number(walletAmount - paymentAmount);
+
+      await user.save(); // make sure to save before returning
+    } else if (payment_method === "online") {
+      if (!razorpay_response?.razorpay_payment_id) {
+        return res
+          .status(400)
+          .json({ error: "Razorpay payment ID is missing." });
+      }
+    } else {
+      return res.status(400).json({ error: "Invalid payment method." });
+    }
+
+    //   Added By Chandra on 13th Aug 2025  start---
+    const orderNumber = `ORD-${Date.now()}`;
+
+    // Generate invoice number
+    const invoiceNumber = await generateInvoiceNo();
+    const owner_ids = await getowneridhelper(paymentIds);
+
+    const newUserCart = new allOrdersDataEmployer({
+      employer_id: employer_id,
+      owner_ids: owner_ids,
+      payment_method: payment_method,
+      balance: user.wallet_amount,
+      order_number: orderNumber,
+      invoice_number: invoiceNumber,
+      subtotal: overall_billing.subtotal,
+      cgst: overall_billing.cgst,
+      cgst_percent: overall_billing.cgst_percent,
+      sgst: overall_billing.sgst,
+      sgst_percent: overall_billing.sgst_percent,
+      total_amount: overall_billing.total,
+      discount_percent: overall_billing.discount_percent,
+      discount_amount: overall_billing.discount,
+      total_numbers_users: overall_billing.total_verifications,
+    });
+
+    const savedCart = await newUserCart.save();
+    const insertedId = savedCart._id;
+
+    // Update is_paid field
+    const updatedUsers = await UserCartVerificationAadhatOTP.updateMany(
+      { employer_id: employer_id },
+      {
+        $set: {
+          is_paid: 1,
+          aadhat_otp: "yes",
+          createdAt: new Date(),
+          order_ref_id: insertedId,
+        },
+      }
+    );
+
+    if (updatedUsers.modifiedCount === 0) {
+      return res
+        .status(404)
+        .json({ message: "No users found for this employer" });
+    }
+
+    // Fetch all cart items for this order
+
+    // const cartItems = await UserCartVerificationAadhatOTP.find({
+    //   employer_id,
+    //   order_ref_id: insertedId,
+    // });
+
+    //added By Chandra on 13th Aug 2025 end-----
+
+    // Get users to archive
+    const usersToArchive = await UserCartVerificationAadhatOTP.find({
+      employer_id: employer_id,
+      is_paid: 1,
+    });
+
+    if (usersToArchive.length === 0) {
+      return res.status(404).json({ message: "No updated users to archive" });
+    }
+
+    // Use the first user to get Aadhaar details (assuming same for all)
+    const aadhaarNumber = usersToArchive[0]?.aadhar_number || "";
+    const nameToMatch = usersToArchive[0]?.aadhar_name || "";
+
+    // Generate and assign order_id to each record
+    const orderPrefix = `ORD-${Date.now()}`;
+    const usersWithOrderId = usersToArchive.map((user, index) => {
+      const obj = user.toObject();
+      obj.order_id = `${orderPrefix}-${index + 1}`;
+      delete obj._id; // Remove _id so MongoDB can generate a new one
+      return obj;
+    });
+
+    // This Line added by Chandra on 13th Aug 2025
+    // await UserVerification.insertMany(usersWithOrderId);
+
+    const userId = usersToArchive[0]?._id;
+
+    // await UserCartVerificationAadhatOTP.deleteMany({
+    //   employer_id: employer_id,
+    //   is_paid: 1,
+    // });
+
+    // amount: parsedAmount,
+    // Save transaction after userIds is ready
+    const transaction = new Transaction({
+      candidate_id: employer_id,
+      order_ref_id: insertedId,
+      // transactionId: razorpay_response?.razorpay_payment_id,
+      transactionId:
+        payment_method === "online"
+          ? razorpay_response.razorpay_payment_id
+          : `wallet_${Date.now()}`,
+      amount: parsedAmount,
+      paymentids: paymentIds || null,
+      order_ids: userId,
+      payment_method: payment_method,
+      payment_type: "debit",
+    });
+
+    await transaction.save();
+
+    // Optional: Insert into archive collection
+    // await UserVerification.insertMany(usersWithOrderId);
+    const insertedDoc = await UserVerification.create(usersWithOrderId[0]);
+    const newId = insertedDoc._id;
+    // Optional: Remove from cart after archiving
+    // await UserCartVerificationAadhatOTP.deleteMany({ employer_id: employer_id, is_paid: 1 })
+
+    await UserCartVerificationAadhatOTP.deleteOne({
+      employer_id: employer_id,
+      is_paid: 1,
+    });
+
+    // Prepare Zoop payload
+    const payload = {
+      mode: "sync",
+      data: {
+        customer_aadhaar_number: aadhaarNumber,
+        name_to_match: nameToMatch,
+        consent: "Y",
+        consent_text:
+          "I hereby declare my consent agreement for fetching my information via ZOOP API",
+      },
+      task_id: "08b01aa8-9487-4e6d-a0f0-c796839d6b77",
+    };
+
+    const headers = {
+      /* 
+      "app-id": "67b8252871c07100283cedc6",
+      "api-key": "YAR46W0-0S0MS44-M6KV686-Q1X70Z1", */
+      "Content-Type": "application/json",
+    };
+
+    /*    const response = await axios.post(
+      "https://live.zoop.one/in/identity/okyc/otp/request",
+      payload,
+      { headers }
+    ); */
+    const response = await axios.post(
+      "https://api.quickekyc.com/api/v1/aadhaar-v2/generate-otp",
+      {
+        key: "0196b58f-2f35-4c99-b219-aa8339013476",
+        id_number: aadhaarNumber,
+      },
+      { headers }
+    );
+
+    return res.status(200).json({
+      message:
+        "Payment processed, verifications archived, and transaction recorded",
+      aadhar_response: response.data,
+      archivedUsersCount: usersWithOrderId.length,
+      remainingWalletBalance: user.wallet_amount,
+      newId: newId,
+    });
+  } catch (error) {
+    console.error("Payment Error:", error);
+    return res.status(500).json({
+      message: "Error processing payment",
+      error: error.message,
+    });
+  }
+};
