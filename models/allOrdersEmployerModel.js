@@ -7,12 +7,12 @@ const allOrdersSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    owner_ids: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "ownerdetails",
-      },
-    ],
+    // owner_ids: [
+    //   {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: "ownerdetails",
+    //   },
+    // ],
     balance: {
       type: String,
     },

@@ -455,6 +455,37 @@ export const paynow = async (req, res) => {
       return res.status(400).json({ error: "Incomplete payment details." });
     }
 
+    // Code Added By Chandra -- Started
+
+    const orderNumber = `ORD-${Date.now()}`;
+
+    // Generate invoice number
+    const invoiceNumber = await generateInvoiceNo();
+
+    // const owner_ids = await getowneridhelper(paymentIds);
+
+    const newUserCart = new allOrdersDataEmployer({
+      // owner_ids: owner_ids,
+      payment_method: payment_method,
+      employer_id: employer_id,
+      // balance: user.wallet_amount,
+      order_number: orderNumber,
+      invoice_number: invoiceNumber,
+      subtotal: overall_billing.subtotal,
+      cgst: overall_billing.cgst,
+      cgst_percent: overall_billing.cgst_percent,
+      sgst: overall_billing.sgst,
+      sgst_percent: overall_billing.sgst_percent,
+      total_amount: overall_billing.total,
+      discount_percent: overall_billing.discount_percent,
+      discount_amount: overall_billing.discount,
+      total_numbers_users: overall_billing.total_verifications,
+    });
+
+    const savedCart = await newUserCart.save();
+    const insertedId = savedCart._id;
+
+    // Code Added By Chandra -- Ended
 
 
 
@@ -475,8 +506,17 @@ export const paynow = async (req, res) => {
       return res.status(404).json({ message: "No updated users to archive" });
     }
 
+    // ✅ Generate and assign order_id to each record
+    const orderPrefix = `ORD-${Date.now()}`;
+    const usersWithOrderId = usersToArchive.map((user, index) => {
+      const obj = user.toObject();
+      obj.order_id = `${orderPrefix}-${index + 1}`;
+      delete obj._id; // Remove _id so MongoDB can generate a new one
+      return obj;
+    });
+
     // Insert the updated records into the archived collection
-    await UserVerification.insertMany(usersToArchive);
+    await UserVerification.insertMany(usersWithOrderId);
 
     const userIds = usersToArchive.map(user => user._id);
 
@@ -1028,6 +1068,154 @@ export const paynowAadharOTP = async (req, res) => {
     console.error("Payment Error:", error);
     return res.status(500).json({
       message: "Error processing payment",
+      error: error.message,
+    });
+  }
+};
+
+export const verifyOtpAadhar = async (req, res) => {
+  try {
+    // Destructure request body to get otp, request_id, and newId
+    const { otp, request_id, newId } = req.body;
+
+    // Prepare the payload to send to Zoop API
+    const payload = {
+      mode: "sync",
+      data: {
+        request_id: request_id,
+        otp: otp,
+        consent: "Y",
+        consent_text:
+          "I hereby declare my consent agreement for fetching my information via ZOOP API",
+      },
+      task_id: "08b01aa8-9487-4e6d-a0f0-c796839d6b77",
+    };
+
+    // Define headers for the API request
+    const headers = {
+      /* 
+      "app-id": "67b8252871c07100283cedc6",
+      "api-key": "52HD084-W614E0Q-JQY5KJG-R8EW1TW", */
+      "Content-Type": "application/json",
+    };
+
+    // Call Zoop API to verify OTP
+    /* const response = await axios.post(
+      "https://live.zoop.one/in/identity/okyc/otp/verify",
+      payload,
+      { headers }
+    ); */
+
+    const response = await axios.post(
+      "https://api.quickekyc.com/api/v1/aadhaar-v2/submit-otp",
+      {
+        key: "0196b58f-2f35-4c99-b219-aa8339013476",
+        request_id: request_id,
+        otp: otp,
+      },
+      { headers }
+    );
+
+    // console.log("OTP Verification Response:", response.data);
+    console.log("New ID:", response.data.status_code);
+    console.log("New MSG:", response.data.message);
+
+    if (response.data.status_code !== 200) {
+      return res
+        .status(200)
+        .json({ success: false, message: response.data.message });
+    }
+    // If OTP is successfully verified, update the document in UserVerification collection
+    const updatedDoc = await UserVerification.findByIdAndUpdate(
+      newId, // Document ID to update
+      {
+        $set: {
+          aadhaar_response: response.data,
+          all_verified: 1,
+        },
+      },
+      { new: true } // Option to return the updated document
+    );
+
+    // Send response back to client with the updated document
+    return res.status(200).json({
+      success: true,
+      message:
+        "Aadhaar verification is complete. You can check the details in the Download Center",
+      data: response.data,
+      updatedDoc: updatedDoc,
+    });
+  } catch (error) {
+    console.error(
+      "Error verifying OTP:",
+      error.response?.data || error.message
+    );
+
+    // Send error response to client in case of failure
+    return res
+      .status(500)
+      .json({ success: false, error: error.response?.data || error.message });
+  }
+};
+
+export const resendAadharOTPFree = async (req, res) => {
+  try {
+    const employer_id = req.userId;
+
+    if (!employer_id) {
+      return res.status(400).json({ error: "User ID is missing." });
+    }
+
+    // Get the last archived verification by employer
+    const archivedUser = await UserVerification.findOne({
+      employer_id,
+      is_del: false, // ensure only active (not deleted) records are used
+    })
+      .sort({ createdAt: -1 }) // get the latest one
+      .lean();
+
+    if (!archivedUser) {
+      return res
+        .status(404)
+        .json({ message: "No verification data found to resend OTP." });
+    }
+
+    const aadhaarNumber = archivedUser.aadhar_number;
+    const nameToMatch = archivedUser.aadhar_name;
+    const newId = archivedUser._id; // Extract newId from existing document
+
+    if (!aadhaarNumber || !nameToMatch) {
+      return res
+        .status(400)
+        .json({ message: "Missing Aadhaar details for resend." });
+    }
+
+    // Prepare payload for OTP resend
+    const payload = {
+      key: "0196b58f-2f35-4c99-b219-aa8339013476",
+      id_number: aadhaarNumber,
+    };
+
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    const response = await axios.post(
+      "https://api.quickekyc.com/api/v1/aadhaar-v2/generate-otp",
+      payload,
+      { headers }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP resent successfully",
+      aadhar_response: response.data,
+      newId: newId,
+    });
+  } catch (error) {
+    console.error("Resend OTP Error:", error);
+    return res.status(500).json({
+      message: "Error resending OTP",
       error: error.message,
     });
   }
