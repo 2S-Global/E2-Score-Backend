@@ -466,20 +466,20 @@ export const paynow = async (req, res) => {
 
     const newUserCart = new allOrdersDataEmployer({
       // owner_ids: owner_ids,
-      payment_method: payment_method,
+      // payment_method: payment_method,
       employer_id: employer_id,
       // balance: user.wallet_amount,
       order_number: orderNumber,
       invoice_number: invoiceNumber,
-      subtotal: overall_billing.subtotal,
-      cgst: overall_billing.cgst,
-      cgst_percent: overall_billing.cgst_percent,
-      sgst: overall_billing.sgst,
-      sgst_percent: overall_billing.sgst_percent,
-      total_amount: overall_billing.total,
-      discount_percent: overall_billing.discount_percent,
-      discount_amount: overall_billing.discount,
-      total_numbers_users: overall_billing.total_verifications,
+      // subtotal: overall_billing.subtotal,
+      // cgst: overall_billing.cgst,
+      // cgst_percent: overall_billing.cgst_percent,
+      // sgst: overall_billing.sgst,
+      // sgst_percent: overall_billing.sgst_percent,
+      // total_amount: overall_billing.total,
+      // discount_percent: overall_billing.discount_percent,
+      // discount_amount: overall_billing.discount,
+      // total_numbers_users: overall_billing.total_verifications,
     });
 
     const savedCart = await newUserCart.save();
