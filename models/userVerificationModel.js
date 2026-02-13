@@ -10,6 +10,10 @@ const userVerificationSchema = new mongoose.Schema(
     order_id: {
       type: String,
     },
+    aadhat_otp: {
+      type: String,
+      default: "no",
+    },
     pdf_url: {
       type: String,
     },
