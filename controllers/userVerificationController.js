@@ -780,6 +780,330 @@ export const verifyDataBackground = async (req, res) => {
   }
 };
 
+export const verifyDataBackgroundForEmployer = async (req, res) => {
+  try {
+    // Fetch only one user that needs verification
+    const userCart = await UserVerification.findOne({
+      is_paid: 1,
+      is_del: false,
+      all_verified: 0,
+      $or: [{ aadhat_otp: "no" }, { aadhat_otp: { $exists: false } }],
+    });
+
+    if (!userCart) {
+      console.log("No users left for verification.");
+      return res
+        .status(200)
+        .json({ message: "No users left for verification." });
+    }
+
+    const currentUserID = userCart._id;
+
+    console.log(userCart._id, " == >>>> ", userCart.candidate_name);
+    // Function to introduce a delay
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    // PAN verification
+    if (userCart.pan_number && !userCart.pan_response) {
+      try {
+        const panData = {
+          mode: "sync",
+          data: {
+            customer_pan_number: userCart.pan_number,
+            pan_holder_name: userCart.pan_name,
+            consent: "Y",
+            consent_text:
+              "I hereby declare my consent agreement for fetching my information via ZOOP API",
+          },
+          task_id: "8bbb54f3-d299-4535-b00e-e74d2d5a3997",
+        };
+
+        const response = await axios.post(
+          "https://live.zoop.one/api/v1/in/identity/pan/lite",
+          panData,
+          {
+            headers: {
+              "app-id": "68020766d125b80028ec9ba0",
+              "api-key": "YAR46W0-0S0MS44-M6KV686-Q1X70Z1",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        await UserVerification.findByIdAndUpdate(
+          currentUserID,
+          { $set: { pan_response: response.data } },
+          { new: true }
+        );
+        await delay(2000);
+      } catch (error) {
+        console.error(
+          "PAN verification failed:",
+          error?.response?.data || error.message
+        );
+      }
+    }
+
+    // Aadhaar verification
+    if (userCart.aadhar_number && !userCart.aadhaar_response) {
+      try {
+        const aadhaarData = {
+          mode: "sync",
+          data: {
+            customer_aadhaar_number: userCart.aadhar_number,
+            consent: "Y",
+            consent_text:
+              "I hereby declare my consent agreement for fetching my information via ZOOP API",
+          },
+          task_id: "ecc326d9-d676-4b10-a82b-50b4b9dd8a16",
+        };
+
+        const response = await axios.post(
+          "https://live.zoop.one/api/v1/in/identity/aadhaar/verification",
+          aadhaarData,
+          {
+            headers: {
+              "app-id": "68020766d125b80028ec9ba0",
+              "api-key": "YAR46W0-0S0MS44-M6KV686-Q1X70Z1",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        await UserVerification.findByIdAndUpdate(
+          currentUserID,
+          { $set: { aadhaar_response: response.data } },
+          { new: true }
+        );
+        await delay(2000);
+      } catch (error) {
+        console.error(
+          "Aadhaar verification failed:",
+          error?.response?.data || error.message
+        );
+      }
+    }
+
+    // Driving License verification
+    if (userCart.dl_number && !userCart.dl_response) {
+      try {
+        const dlData = {
+          mode: "sync",
+          data: {
+            customer_dl_number: userCart.dl_number,
+            name_to_match: userCart.dl_name,
+            customer_dob: convertDateFormat(userCart.candidate_dob),
+            consent: "Y",
+            consent_text:
+              "I hereby declare my consent agreement for fetching my information via ZOOP API",
+          },
+          task_id: "f26eb21e-4c35-4491-b2d5-41fa0e545a34",
+        };
+
+        const response = await axios.post(
+          "https://live.zoop.one/api/v1/in/identity/dl/advance",
+          dlData,
+          {
+            headers: {
+              "app-id": "68020766d125b80028ec9ba0",
+              "api-key": "YAR46W0-0S0MS44-M6KV686-Q1X70Z1",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        await UserVerification.findByIdAndUpdate(
+          currentUserID,
+          { $set: { dl_response: response.data } },
+          { new: true }
+        );
+        await delay(2000);
+      } catch (error) {
+        console.error(
+          "Driving License verification failed:",
+          error?.response?.data || error.message
+        );
+      }
+    }
+
+    // Passport verification
+    if (userCart.passport_file_number && !userCart.passport_response) {
+      try {
+        const passportData = {
+          mode: "sync",
+          data: {
+            customer_file_number: userCart.passport_file_number,
+            name_to_match: userCart.passport_name,
+            customer_dob: convertDateFormat(userCart.candidate_dob),
+            consent: "Y",
+            consent_text:
+              "I hereby declare my consent agreement for fetching my information via ZOOP API",
+          },
+          task_id: "8bbb54f3-d299-4535-b00e-e74d2d5a3997",
+        };
+
+        const response = await axios.post(
+          "https://live.zoop.one/api/v1/in/identity/passport/advance",
+          passportData,
+          {
+            headers: {
+              "app-id": "68020766d125b80028ec9ba0",
+              "api-key": "YAR46W0-0S0MS44-M6KV686-Q1X70Z1",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        await UserVerification.findByIdAndUpdate(
+          currentUserID,
+          { $set: { passport_response: response.data } },
+          { new: true }
+        );
+        await delay(2000);
+      } catch (error) {
+        console.error(
+          "Passport verification failed:",
+          error?.response?.data || error.message
+        );
+      }
+    }
+
+    // EPIC (Voter ID) verification
+    if (userCart.epic_number && !userCart.epic_response) {
+      try {
+        const epicData = {
+          data: {
+            customer_epic_number: userCart.epic_number,
+            name_to_match: userCart.epic_name,
+            consent: "Y",
+            consent_text:
+              "I hereby declare my consent agreement for fetching my information via ZOOP API",
+          },
+          task_id: "d15a2a3b-9989-46ef-9b63-e24728292dc0",
+        };
+
+        const response = await axios.post(
+          "https://live.zoop.one/api/v1/in/identity/voter/advance",
+          epicData,
+          {
+            headers: {
+              "app-id": "68020766d125b80028ec9ba0",
+              "api-key": "YAR46W0-0S0MS44-M6KV686-Q1X70Z1",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        await UserVerification.findByIdAndUpdate(
+          currentUserID,
+          { $set: { epic_response: response.data } },
+          { new: true }
+        );
+        await delay(2000);
+      } catch (error) {
+        console.error(
+          "EPIC verification failed:",
+          error?.response?.data || error.message
+        );
+      }
+    }
+
+    /////UAN VERIFICATION
+    if (userCart.uan_number && !userCart.uan_response) {
+      try {
+        const data = {
+          mode: "sync",
+          data: {
+            customer_uan_number: userCart.uan_number,
+            consent: "Y",
+            consent_text:
+              "I consent to this information being shared with zoop.one.",
+          },
+          task_id: "ecc326d9-d676-4b10-a82b-50b4b9dd8a16",
+        };
+
+        const response = await axios.post(
+          "https://live.zoop.one/api/v1/in/identity/uan/advance",
+          data,
+          {
+            headers: {
+              "app-id": "68020766d125b80028ec9ba0",
+              "api-key": "YAR46W0-0S0MS44-M6KV686-Q1X70Z1",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        await UserVerification.findByIdAndUpdate(
+          currentUserID,
+          { $set: { uan_response: response.data } },
+          { new: true }
+        );
+        await delay(2000);
+      } catch (error) {
+        console.error(
+          "UAN verification failed:",
+          error?.response?.data || error.message
+        );
+      }
+    }
+
+    ///Epfo Verification
+    if (userCart.epfo_number && !userCart.epfo_response) {
+      try {
+        const data = {
+          mode: "sync",
+          data: {
+            customer_phone_number: "9051624898", // NOTE: phone is hardcoded, should come from userCart?
+            consent: "Y",
+            consent_text:
+              "I hereby declare my consent agreement for fetching my information via ZOOP API",
+          },
+          task_id: "9791f6f3-3106-4385-b2f0-5d391f1463cb",
+        };
+
+        const response = await axios.post(
+          "https://live.zoop.one/api/v1/in/identity/epfo/pro",
+          data,
+          {
+            headers: {
+              "app-id": "68020766d125b80028ec9ba0",
+              "api-key": "YAR46W0-0S0MS44-M6KV686-Q1X70Z1",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        await UserVerification.findByIdAndUpdate(
+          currentUserID,
+          { $set: { epfo_response: response.data } },
+          { new: true }
+        );
+        await delay(2000);
+      } catch (error) {
+        console.error(
+          "EPFO verification failed:",
+          error?.response?.data || error.message
+        );
+      }
+    }
+
+    // After all verifications are done, update all_verified to 1
+    await UserVerification.findByIdAndUpdate(
+      currentUserID,
+      { $set: { all_verified: 1 } },
+      { new: true }
+    );
+
+    return res
+      .status(200)
+      .json({ message: "Verification completed successfully for one user." });
+  } catch (error) {
+    console.error("Error fetching records:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 export const verifyUan = async (req, res) => {
   try {
     const data = {
