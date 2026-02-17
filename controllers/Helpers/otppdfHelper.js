@@ -70,6 +70,13 @@ const OtpGeneratePDF = ({ user }) => {
     <div class="container mt-2 small content">
   `;
 
+  const verificationReportHeader = `
+  <h3 class="text-center fw-bold text-dark mb-3">
+    Verification Report
+  </h3>
+  <hr />
+  `;
+
   const candidateInfo = `
   <h4 class="text-primary">Candidate Information</h4>
 <div class="row g-1">
@@ -279,6 +286,7 @@ const OtpGeneratePDF = ({ user }) => {
 
   const htmlContent = `
   ${htmlHead}
+  ${verificationReportHeader}
   ${candidateInfo}
   ${verificationDetails}
   <div class="row mt-4">

@@ -20,7 +20,7 @@ const upload = multer({ storage: storage });
 
 // Generate PDF for verified users
 pdfRouter.post("/generate-pdf", generatePDF);
-// pdfRouter.post("/generate-pdf-employer", upload.none(), generatePDFForEmployer);
+pdfRouter.post("/generate-pdf-employer", upload.none(), generatePDFForEmployer);
 pdfRouter.post("/otp-generate-pdf", otpgeneratePDF);
 
 export default pdfRouter;
