@@ -34,6 +34,7 @@ import {
   getMultipleEmployeeDetails,
   addEmployeeVerificationDetails,
   getVerifiedUser,
+  getCompanyLogoByJobId,
 } from "../../controllers/company/CompanyBranchControllers.js";
 
 // Middleware
@@ -206,6 +207,12 @@ CompanyProfileRouter.get(
   userAuth,
   Companymid,
   getVerifiedUser
+);
+
+
+CompanyProfileRouter.get(
+  "/get-company-logo-by-job",
+  getCompanyLogoByJobId
 );
 
 export default CompanyProfileRouter;

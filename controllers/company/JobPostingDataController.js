@@ -2570,6 +2570,8 @@ export const acceptShortlistedCandidates = async (req, res) => {
 
     // 2️⃣ Find application first (optional but recommended)
     const application = await JobApplication.findById(applicationId);
+    const jobId = application?.jobId.toString();
+    // console.log("Here I am getting my Job Id:", jobId);
 
     if (!application) {
       return res.status(404).json({
@@ -2779,24 +2781,12 @@ export const acceptShortlistedCandidates = async (req, res) => {
 
                       <tr>
                         <td align="center" style="padding-bottom:10px;">
-                          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=accept"
+                          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&jobId=${jobId}"
                             style="display:block;width:100%;max-width:320px;
                                     background:#28a745;color:#ffffff;
                                     padding:14px 0;text-decoration:none;
                                     border-radius:4px;font-weight:bold;text-align:center;">
-                            Confirm Interview
-                          </a>
-                        </td>
-                      </tr>
-
-                      <tr>
-                        <td align="center">
-                          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reject"
-                            style="display:block;width:100%;max-width:320px;
-                                    background:#dc3545;color:#ffffff;
-                                    padding:14px 0;text-decoration:none;
-                                    border-radius:4px;font-weight:bold;text-align:center;">
-                            Decline Interview
+                            Confirmation
                           </a>
                         </td>
                       </tr>

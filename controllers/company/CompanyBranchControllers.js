@@ -9,6 +9,8 @@ import mongoose from "mongoose";
 import list_tbl_countrie from "../../models/monogo_query/countriesModel.js";
 import personalDetails from "../../models/personalDetails.js";
 import list_gender from "../../models/monogo_query/genderModel.js";
+import JobPosting from "../../models/company_Models/JobPostingModel.js";
+import CompanyDetails from "../../models/company_Models/companydetails.js";
 import nodemailer from "nodemailer";
 
 // Get Conunty
@@ -838,5 +840,65 @@ export const getVerifiedUser = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+export const getCompanyLogoByJobId = async (req, res) => {
+  try {
+    const { jobId } = req.query;
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "jobId is required",
+      });
+    }
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid jobId",
+      });
+    }
+
+    // 1️⃣ Fetch job using jobId
+    const job = await JobPosting.findById(jobId).select("userId");
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    const userId = job.userId;
+
+    // 2️⃣ Fetch company details using userId
+    const company = await CompanyDetails.findOne({ userId }).select(
+      "logo name"
+    );
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: "Company details not found",
+      });
+    }
+
+    // 3️⃣ Response
+    return res.status(200).json({
+      success: true,
+      jobId: jobId,
+      userId: userId.toString(),
+      companyLogo: company.logo,
+      companyName: company.name ?? "N/A",
+    });
+  } catch (error) {
+    console.error("Error fetching company logo:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
