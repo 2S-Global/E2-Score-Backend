@@ -798,6 +798,132 @@ export const EditJobPostingDetails = async (req, res) => {
   }
 };
 
+// Custom Email Functionality for sending email to employer when job is confirmed and there are applications for that job
+export const sendJobApplicationsEmail123 = async ({
+  employerEmail,
+  job,
+  applications,
+}) => {
+
+  console.log("I am inside mail sending functions: ");
+
+  // Send email with login credentials
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const applicantsHtml = applications
+    .map((app, index) => {
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${app.candidateId.name}</td>
+          <td>${app.candidateId.email}</td>
+          <td>${app.candidateId.phone || "N/A"}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  const mailOptions = {
+    from: process.env.MAIL_USER,
+    to: employerEmail,
+    subject: `Applications Received for ${job.jobTitle}`,
+    html: `
+      <h2>Job Applications Summary</h2>
+      <p><strong>Job Title:</strong> ${job.jobTitle}</p>
+      <p><strong>Total Applications:</strong> ${applications.length}</p>
+
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Candidate Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${applicantsHtml}
+        </tbody>
+      </table>
+
+      <br/>
+      <p>Please log in to your dashboard to view full application details.</p>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+export const sendJobApplicationsEmail = async ({
+  employerEmail,
+  job
+}) => {
+
+  console.log("Inside mail sending function");
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: employerEmail,
+    subject: `New Application Update – ${job.jobTitle}`,
+    html: `
+      <h2>Application Update Notification</h2>
+
+      <p>
+        You have received a new update regarding applications for the job:
+      </p>
+
+      <p><strong>Job Title:</strong> ${job.jobTitle}</p>
+
+      <h3>Candidate Details</h3>
+      <table cellpadding="6" cellspacing="0" border="0">
+        <tr>
+          <td><strong>Name</strong></td>
+          <td>${job.candidateName}</td>
+        </tr>
+        <tr>
+          <td><strong>Email</strong></td>
+          <td>${job.candidateEmail}</td>
+        </tr>
+        <tr>
+          <td><strong>Phone</strong></td>
+          <td>${job.candidatePhone || "N/A"}</td>
+        </tr>
+      </table>
+
+
+      <br/>
+
+      <p>
+        Please log in to your employer dashboard to review the application details.
+      </p>
+
+      <br/>
+      <p>— Team GEISIL</p>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+
 // Confirm Job Posting Details API
 export const ConfirmJobPostingDetails = async (req, res) => {
   try {
@@ -822,7 +948,12 @@ export const ConfirmJobPostingDetails = async (req, res) => {
       { new: true } // return updated document
     );
 
-    console.log("New Job Object:", updatedJob);
+    if (!updatedJob) {
+      return res.status(404).json({ message: "Job not found or already confirmed" });
+    }
+
+
+    // console.log("New Job Object:", updatedJob);
 
     // const savedJob = await newJob.save();
 
@@ -1548,6 +1679,38 @@ export const applyJobPosting = async (req, res) => {
       acceptedTerms,
       experienceLevel,
     });
+
+    // Send email notification to employer
+    // 3. Fetch applications for this job
+    const applications = await JobPosting.findById(
+      jobId,
+      { getApplicationUpdateEmail: 1, jobTitle: 1, userId: 1 }
+    ).lean();
+
+    console.log("Hi,Hello for received jobId:  ---------????????????????????", jobId);
+    console.log("Hi,Hello ---------????????????????????", applications);
+
+    const candidateInfo = await User.findOne(
+      { _id: userId },
+      { name: 1, email: 1, phone: 1 }
+    ).lean();
+
+    if (!candidateInfo) {
+      return res.status(404).json({ message: "No candidate information found for this job" });
+    }
+
+    applications.candidateName = candidateInfo.name;
+    applications.candidateEmail = candidateInfo.email;
+    applications.candidatePhone = candidateInfo.phone;
+
+    // 4. Send email ONLY if applications exist
+    if (applications && applications.getApplicationUpdateEmail) {
+      console.log("applications found, getApplicationUpdateEmail");
+      await sendJobApplicationsEmail({
+        employerEmail: applications.getApplicationUpdateEmail,
+        job: applications,
+      });
+    }
 
     res.status(200).json({
       success: true,
