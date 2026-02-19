@@ -89,6 +89,19 @@ const jobApplicationSchema = new mongoose.Schema(
             default: "applied",
         },
 
+        requestDate: {
+            type: Date, // e.g. 2026-02-05
+        },
+        requestStartTime: {
+            type: String, // e.g. "10:30 AM"
+        },
+        requestEndTime: {
+            type: String, // e.g. "10:30 AM"
+        },
+        requestReschedule: {
+            type: Boolean,
+        },
+
         isDel: {
             type: Boolean,
             default: false,

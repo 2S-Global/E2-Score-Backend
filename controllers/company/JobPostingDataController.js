@@ -2802,90 +2802,6 @@ export const acceptShortlistedCandidates = async (req, res) => {
       },
     });
 
-    const mailOptions123 = {
-      from: `"HR Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      // to: "avik@2sglobal.co",
-      subject: `Interview Invitation – ${formDesignation} at ${companyName}`,
-      html: `
-        <p>Dear ${user.name || "Candidate"},</p>
-
-        <p>
-          As discussed earlier, we would like to invite you to attend an interview for the position of
-          <strong>${designation}</strong> at <strong>${companyName}</strong>.
-        </p>
-
-        <table role="presentation" cellspacing="0" cellpadding="0" align="center" width="100%" style="margin-top:20px;">
-          <tr>
-            <td align="center" style="padding-bottom:12px;">
-              <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=accept"
-                style="display:block;width:100%;max-width:300px;
-                        background-color:#28a745;color:#ffffff;
-                        padding:14px 0;text-decoration:none;
-                        border-radius:4px;font-weight:bold;
-                        text-align:center;">
-                Accept Interview
-              </a>
-            </td>
-          </tr>
-
-          <tr>
-            <td align="center" style="padding-bottom:10px;">
-              <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reschedule"
-                style="display:block;width:100%;max-width:320px;
-                        background:#007bff;color:#ffffff;
-                        padding:14px 0;text-decoration:none;
-                        border-radius:4px;font-weight:bold;text-align:center;">
-                Request Reschedule
-              </a>
-            </td>
-          </tr>
-
-          <tr>
-            <td align="center">
-              <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reject"
-                style="display:block;width:100%;max-width:300px;
-                        background-color:#dc3545;color:#ffffff;
-                        padding:14px 0;text-decoration:none;
-                        border-radius:4px;font-weight:bold;
-                        text-align:center;">
-                Reject Interview
-              </a>
-            </td>
-          </tr>
-        </table>
-
-
-        <p>
-          <strong>Interview Details:</strong><br />
-          <strong>Position:</strong> ${designation}<br />
-          <strong>Date:</strong> ${new Date(interviewDate).toDateString()}<br />
-          <strong>Time:</strong> ${interviewTime}
-        </p>
-
-        <p>
-          The interview will focus on assessing your technical skills, experience, and overall suitability for the role.
-          Kindly ensure your availability at the scheduled time.
-        </p>
-
-        <p>
-          <strong>Please confirm your availability by selecting one of the options below:</strong>
-        </p>
-
-        <p>
-          If you have any questions or require any clarification, please feel free to reply to this email.
-          We request you to confirm your availability by responding to this invitation.
-        </p>
-
-        <p>We look forward to speaking with you.</p>
-
-        <br />
-        <p>Best regards,</p>
-        <p><strong>HR Team</strong></p>
-      `
-
-    };
-
     const mailOptions = {
       from: `"HR Team" <${process.env.EMAIL_USER}>`,
       to: user.email,
@@ -3566,6 +3482,101 @@ export const acceptInterviewInvitation = async (req, res) => {
     application.interviewInvitationAccepted = accept; // true or false
     await application.save();
 
+    // ➤ Get jobId from application
+    const jobId = application.jobId;
+    // ➤ Fetch job posting (to get employer userId)
+    const job = await JobPosting.findById(jobId);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job posting not found",
+      });
+    }
+    // ➤ Fetch employer user
+    const employer = await User.findById(job.userId);
+
+    if (!employer || !employer.email) {
+      return res.status(404).json({
+        success: false,
+        message: "Employer email not found",
+      });
+    }
+
+    // ➤ Fetch candidate (optional but recommended)
+    const candidate = await User.findById(application.userId);
+
+    // Send email with login credentials
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+    let mailOptions;
+    if (accept === true) {
+      mailOptions = {
+        // from: `"HR Team" <${process.env.EMAIL_USER}>`,
+        from: `"GEISIL Notifications" <${process.env.EMAIL_USER}>`,
+        to: employer.email,
+        // to: "chandrasarkar2sglobal@gmail.com",
+        subject: `Interview Invitation Accepted – ${job.jobTitle}`,
+        html: `
+            <p>Hello ${employer.name || "Employer"},</p>
+
+            <p>
+              The candidate <strong>${candidate?.name || "Candidate"}</strong>
+              has accepted the interview invitation for the position
+              <strong>${job.jobTitle}</strong>.
+            </p>
+
+            <p>
+              Please log in to your dashboard to schedule the interview
+              and proceed further.
+            </p>
+
+            <p>
+              Regards,<br />
+              <strong>GEISIL</strong>
+            </p>
+          `,
+      };
+    } else {
+      mailOptions = {
+        from: `"GEISIL Notifications" <${process.env.EMAIL_USER}>`,
+        to: employer.email,
+        // to: "chandrasarkar2sglobal@gmail.com",
+        subject: `Interview Invitation Rejected – ${job.jobTitle}`,
+        html: `
+          <p>Hello ${employer.name || "Employer"},</p>
+
+          <p>
+            The candidate <strong>${candidate?.name || "Candidate"}</strong>
+            has <strong>declined</strong> the interview invitation for the position
+            <strong>${job.jobTitle}</strong>.
+          </p>
+
+          <p>
+            You may review other applicants or invite another suitable
+            candidate for the interview.
+          </p>
+
+          <p>
+            Regards,<br />
+            <strong>GEISIL</strong>
+          </p>
+        `,
+      };
+    }
+
+    if (employer?.email) {
+      await transporter.sendMail(mailOptions);
+    }
+
+
     // 4️⃣ Response
     return res.status(200).json({
       success: true,
@@ -3626,6 +3637,125 @@ export const checkJobApplicationStatus = async (req, res) => {
 
   } catch (error) {
     console.error("Check application status error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Request Reschedule By Candidate API
+export const requestRescheduleByCandidate = async (req, res) => {
+  try {
+    console.log("Request reschedule by candidate called with body:", req.body);
+    const {
+      applicationId,
+      requestDate,
+      requestStartTime,
+      requestEndTime,
+    } = req.body;
+
+    if (!applicationId || !requestDate || !requestStartTime || !requestEndTime) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    // 1️⃣ Fetch application
+    const application = await JobApplication.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+    if (application.status !== "invitation_sent") {
+      return res.status(400).json({
+        success: false,
+        message: "Reschedule request not allowed for current status",
+      });
+    }
+
+    // 2️⃣ Store candidate request (DO NOT change interview details)
+    application.requestReschedule = true;
+    application.requestDate = requestDate;
+    application.requestStartTime = requestStartTime;
+    application.requestEndTime = requestEndTime;
+    application.rescheduleRequestedAt = new Date();
+
+    await application.save();
+
+    // 3️⃣ Fetch candidate
+    const candidate = await User.findById(application.userId)
+      .select("name email");
+
+    // 4️⃣ Fetch job & employer
+    const job = await JobPosting.findById(application.jobId)
+      .select("jobTitle userId");
+
+    const employer = await User.findById(job.userId)
+      .select("name email");
+
+    // 5️⃣ Send mail to employer
+    if (employer?.email) {
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: `"GEISIL Notifications" <${process.env.EMAIL_USER}>`,
+        // to: employer.email,
+        to: employer.email, // use real employer email
+        subject: `Reschedule Request – ${job.jobTitle}`,
+        html: `
+          <p>Hello ${employer.name || "Employer"},</p>
+
+          <p>
+            The candidate <strong>${candidate.name}</strong> has requested
+            to <strong>reschedule</strong> the interview for the position
+            <strong>${job.jobTitle}</strong>.
+          </p>
+
+          <p><strong>Requested Schedule:</strong></p>
+          <ul>
+            <li><strong>Date:</strong> ${new Date(requestDate).toDateString()}</li>
+            <li><strong>Time Window:</strong> ${requestStartTime} – ${requestEndTime}</li>
+          </ul>
+
+          <p>
+            Please log in to your dashboard to review and take action
+            on this reschedule request.
+          </p>
+
+          <p>
+            Regards,<br />
+            <strong>GEISIL</strong>
+          </p>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+    }
+
+
+    return res.status(200).json({
+      success: true,
+      message: "Reschedule request sent successfully",
+      data: application,
+    });
+
+  } catch (error) {
+    console.error("Reschedule Request Error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
