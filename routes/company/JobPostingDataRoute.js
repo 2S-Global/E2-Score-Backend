@@ -36,6 +36,7 @@ import {
   checkJobApplicationStatus,
   rescheduleInterview,
   requestRescheduleByCandidate,
+  getRescheduleRequestByApplication,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -283,6 +284,13 @@ jobPostingDataRouter.post(
   upload.none(),
   userAuth,
   requestRescheduleByCandidate
+);
+
+// Get Request Reschedule By Candidate API
+jobPostingDataRouter.get(
+  "/get-request-reschedule-data",
+  userAuth,
+  getRescheduleRequestByApplication
 );
 
 export default jobPostingDataRouter;

@@ -2503,6 +2503,10 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
           designation: 1,
           isInterviewFeedbackSubmitted: 1,
           interviewInvitationStatus: 1,
+          requestReschedule: 1,
+          requestDate: 1,
+          requestStartTime: 1,
+          requestEndTime: 1,
 
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
@@ -3761,4 +3765,52 @@ export const requestRescheduleByCandidate = async (req, res) => {
       message: "Internal server error",
     });
   }
+};
+
+export const getRescheduleRequestByApplication = async (req, res) => {
+  try {
+    const { applicationId } = req.query;
+
+    if (!applicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Application ID is required",
+      });
+    }
+
+    const application = await JobApplication.findById(applicationId).lean();
+
+    // .populate("userId", "name email")
+    // .populate("jobId", "jobTitle userId")
+
+if (!application) {
+  return res.status(404).json({
+    success: false,
+    message: "Application not found",
+  });
+}
+
+return res.status(200).json({
+  success: true,
+  message: "Reschedule request fetched successfully",
+  // data: {
+  //   applicationId: application._id,
+  //   requestReschedule: application.requestReschedule,
+  //   requestDate: application.requestDate,
+  //   requestStartTime: application.requestStartTime,
+  //   requestEndTime: application.requestEndTime,
+  //   rescheduleRequestedAt: application.rescheduleRequestedAt,
+  //   candidate: application.userId,
+  //   job: application.jobId,
+  //   status: application.status,
+  // },
+  data: application,
+});
+  } catch (error) {
+  console.error("Get Reschedule Request Error:", error);
+  return res.status(500).json({
+    success: false,
+    message: "Internal server error",
+  });
+}
 };
