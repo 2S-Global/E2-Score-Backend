@@ -2473,6 +2473,7 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
         },
       },
 
+      /*
       {
         $addFields: {
           interviewInvitationStatus: {
@@ -2490,7 +2491,31 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
           },
         },
       },
+      */
 
+      {
+        $addFields: {
+          interviewInvitationStatus: {
+            $cond: {
+              if: { $eq: ["$requestReschedule", true] },
+              then: "reschedule_request",
+              else: {
+                $cond: {
+                  if: { $eq: ["$interviewInvitationAccepted", true] },
+                  then: "accepted",
+                  else: {
+                    $cond: {
+                      if: { $eq: ["$interviewInvitationAccepted", false] },
+                      then: "rejected",
+                      else: "pending",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
 
       // 9️⃣ Final Response
       {
@@ -3783,34 +3808,34 @@ export const getRescheduleRequestByApplication = async (req, res) => {
     // .populate("userId", "name email")
     // .populate("jobId", "jobTitle userId")
 
-if (!application) {
-  return res.status(404).json({
-    success: false,
-    message: "Application not found",
-  });
-}
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
 
-return res.status(200).json({
-  success: true,
-  message: "Reschedule request fetched successfully",
-  // data: {
-  //   applicationId: application._id,
-  //   requestReschedule: application.requestReschedule,
-  //   requestDate: application.requestDate,
-  //   requestStartTime: application.requestStartTime,
-  //   requestEndTime: application.requestEndTime,
-  //   rescheduleRequestedAt: application.rescheduleRequestedAt,
-  //   candidate: application.userId,
-  //   job: application.jobId,
-  //   status: application.status,
-  // },
-  data: application,
-});
+    return res.status(200).json({
+      success: true,
+      message: "Reschedule request fetched successfully",
+      // data: {
+      //   applicationId: application._id,
+      //   requestReschedule: application.requestReschedule,
+      //   requestDate: application.requestDate,
+      //   requestStartTime: application.requestStartTime,
+      //   requestEndTime: application.requestEndTime,
+      //   rescheduleRequestedAt: application.rescheduleRequestedAt,
+      //   candidate: application.userId,
+      //   job: application.jobId,
+      //   status: application.status,
+      // },
+      data: application,
+    });
   } catch (error) {
-  console.error("Get Reschedule Request Error:", error);
-  return res.status(500).json({
-    success: false,
-    message: "Internal server error",
-  });
-}
+    console.error("Get Reschedule Request Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
 };
