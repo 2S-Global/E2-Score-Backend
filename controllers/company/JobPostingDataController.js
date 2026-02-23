@@ -2493,6 +2493,8 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
       },
       */
 
+      // Update Part II
+      /*  
       {
         $addFields: {
           interviewInvitationStatus: {
@@ -2510,6 +2512,39 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
                       else: "pending",
                     },
                   },
+                },
+              },
+            },
+          },
+        },
+      },
+      */
+
+      {
+        $addFields: {
+          interviewInvitationStatus: {
+            $cond: {
+              // 1️⃣ Check if interviewInvitationAccepted exists
+              if: { $ne: [{ $ifNull: ["$interviewInvitationAccepted", null] }, null] },
+              then: {
+                $cond: {
+                  if: { $eq: ["$interviewInvitationAccepted", true] },
+                  then: "accepted",
+                  else: {
+                    $cond: {
+                      if: { $eq: ["$interviewInvitationAccepted", false] },
+                      then: "rejected",
+                      else: "pending",
+                    },
+                  },
+                },
+              },
+              else: {
+                // 2️⃣ Only if interviewInvitationAccepted does NOT exist
+                $cond: {
+                  if: { $eq: ["$requestReschedule", true] },
+                  then: "reschedule_request",
+                  else: "pending",
                 },
               },
             },
