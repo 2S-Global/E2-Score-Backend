@@ -288,17 +288,33 @@ export const getMySavedJobs = async (req, res) => {
   try {
     const userId = req.userId;
 
-const savedJobs = await SavedJob.find({ userId })
-  .populate({
-    path: "jobId",
-    populate: [
-      { path: "jobType", select: "name" },
-      { path: "experienceLevel", select: "name" },
-      { path: "branch", select: "name" },
-    ],
-  })
-  .sort({ savedAt: -1 })
-  .lean();
+    const savedJobs = await SavedJob.find({ userId })
+      .populate({
+        path: "jobId",
+        populate: [
+          { path: "jobType", select: "name" },
+          { path: "experienceLevel", select: "name" },
+          { path: "branch", select: "name" },
+        ],
+      })
+      .sort({ savedAt: -1 })
+      .lean();
+
+    const employerIds = savedJobs
+      .map(item => item.jobId?.userId)
+      .filter(Boolean);
+
+    const companies = await CompanyDetails.find({
+      userId: { $in: employerIds }
+    }).select("userId logo").lean();
+
+    const logoMap = {};
+    companies.forEach(c => {
+      logoMap[c.userId.toString()] = c.logo;
+    });
+
+
+    // console.log("Fetched saved jobs to see all the result:", savedJobs);
 
     return res.json({
       success: true,
@@ -307,8 +323,9 @@ const savedJobs = await SavedJob.find({ userId })
         savedAt: item.savedAt,
         job: {
           ...item.jobId,
-          jobType: item.jobId.jobType?.map((t) => t.name) || [],
-          jobExperienceLevel: item.jobId.experienceLevel?.name || "",
+          logo: logoMap[item.jobId?.userId?.toString()] || null,
+          jobType: item.jobId?.jobType?.map((t) => t.name) || [],
+          jobExperienceLevel: item.jobId?.experienceLevel?.name || "",
         },
       })),
     });
