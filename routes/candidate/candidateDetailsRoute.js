@@ -3,7 +3,7 @@ import multer from "multer";
 
 //import controllers
 
-import { getCandidateDetails } from "../../controllers/candidate/candidateDetailsController.js";
+import { getCandidateDetails, getCandidateDashboardData } from "../../controllers/candidate/candidateDetailsController.js";
 import { getCandidateDetailsV2 } from "../../controllers/candidate/candidatedetailsv2.js";
 //import middleware
 import userAuth from "../../middleware/authMiddleware.js";
@@ -27,5 +27,6 @@ CandidateDetailsRouter.get("/get_candidate_details", getCandidateDetails);
 // );
 
 CandidateDetailsRouter.get("/get_candidate_details_v2", getCandidateDetailsV2);
+CandidateDetailsRouter.get("/get_candidate_dashboard_data", userAuth, getCandidateDashboardData);
 
 export default CandidateDetailsRouter;

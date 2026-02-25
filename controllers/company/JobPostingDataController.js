@@ -1852,7 +1852,22 @@ export const getAppliedCandidatesByJob = async (req, res) => {
           experienceLevel: 1,
 
           candidateName: "$user.name",
-          profilePicture: "$user.profilePicture",
+          profilePicture: {
+            $cond: {
+              if: {
+                $eq: [
+                  {
+                    $trim: {
+                      input: { $ifNull: ["$user.profilePicture", ""] },
+                    },
+                  },
+                  "",
+                ],
+              },
+              then: `${process.env.CLIENT_BASE_URL}/images/no_user.png`,
+              else: "$user.profilePicture",
+            },
+          },
 
           skills: "$personalDetails.skills",
           currentLocation: "$candidateDetails.currentLocation",
@@ -2008,8 +2023,22 @@ export const getShortlistedCandidatesByJob = async (req, res) => {
           preferredTime: 1,
 
           candidateName: "$user.name",
-          profilePicture: "$user.profilePicture",
-
+          profilePicture: {
+            $cond: {
+              if: {
+                $eq: [
+                  {
+                    $trim: {
+                      input: { $ifNull: ["$user.profilePicture", ""] },
+                    },
+                  },
+                  "",
+                ],
+              },
+              then: `${process.env.CLIENT_BASE_URL}/images/no_user.png`,
+              else: "$user.profilePicture",
+            },
+          },
           skills: "$personalDetails.skills",
           currentLocation: "$candidateDetails.currentLocation",
 
@@ -2164,7 +2193,23 @@ export const getOfferSentCandidatesByJob = async (req, res) => {
           offer_letter_message: 1,
 
           candidateName: "$user.name",
-          profilePicture: "$user.profilePicture",
+          // profilePicture: "$user.profilePicture",
+          profilePicture: {
+            $cond: {
+              if: {
+                $eq: [
+                  {
+                    $trim: {
+                      input: { $ifNull: ["$user.profilePicture", ""] },
+                    },
+                  },
+                  "",
+                ],
+              },
+              then: `${process.env.CLIENT_BASE_URL}/images/no_user.png`,
+              else: "$user.profilePicture",
+            },
+          },
 
           skills: "$personalDetails.skills",
           currentLocation: "$candidateDetails.currentLocation",
@@ -2569,7 +2614,23 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
           requestEndTime: 1,
 
           candidateName: "$user.name",
-          profilePicture: "$user.profilePicture",
+          // profilePicture: "$user.profilePicture",
+          profilePicture: {
+            $cond: {
+              if: {
+                $eq: [
+                  {
+                    $trim: {
+                      input: { $ifNull: ["$user.profilePicture", ""] },
+                    },
+                  },
+                  "",
+                ],
+              },
+              then: `${process.env.CLIENT_BASE_URL}/images/no_user.png`,
+              else: "$user.profilePicture",
+            },
+          },
 
           skills: "$personalDetails.skills",
           currentLocation: "$candidateDetails.currentLocation",
