@@ -112,6 +112,7 @@ export const getAllJobList = async (req, res) => {
         advertiseCityName,
         salary: job.salary || "",
         createdAgo: dayjs(job.createdAt).fromNow(),
+        createdDate: job.createdAt || "",
         companyName: companyInfo.companyName,
         logo: companyInfo.logo,
 
