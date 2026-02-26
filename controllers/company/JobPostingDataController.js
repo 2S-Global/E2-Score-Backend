@@ -3303,6 +3303,7 @@ export const sentOfferToCandidates = async (req, res) => {
 
     // 2️⃣ Find application first (optional but recommended)
     const application = await JobApplication.findById(applicationId);
+    const jobId = application?.jobId.toString();
 
     if (!application) {
       return res.status(404).json({
@@ -3389,9 +3390,30 @@ export const sentOfferToCandidates = async (req, res) => {
         }
 
         <p>
-          Kindly confirm your acceptance of this offer by replying to this email.
+          Kindly confirm your acceptance of this offer by selecting one of the options below.
           Further onboarding details will be shared upon confirmation.
         </p>
+
+        <!-- BUTTONS -->
+        <tr>
+          <td align="center" style="padding:20px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+
+              <tr>
+                <td align="center" style="padding-bottom:10px;">
+                  <a href="${process.env.frontend_url}/offer-acceptance-response?id=${applicationId}&jobId=${jobId}"
+                    style="display:block;width:100%;max-width:320px;
+                            background:#28a745;color:#ffffff;
+                            padding:14px 0;text-decoration:none;
+                            border-radius:4px;font-weight:bold;text-align:center;">
+                    Confirmation
+                  </a>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
 
         <br />
         <p>Best regards,</p>
@@ -3708,6 +3730,167 @@ export const acceptInterviewInvitation = async (req, res) => {
       message: accept
         ? "Interview invitation accepted"
         : "Interview invitation rejected",
+      data: application,
+    });
+
+  } catch (error) {
+    console.error("Interview decision error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Accept or Reject Interview Invitation API
+export const acceptRejectOfferLetter = async (req, res) => {
+  try {
+    const { applicationId, accept } = req.body;
+
+    // 1️⃣ Validate input
+    if (!applicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "applicationId is required",
+      });
+    }
+
+    // accept must be boolean
+    if (typeof accept !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "accept must be true or false",
+      });
+    }
+
+    // 2️⃣ Find application
+    const application = await JobApplication.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+    // 3️⃣ Check if response already recorded
+    // IMPORTANT: checking for both true and false
+    if (typeof application.offerLetterAccepted === "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "Your response already recorded",
+      });
+    }
+
+    // 3️⃣ Update DB field
+    application.offerLetterAccepted = accept;
+    if (accept === true){
+      application.status = "offer-letter-accepted";
+    } else{
+      application.status = "offer-letter-rejected";
+    }
+    await application.save();
+
+    // ➤ Get jobId from application
+    const jobId = application.jobId;
+    // ➤ Fetch job posting (to get employer userId)
+    const job = await JobPosting.findById(jobId);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job posting not found",
+      });
+    }
+    // ➤ Fetch employer user
+    const employer = await User.findById(job.userId);
+
+    if (!employer || !employer.email) {
+      return res.status(404).json({
+        success: false,
+        message: "Employer email not found",
+      });
+    }
+
+    // ➤ Fetch candidate (optional but recommended)
+    const candidate = await User.findById(application.userId);
+
+    // Send email with login credentials
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+    let mailOptions;
+    if (accept === true) {
+      mailOptions = {
+        // from: `"HR Team" <${process.env.EMAIL_USER}>`,
+        from: `"GEISIL Notifications" <${process.env.EMAIL_USER}>`,
+        to: employer.email,
+        // to: "chandrasarkar2sglobal@gmail.com",
+        subject: `Offer Letter Accepted – ${job.jobTitle}`,
+        html: `
+            <p>Hello ${employer.name || "Employer"},</p>
+
+            <p>
+              The candidate <strong>${candidate?.name || "Candidate"}</strong>
+              has accepted the offer letter for the position
+              <strong>${job.jobTitle}</strong>.
+            </p>
+
+            <p>
+              Kindly log in to your dashboard to proceed with the onboarding and joining formalities.
+            </p>
+
+            <p>
+              Regards,<br />
+              <strong>GEISIL</strong>
+            </p>
+          `,
+      };
+    } else {
+      mailOptions = {
+        from: `"GEISIL Notifications" <${process.env.EMAIL_USER}>`,
+        to: employer.email,
+        // to: "chandrasarkar2sglobal@gmail.com",
+        subject: `Offer Letter Rejected – ${job.jobTitle}`,
+        html: `
+          <p>Hello ${employer.name || "Employer"},</p>
+
+          <p>
+            The candidate <strong>${candidate?.name || "Candidate"}</strong>
+            has <strong>declined</strong> the offer letter for the position
+            <strong>${job.jobTitle}</strong>.
+          </p>
+
+          <p>
+            You may review other applicants or invite another suitable
+            candidate for the interview.
+          </p>
+
+          <p>
+            Regards,<br />
+            <strong>GEISIL</strong>
+          </p>
+        `,
+      };
+    }
+
+    if (employer?.email) {
+      await transporter.sendMail(mailOptions);
+    }
+
+
+    // 4️⃣ Response
+    return res.status(200).json({
+      success: true,
+      message: accept
+        ? "Offer letter accepted"
+        : "Offer letter rejected",
       data: application,
     });
 

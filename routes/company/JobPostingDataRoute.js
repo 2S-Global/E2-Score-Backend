@@ -37,6 +37,7 @@ import {
   rescheduleInterview,
   requestRescheduleByCandidate,
   getRescheduleRequestByApplication,
+  acceptRejectOfferLetter,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -269,6 +270,13 @@ jobPostingDataRouter.post(
   "/accept_interview_invitation",
   upload.none(),
   acceptInterviewInvitation
+);
+
+// Accept or Reject Offer Letter API
+jobPostingDataRouter.post(
+  "/accept_reject_offer_letter",
+  upload.none(),
+  acceptRejectOfferLetter
 );
 
 // Get check-application-status API

@@ -78,6 +78,10 @@ const jobApplicationSchema = new mongoose.Schema(
             type: Boolean,
             // default: false,
         },
+        offerLetterAccepted: {
+            type: Boolean,
+            // default: false,
+        },
         appliedAt: {
             type: Date,
             default: Date.now,
