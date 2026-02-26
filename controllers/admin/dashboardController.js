@@ -22,9 +22,9 @@ export const getTotal = async (req, res) => {
       totalInstitution,
       totalCandidate
     ] = await Promise.all([
-      User.countDocuments({ role: 2,is_del:false }), // Users with role_id = 1
-      User.countDocuments({ role: 3,is_del:false }), // Fully verified users
-      User.countDocuments({ role: 1,is_del:false }), // Pending verification users
+      User.countDocuments({ role: 2, is_del: false }), // Users with role_id = 1
+      User.countDocuments({ role: 3, is_del: false }), // Fully verified users
+      User.countDocuments({ role: 1, is_del: false }), // Pending verification users
     ]);
 
     const TotalPayment = '0.00';
@@ -98,35 +98,35 @@ export const getMonthlyCompanyDetails = async (req, res) => {
 
 
     let totalSum = 0;
-for (let i = 11; i >= 0; i--) {
-const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
 
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
 
-  const total = dataMap.get(`${year}-${month}`) || 0;
-  totalSum += total;
-}
+      const total = dataMap.get(`${year}-${month}`) || 0;
+      totalSum += total;
+    }
 
     const result = [];
 
 
     for (let i = 11; i >= 0; i--) {
-const date = new Date(now.getFullYear(), now.getMonth() - i, 1); // Safe and immutable
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1); // Safe and immutable
 
 
       const year = date.getFullYear();
       const month = date.getMonth() + 1; // 1-based month
 
       const total = dataMap.get(`${year}-${month}`) || 0;
-     const percentage = totalSum ? (total / totalSum) * 100 : 0;
+      const percentage = totalSum ? (total / totalSum) * 100 : 0;
 
       result.push({
         year,
         month,
         monthName: monthNames[month],
         total,
-        percentage:+percentage.toFixed(2)
+        percentage: +percentage.toFixed(2)
       });
     }
 
@@ -397,7 +397,7 @@ export const getMonthlyInstitutionsDetails = async (req, res) => {
 export const getTotalFrontend = async (req, res) => {
   try {
     // const user_id = req.userId;
-const user_id = new mongoose.Types.ObjectId(req.userId);
+    const user_id = new mongoose.Types.ObjectId(req.userId);
     // Get the company package for this employer
     const companyPackage = await CompanyPackage.findOne({
       companyId: user_id,
@@ -430,9 +430,9 @@ const user_id = new mongoose.Types.ObjectId(req.userId);
         },
         {
           $group: {
-      _id: 0,
-      total: { $sum: "$amount" } // assuming amount is already stored as number
-    }
+            _id: 0,
+            total: { $sum: "$amount" } // assuming amount is already stored as number
+          }
         },
         {
           $project: {
@@ -443,7 +443,7 @@ const user_id = new mongoose.Types.ObjectId(req.userId);
       ])
     ]);
 
-   // const totalTransactionAmount = totalTransactionAmountAgg[0]?.total || 0;
+    // const totalTransactionAmount = totalTransactionAmountAgg[0]?.total || 0;
     const totalTransactionAmount = parseFloat((totalTransactionAmountAgg[0]?.total || 0).toFixed(2));
 
     res.status(200).json({
@@ -479,7 +479,7 @@ export const getMonthlyUserDetails = async (req, res) => {
     const monthlyData = await User.aggregate([
       {
         $match: {
-         // role: 1,
+          // role: 1,
           is_del: false,
           createdAt: { $gte: sixMonthsAgo }
         }
@@ -645,14 +645,14 @@ export const getLatestApplicants = async (req, res) => {
       {
         $match: {
           jobId: { $in: jobIds },
-           status: "applied", // ✅ only applied candidates
+          status: "applied", // ✅ only applied candidates
           isDel: false,
         },
       },
-  // ✅ ADD THIS
-  {
-    $sort: { appliedAt: -1 },
-  },
+      // ✅ ADD THIS
+      {
+        $sort: { appliedAt: -1 },
+      },
 
 
       // 🔹 User
@@ -928,6 +928,103 @@ export const getMonthlyApplicantsStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Monthly applicants stats error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getMonthlyAppliedJobsStatus = async (req, res) => {
+  try {
+    const candidateId = req.userId;
+    const candidateObjectId = new mongoose.Types.ObjectId(req.userId);
+
+    console.log("Candidate ID:", candidateId);
+
+    // 1️⃣ Build last 6 months array
+    const months = [];
+    const monthNames = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+
+    const now = new Date();
+    now.setDate(1);
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now);
+      d.setMonth(d.getMonth() - i);
+
+      months.push({
+        key: `${d.getFullYear()}-${d.getMonth() + 1}`,
+        month: `${monthNames[d.getMonth()]} ${d.getFullYear()}`,
+        totalAppliedJobs: 0,
+      });
+    }
+
+    const [year, month] = months[0].key.split("-");
+    const startDate = new Date(Date.UTC(
+      Number(year),
+      Number(month) - 1,
+      1
+    ));
+
+    // 3️⃣ FIXED aggregation pipeline
+    const stats = await JobApplication.aggregate([
+      {
+        // 🔹 First match only static fields
+        $match: {
+          userId: candidateObjectId,
+          isDel: false,
+        },
+      },
+      {
+        // 🔹 Decide which date to use
+        $addFields: {
+          appliedDate: {
+            $ifNull: ["$appliedAt", "$createdAt"],
+          },
+        },
+      },
+      {
+        // 🔹 Now filter by date
+        $match: {
+          appliedDate: { $gte: startDate },
+        },
+      },
+      {
+        // 🔹 Group month-wise
+        $group: {
+          _id: {
+            year: { $year: "$appliedDate" },
+            month: { $month: "$appliedDate" },
+          },
+          totalAppliedJobs: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // 4️⃣ Merge aggregation result with months list
+    stats.forEach(item => {
+      const key = `${item._id.year}-${item._id.month}`;
+      const index = months.findIndex(m => m.key === key);
+      if (index !== -1) {
+        months[index].totalAppliedJobs = item.totalAppliedJobs;
+      }
+    });
+
+    // 5️⃣ Final response
+    return res.status(200).json({
+      success: true,
+      data: months.map(({ month, totalAppliedJobs }) => ({
+        month,
+        totalAppliedJobs,
+      })),
+    });
+
+  } catch (error) {
+    console.error("Candidate monthly applied jobs stats error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

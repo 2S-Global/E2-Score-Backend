@@ -833,7 +833,13 @@ export const getCandidateDashboardData = async (req, res) => {
       }),
       JobApplication.countDocuments({
         userId,
-        status: "offer_sent",
+        status: {
+          $in: [
+            "offer_sent",
+            "offer_letter_accepted",
+            "offer_letter_rejected",
+          ],
+        },
       }),
     ]);
 
