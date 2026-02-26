@@ -3785,9 +3785,9 @@ export const acceptRejectOfferLetter = async (req, res) => {
     // 3️⃣ Update DB field
     application.offerLetterAccepted = accept;
     if (accept === true){
-      application.status = "offer-letter-accepted";
+      application.status = "offer_letter_accepted";
     } else{
-      application.status = "offer-letter-rejected";
+      application.status = "offer_letter_rejected";
     }
     await application.save();
 
