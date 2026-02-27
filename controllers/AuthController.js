@@ -88,7 +88,8 @@ export const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      phone_number: dbPhoneNumber,
+      phone_number: dbPhoneNumber, 
+      profilePicture: `${process.env.CLIENT_BASE_URL}/images/no_user.png`,
     });
     await newUser.save();
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
