@@ -88,7 +88,7 @@ export const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      phone_number: dbPhoneNumber, 
+      phone_number: dbPhoneNumber,
       profilePicture: `${process.env.CLIENT_BASE_URL}/images/no_user.png`,
     });
     await newUser.save();
@@ -334,11 +334,13 @@ export const registerCompany = async (req, res) => {
           .status(404)
           .json({ message: "User with this email already exists" });
       }
+      /*
       if (existingUser.cin_number === cin) {
         return res
           .status(404)
           .json({ message: "User with this CIN number already exists" });
       }
+      */
     }
 
     // companylist
@@ -528,15 +530,12 @@ export const registerCompany = async (req, res) => {
          alt="profile" 
          style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
     <div>
-      <h3 style="margin:0; font-size:16px; color:#0073b1;">${
-        emp.name || "N/A"
-      }</h3>
-      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${
-        emp.jobTitle || "Unknown"
-      }</p>
-      <p style="margin:2px 0; font-size:13px; color:#555;">${
-        emp.email || ""
-      }</p>
+      <h3 style="margin:0; font-size:16px; color:#0073b1;">${emp.name || "N/A"
+            }</h3>
+      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${emp.jobTitle || "Unknown"
+            }</p>
+      <p style="margin:2px 0; font-size:13px; color:#555;">${emp.email || ""
+            }</p>
     </div>
   </div>
 `
