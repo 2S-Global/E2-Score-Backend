@@ -862,3 +862,23 @@ export const getCandidateDashboardData = async (req, res) => {
     return res.status(500).json({ message: "Internal server error." });
   }
 };
+
+export const getAllCandidates = async (req, res) => {
+  try {
+    const candidates = await User.find({ role: 1, is_del: false })
+      .select("-password") // exclude password
+      .sort({ createdAt: -1 }); // latest first (optional)
+
+    return res.status(200).json({
+      success: true,
+      count: candidates.length,
+      data: candidates,
+    });
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch candidates",
+    });
+  }
+};
