@@ -863,7 +863,7 @@ export const getCandidateDashboardData = async (req, res) => {
   }
 };
 
-export const getAllCandidates = async (req, res) => {
+export const getAllCandidates123 = async (req, res) => {
   try {
     const candidates = await User.find({ role: 1, is_del: false })
       .select("-password") // exclude password
@@ -879,6 +879,230 @@ export const getAllCandidates = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch candidates",
+    });
+  }
+};
+
+export const getAllCandidates456 = async (req, res) => {
+  try {
+    const candidates = await User.aggregate([
+      {
+        $match: { role: 1, is_del: false }
+      },
+      {
+        $lookup: {
+          from: "candidatedetails", // collection name (plural, lowercase)
+          localField: "_id",
+          foreignField: "userId",
+          as: "candidateDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          password: 0,
+          "candidateDetails._id": 0,
+          "candidateDetails.userId": 0
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: candidates.length,
+      data: candidates
+    });
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch candidates"
+    });
+  }
+};
+
+export const getAllCandidates789 = async (req, res) => {
+  try {
+    const candidates = await User.aggregate([
+      // 1️⃣ Filter candidates
+      {
+        $match: { role: 1, is_del: false }
+      },
+
+      // 2️⃣ Join CandidateDetails
+      {
+        $lookup: {
+          from: "candidatedetails",
+          localField: "_id",
+          foreignField: "userId",
+          as: "candidateDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+      // 3️⃣ Join PersonalDetails
+      {
+        $lookup: {
+          from: "personaldetails",
+          localField: "_id",
+          foreignField: "user",
+          as: "personalDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$personalDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+      // 4️⃣ Resolve skills ObjectId → skill name
+      {
+        $lookup: {
+          from: "list_key_skill",
+          localField: "personaldetails.skills",
+          foreignField: "_id",
+          as: "skills"
+        }
+      },
+
+      // 5️⃣ Shape final response
+      {
+        $project: {
+          password: 0,
+          "candidateDetails._id": 0,
+          "candidateDetails.userId": 0,
+          "personalDetails._id": 0,
+          "personalDetails.userId": 0,
+          "personalDetails.skills": 0,
+          "skills._id": 0
+        }
+      },
+
+      // 6️⃣ Latest candidates first
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: candidates.length,
+      data: candidates
+    });
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch candidates"
+    });
+  }
+};
+
+export const getAllCandidates = async (req, res) => {
+  try {
+    const candidates = await User.aggregate([
+      // 1️⃣ Fetch candidates
+      {
+        $match: { role: 1, is_del: false }
+      },
+
+      // 2️⃣ Join CandidateDetails
+      {
+        $lookup: {
+          from: "candidatedetails",
+          localField: "_id",
+          foreignField: "userId",
+          as: "candidateDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+      // 3️⃣ Join PersonalDetails
+      {
+        $lookup: {
+          from: "personaldetails",
+          localField: "_id",
+          foreignField: "user",
+          as: "personalDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$personalDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+      // 4️⃣ Resolve skills ObjectId → skill documents
+      {
+        $lookup: {
+          from: "list_key_skills",
+          localField: "personalDetails.skills",
+          foreignField: "_id",
+          as: "skills"
+        }
+      },
+
+      // 5️⃣ Convert skills to string array ["Skill1", "Skill2"]
+      {
+        $addFields: {
+          skills: {
+            $map: {
+              input: "$skills",
+              as: "skill",
+              in: "$$skill.Skill"
+            }
+          }
+        }
+      },
+
+      // 6️⃣ Clean response
+      {
+        $project: {
+          password: 0,
+          "candidateDetails._id": 0,
+          "candidateDetails.userId": 0,
+          "personalDetails._id": 0,
+          "personalDetails.userId": 0,
+          "personalDetails.skills": 0
+        }
+      },
+
+      // 7️⃣ Latest first
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: candidates.length,
+      data: candidates
+    });
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch candidates"
     });
   }
 };

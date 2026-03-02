@@ -3389,32 +3389,6 @@ export const sentOfferToCandidates = async (req, res) => {
           : ""
         }
 
-        <p>
-          Kindly confirm your acceptance of this offer by selecting one of the options below.
-          Further onboarding details will be shared upon confirmation.
-        </p>
-
-        <!-- BUTTONS -->
-        <tr>
-          <td align="center" style="padding:20px 0;">
-            <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-
-              <tr>
-                <td align="center" style="padding-bottom:10px;">
-                  <a href="${process.env.frontend_url}/offer-acceptance-response?id=${applicationId}&jobId=${jobId}"
-                    style="display:block;width:100%;max-width:320px;
-                            background:#28a745;color:#ffffff;
-                            padding:14px 0;text-decoration:none;
-                            border-radius:4px;font-weight:bold;text-align:center;">
-                    Confirmation
-                  </a>
-                </td>
-              </tr>
-
-            </table>
-          </td>
-        </tr>
-
         <br />
         <p>Best regards,</p>
         <p><strong>HR Team</strong></p>
