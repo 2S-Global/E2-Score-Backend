@@ -1225,7 +1225,7 @@ export const getScore = async (req, res) => {
     /* -----------------------------------
        OPTIONAL: CIBIL
     ----------------------------------- */
-    const CibilScore = 80;
+    const CibilScore = 780;
 
     res.status(200).json({
       success: true,
