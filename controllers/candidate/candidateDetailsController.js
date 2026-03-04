@@ -1052,6 +1052,39 @@ export const getAllCandidates = async (req, res) => {
         }
       },
 
+      //  NEW: Join UserCareer
+      {
+        $lookup: {
+          from: "usercareers",
+          localField: "_id",
+          foreignField: "userId",
+          as: "career"
+        }
+      },
+      {
+        $unwind: {
+          path: "$career",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      // 🔴 CHANGE 1: Convert JobRole string → ObjectId
+      {
+        $addFields: {
+          jobRoleObjId: {
+            $toObjectId: "$career.JobRole"
+          }
+        }
+      },
+      // 🔴 CHANGE 2: Lookup job role name from list_job_roles
+      {
+        $lookup: {
+          from: "list_job_roles",
+          localField: "jobRoleObjId",
+          foreignField: "_id",
+          as: "jobRoleData"
+        }
+      },
+
       // 4️⃣ Resolve skills ObjectId → skill documents
       {
         $lookup: {
@@ -1071,6 +1104,11 @@ export const getAllCandidates = async (req, res) => {
               as: "skill",
               in: "$$skill.Skill"
             }
+          },
+
+          // Extract JobRole
+          JobRole: {
+            $first: "$jobRoleData.job_role"
           }
         }
       },
@@ -1079,11 +1117,16 @@ export const getAllCandidates = async (req, res) => {
       {
         $project: {
           password: 0,
+          // 🔴 remove temporary fields
+          jobRoleObjId: 0,
+          jobRoleData: 0,
+          career: 0,
+
           "candidateDetails._id": 0,
           "candidateDetails.userId": 0,
           "personalDetails._id": 0,
           "personalDetails.userId": 0,
-          "personalDetails.skills": 0
+          "personalDetails.skills": 0,
         }
       },
 
