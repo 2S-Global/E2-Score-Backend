@@ -1095,6 +1095,34 @@ export const getAllCandidates = async (req, res) => {
         }
       },
 
+      // 2️⃣ Join user Educations
+      {
+        $lookup: {
+          from: "usereducations",
+          localField: "_id",
+          foreignField: "userId",
+          as: "userEducations",
+          pipeline:[{$match:{isDel:false}}]
+        }
+      },
+      //all education level one array
+    {
+  $addFields: {
+    levels: {
+        $setUnion: [
+            {
+                $map: {
+                  input: "$userEducations",
+                  as: "level",
+                  in: "$$level.level"
+                }
+            },
+        []
+      ]
+    }
+  }
+},
+
       // 5️⃣ Convert skills to string array ["Skill1", "Skill2"]
       {
         $addFields: {
@@ -1109,7 +1137,9 @@ export const getAllCandidates = async (req, res) => {
           // Extract JobRole
           JobRole: {
             $first: "$jobRoleData.job_role"
-          }
+          },
+
+         
         }
       },
 
