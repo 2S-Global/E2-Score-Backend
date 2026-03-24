@@ -157,35 +157,26 @@ export const updateBannerDetails = async (req, res) => {
 
 export const getAllBannerDetails = async (req, res) => {
   try {
-    const { id } = req.params;
+    // Fetch all banners (latest first optional)
+    const banners = await homeBannerDetails
+      .find()
+      .sort({ createdAt: -1 }); // optional: latest first
 
-    console.log("Params:", req.params);
-
-    // ✅ Validate ID format (important)
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: "Banner ID is required",
-      });
-    }
-
-    const banner = await homeBannerDetails.findById(id);
-
-    // ✅ If not found
-    if (!banner) {
+    // If no banners found
+    if (!banners || banners.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Banner not found",
+        message: "No banners found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      data: banner,
+      data: banners,
     });
 
   } catch (error) {
-    console.error("Get Banner By ID Error:", error);
+    console.error("Get All Banners Error:", error);
 
     return res.status(500).json({
       success: false,

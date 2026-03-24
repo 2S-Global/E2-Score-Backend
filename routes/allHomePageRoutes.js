@@ -33,7 +33,7 @@ HomePageRouter.get("/getBannerDetails", getAllFields);
 
 HomePageRouter.put("/update-banner-details/:id", upload.single("newImage"), updateBannerDetails);
 
-HomePageRouter.get("/get-banner-details/:id", getAllBannerDetails);
+HomePageRouter.get("/get-banner-details", getAllBannerDetails);
 
 
 export default HomePageRouter;
