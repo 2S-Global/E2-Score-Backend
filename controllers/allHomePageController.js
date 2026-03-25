@@ -1,4 +1,5 @@
 import homeBannerDetails from "../models/allHomePageModels.js";
+import ServiceDetails from "../models/ServiceDetailsModel.js";
 import { v2 as cloudinary } from 'cloudinary';
 
 export const getAllFields = async (req, res) => {
@@ -181,6 +182,153 @@ export const getAllBannerDetails = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+export const addServiceDetails = async (req, res) => {
+  try {
+    const { title, description } = req.body;
+
+    // 🔹 Basic validation
+    if (!title || !description) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and description are required",
+      });
+    }
+
+    // 🔹 Create new service
+    const newService = new ServiceDetails({
+      title,
+      description,
+    });
+
+    // 🔹 Save to DB
+    await newService.save();
+
+    // 🔹 Response
+    return res.status(201).json({
+      success: true,
+      message: "Service details added successfully",
+      data: newService,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error adding service details",
+      error: error.message,
+    });
+  }
+};
+
+export const updateServiceDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description } = req.body;
+
+    // 🔹 Validate ID
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Service ID is required",
+      });
+    }
+
+    // 🔹 Check if service exists and not deleted
+    const existingService = await ServiceDetails.findOne({
+      _id: id,
+      isDel: false,
+    });
+
+    if (!existingService) {
+      return res.status(404).json({
+        success: false,
+        message: "Service not found",
+      });
+    }
+
+    // 🔹 Update fields (only if provided)
+    if (title) existingService.title = title;
+    if (description) existingService.description = description;
+
+    // 🔹 Save updated data
+    await existingService.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Service details updated successfully",
+      data: existingService,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error updating service details",
+      error: error.message,
+    });
+  }
+};
+
+export const getAllServiceDetails = async (req, res) => {
+  try {
+    // 🔹 Fetch all non-deleted services
+    const services = await ServiceDetails.find({ isDel: false })
+      .sort({ createdAt: -1 }); // latest first
+
+    return res.status(200).json({
+      success: true,
+      message: "Service details fetched successfully",
+      data: services,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching service details",
+      error: error.message,
+    });
+  }
+};
+
+export const deleteServiceDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 🔹 Validate ID
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Service ID is required",
+      });
+    }
+
+    // 🔹 Find and update (soft delete)
+    const deletedService = await ServiceDetails.findOneAndUpdate(
+      { _id: id, isDel: false },
+      { isDel: true },
+      { new: true }
+    );
+
+    // 🔹 If not found
+    if (!deletedService) {
+      return res.status(404).json({
+        success: false,
+        message: "Service not found or already deleted",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Service deleted successfully",
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error deleting service",
+      error: error.message,
     });
   }
 };
