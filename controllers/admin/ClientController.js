@@ -33,7 +33,7 @@ export const addClient = async (req, res) => {
           }
           const uploadResult = await new Promise((resolve, reject) => {
                 const stream = cloudinary.uploader.upload_stream(
-                  { folder: "homepageitems/banner" },
+                  { folder: "homepageitems/client" },
                   (error, result) => {
                     if (error) {
                       console.error("Cloudinary upload error:", error);
@@ -160,7 +160,7 @@ export const updateClient = async (req, res) => {
           }
           const uploadResult = await new Promise((resolve, reject) => {
                 const stream = cloudinary.uploader.upload_stream(
-                  { folder: "homepageitems/banner" },
+                  { folder: "homepageitems/client" },
                   (error, result) => {
                     if (error) {
                       console.error("Cloudinary upload error:", error);
@@ -186,7 +186,7 @@ export const updateClient = async (req, res) => {
           // If there was an old image, delete it from Cloudinary
           if (oldPublicId) {
             try{
-                  await cloudinary.uploader.destroy(`homepageitems/banner/${oldPublicId}`);
+                  await cloudinary.uploader.destroy(`homepageitems/client/${oldPublicId}`);
             }
             catch(err){
               console.log("file delete failed")

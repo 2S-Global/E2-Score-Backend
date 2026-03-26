@@ -39,7 +39,7 @@ export const addTestimonial = async (req, res) => {
           }
           const uploadResult = await new Promise((resolve, reject) => {
                 const stream = cloudinary.uploader.upload_stream(
-                  { folder: "homepageitems/banner" },
+                  { folder: "homepageitems/testimonial" },
                   (error, result) => {
                     if (error) {
                       console.error("Cloudinary upload error:", error);
@@ -175,7 +175,7 @@ export const updateTestimonial = async (req, res) => {
           }
           const uploadResult = await new Promise((resolve, reject) => {
                 const stream = cloudinary.uploader.upload_stream(
-                  { folder: "homepageitems/banner" },
+                  { folder: "homepageitems/testimonial" },
                   (error, result) => {
                     if (error) {
                       console.error("Cloudinary upload error:", error);
@@ -201,7 +201,7 @@ export const updateTestimonial = async (req, res) => {
           // If there was an old image, delete it from Cloudinary
           if (oldPublicId) {
             try{
-                  await cloudinary.uploader.destroy(`homepageitems/banner/${oldPublicId}`);
+                  await cloudinary.uploader.destroy(`homepageitems/testimonial/${oldPublicId}`);
             }
             catch(err){
               console.log("file delete failed")

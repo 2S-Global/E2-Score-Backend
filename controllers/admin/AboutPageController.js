@@ -46,7 +46,7 @@ export const updateData = async (req, res) => {
               }
               const uploadResult = await new Promise((resolve, reject) => {
                     const stream = cloudinary.uploader.upload_stream(
-                      { folder: "homepageitems/banner" },
+                      { folder: "homepageitems/about" },
                       (error, result) => {
                         if (error) {
                           console.error("Cloudinary upload error:", error);
@@ -72,7 +72,7 @@ export const updateData = async (req, res) => {
               // If there was an old image, delete it from Cloudinary
               if (oldPublicId) {
                 try{
-                      await cloudinary.uploader.destroy(`homepageitems/banner/${oldPublicId}`);
+                      await cloudinary.uploader.destroy(`homepageitems/about/${oldPublicId}`);
                 }
                 catch(err){
                   console.log("file delete failed")
