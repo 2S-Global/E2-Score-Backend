@@ -72,6 +72,9 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import userAdminRouter from "./routes/admin/userRoute.js";
 import CandidateListVerifiedRoute from "./routes/admin/adminVerifyRoute.js";
 import fieldsRouts from "./routes/additionalFieldsRoutes.js";
+import aboutPageRoute from "./routes/admin/aboutPageRoute.js";
+import testimonialRoute from "./routes/admin/testimonialRoute.js";
+import clientRoute from "./routes/admin/clientRoute.js";
 
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
@@ -126,6 +129,9 @@ app.use("/api/companyPackageRoute", companyPackageRoute);
 app.use("/api/companyRoutes", companyRoutes);
 app.use("/api/dashboard", dashboardRoute);
 app.use("/api/admin/cart", CandidateListVerifiedRoute);
+app.use("/api/about", aboutPageRoute);
+app.use("/api/testimonials", testimonialRoute);
+app.use("/api/clients", clientRoute);
 
 //Admin Routes Abhishek Dey
 app.use("/api/useradmin", userAdminRouter);
