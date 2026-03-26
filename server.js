@@ -72,9 +72,12 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import userAdminRouter from "./routes/admin/userRoute.js";
 import CandidateListVerifiedRoute from "./routes/admin/adminVerifyRoute.js";
 import fieldsRouts from "./routes/additionalFieldsRoutes.js";
+
 import aboutPageRoute from "./routes/admin/aboutPageRoute.js";
 import testimonialRoute from "./routes/admin/testimonialRoute.js";
 import clientRoute from "./routes/admin/clientRoute.js";
+import homeRouter from "./routes/allHomePageRoutes.js";
+
 
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
@@ -149,6 +152,9 @@ app.use("/api/candidatebookmark", candidateBookmarkRouter);
 //Testing
 app.use("/api/instituteprofile", InstituteProfileRouter);
 app.use("/api/institutestudent", InstituteStudentRouter);
+
+// API for Home Pages
+app.use("/api/home", homeRouter);
 
 const PORT = process.env.PORT || 3015;
 app.listen(PORT, () => {
