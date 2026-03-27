@@ -28,6 +28,6 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 aboutPageRoute.post("/updateAbout", upload.single("image"),userAuth,adminMiddleware, updateData);
-aboutPageRoute.get("/details",userAuth,getData);
+aboutPageRoute.get("/details",getData);
 
 export default aboutPageRoute;

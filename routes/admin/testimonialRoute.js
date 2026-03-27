@@ -21,7 +21,7 @@ const testimonialRoute = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-testimonialRoute.get("/all-testimonial",userAuth,getAllTestimonials);
+testimonialRoute.get("/all-testimonial",getAllTestimonials);
 testimonialRoute.post("/add-testimonial", upload.single("image"),userAuth,adminMiddleware, addTestimonial);
 testimonialRoute.post("/update-testimonial", upload.single("image"),userAuth,adminMiddleware, updateTestimonial);
 testimonialRoute.post("/delete-testimonial",userAuth,adminMiddleware,deleteTestimonial);
