@@ -21,7 +21,7 @@ const clientRoute = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-clientRoute.get("/all-client",userAuth,getAllClients);
+clientRoute.get("/all-client",getAllClients);
 clientRoute.post("/add-client", upload.single("image"),userAuth,adminMiddleware, addClient);
 clientRoute.post("/update-Client", upload.single("image"),userAuth,adminMiddleware, updateClient);
 clientRoute.post("/delete-Client",userAuth,adminMiddleware,deleteClient);
