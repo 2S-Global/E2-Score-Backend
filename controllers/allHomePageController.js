@@ -438,3 +438,25 @@ export const addContact = async (req, res) => {
     });
   }
 };
+
+export const listContact = async (req, res) => {
+  try {
+    console.log("I am inside listContact controller");
+
+    const contacts = await HomepagecontactModel.find({
+      isDel: false,
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      message: "Contact list fetched successfully",
+      data: contacts,
+    });
+  } catch (error) {
+    console.error("Error fetching contacts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error, please try again later",
+    });
+  }
+};

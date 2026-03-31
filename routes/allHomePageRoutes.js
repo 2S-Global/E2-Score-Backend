@@ -3,7 +3,7 @@ import multer from "multer";
 import dotenv from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
 
-import { getAllFields, updateBannerDetails, getAllBannerDetails, addServiceDetails, updateServiceDetails, getAllServiceDetails, deleteServiceDetails, addContact } from "../controllers/allHomePageController.js";
+import { getAllFields, updateBannerDetails, getAllBannerDetails, addServiceDetails, updateServiceDetails, getAllServiceDetails, deleteServiceDetails, addContact, listContact } from "../controllers/allHomePageController.js";
 
 // Initialize dotenv to load environment variables
 dotenv.config();
@@ -44,5 +44,7 @@ HomePageRouter.get("/get-service-details", getAllServiceDetails);
 HomePageRouter.put("/delete-service-details/:id", upload.none(), userAuth, adminMiddleware, deleteServiceDetails);
 
 HomePageRouter.post("/add-contact", upload.none(), addContact);
+
+HomePageRouter.get("/list-contact-details", listContact);
 
 export default HomePageRouter;
