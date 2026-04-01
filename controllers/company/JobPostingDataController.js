@@ -3425,7 +3425,7 @@ export const sentOfferToCandidates = async (req, res) => {
     );
 
     // 🔹 NEW: Fetch company name from company user (job.userId)
-    const companyUser = await User.findById(job.userId).select("name");
+    const companyUser = await User.findById(job.userId).select("name email");
 
     const companyName =
       companyUser?.name || "our organization";
@@ -3485,9 +3485,67 @@ export const sentOfferToCandidates = async (req, res) => {
 
     };
 
+    const employerMailOptions = {
+      from: `"HR System" <${process.env.EMAIL_USER}>`,
+      to: companyUser.email,
+      subject: `Offer Sent to Candidate – ${offer_letter_designation}`,
+      html: `
+    <h2>Offer Letter Sent Notification</h2>
+
+    <p>
+      An offer letter has been successfully sent to a candidate for the position:
+    </p>
+
+    <p><strong>Job Title:</strong> ${designation}</p>
+
+    <h3>Candidate Details</h3>
+    <table cellpadding="6" cellspacing="0" border="0">
+      <tr>
+        <td><strong>Name</strong></td>
+        <td>${user.name || "N/A"}</td>
+      </tr>
+      <tr>
+        <td><strong>Email</strong></td>
+        <td>${user.email}</td>
+      </tr>
+    </table>
+
+    <br/>
+
+    <h3>Offer Details</h3>
+    <p>
+      <strong>Designation:</strong> ${offer_letter_designation}<br/>
+      <strong>Joining Date:</strong> ${new Date(
+        offer_letter_joining_date
+      ).toDateString()}<br/>
+      <strong>Salary:</strong> ₹${offer_letter_salary}
+    </p>
+
+    <br/>
+    <p>— System Notification</p>
+  `,
+    };
+
+    // if (user?.email) {
+    //   await transporter.sendMail(mailOptions);
+    // }
+
+    const emailPromises = [];
+
+    // Candidate email
     if (user?.email) {
-      await transporter.sendMail(mailOptions);
+      emailPromises.push(transporter.sendMail(mailOptions));
     }
+
+    // Employer email
+    if (companyUser?.email) {
+      emailPromises.push(transporter.sendMail(employerMailOptions));
+    }
+
+    // Send in parallel
+    await Promise.all(emailPromises);
+
+
 
     return res.status(200).json({
       success: true,
