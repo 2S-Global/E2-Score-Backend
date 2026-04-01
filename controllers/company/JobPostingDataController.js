@@ -924,6 +924,72 @@ export const sendJobApplicationsEmail = async ({
 };
 
 
+export const sendCandidateApplicationEmail = async ({
+  candidateEmail,
+  job
+}) => {
+
+  console.log("Sending confirmation email to candidate");
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: candidateEmail,
+    subject: `Application Submitted Successfully – ${job.jobTitle}`,
+    html: `
+      <h2>Application Confirmation</h2>
+
+      <p>Hi <strong>${job.candidateName}</strong>,</p>
+
+      <p>
+        Thank you for applying for the position of 
+        <strong>${job.jobTitle}</strong>.
+      </p>
+
+      <p>
+        We have successfully received your application. Our team will review your profile,
+        and if shortlisted, the employer will contact you for the next steps.
+      </p>
+
+      <h3>Your Submitted Details</h3>
+      <table cellpadding="6" cellspacing="0" border="0">
+        <tr>
+          <td><strong>Name</strong></td>
+          <td>${job.candidateName}</td>
+        </tr>
+        <tr>
+          <td><strong>Email</strong></td>
+          <td>${job.candidateEmail}</td>
+        </tr>
+        <tr>
+          <td><strong>Phone</strong></td>
+          <td>${job.candidatePhone || "N/A"}</td>
+        </tr>
+      </table>
+
+      <br/>
+
+      <p>
+        You can log in to your account anytime to track your application status.
+      </p>
+
+      <br/>
+      <p>Best regards,<br/>Team GEISIL</p>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
 // Confirm Job Posting Details API
 export const ConfirmJobPostingDetails = async (req, res) => {
   try {
@@ -1687,12 +1753,9 @@ export const applyJobPosting = async (req, res) => {
       { getApplicationUpdateEmail: 1, jobTitle: 1, userId: 1 }
     ).lean();
 
-    console.log("Hi,Hello for received jobId:  ---------????????????????????", jobId);
-    console.log("Hi,Hello ---------????????????????????", applications);
-
     const candidateInfo = await User.findOne(
       { _id: userId },
-      { name: 1, email: 1, phone: 1 }
+      { name: 1, email: 1, phone_number: 1 }
     ).lean();
 
     if (!candidateInfo) {
@@ -1701,16 +1764,41 @@ export const applyJobPosting = async (req, res) => {
 
     applications.candidateName = candidateInfo.name;
     applications.candidateEmail = candidateInfo.email;
-    applications.candidatePhone = candidateInfo.phone;
+    applications.candidatePhone = candidateInfo.phone_number;
 
     // 4. Send email ONLY if applications exist
-    if (applications && applications.getApplicationUpdateEmail) {
-      console.log("applications found, getApplicationUpdateEmail");
-      await sendJobApplicationsEmail({
-        employerEmail: applications.getApplicationUpdateEmail,
-        job: applications,
-      });
+    // if (applications && applications.getApplicationUpdateEmail) {
+    //   console.log("applications found, getApplicationUpdateEmail");
+    //   await sendJobApplicationsEmail({
+    //     employerEmail: applications.getApplicationUpdateEmail,
+    //     job: applications,
+    //   });
+    // }
+
+    const emailPromises = [];
+
+    // Employer email
+    if (applications?.getApplicationUpdateEmail) {
+      emailPromises.push(
+        sendJobApplicationsEmail({
+          employerEmail: applications.getApplicationUpdateEmail,
+          job: applications,
+        })
+      );
     }
+
+    // Candidate email
+    if (candidateInfo?.email) {
+      emailPromises.push(
+        sendCandidateApplicationEmail({
+          candidateEmail: applications.candidateEmail,
+          job: applications,
+        })
+      );
+    }
+
+    // Run all emails in parallel
+    await Promise.all(emailPromises);
 
     res.status(200).json({
       success: true,
@@ -3758,9 +3846,9 @@ export const acceptRejectOfferLetter = async (req, res) => {
 
     // 3️⃣ Update DB field
     application.offerLetterAccepted = accept;
-    if (accept === true){
+    if (accept === true) {
       application.status = "offer_letter_accepted";
-    } else{
+    } else {
       application.status = "offer_letter_rejected";
     }
     await application.save();
