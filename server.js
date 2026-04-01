@@ -77,7 +77,7 @@ import aboutPageRoute from "./routes/admin/aboutPageRoute.js";
 import testimonialRoute from "./routes/admin/testimonialRoute.js";
 import clientRoute from "./routes/admin/clientRoute.js";
 import homeRouter from "./routes/allHomePageRoutes.js";
-
+import contactRoutes from "./routes/admin/contactinfoRoutes.js";
 
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
@@ -155,6 +155,7 @@ app.use("/api/institutestudent", InstituteStudentRouter);
 
 // API for Home Pages
 app.use("/api/home", homeRouter);
+app.use("/api/contact", contactRoutes);
 
 const PORT = process.env.PORT || 3015;
 app.listen(PORT, () => {
