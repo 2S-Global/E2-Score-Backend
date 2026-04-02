@@ -922,7 +922,7 @@ export const getVerifiedUser = async (req, res) => {
       filter.workedInCompany = { $exists: false };
     } else if (user_type === "verified") {
       filter.workedInCompany = true;
-      filter.isVerified = true;
+      // filter.isVerified = true;
     } else if (user_type === "rejected") {
       filter.workedInCompany = false;
     }
