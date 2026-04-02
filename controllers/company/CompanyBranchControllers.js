@@ -585,6 +585,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
       joining_month,
       leaving_year,
       leaving_month,
+      worked_in_company,
       Verified,
       designation_verified,
       duration_verified,
@@ -593,6 +594,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
       has_noc,
       has_due,
       remarks,
+      isRejected,
     } = req.body;
 
     if (!_id || !employmentId) {
@@ -622,6 +624,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
         year: leaving_year,
         month: leaving_month,
       },
+      workedInCompany: worked_in_company,
       isVerified: Verified,
       jobTypeVerified: employmenttype_verified,
       designationVerified: designation_verified,
@@ -630,6 +633,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
       hasNOC: has_noc,
       hasDues: has_due,
       remarks: remarks,
+      isRejected: isRejected,
     };
 
     // Update employment based on conditions
@@ -647,7 +651,8 @@ export const addEmployeeVerificationDetails = async (req, res) => {
 
     if (associatedEmployee) {
       // === EMAIL SENDING SECTION ===
-
+      const workedInCompanyBool =
+        worked_in_company === true || worked_in_company === "true";
       const VerifiedBool = Verified === true || Verified === "true";
       const designationVerifiedBool =
         designation_verified === true || designation_verified === "true";
@@ -659,17 +664,15 @@ export const addEmployeeVerificationDetails = async (req, res) => {
       // Build status message for verified fields
       let verificationStatus = `
       <ul>
-        <li>Overall Employment Verified: <strong>${
-          VerifiedBool ? "✅ Yes" : "❌ No"
+        <li>Worked in Company: <strong>${workedInCompanyBool ? "✅ Yes" : "❌ No"
         }</strong></li>
-        <li>Designation Verified: <strong>${
-          designationVerifiedBool ? "✅ Yes" : "❌ No"
+        <li>Overall Employment Verified: <strong>${VerifiedBool ? "✅ Yes" : "❌ No"
         }</strong></li>
-        <li>Duration Verified: <strong>${
-          durationVerifiedBool ? "✅ Yes" : "❌ No"
+        <li>Designation Verified: <strong>${designationVerifiedBool ? "✅ Yes" : "❌ No"
         }</strong></li>
-        <li>Employment Type Verified: <strong>${
-          employmentTypeVerifiedBool ? "✅ Yes" : "❌ No"
+        <li>Duration Verified: <strong>${durationVerifiedBool ? "✅ Yes" : "❌ No"
+        }</strong></li>
+        <li>Employment Type Verified: <strong>${employmentTypeVerifiedBool ? "✅ Yes" : "❌ No"
         }</strong></li>
       </ul>
     `;
@@ -722,7 +725,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
   }
 };
 
-export const getVerifiedUser = async (req, res) => {
+export const getVerifiedUser123 = async (req, res) => {
   try {
     const company_id = req.companyId;
 
@@ -752,7 +755,7 @@ export const getVerifiedUser = async (req, res) => {
 
     // 3. Fetch user details (name, photo)
     const users = await User.find(
-      { _id: { $in: userIds } },
+      { _id: { $in: userIds }, is_del: false },
       {
         name: 1,
         email: 1,
@@ -900,5 +903,147 @@ export const getCompanyLogoByJobId = async (req, res) => {
       success: false,
       message: "Internal server error",
     });
+  }
+};
+
+export const getVerifiedUser = async (req, res) => {
+  try {
+    const company_id = req.companyId;
+    const { user_type } = req.query;
+
+    // ✅ Base filter
+    const filter = {
+      companyName: company_id,
+      isDel: false,
+    };
+
+    // ✅ Apply logic based on query
+    if (user_type === "requested") {
+      filter.workedInCompany = { $exists: false };
+    } else if (user_type === "verified") {
+      filter.workedInCompany = true;
+      filter.isVerified = true;
+    } else if (user_type === "rejected") {
+      filter.workedInCompany = false;
+    }
+
+    if (!company_id) {
+      return res.status(400).json({
+        success: false,
+        message: "company_id is required in query parameter",
+      });
+    }
+
+    // Search employments collection where companyName = company_id
+
+    // const employments = await Employment.find({
+    //   companyName: company_id,
+    //   isVerified: true,
+    // });
+
+    // 1. Fetch employments
+    const employments = await Employment.find(filter).sort({ _id: -1 }).lean();
+
+    if (!employments || employments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No users found for this company",
+      });
+    }
+
+    const userIds = [
+      ...new Set(employments.map((emp) => emp.user.toString())),
+    ].map((id) => new mongoose.Types.ObjectId(id));
+
+    // 3. Fetch user details (name, photo)
+    const users = await User.find(
+      { _id: { $in: userIds }, is_del: false },
+      {
+        name: 1,
+        email: 1,
+        profilePicture: 1,
+      } // only select required fields
+    ).lean();
+
+    // 4. Fetch candidate details (currentLocation, countryId, hometown)
+    const candidateDetails = await CandidateDetails.find(
+      { userId: { $in: userIds } },
+      { currentLocation: 1, country_id: 1, hometown: 1, userId: 1 }
+    ).lean();
+
+    // 4. Collect unique countryIds
+    const countryIds = [
+      ...new Set(candidateDetails.map((c) => c.country_id).filter(Boolean)),
+    ];
+
+    // 5. Fetch country details
+    const countries = await list_tbl_countrie
+      .find({ id: { $in: countryIds } }, { name: 1, id: 1 })
+      .lean();
+
+    // Create a lookup map: countryId → countryName
+    const countryMap = {};
+    countries.forEach((c) => {
+      countryMap[c.id.toString()] = c.name;
+    });
+
+    // 5. Merge all results
+
+    /*
+    const result = userIds.map(userId => {
+
+      const user = users.find(u => u._id && u._id.equals(userId));
+      const employment = employments.find(e => e.user && e.user.equals(userId));
+      const candidate = candidateDetails.find(c => c.userId && c.userId.equals(userId));
+
+      const countryId = candidate && candidate.country_id ? candidate.country_id.toString() : null;
+      const countryName = countryId && countryMap[countryId] ? countryMap[countryId] : "Not Provided";
+
+      return {
+        userId,
+        name: user && user.name ? user.name : "N/A",
+        email: user && user.email ? user.email : "N/A",
+        photo: user && user.profilePicture ? user.profilePicture : null,
+        jobTitle: employment && employment.jobTitle ? employment.jobTitle : "Not Provided",
+        //currentLocation: candidate && candidate.currentLocation ? candidate.currentLocation : "Not Provided",
+        //countryId: candidate && candidate.country_id ? candidate.country_id : null,
+        //countryName: countryName,
+        // hometown: candidate && candidate.hometown ? candidate.hometown : "Not Provided",
+        // currentAddress: `${candidate?.currentLocation || "Not Provided"}, ${countryName}`,
+      };
+    });
+    */
+
+    // 6. Build result based on employments (not unique users)
+    const result = employments.map((emp) => {
+      const user = users.find((u) => u._id && u._id.equals(emp.user));
+      const candidate = candidateDetails.find(
+        (c) => c.userId && c.userId.equals(emp.user)
+      );
+
+      //const countryId = candidate?.country_id?.toString() || null;
+      //const countryName = countryId && countryMap[countryId] ? countryMap[countryId] : "Not Provided";
+
+      return {
+        userId: emp.user,
+        name: user?.name || "N/A",
+        email: user?.email || "N/A",
+        photo: user?.profilePicture || null,
+        jobTitle: emp.jobTitle || "Not Provided",
+        // currentLocation: candidate?.currentLocation || "Not Provided",
+        // countryName,
+        // hometown: candidate?.hometown || "Not Provided",
+        // currentAddress: `${candidate?.currentLocation || "Not Provided"}, ${countryName}`,
+        employmentId: emp._id, // to differentiate employments if needed
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: result,
+      message: "User associated with company fetched successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

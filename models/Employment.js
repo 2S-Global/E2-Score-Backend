@@ -68,7 +68,9 @@ const employmentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-
+    workedInCompany: {
+      type: Boolean,
+    },
     isVerified: {
       type: Boolean,
       default: false,
@@ -99,6 +101,9 @@ const employmentSchema = new mongoose.Schema(
     },
     remarks: {
       type: String,
+    },
+    isRejected: {
+      type: Boolean,
     },
   },
   { timestamps: true }
