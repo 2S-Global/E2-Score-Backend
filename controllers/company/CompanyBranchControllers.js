@@ -1017,6 +1017,16 @@ export const getVerifiedUser = async (req, res) => {
     // 6. Build result based on employments (not unique users)
     const result = employments.map((emp) => {
       const user = users.find((u) => u._id && u._id.equals(emp.user));
+
+      // ✅ Determine status dynamically
+      let status = "Pending";
+
+      if (emp.workedInCompany === true) {
+        status = "Verified";
+      } else if (emp.workedInCompany === false) {
+        status = "Rejected";
+      }
+      
       const candidate = candidateDetails.find(
         (c) => c.userId && c.userId.equals(emp.user)
       );
@@ -1035,6 +1045,7 @@ export const getVerifiedUser = async (req, res) => {
         // hometown: candidate?.hometown || "Not Provided",
         // currentAddress: `${candidate?.currentLocation || "Not Provided"}, ${countryName}`,
         employmentId: emp._id, // to differentiate employments if needed
+        status,
       };
     });
 
