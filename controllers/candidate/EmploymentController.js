@@ -763,6 +763,7 @@ export const getEmploymentDetails = async (req, res) => {
         notice_period: item.NoticePeriod || "",
         remarks: item.remarks || "",
         notice_period_name: noticePeriodMap[item.NoticePeriod] || "",
+        workedInCompany: item.workedInCompany || false,
       };
     });
 
