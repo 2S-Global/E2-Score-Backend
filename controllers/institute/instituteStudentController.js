@@ -407,6 +407,7 @@ export const GetstudentDetails = async (req, res) => {
 export const UpdatestudentStatus = async (req, res) => {
   try {
     const {
+      is_studied_here,
       is_verified,
       employmentId,
       level,
@@ -449,6 +450,7 @@ export const UpdatestudentStatus = async (req, res) => {
     const updatedUserEducation = await usereducation.findOneAndUpdate(
       { _id: employmentId },
       {
+        is_studied_here,
         is_verified,
         level,
         level_verified,
@@ -549,6 +551,123 @@ export const UpdatestudentStatus = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in UpdatestudentStatus:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: err.message,
+    });
+  }
+};
+
+export const GetStudentsByVerification = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { status } = req.query; // verified | unverified
+
+    // ✅ Step 1: Validate status
+    // if (!["verified", "unverified"].includes(status)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Invalid status. Use 'verified' or 'unverified'.",
+    //   });
+    // }
+
+    // ✅ Step 2: Verify institute
+    const instituteDetails = await CompanyDetails.findOne({
+      userId,
+      isDel: false,
+    });
+
+    if (!instituteDetails) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Institute not found." });
+    }
+
+    // ✅ Step 3: Get institute IDs
+    const listOfInstitutes = await list_university_colleges.find({
+      name: instituteDetails.name,
+      is_del: 0,
+    });
+
+    if (!listOfInstitutes.length) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No institutes found." });
+    }
+
+    const instituteIds = listOfInstitutes.map((inst) =>
+      inst.id.toString()
+    );
+
+    // ✅ Step 3: Dynamic filter (MAIN LOGIC)
+    let verificationFilter = {};
+
+    if (status === "verified") {
+      verificationFilter = { is_studied_here: true };
+    } else if (status === "unverified") {
+      verificationFilter = { is_studied_here: { $exists: false } };
+    } else if (status === "rejected") {
+      verificationFilter = { is_studied_here: false };
+    }
+    // 👉 if status not provided → no filter (returns all)
+
+    // ✅ Step 5: Fetch students
+    const studentList = await usereducation
+      .find({
+        isDel: false,
+        instituteName: { $in: instituteIds },
+        ...verificationFilter,
+      })
+      .populate("userId", "name email profilePicture")
+      .lean()
+      .limit(5);
+
+    if (!studentList.length) {
+      return res.status(200).json({
+        success: true,
+        total: 0,
+        data: [],
+        message: `No ${status} students found.`,
+      });
+    }
+
+    // ✅ Step 6: Course mapping
+    const courseIds = [...new Set(studentList.map((s) => s.courseName))];
+
+    const courses = await list_university_course.find({
+      id: { $in: courseIds },
+      is_del: 0,
+    });
+
+    const courseMap = courses.reduce((acc, course) => {
+      acc[course.id] = course.name;
+      return acc;
+    }, {});
+
+    // ✅ Step 7: Format response
+    const finalList = studentList.map((student) => ({
+      employmentId: student._id,
+      userId: student.userId?._id || null,
+      name: student.userId?.name || "Unknown",
+      email: student.userId?.email || "N/A",
+      details: `${
+        courseMap[student.courseName] ||
+        student.courseName ||
+        "Unknown Course"
+      } || ${student.duration?.from || "N/A"}-${
+        student.duration?.to || "N/A"
+      }`,
+      photo: student.userId?.profilePicture || null,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      total: finalList.length,
+      data: finalList,
+    });
+  } catch (err) {
+    console.error("❌ Error in GetStudentsByVerification:", err);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",

@@ -117,6 +117,9 @@ const userEducationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    is_studied_here: {
+      type: Boolean,
+    },
     is_verified: {
       type: Boolean,
       default: false,
