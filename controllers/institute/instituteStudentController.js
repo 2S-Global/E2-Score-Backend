@@ -82,9 +82,8 @@ export const GetunverifiedStudents = async (req, res) => {
       userId: student.userId?._id || null,
       name: student.userId?.name || "Unknown",
       email: student.userId?.email || "N/A",
-      details: `${
-        courseMap[student.courseName] || student.courseName || "Unknown Course"
-      } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"}`,
+      details: `${courseMap[student.courseName] || student.courseName || "Unknown Course"
+        } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"}`,
       photo: student.userId?.profilePicture || null,
     }));
 
@@ -174,9 +173,8 @@ export const GetallStudents = async (req, res) => {
       userId: student.userId?._id || null,
       name: student.userId?.name || "Unknown",
       email: student.userId?.email || "N/A",
-      details: `${
-        courseMap[student.courseName] || student.courseName || "Unknown Course"
-      } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"}`,
+      details: `${courseMap[student.courseName] || student.courseName || "Unknown Course"
+        } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"}`,
       photo: student.userId?.profilePicture || null,
     }));
 
@@ -268,9 +266,8 @@ export const GetverifiedStudents = async (req, res) => {
       userId: student.userId?._id || null,
       name: student.userId?.name || "Unknown",
       email: student.userId?.email || "N/A",
-      details: `${
-        courseMap[student.courseName] || student.courseName || "Unknown Course"
-      } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"}`,
+      details: `${courseMap[student.courseName] || student.courseName || "Unknown Course"
+        } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"}`,
       photo: student.userId?.profilePicture || null,
     }));
 
@@ -367,9 +364,8 @@ export const GetstudentDetails = async (req, res) => {
       education.courseName = courseDoc?.name || null;
     }
     //-- Enrich Duration
-    education.durationstring = `${education.duration?.from || "N/A"}-${
-      education.duration?.to || "N/A"
-    }`;
+    education.durationstring = `${education.duration?.from || "N/A"}-${education.duration?.to || "N/A"
+      }`;
     // --- Enrich list_grading_system ---
     if (education?.gradingSystem) {
       const gradingSystemDoc = await list_grading_system
@@ -498,30 +494,24 @@ export const UpdatestudentStatus = async (req, res) => {
 
     let verificationStatus = `
         <ul>
-          <li><strong>Level:</strong> ${
-            updatedUserEducation.level_verified ? "Verified" : "Not Verified"
-          }</li>
-          <li><strong>Course Type:</strong> ${
-            updatedUserEducation.courseType_verified
-              ? "Verified"
-              : "Not Verified"
-          }</li>
-          <li><strong>Course Name:</strong> ${
-            updatedUserEducation.courseName_verified
-              ? "Verified"
-              : "Not Verified"
-          }</li>
-          <li><strong>Duration:</strong> ${
-            updatedUserEducation.duration_verified ? "Verified" : "Not Verified"
-          }</li>
-          <li><strong>Grading System:</strong> ${
-            updatedUserEducation.gradingSystem_verified
-              ? "Verified"
-              : "Not Verified"
-          }</li>
-          <li><strong>Marks:</strong> ${
-            updatedUserEducation.marks_verified ? "Verified" : "Not Verified"
-          }</li>
+          <li><strong>Level:</strong> ${updatedUserEducation.level_verified ? "Verified" : "Not Verified"
+      }</li>
+          <li><strong>Course Type:</strong> ${updatedUserEducation.courseType_verified
+        ? "Verified"
+        : "Not Verified"
+      }</li>
+          <li><strong>Course Name:</strong> ${updatedUserEducation.courseName_verified
+        ? "Verified"
+        : "Not Verified"
+      }</li>
+          <li><strong>Duration:</strong> ${updatedUserEducation.duration_verified ? "Verified" : "Not Verified"
+      }</li>
+          <li><strong>Grading System:</strong> ${updatedUserEducation.gradingSystem_verified
+        ? "Verified"
+        : "Not Verified"
+      }</li>
+          <li><strong>Marks:</strong> ${updatedUserEducation.marks_verified ? "Verified" : "Not Verified"
+      }</li>
           <li><strong>Remarks:</strong> ${updatedUserEducation.remarks}</li>
         </ul>
       `;
@@ -563,14 +553,6 @@ export const GetStudentsByVerification = async (req, res) => {
   try {
     const userId = req.userId;
     const { status } = req.query; // verified | unverified
-
-    // ✅ Step 1: Validate status
-    // if (!["verified", "unverified"].includes(status)) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Invalid status. Use 'verified' or 'unverified'.",
-    //   });
-    // }
 
     // ✅ Step 2: Verify institute
     const instituteDetails = await CompanyDetails.findOne({
@@ -646,20 +628,31 @@ export const GetStudentsByVerification = async (req, res) => {
     }, {});
 
     // ✅ Step 7: Format response
-    const finalList = studentList.map((student) => ({
-      employmentId: student._id,
-      userId: student.userId?._id || null,
-      name: student.userId?.name || "Unknown",
-      email: student.userId?.email || "N/A",
-      details: `${
-        courseMap[student.courseName] ||
-        student.courseName ||
-        "Unknown Course"
-      } || ${student.duration?.from || "N/A"}-${
-        student.duration?.to || "N/A"
-      }`,
-      photo: student.userId?.profilePicture || null,
-    }));
+    const finalList = studentList.map((student) => {
+      let studentStatus = "unverified";
+
+      if (student.is_studied_here === true) {
+        studentStatus = "verified";
+      } else if (student.is_studied_here === false) {
+        studentStatus = "rejected";
+      }
+
+      return {
+        employmentId: student._id,
+        userId: student.userId?._id || null,
+        name: student.userId?.name || "Unknown",
+        email: student.userId?.email || "N/A",
+        details: `${courseMap[student.courseName] ||
+          student.courseName ||
+          "Unknown Course"
+          } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"
+          }`,
+        photo: student.userId?.profilePicture || null,
+
+        // ✅ Add this line
+        status: studentStatus,
+      };
+    });
 
     return res.status(200).json({
       success: true,
