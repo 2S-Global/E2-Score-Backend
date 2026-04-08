@@ -905,11 +905,14 @@ export const editEmploymentDetails = async (req, res) => {
       NoticePeriod: notice_period,
     };
 
-    const updatedEmployment = await Employment.findByIdAndUpdate(
-      _id,
-      updatedFields,
-      { new: true }
-    );
+ const updatedEmployment = await Employment.findByIdAndUpdate(
+   _id,
+   {
+     $set: updatedFields,
+     $unset: { workedInCompany: 1 }, // ✅ removes field completely
+   },
+   { new: true },
+ );
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,
