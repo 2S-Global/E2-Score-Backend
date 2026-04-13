@@ -13,19 +13,21 @@ export const addTestimonial = async (req, res) => {
       subject,
       customer_name,
       customer_designation,
-      description
+      description,
+      linkedin_url,
     } = req.body;
  // ✅ Validate required fields
    if (
        !subject ||
       !customer_name ||
       !customer_designation ||
-      !description
+      !description ||
+      !linkedin_url
     ) {
       return res.status(400).json({
         success: false,
         message:
-          "All fields are required:  subject, customer_name, customer_designation, description",
+          "All fields are required:  subject, customer_name, customer_designation, description, linkedin_url",
       });
     }
     let updatedImage = null;
@@ -61,7 +63,8 @@ export const addTestimonial = async (req, res) => {
       customer_name,
       customer_designation,
       customer_image:updatedImage,
-      description
+      description,
+      linkedin_url
     });
 
     const savedTestimonial = await newTestimonial.save();
@@ -137,7 +140,8 @@ export const updateTestimonial = async (req, res) => {
       subject,
       customer_name,
       customer_designation,
-      description
+      description,
+      linkedin_url,
     } = req.body;
  // ✅ Validate required fields
    if (
@@ -145,12 +149,13 @@ export const updateTestimonial = async (req, res) => {
        !subject ||
       !customer_name ||
       !customer_designation ||
-      !description
+      !description ||
+      !linkedin_url
     ) {
       return res.status(400).json({
         success: false,
         message:
-          "All fields are required:  id,subject, customer_name, customer_designation, description",
+          "All fields are required:  id,subject, customer_name, customer_designation, description, linkedin_url",
       });
     }
 
@@ -219,7 +224,8 @@ export const updateTestimonial = async (req, res) => {
         customer_name,
         customer_designation,
         customer_image:updatedImage,
-        description
+        description,
+        linkedin_url
       },
       { new: true }
     );

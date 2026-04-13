@@ -594,6 +594,7 @@ export const getUserEducation = async (req, res) => {
 
     const responseData = educationRecords.map((record) => ({
       ...record,
+      is_studied_here: record.is_studied_here,
       level_id: record.level,
       level: maps.level[record.level] || record.level,
       state: maps.state[record.state] || record.state,

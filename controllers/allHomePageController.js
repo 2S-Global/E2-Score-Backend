@@ -5,156 +5,15 @@ import nodemailer from "nodemailer";
 import { v2 as cloudinary } from 'cloudinary';
 
 export const getAllFields = async (req, res) => {
-    try {
-
-        res.status(200).json({
-            success: true,
-            message: "Home Page Testing API is running successfully ! ",
-        });
-
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Error fetching fields", error: error.message });
-    }
-};
-
-export const addBannerDetails = async (req, res) => {
-    try {
-
-        const { title } = req.body;
-
-        console.log("Body:", req.body);
-        console.log("File:", req.file);
-
-        // ✅ Validation
-        if (!title || !req.file) {
-            return res.status(400).json({
-                success: false,
-                message: "Title and Banner Image are required",
-            });
-        }
-
-        if (!req.file.buffer) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid image file",
-            });
-        }
-
-        console.log("Uploading file:", req.file.originalname);
-
-        // ✅ Upload single image to Cloudinary
-        const uploadResult = await new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-                { folder: "homepageitems/banner" },
-                (error, result) => {
-                    if (error) {
-                        console.error("Cloudinary upload error:", error);
-                        reject(error);
-                    } else {
-                        resolve(result);
-                    }
-                }
-            );
-
-            stream.end(req.file.buffer);
-        });
-
-        // ✅ Save to DB
-        const newItem = new homeBannerDetails({
-            title,
-            bannerImage: uploadResult.secure_url, // 👈 single image
-        });
-
-        await newItem.save();
-
-        res.status(200).json({  
-            success: true,
-            message: "Banner details added successfully ! ",
-        });
-
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Error fetching fields", error: error.message });
-    }
-};
-
-export const updateBannerDetails = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { title } = req.body;
 
-    console.log("Params:", req.params);
-    console.log("Body:", req.body);
-    console.log("File:", req.file);
-
-    // ✅ Find existing record
-    const existingBanner = await homeBannerDetails.findById(id);
-
-    if (!existingBanner) {
-      return res.status(404).json({
-        success: false,
-        message: "Banner not found",
-      });
-    }
-
-    let updatedImage = existingBanner.bannerImage;
-
-    // ✅ If new image is uploaded → replace it
-    if (req.file) {
-      if (!req.file.buffer) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid image file",
-        });
-      }
-
-      console.log("Uploading new banner:", req.file.originalname);
-
-      const uploadResult = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "homepageitems/banner" },
-          (error, result) => {
-            if (error) {
-              console.error("Cloudinary upload error:", error);
-              reject(error);
-            } else {
-              resolve(result);
-            }
-          }
-        );
-
-        stream.end(req.file.buffer);
-      });
-
-      updatedImage = uploadResult.secure_url;
-
-    //   🔥 (Optional but recommended)
-    //   Delete old image from Cloudinary
-    //   const publicId = extractPublicId(existingBanner.bannerImage);
-    //   await cloudinary.uploader.destroy(publicId);
-    }
-
-    // ✅ Update DB
-    const updatedBanner = await homeBannerDetails.findByIdAndUpdate(
-      id,
-      {
-        title: title || existingBanner.title,
-        bannerImage: updatedImage,
-      },
-      { new: true }
-    );
-
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: "Banner updated successfully",
-      data: updatedBanner,
+      message: "Home Page Testing API is running successfully ! ",
     });
 
   } catch (error) {
-    console.error("Update Banner Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Internal Server Error",
-    });
+    res.status(500).json({ success: false, message: "Error fetching fields", error: error.message });
   }
 };
 
@@ -372,7 +231,7 @@ export const addContact = async (req, res) => {
     });
 
     // Email HTML template (conditional)
-    const emailTemplate =  `
+    const emailTemplate = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
         <!-- Header -->
         <div style="background: #4f46e5; color: white; padding: 16px; text-align: center;">
@@ -457,6 +316,248 @@ export const listContact = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error, please try again later",
+    });
+  }
+};
+
+export const addBanner = async (req, res) => {
+  try {
+    const {
+      banner_title,
+    } = req.body;
+
+    if (
+      !banner_title
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "All fields are required:  banner_title",
+      });
+    }
+    let updatedImage = null;
+    // ✅ If new image is uploaded → replace it
+    if (req.file) {
+      if (!req.file.buffer) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid image file",
+        });
+      }
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "homepageitems/banner" },
+          (error, result) => {
+            if (error) {
+              console.error("Cloudinary upload error:", error);
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+      updatedImage = uploadResult.secure_url;
+    }
+
+
+
+    const newTestimonial = new homeBannerDetails({
+      banner_title,
+      banner_image: updatedImage,
+    });
+
+    const savedTestimonial = await newTestimonial.save();
+    res.status(201).json({ message: "Banner added successfully", data: savedTestimonial });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding Banner", error: error.message });
+  }
+};
+
+export const getAllBannners = async (req, res) => {
+  try {
+    const banners = await homeBannerDetails.find({ is_del: false });
+    res.status(200).json({
+      message: "Banners fetched successfully",
+      data: banners,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching banners",
+      error: error.message,
+    });
+  }
+};
+
+export const updateBanner = async (req, res) => {
+  try {
+    const {
+      id,
+      banner_title,
+    } = req.body;
+    // ✅ Validate required fields
+    if (
+      !id
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Banner id is required",
+      });
+    }
+
+    // ✅ Fetch the existing Banner
+    const existingBanner = await homeBannerDetails.findById(id);
+    if (!existingBanner) {
+      return res.status(404).json({
+        success: false,
+        message: "Banner not found",
+      });
+    }
+
+    let updatedImage = existingBanner.banner_image;
+    // ✅ If new image is uploaded → replace it
+    if (req.file) {
+
+      if (!req.file.buffer) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid image file",
+        });
+      }
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "homepageitems/banner" },
+          (error, result) => {
+            if (error) {
+              console.error("Cloudinary upload error:", error);
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+
+      updatedImage = uploadResult.secure_url;
+      //   🔥 (Optional but recommended)
+      //   Delete old image from Cloudinary
+      const oldImage = existingBanner.banner_image;
+      let oldPublicId = null;
+      if (oldImage) {
+        // Extract the public ID from the old image URL
+        const oldImageUrlParts = oldImage.split("/");
+        oldPublicId = oldImageUrlParts[oldImageUrlParts.length - 1].split(".")[0];
+      }
+      // If there was an old image, delete it from Cloudinary
+      if (oldPublicId) {
+        try {
+          await cloudinary.uploader.destroy(`homepageitems/banner/${oldPublicId}`);
+        }
+        catch (err) {
+          console.log("file delete failed")
+        }
+
+      }
+
+    }
+
+    // ✅ Build dynamic update object
+    const updateData = {};
+
+    if (banner_title) {
+      updateData.banner_title = banner_title;
+    }
+
+    if (updatedImage) {
+      updateData.banner_image = updatedImage;
+    }
+
+    // ❌ If nothing to update
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No data provided to update",
+      });
+    }
+
+    // ✅ Update the Testimonial with the new data (replace verifications)
+    const updated = await homeBannerDetails.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Banner updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("Update Banner Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating Banner",
+      error: error.message,
+    });
+  }
+};
+
+export const deleteBanner = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    console.log("Delete Banner ID:", id);
+
+    // ✅ Validate
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Banner id is required",
+      });
+    }
+
+    // ✅ Find banner
+    const banner = await homeBannerDetails.findById(id);
+
+    if (!banner) {
+      return res.status(404).json({
+        success: false,
+        message: "Banner not found",
+      });
+    }
+
+    // 🔥 Delete image from Cloudinary (optional but recommended)
+    if (banner.banner_image) {
+      try {
+        const parts = banner.banner_image.split("/");
+        const fileName = parts[parts.length - 1];
+        const publicId = fileName.split(".")[0];
+
+        await cloudinary.uploader.destroy(
+          `homepageitems/banner/${publicId}`
+        );
+      } catch (err) {
+        console.log("Cloudinary delete failed");
+      }
+    }
+
+    // ✅ Delete from DB
+    await homeBannerDetails.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Banner deleted successfully",
+    });
+
+  } catch (error) {
+    console.error("Delete Banner Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error deleting Banner",
+      error: error.message,
     });
   }
 };

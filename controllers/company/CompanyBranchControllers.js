@@ -478,6 +478,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
           { _id: employmentId, user: userId, companyName: company_id },
           {
             jobTitle: 1,
+            workedInCompany: 1,
             employmentType: 1,
             joiningDate: 1,
             leavingDate: 1,
