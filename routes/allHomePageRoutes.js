@@ -3,7 +3,7 @@ import multer from "multer";
 import dotenv from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
 
-import { getAllFields, updateBannerDetails, getAllBannerDetails, addServiceDetails, updateServiceDetails, getAllServiceDetails, deleteServiceDetails, addContact, listContact } from "../controllers/allHomePageController.js";
+import { getAllFields, addServiceDetails, updateServiceDetails, getAllServiceDetails, deleteServiceDetails, addContact, listContact, addBanner, getAllBannners, updateBanner, deleteBanner } from "../controllers/allHomePageController.js";
 
 // Initialize dotenv to load environment variables
 dotenv.config();
@@ -31,9 +31,15 @@ HomePageRouter.get("/getBannerDetails", getAllFields);
 //   addBannerDetails
 // );
 
-HomePageRouter.put("/update-banner-details/:id", upload.single("bannerImage"), updateBannerDetails);
+// HomePageRouter.post("/add-banner-details", upload.array("banners"), addBannerDetails);
 
-HomePageRouter.get("/get-banner-details", getAllBannerDetails);
+HomePageRouter.get("/all-banner", getAllBannners);
+
+HomePageRouter.post("/add-banner", upload.single("image"),userAuth,adminMiddleware, addBanner);
+
+HomePageRouter.post("/update-banner", upload.single("image"),userAuth,adminMiddleware, updateBanner);
+
+HomePageRouter.post("/delete-banner", upload.none(), userAuth, adminMiddleware, deleteBanner);
 
 HomePageRouter.post("/add-service-details", upload.none(), userAuth, adminMiddleware, addServiceDetails);
 
