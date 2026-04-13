@@ -10,9 +10,9 @@ import CandidateKYC from "../../models/CandidateKYCModel.js";
 import list_education_level from "../../models/monogo_query/educationLevelModel.js";
 import list_course_type from "../../models/monogo_query/courseTypeModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
-
+import {InstitueStudent,InstitueStudentSemester} from "../../models/InstitueStudentModel.js";
 import nodemailer from "nodemailer";
-
+import { Types } from 'mongoose';
 export const GetunverifiedStudents = async (req, res) => {
   try {
     const userId = req.userId;
@@ -665,6 +665,63 @@ export const GetStudentsByVerification = async (req, res) => {
       success: false,
       message: "Internal Server Error",
       error: err.message,
+    });
+  }
+};
+
+// institute Student maintain there own record
+
+export const instituteStudent= async (req, res) => {
+  try {
+    const user=req?.user
+
+    // 2️⃣ Get Institue Student
+    const institueStudent = await InstitueStudent.aggregate([
+      {
+        $match: {
+          instituteId:new Types.ObjectId(user?.userId),
+          status: true, 
+          is_del: false,
+        },
+      },
+      // ✅ ADD THIS
+      {
+        $sort: { createdAt: -1 },
+      },
+     {
+    $lookup: {
+      from: "instituestudentsemesters",
+      let: { insId: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ["$InstitueStudentId", "$$insId"] },   // join condition
+                { $eq: ["$is_del", false] }       // ✅ child condition
+              ]
+            }
+          }
+        }
+      ],
+      as: "semesters",
+    },
+  },
+     
+  //{ $unwind: { path: "$semesters", preserveNullAndEmptyArrays: true } },
+    
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: institueStudent.length,
+      data: institueStudent,
+    });
+  } catch (error) {
+    console.error("Error fetching student:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };

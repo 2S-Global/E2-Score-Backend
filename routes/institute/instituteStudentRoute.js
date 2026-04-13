@@ -9,11 +9,22 @@ import {
   UpdatestudentStatus,
   GetallStudents,
   GetStudentsByVerification,
+  instituteStudent,
 } from "../../controllers/institute/instituteStudentController.js";
+
+import {
+ insStudentImport
+} from "../../controllers/institute/instituteStudentImport.js";
+
+import {
+ insStudentMarksImport
+} from "../../controllers/institute/instituteStudentImportMarks.js";
+
 
 // Middleware
 import userAuth from "../../middleware/authMiddleware.js";
 import Institutemid from "../../middleware/InstituteMiddleware.js";
+import csvFile from "../../middleware/csvMiddleware.js";
 
 // Initialize router
 const InstituteStudentRouter = express.Router();
@@ -64,4 +75,24 @@ InstituteStudentRouter.put(
   UpdatestudentStatus
 );
 
+InstituteStudentRouter.post(
+  "/import-candidates",
+  userAuth,
+  Institutemid,
+  csvFile.single("csv"),
+  insStudentImport
+);
+InstituteStudentRouter.post(
+  "/import-candidates-marks",
+  userAuth,
+  Institutemid,
+  csvFile.single("csv"),
+  insStudentMarksImport
+);
+InstituteStudentRouter.get(
+  "/institute-student-list",
+   userAuth,
+  Institutemid,
+  instituteStudent
+);
 export default InstituteStudentRouter;
