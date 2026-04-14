@@ -12,7 +12,7 @@ export const processCSV = (buffer) => {
        let rowData=data
         results.push({
           USN: rowData?.usn?.toLowerCase().trim(),
-          semester: rowData?.semester?.toLowerCase().trim(),
+          semester: rowData['semester(number)'],
           marks: rowData?.marks?.toLowerCase().trim(),
         });
       })
