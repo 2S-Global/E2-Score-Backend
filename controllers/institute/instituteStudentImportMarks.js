@@ -1,6 +1,6 @@
 import csv from 'csv-parser';
 import streamifier from 'streamifier';
-import {InstitueStudent,InstitueStudentSemester} from "../../models/InstitueStudentModel.js";
+import { InstitueStudent, InstitueStudentSemester } from "../../models/InstitueStudentModel.js";
 
 
 export const processCSV = (buffer) => {
@@ -9,11 +9,14 @@ export const processCSV = (buffer) => {
     streamifier.createReadStream(buffer)
       .pipe(csv())
       .on('data', (data) => {
-       let rowData=data
+        let rowData = data
         results.push({
           USN: rowData?.usn?.toLowerCase().trim(),
           semester: rowData['semester(number)'],
           marks: rowData?.marks?.toLowerCase().trim(),
+          marksType: rowData?.["marks type"]?.toLowerCase().trim(),
+          semesterYear: rowData?.["semester year"]?.toLowerCase().trim(),
+          semesterMonth: rowData?.["semester month"]?.toLowerCase().trim(),
         });
       })
       .on('end', () => resolve(results))
@@ -37,6 +40,14 @@ function marksValidation(v) {
 
 export const insStudentMarksImport = async (req, res) => {
   try {
+    const { marksType, semesterYear, semesterMonth } = req.body;
+
+    if (!marksType || !semesterYear || !semesterMonth) {
+      return res.status(400).json({
+        message: "marksType, semesterYear, and semesterMonth are required"
+      });
+    }
+
     if (!req.file) {
       return res.status(400).json({ message: 'File is required' });
     }
@@ -55,16 +66,21 @@ export const insStudentMarksImport = async (req, res) => {
     // --------------------------------
     for (let i = 0; i < data.length; i++) {
       const {
-          USN,
-          semester,
-          marks,
-          } = data[i];
+        USN,
+        semester,
+        marks,
+      } = data[i];
+
+      console.log(`Processing row ${i}: USN=${USN}, semester=${semester}, marks=${marks}, marksType=${marksType}, semesterYear=${semesterYear}, semesterMonth=${semesterMonth}`);
 
       const logEntry = {
         row: i + 2, // Excel row (header = row 1)
         USN,
         semester,
         marks,
+        // marksType,
+        // semesterYear,
+        // semesterMonth,
         status: "pending",
         errors: [],
       };
@@ -73,25 +89,26 @@ export const insStudentMarksImport = async (req, res) => {
       if (!USN) logEntry.errors.push("USN missing");
       if (!semester) logEntry.errors.push("Semester missing");
       if (!marks) logEntry.errors.push("Marks missing");
+      // if (!marksType) logEntry.errors.push("Marks type missing");
+      // if (!semesterYear) logEntry.errors.push("Semester year missing");
+      // if (!semesterMonth) logEntry.errors.push("Semester month missing");
       if (!semesterValidation(semester)) logEntry.errors.push("Invalid semester number format");
 
-       if (logEntry.errors.length) {
+      if (logEntry.errors.length) {
         logEntry.status = "invalid";
         audit.push(logEntry);
         invalidCount++;
         continue;
       }
-
-       //insert into DB
+      //insert into DB
       const existingData = await InstitueStudent.findOne({
         USN,
         is_del: false,
       })
 
-     
       await InstitueStudentSemester.findOneAndUpdate(
-        { InstitueStudentId:existingData?._id ,semester},
-        { $set: {USN,semester,marks} },
+        { InstitueStudentId: existingData?._id, semester },
+        { $set: { USN, semester, marks, marksType, semesterYear, semesterMonth } },
         {
           upsert: true,
           new: true,
@@ -103,7 +120,7 @@ export const insStudentMarksImport = async (req, res) => {
       audit.push(logEntry);
       createdCount++;
 
-  } 
+    }
 
     // --------------------------------
     // Final response
@@ -116,8 +133,8 @@ export const insStudentMarksImport = async (req, res) => {
       invalid: invalidCount,
       audit
     });
-  
-}catch (err) {
+
+  } catch (err) {
     return res.status(500).json({
       message: 'Processing failed',
       error: err.message
