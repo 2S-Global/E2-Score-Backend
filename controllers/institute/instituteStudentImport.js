@@ -29,12 +29,10 @@ export const processCSV = (buffer) => {
         results.push({
           name: rowData?.name?.toLowerCase().trim(),
           USN: rowData?.usn?.toLowerCase().trim(),
-          program: rowData?.program?.toLowerCase().trim(),
           gender: rowData?.gender?.toLowerCase().trim(),
           dob: rowData?.dob,
-          admissionYear: rowData?.admissionYear,
-          tenTh: rowData['10th(marks)'],
-          twelveTh: rowData['12th(marks)'],
+          tenTh: rowData['10th(%)'],
+          twelveTh: rowData['12th(%)'],
         });
       })
       .on('end', () => resolve(results))
@@ -43,6 +41,7 @@ export const processCSV = (buffer) => {
 };
 //Institute Student Import
 export const insStudentImport = async (req, res) => {
+  console.log('ttttttttttttt',req.body)
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'File is required' });
@@ -56,17 +55,17 @@ export const insStudentImport = async (req, res) => {
     let createdCount = 0;
     //let duplicateCount = 0;
     let invalidCount = 0;
-
+    let program=req.body?.program;
+    let admissionYear=req.body?.admissionYear;
+    let semester=req.body?.semester;
     // --------------------------------
     // Process each imported user
     // --------------------------------
     for (let i = 0; i < data.length; i++) {
       const {name,
           USN,
-          program,
           gender,
           dob,
-          admissionYear,
           tenTh,
           twelveTh,
           } = data[i];
@@ -81,6 +80,7 @@ export const insStudentImport = async (req, res) => {
         admissionYear,
         tenTh,
         twelveTh,
+        semester,
         status: "pending",
         errors: [],
       };
@@ -92,8 +92,8 @@ export const insStudentImport = async (req, res) => {
       if (!gender) logEntry.errors.push("Gender missing.");
       if (!dob) logEntry.errors.push("DOB missing.");
       if (!admissionYear) logEntry.errors.push("Admission Year missing.");
-      if (!tenTh) logEntry.errors.push("10TH marks missing.");
-      if (!twelveTh) logEntry.errors.push("12TH marks missing.");
+      if (!tenTh) logEntry.errors.push("10TH(%) missing.");
+      if (!twelveTh) logEntry.errors.push("12TH(%) marks missing.");
        if(!validateGender(gender))logEntry.errors.push("Only the gender values 'M', 'F', and 'O' are allowed.");
       if(!validator.isDate(dob, {
           format: 'DD-MM-YYYY',
@@ -125,8 +125,8 @@ export const insStudentImport = async (req, res) => {
       } */
       //insert into DB
       await InstitueStudent.findOneAndUpdate(
-        { USN , instituteId:user.userId},
-        { $set: {name,USN,program,gender,dob:dobYMD,admissionYear,tenTh,twelveTh,instituteId:user.userId } },
+        { USN , instituteId:user.userId,admissionYear},
+        { $set: {name,USN,program,gender,dob:dobYMD,admissionYear,tenTh,twelveTh,semester,instituteId:user.userId } },
         {
           upsert: true,
           new: true,

@@ -12,6 +12,7 @@ const InstitueStudentSchema = new mongoose.Schema({
   gender: { type: String ,required:true,trim:true},
   dob: { type: Date ,required:true,trim:true},
   admissionYear: { type: String ,required:true,trim:true},
+  semester: { type: Number,required:true,trim:true },
   tenTh: { type: Number, required:true },
   twelveTh: { type: Number, required:true },
   is_del: { type: Boolean, default: false },
