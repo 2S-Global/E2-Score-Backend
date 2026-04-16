@@ -10,7 +10,7 @@ const studentCourseSchema = new mongoose.Schema(
         course_mongo_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'list_university_course',
-            required: true
+            required: false
         },
         course_sql_id: {
             type: Number

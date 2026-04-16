@@ -10,6 +10,10 @@ import {
   GetallStudents,
   GetStudentsByVerification,
   instituteStudent,
+  addCustomCourse,
+  updateCustomCourse,
+  deleteCustomCourse,
+  getAllCourses,
 } from "../../controllers/institute/instituteStudentController.js";
 
 import {
@@ -94,6 +98,41 @@ InstituteStudentRouter.get(
   userAuth,
   Institutemid,
   instituteStudent
+);
+
+// Add Custom Course
+InstituteStudentRouter.post(
+  "/add-custom-course",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  addCustomCourse,
+);
+
+//Update Custom Course
+InstituteStudentRouter.put(
+  "/update-custom-course",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  updateCustomCourse,
+);
+
+// Delete Custom Course
+InstituteStudentRouter.delete(
+  "/delete-custom-course",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  deleteCustomCourse,
+);
+
+// Get All Courses
+InstituteStudentRouter.get(
+  "/get-all-courses",
+  userAuth,
+  Institutemid,
+  getAllCourses
 );
 
 export default InstituteStudentRouter;

@@ -11,7 +11,9 @@ import list_education_level from "../../models/monogo_query/educationLevelModel.
 import list_course_type from "../../models/monogo_query/courseTypeModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
 import {InstitueStudent,InstitueStudentSemester} from "../../models/InstitueStudentModel.js";
+import student_course_details from "../../models/studentCourseModel.js";
 import nodemailer from "nodemailer";
+import mongoose from "mongoose";
 import { Types } from 'mongoose';
 export const GetunverifiedStudents = async (req, res) => {
   try {
@@ -722,6 +724,226 @@ export const instituteStudent= async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
+    });
+  }
+};
+
+// Add Custom Course
+export const addCustomCourse = async (req, res) => {
+  try {
+    const {
+      name,
+      course_durartion,
+      total_number_of_semesters,
+    } = req.body;
+
+    const userId = req.userId;
+
+    // ✅ Validation
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    if (!name || !course_durartion || !total_number_of_semesters) {
+      return res.status(400).json({
+        message: "name, duration and total semesters are required",
+      });
+    }
+
+    // ✅ Validate user
+    const user = await User.findById(userId);
+    if (!user || user.is_del) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ Create new course
+    const newCourse = await student_course_details.create({
+      userId,
+      course_mongo_id: null, // dummy unique id
+      course_sql_id: null,
+      name: name.trim(),
+      type: "custom",
+      course_durartion: course_durartion.trim(),
+      total_number_of_semesters: total_number_of_semesters.trim(),
+      is_del: 0,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Course added successfully",
+      data: newCourse,
+    });
+  } catch (error) {
+    console.error("Error in addCustomCourse:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error,
+    });
+  }
+};
+
+// Update Custom Course
+export const updateCustomCourse = async (req, res) => {
+  try {
+    const {
+      courseId,
+      name,
+      course_durartion,
+      total_number_of_semesters,
+    } = req.body;
+
+    const userId = req.userId;
+
+    // ✅ Validation
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    if (!courseId) {
+      return res.status(400).json({ message: "courseId is required" });
+    }
+
+    // ✅ Validate user
+    const user = await User.findById(userId);
+    if (!user || user.is_del) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ Check course exists and belongs to user
+    const existingCourse = await student_course_details.findOne({
+      _id: courseId,
+      userId: userId,
+      is_del: 0
+    });
+
+    if (!existingCourse) {
+      return res.status(404).json({
+        message: "Course not found or not allowed to update",
+      });
+    }
+
+    // ✅ Prepare update object (handle empty vs undefined properly)
+    const updateData = {};
+
+    if (name !== undefined) updateData.name = name.trim();
+    if (course_durartion !== undefined)
+      updateData.course_durartion = course_durartion.trim();
+    if (total_number_of_semesters !== undefined)
+      updateData.total_number_of_semesters =
+        total_number_of_semesters.trim();
+
+    // ⚠️ Prevent empty update
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        message: "At least one field is required to update",
+      });
+    }
+
+    // ✅ Update course
+    const updatedCourse = await student_course_details.findByIdAndUpdate(
+      courseId,
+      { $set: updateData },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Course updated successfully",
+      data: updatedCourse,
+    });
+  } catch (error) {
+    console.error("Error in updateCustomCourse:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error,
+    });
+  }
+};
+
+// Delete Custom Course (Soft Delete)
+export const deleteCustomCourse = async (req, res) => {
+  try {
+    const { courseId } = req.body;
+    const userId = req.userId;
+
+    // ✅ Validation
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    if (!courseId) {
+      return res.status(400).json({ message: "courseId is required" });
+    }
+
+    // ✅ Validate user
+    const user = await User.findById(userId);
+    if (!user || user.is_del) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ Check course exists and belongs to user
+    const existingCourse = await student_course_details.findOne({
+      _id: courseId,
+      userId: userId,
+      is_del: 0,
+    });
+
+    if (!existingCourse) {
+      return res.status(404).json({
+        message: "Course not found or not allowed to delete",
+      });
+    }
+
+    // ✅ Soft delete
+    await student_course_details.findByIdAndUpdate(
+      courseId,
+      { $set: { is_del: 1 } },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Course deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error in deleteCustomCourse:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error,
+    });
+  }
+};
+
+// Get All Courses for a Student
+export const getAllCourses = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // ✅ Validation
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // ✅ Fetch courses
+    const courses = await student_course_details.find({
+      userId: userId,
+      is_del: 0,
+    }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: courses.length,
+      data: courses,
+    });
+  } catch (error) {
+    console.error("Error in getAllCourses:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error,
     });
   }
 };
