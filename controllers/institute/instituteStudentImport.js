@@ -41,7 +41,6 @@ export const processCSV = (buffer) => {
 };
 //Institute Student Import
 export const insStudentImport = async (req, res) => {
-  console.log('ttttttttttttt',req.body)
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'File is required' });
@@ -55,9 +54,7 @@ export const insStudentImport = async (req, res) => {
     let createdCount = 0;
     //let duplicateCount = 0;
     let invalidCount = 0;
-    let program=req.body?.program;
-    let admissionYear=req.body?.admissionYear;
-    let semester=req.body?.semester;
+    const { program, semester,admissionYear } = req.body;
     // --------------------------------
     // Process each imported user
     // --------------------------------

@@ -65,6 +65,7 @@ import CompanyKycRoute from "./routes/company/companykycRoute.js";
 //Institute Routes
 import InstituteProfileRouter from "./routes/institute/InstituteProfileRoute.js";
 import InstituteStudentRouter from "./routes/institute/instituteStudentRoute.js";
+import InstituteCourseRoute from "./routes/institute/instituteCourseRoute.js";
 // Payment Routes
 import paymentRoutes from "./routes/paymentRoutes.js";
 
@@ -152,6 +153,7 @@ app.use("/api/candidatebookmark", candidateBookmarkRouter);
 //Testing
 app.use("/api/instituteprofile", InstituteProfileRouter);
 app.use("/api/institutestudent", InstituteStudentRouter);
+app.use("/api/institute-course", InstituteCourseRoute);
 
 // API for Home Pages
 app.use("/api/home", homeRouter);
