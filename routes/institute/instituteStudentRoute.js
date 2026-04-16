@@ -13,11 +13,11 @@ import {
 } from "../../controllers/institute/instituteStudentController.js";
 
 import {
- insStudentImport
+  insStudentImport
 } from "../../controllers/institute/instituteStudentImport.js";
 
 import {
- insStudentMarksImport
+  insStudentMarksImport
 } from "../../controllers/institute/instituteStudentImportMarks.js";
 
 
@@ -91,8 +91,9 @@ InstituteStudentRouter.post(
 );
 InstituteStudentRouter.get(
   "/institute-student-list",
-   userAuth,
+  userAuth,
   Institutemid,
   instituteStudent
 );
+
 export default InstituteStudentRouter;

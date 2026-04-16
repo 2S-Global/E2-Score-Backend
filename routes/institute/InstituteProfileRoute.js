@@ -8,6 +8,7 @@ import {
   Deletecoverphoto,
   GetAccountDetails,
   updateAccountDetails,
+  syncStudentCourses
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -110,5 +111,14 @@ InstituteProfileRouter.post(
 
 // Get Social
 InstituteProfileRouter.get("/get_social", userAuth, Institutemid, getSocial);
+
+// Add course details route here according to new requirement
+InstituteProfileRouter.post(
+  "/add_course_details",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  syncStudentCourses
+);
 
 export default InstituteProfileRouter;
