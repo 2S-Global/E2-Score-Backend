@@ -3,6 +3,9 @@ import CompanyDetails from "../../models/company_Models/companydetails.js";
 import User from "../../models/userModel.js";
 import uploadToCloudinary from "../../utility/uploadToCloudinary.js";
 import deleteImageByUrl from "../../utility/deleteImageByUrl.js";
+import list_university_colleges from "../../models/monogo_query/universityCollegesModel.js";
+import list_university_course from "../../models/monogo_query/universityCourseModel.js";
+import student_course_details from "../../models/studentCourseModel.js";
 
 /**
  * @description Add or update a company's details for the authenticated user.
@@ -42,6 +45,20 @@ export const AddorUpdateCompany = async (req, res) => {
       about,
     } = req.body;
 
+    console.log("This api is running sucessfully ! ");
+    console.log("Received data:", {
+      name,
+      email,
+      phone,
+      address,
+      website,
+      established,
+      teamsize,
+      courses,
+      allowinsearch,
+      about,
+    });
+
     const logo = req.files?.logo?.[0];
     const cover = req.files?.cover?.[0];
     const userId = req.userId;
@@ -76,10 +93,10 @@ export const AddorUpdateCompany = async (req, res) => {
         : null,
       cover
         ? uploadToCloudinary(
-            cover.buffer,
-            "e2score/cover",
-            `cover-${Date.now()}`
-          )
+          cover.buffer,
+          "e2score/cover",
+          `cover-${Date.now()}`
+        )
         : null,
     ]);
 
@@ -109,6 +126,68 @@ export const AddorUpdateCompany = async (req, res) => {
       { $set: { name: name?.trim() } },
       { new: true }
     );
+
+    const listOfInstitutes = await list_university_colleges.find({
+      name: name,
+      is_del: 0,
+    });
+
+    console.log("List of institutes found:", listOfInstitutes);
+
+    const institute = listOfInstitutes[0];
+
+    let courseIds = [];
+
+    if (institute?.courses) {
+      courseIds = institute.courses
+        .split(",")
+        .map((id) => Number(id.trim())) // convert to number (important)
+        .filter(Boolean); // remove invalid values
+    }
+    
+    console.log("Parsed Course IDs:", courseIds);
+
+    const courseDetails = await list_university_course.find({
+      id: { $in: courseIds },
+      is_del: 0,
+    });
+
+    console.log("Course details:", courseDetails);
+
+    const bulkOps = courseDetails.map((course) => ({
+      updateOne: {
+        filter: {
+          userId: userId,
+          course_sql_id: course.id, // unique per user
+        },
+        update: {
+          $set: {
+            userId: userId,
+            course_mongo_id: course._id,
+            course_sql_id: course.id,
+            name: course.name,
+            type: course.type || "",
+            course_durartion: course.course_durartion || "",
+            total_number_of_semesters:
+              course.total_number_of_semesters || "",
+            is_del: 0,
+          },
+        },
+        upsert: true, // ✅ insert if not exists
+      },
+    }));
+
+    if (bulkOps.length) {
+      await student_course_details.bulkWrite(bulkOps);
+    }
+
+    console.log("Courses saved into student_course_details");
+
+    // if (!listOfInstitutes.length) {
+    //   return res
+    //     .status(404)
+    //     .json({ success: false, message: "No institutes found." });
+    // }
 
     return res.status(200).json({
       success: true,
@@ -283,5 +362,73 @@ export const updateAccountDetails = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Internal server error", error });
+  }
+};
+
+export const syncStudentCourses = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    console.log("Syncing courses for userId:", userId);
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // 1️⃣ Find company
+    const company = await CompanyDetails.findOne({ userId });
+
+    console.log("Company found:", company);
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // 2️⃣ Find university/college by name
+
+    // const university = await list_university_colleges.findOne({
+    //   name: company.name,
+    // });
+
+    if (!university) {
+      return res.status(404).json({ message: "University not found" });
+    }
+
+    const courseIds = university.courses; // array of ObjectIds
+
+    if (!courseIds || courseIds.length === 0) {
+      return res.status(400).json({ message: "No courses found" });
+    }
+
+    // 3️⃣ Fetch all course details
+    const courses = await list_all_courses.find({
+      _id: { $in: courseIds },
+    });
+
+    // 4️⃣ Prepare data for insertion
+    const formattedCourses = courses.map((course) => ({
+      userId,
+      courseId: course._id,
+      courseName: course.name,
+    }));
+
+    // 5️⃣ Optional: Remove old records (to avoid duplicates)
+    await studentCourseDetails.deleteMany({ userId });
+
+    // 6️⃣ Insert new records
+    await studentCourseDetails.insertMany(formattedCourses);
+
+    return res.status(200).json({
+      success: true,
+      message: "Courses synced successfully",
+      totalCourses: formattedCourses.length,
+    });
+  } catch (error) {
+    console.error("Error in syncStudentCourses:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error,
+    });
   }
 };
