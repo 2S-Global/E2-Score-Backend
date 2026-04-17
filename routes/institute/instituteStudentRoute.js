@@ -17,7 +17,9 @@ import {
 } from "../../controllers/institute/instituteStudentController.js";
 
 import {
-  insStudentImport
+  insStudentImport,
+  addInstituteStudentManually,
+  deleteInstituteStudent,
 } from "../../controllers/institute/instituteStudentImport.js";
 
 import {
@@ -133,6 +135,24 @@ InstituteStudentRouter.get(
   userAuth,
   Institutemid,
   getAllCourses
+);
+
+// Add Institute Student Manually
+InstituteStudentRouter.post(
+  "/add-institute-student-manually",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  addInstituteStudentManually
+);
+
+// Delete Institute Student Manually
+InstituteStudentRouter.delete(
+  "/delete-institute-student",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  deleteInstituteStudent,
 );
 
 export default InstituteStudentRouter;
