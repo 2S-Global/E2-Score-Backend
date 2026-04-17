@@ -38,11 +38,13 @@ function marksValidation(v) {
 
 export const insStudentMarksImport = async (req, res) => {
   try {
-    const { semester,marksType, semesterYear, semesterMonth,admissionYear } = req.body;
+    /* const { semester,marksType, semesterYear, semesterMonth,admissionYear } = req.body;  */
+    const { semester,admissionYear } = req.body; 
 
-    if (!marksType || !semesterYear || !semesterMonth || !admissionYear) {
+    /* if (!marksType || !semesterYear || !semesterMonth || !admissionYear) { */
+    if (!semester && !admissionYear) {
       return res.status(400).json({
-        message: "marksType,semester,semesterYear, admissionYear and semesterMonth are required"
+        message: "semester,admissionYear required"
       });
     }
 
@@ -105,7 +107,7 @@ export const insStudentMarksImport = async (req, res) => {
       if(existingData){
           await InstitueStudentSemester.findOneAndUpdate(
             { InstitueStudentId: existingData?._id, semester },
-            { $set: { USN, semester, marks, marksType, semesterYear, semesterMonth } },
+            { $set: { USN, semester, marks } },
             {
               upsert: true,
               new: true,
