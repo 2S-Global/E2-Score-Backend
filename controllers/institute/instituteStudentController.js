@@ -709,8 +709,35 @@ export const instituteStudent= async (req, res) => {
       as: "semesters",
     },
   },
+   {
+    $lookup: {
+      from: "student_course_details",
+      let: { pro: "$program" },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ["$_id", "$$pro"] },   // join condition
+                { $eq: ["$is_del", 0] }     // ✅ child condition
+              ]
+            }
+          }
+        },
+        {
+          $project: {
+            name: 1,
+            total_number_of_semesters: 1,
+            type: 1,
+            course_durartion:1
+          }
+        }
+      ],
+      as: "programDetails",
+    },
+  },
      
-  //{ $unwind: { path: "$semesters", preserveNullAndEmptyArrays: true } },
+  { $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true } },
     
     ]);
 

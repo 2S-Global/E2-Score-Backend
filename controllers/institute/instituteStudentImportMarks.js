@@ -102,19 +102,25 @@ export const insStudentMarksImport = async (req, res) => {
         is_del: false,
       })
 
-      await InstitueStudentSemester.findOneAndUpdate(
-        { InstitueStudentId: existingData?._id, semester },
-        { $set: { USN, semester, marks, marksType, semesterYear, semesterMonth } },
-        {
-          upsert: true,
-          new: true,
-          runValidators: true
-        }
-      );
-
-      logEntry.status = "created";
-      audit.push(logEntry);
-      createdCount++;
+      if(existingData){
+          await InstitueStudentSemester.findOneAndUpdate(
+            { InstitueStudentId: existingData?._id, semester },
+            { $set: { USN, semester, marks, marksType, semesterYear, semesterMonth } },
+            {
+              upsert: true,
+              new: true,
+              runValidators: true
+            }
+          );
+          logEntry.status = "created";
+          audit.push(logEntry);
+          createdCount++;
+      }
+      else{
+         logEntry.status = "invalid";
+        audit.push(logEntry);
+        invalidCount++;
+      }
 
     }
 

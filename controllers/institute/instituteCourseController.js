@@ -6,9 +6,8 @@ import { Types } from 'mongoose';
 export const instituteCourse= async (req, res) => {
   try {
     const user=req?.user
-    console.log('shgfsdjkfgds sdkfhsdlkhgdfk skjfhsjekg ',user);
     // 2️⃣ Get Institue Course
-    const CourseList = await student_course_details.find({ userId:user?.userId, is_del: 0 })
+    const CourseList = await student_course_details.find({ userId:user?.userId, is_del: 0 }).sort({ createdAt: -1 });
     return res.status(200).json({
       success: true,
       count: CourseList.length,
