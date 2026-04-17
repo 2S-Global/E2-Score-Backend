@@ -8,7 +8,11 @@ const InstitueStudentSchema = new mongoose.Schema({
           },
   name: { type: String,required:true,trim:true },
   USN : { type: String,required:true,trim:true },
-  program : { type: String,required:true,trim:true },
+  program :{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "student_course_details", 
+        required:true
+          },
   gender: { type: String ,required:true,trim:true},
   dob: { type: Date ,required:true,trim:true},
   admissionYear: { type: String ,required:true,trim:true},
