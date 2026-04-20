@@ -142,7 +142,6 @@ InstituteStudentRouter.post(
   "/add-institute-student-manually",
   userAuth,
   Institutemid,
-  upload.none(),
   addInstituteStudentManually
 );
 

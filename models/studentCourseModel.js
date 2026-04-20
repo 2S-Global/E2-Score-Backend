@@ -24,6 +24,16 @@ const studentCourseSchema = new mongoose.Schema(
         course_durartion: {
             type: String,
         },
+        courseStructure: {
+            type: String,
+            enum: ["year", "semester"],
+            required: true
+        },
+        marksType: {
+            type: String,
+            enum: ["dgpa", "cgpa", "percentage"],
+            required: true
+        },
         total_number_of_semesters: {
             type: String,
         },

@@ -763,6 +763,8 @@ export const addCustomCourse = async (req, res) => {
       name,
       course_durartion,
       total_number_of_semesters,
+      courseStructure,
+      marksType
     } = req.body;
 
     const userId = req.userId;
@@ -772,9 +774,9 @@ export const addCustomCourse = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    if (!name || !course_durartion || !total_number_of_semesters) {
+    if (!name || !course_durartion || !total_number_of_semesters || !courseStructure || !marksType) {
       return res.status(400).json({
-        message: "name, duration and total semesters are required",
+        message: "name, course_durartion, total_number_of_semesters, courseStructure, marksType are required",
       });
     }
 
@@ -793,8 +795,10 @@ export const addCustomCourse = async (req, res) => {
       type: "custom",
       course_durartion: course_durartion.trim(),
       total_number_of_semesters: total_number_of_semesters.trim(),
+      courseStructure: courseStructure || null,
+      marksType: marksType || null,
       is_del: 0,
-    });
+    }); 
 
     return res.status(201).json({
       success: true,
@@ -819,6 +823,8 @@ export const updateCustomCourse = async (req, res) => {
       name,
       course_durartion,
       total_number_of_semesters,
+      courseStructure,
+      marksType
     } = req.body;
 
     const userId = req.userId;
@@ -860,6 +866,8 @@ export const updateCustomCourse = async (req, res) => {
     if (total_number_of_semesters !== undefined)
       updateData.total_number_of_semesters =
         total_number_of_semesters.trim();
+    if (courseStructure !== undefined) updateData.courseStructure = courseStructure;
+    if (marksType !== undefined) updateData.marksType = marksType;
 
     // ⚠️ Prevent empty update
     if (Object.keys(updateData).length === 0) {

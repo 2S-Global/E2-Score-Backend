@@ -2,6 +2,7 @@ import csv from 'csv-parser';
 import streamifier from 'streamifier';
 import validator from 'validator';
 import { InstitueStudent } from "../../models/InstitueStudentModel.js";
+import { InstitueStudentSemester } from "../../models/InstitueStudentModel.js";
 import mongoose from "mongoose";
 function convertDate(dateStr) {
 
@@ -174,9 +175,11 @@ export const addInstituteStudentManually = async (req, res) => {
       tenTh,
       twelveTh,
       program,
-      semester,
+      semesters,
       admissionYear,
     } = req.body;
+
+    console.log("all data: ", req.body);
 
     let createdCount = 0;
 
@@ -192,7 +195,7 @@ export const addInstituteStudentManually = async (req, res) => {
       admissionYear,
       tenTh,
       twelveTh,
-      semester,
+      semesters,
       status: "pending",
       errors: [],
     };
@@ -203,7 +206,7 @@ export const addInstituteStudentManually = async (req, res) => {
     if (!name) logEntry.errors.push("Name missing.");
     if (!USN) logEntry.errors.push("USN missing.");
     if (!program) logEntry.errors.push("Program missing.");
-    if (!semester) logEntry.errors.push("Semester missing.");
+    // if (!semester) logEntry.errors.push("Semester missing.");
     if (!gender) logEntry.errors.push("Gender missing.");
     if (!dob) logEntry.errors.push("DOB missing.");
     if (!admissionYear) logEntry.errors.push("Admission Year missing.");
@@ -222,6 +225,23 @@ export const addInstituteStudentManually = async (req, res) => {
 
     if (!year(admissionYear)) {
       logEntry.errors.push("Admission Year not valid format.");
+    }
+
+    // Semesters validation
+    if (!semesters || !Array.isArray(semesters)) {
+      logEntry.errors.push("Semesters must be an array.");
+    } else {
+      semesters.forEach((sem) => {
+        const key = Object.keys(sem)[0];
+        const value = sem[key];
+
+        if (!key || isNaN(key)) {
+          logEntry.errors.push(`Invalid semester key: ${JSON.stringify(sem)}`);
+        }
+        if (!value || isNaN(value)) {
+          logEntry.errors.push(`Invalid marks: ${JSON.stringify(sem)}`);
+        }
+      });
     }
 
     // -----------------------------
@@ -244,9 +264,9 @@ export const addInstituteStudentManually = async (req, res) => {
 
     console.log("USN: ", USN);
     console.log("Program: ", program);
-    console.log("Semester: ", semester);
+    console.log("Semester: ", semesters);
 
-    await InstitueStudent.findOneAndUpdate(
+    const student = await InstitueStudent.findOneAndUpdate(
       {
         USN,
         instituteId: user.userId,
@@ -261,7 +281,6 @@ export const addInstituteStudentManually = async (req, res) => {
           tenTh,
           twelveTh,
           program: new mongoose.Types.ObjectId(program), // ✅ FIX
-          semester: Number(semester), // ✅ FIX
           admissionYear,
           instituteId: user.userId
         }
@@ -273,6 +292,28 @@ export const addInstituteStudentManually = async (req, res) => {
       }
     );
 
+
+    // -----------------------------
+    // Handle Semesters
+    // -----------------------------
+    // Delete old semesters (important for update case)
+    await InstitueStudentSemester.deleteMany({
+      InstitueStudentId: student._id,
+    });
+
+    const semesterData = semesters.map((sem) => {
+      const key = Object.keys(sem)[0];   // "1"
+      const value = sem[key];            // "56"
+
+      return {
+        InstitueStudentId: student._id,
+        semester: Number(key),
+        marks: Number(value),
+      };
+    });
+
+    await InstitueStudentSemester.insertMany(semesterData);
+
     // -----------------------------
     // Success log
     // -----------------------------
@@ -283,10 +324,11 @@ export const addInstituteStudentManually = async (req, res) => {
     // -----------------------------
     // Final Response
     // -----------------------------
-    return res.json({
-      message: "Student saved successfully",
+    return res.status(200).json({
+      message: "Student & semesters saved successfully",
       success: true,
       created: createdCount,
+      studentId: student._id,
       audit,
     });
 
