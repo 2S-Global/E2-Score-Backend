@@ -729,7 +729,8 @@ export const instituteStudent= async (req, res) => {
             name: 1,
             total_number_of_semesters: 1,
             type: 1,
-            course_durartion:1
+            course_durartion:1,
+            courseStructure:1
           }
         }
       ],
