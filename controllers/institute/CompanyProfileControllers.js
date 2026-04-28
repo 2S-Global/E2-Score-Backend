@@ -6,6 +6,7 @@ import deleteImageByUrl from "../../utility/deleteImageByUrl.js";
 import list_university_colleges from "../../models/monogo_query/universityCollegesModel.js";
 import list_university_course from "../../models/monogo_query/universityCourseModel.js";
 import student_course_details from "../../models/studentCourseModel.js";
+import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
 
 /**
  * @description Add or update a company's details for the authenticated user.
@@ -144,7 +145,7 @@ export const AddorUpdateCompany = async (req, res) => {
         .map((id) => Number(id.trim())) // convert to number (important)
         .filter(Boolean); // remove invalid values
     }
-    
+
     console.log("Parsed Course IDs:", courseIds);
 
     const courseDetails = await list_university_course.find({
@@ -429,6 +430,173 @@ export const syncStudentCourses = async (req, res) => {
       success: false,
       message: "Internal server error",
       error,
+    });
+  }
+};
+
+export const addCompanyByInstitute = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const { name, email, contactPerson, phone, address } = req.body;
+
+    // 🔹 Basic validation
+    if (!userId || !name || !email || !contactPerson || !phone || !address) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    // 🔹 Check duplicate (same email under same user)
+    const existingCompany = await CompanyByInstitute.findOne({
+      userId,
+      email,
+      isDel: false,
+    });
+
+    if (existingCompany) {
+      return res.status(409).json({
+        success: false,
+        message: "Company with this email already exists",
+      });
+    }
+
+    // 🔹 Create company
+    const newCompany = await CompanyByInstitute.create({
+      userId,
+      name,
+      email,
+      contactPerson,
+      phone,
+      address,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Company added successfully",
+      data: newCompany,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const editCompanyByInstitute = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const companyId = req.body.id;
+
+    const { name, email, contactPerson, phone, address } = req.body;
+
+    if (!userId || !companyId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request",
+      });
+    }
+
+    // 🔹 Duplicate email check
+    if (email) {
+      const duplicate = await CompanyByInstitute.findOne({
+        userId,
+        email,
+        _id: { $ne: companyId },
+        isDel: false,
+      });
+
+      if (duplicate) {
+        return res.status(409).json({
+          success: false,
+          message: "Another company with this email already exists",
+        });
+      }
+    }
+
+    const updatedCompany = await CompanyByInstitute.findOneAndUpdate(
+      { _id: companyId, userId, isDel: false },
+      { name, email, contactPerson, phone, address },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedCompany) {
+      return res.status(404).json({
+        success: false,
+        message: "Company not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Company updated successfully",
+      data: updatedCompany,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getAllCompaniesByInstitute = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    const companies = await CompanyByInstitute.find({
+      userId,
+      isDel: false,
+    }).sort({ createdAt: -1 }); // latest first
+
+    return res.status(200).json({
+      success: true,
+      message: "Company list fetched successfully",
+      data: companies,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const deleteCompanyByInstitute = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const companyId = req.query.id;
+
+    const deletedCompany = await CompanyByInstitute.findOneAndUpdate(
+      { _id: companyId, userId, isDel: false },
+      { isDel: true },
+      { new: true }
+    );
+
+    if (!deletedCompany) {
+      return res.status(404).json({
+        success: false,
+        message: "Company not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Company deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };

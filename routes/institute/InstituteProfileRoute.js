@@ -8,7 +8,11 @@ import {
   Deletecoverphoto,
   GetAccountDetails,
   updateAccountDetails,
-  syncStudentCourses
+  syncStudentCourses,
+  addCompanyByInstitute,
+  editCompanyByInstitute,
+  getAllCompaniesByInstitute,
+  deleteCompanyByInstitute
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -120,5 +124,26 @@ InstituteProfileRouter.post(
   upload.none(),
   syncStudentCourses
 );
+
+// Add company by Institute
+InstituteProfileRouter.post(
+  "/add_company",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  addCompanyByInstitute
+);
+
+InstituteProfileRouter.put(
+  "/update_company_by_institute",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  editCompanyByInstitute
+);
+
+InstituteProfileRouter.get("/get_all_companies_by_institute", userAuth, Institutemid, getAllCompaniesByInstitute);
+
+InstituteProfileRouter.delete("/delete_company_by_institute", userAuth, Institutemid, deleteCompanyByInstitute);
 
 export default InstituteProfileRouter;
