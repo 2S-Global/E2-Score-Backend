@@ -3,6 +3,7 @@ import streamifier from 'streamifier';
 import validator from 'validator';
 import { InstitueStudent } from "../../models/InstitueStudentModel.js";
 import { InstitueStudentSemester } from "../../models/InstitueStudentModel.js";
+import { instituteStudentAvgMarks } from "../../controllers/institute/instituteStudentController.js";
 import mongoose from "mongoose";
 function convertDate(dateStr) {
 
@@ -108,7 +109,7 @@ export const insStudentImport = async (req, res) => {
         continue;
       }
       let dobYMD = convertDate(dob)
-
+      const currentYear = new Date().getFullYear();
       /*  // ---- Duplicate Check ----
        const existingUser = await InstitueStudent.findOne({
          USN,
@@ -125,7 +126,7 @@ export const insStudentImport = async (req, res) => {
       //insert into DB
       await InstitueStudent.findOneAndUpdate(
         { USN, instituteId: user.userId, admissionYear },
-        { $set: { name, USN, program, gender, dob: dobYMD, admissionYear, tenTh, twelveTh, semester, instituteId: user.userId } },
+        { $set: { name, USN, program, gender, dob: dobYMD, admissionYear, tenTh, twelveTh, semester, instituteId: user.userId ,presentYear:currentYear,promotedYear:currentYear,promotedSemester:semester} },
         {
           upsert: true,
           new: true,
@@ -312,7 +313,35 @@ export const addInstituteStudentManually = async (req, res) => {
       };
     });
 
-    await InstitueStudentSemester.insertMany(semesterData);
+    let sem=await InstitueStudentSemester.insertMany(semesterData);
+
+    if(sem){
+        let avgMarks=await instituteStudentAvgMarks(req?.user,student._id)
+        console.log('avgMarks',avgMarks?.[0]?.averagePercentage);
+        if(avgMarks?.[0]?.averagePercentage){
+           let  res=await InstitueStudent.findOneAndUpdate(
+            {
+              USN,
+              instituteId: user.userId,
+              admissionYear
+            },
+            {
+              $set: {
+                graduationMarks:avgMarks?.[0]?.averagePercentage
+              }
+            },
+            {
+              upsert: true,
+              new: true,
+              runValidators: true
+            }
+         )
+         console.log(res)
+        }
+       
+    }
+
+    
 
     // -----------------------------
     // Success log

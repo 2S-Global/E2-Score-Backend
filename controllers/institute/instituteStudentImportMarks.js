@@ -1,8 +1,8 @@
 import csv from 'csv-parser';
 import streamifier from 'streamifier';
 import { InstitueStudent, InstitueStudentSemester } from "../../models/InstitueStudentModel.js";
-
-
+import { Types } from 'mongoose';
+import { instituteStudentAvgMarks } from "../../controllers/institute/instituteStudentController.js";
 export const processCSV = (buffer) => {
   return new Promise((resolve, reject) => {
     const results = [];
@@ -40,7 +40,7 @@ export const insStudentMarksImport = async (req, res) => {
   try {
     /* const { semester,marksType, semesterYear, semesterMonth,admissionYear } = req.body;  */
     const { semester,admissionYear } = req.body; 
-
+    const user = req?.user
     /* if (!marksType || !semesterYear || !semesterMonth || !admissionYear) { */
     if (!semester && !admissionYear) {
       return res.status(400).json({
@@ -60,6 +60,7 @@ export const insStudentMarksImport = async (req, res) => {
     let createdCount = 0;
     //let duplicateCount = 0;
     let invalidCount = 0;
+    let notPromotedCount = 0;
 
     // --------------------------------
     // Process each imported user
@@ -101,11 +102,13 @@ export const insStudentMarksImport = async (req, res) => {
       const existingData = await InstitueStudent.findOne({
         USN,
         admissionYear,
+        instituteId: new Types.ObjectId(user?.userId),
         is_del: false,
       })
 
       if(existingData){
-          await InstitueStudentSemester.findOneAndUpdate(
+        if(existingData?.semester>=semester){
+            let sem=await InstitueStudentSemester.findOneAndUpdate(
             { InstitueStudentId: existingData?._id, semester },
             { $set: { USN, semester, marks } },
             {
@@ -114,9 +117,41 @@ export const insStudentMarksImport = async (req, res) => {
               runValidators: true
             }
           );
+          if(sem){
+              let avgMarks=await instituteStudentAvgMarks(user,existingData._id)
+              console.log('avgMarks',avgMarks?.[0]?.averagePercentage);
+              if(avgMarks?.[0]?.averagePercentage){
+                  let  res=await InstitueStudent.findOneAndUpdate(
+                    {
+                      USN,
+                      instituteId: user.userId,
+                      admissionYear
+                    },
+                    {
+                      $set: {
+                        graduationMarks:avgMarks?.[0]?.averagePercentage
+                      }
+                    },
+                    {
+                      upsert: true,
+                      new: true,
+                      runValidators: true
+                    }
+                  )
+              console.log(res)
+              }
+            
+          }
           logEntry.status = "created";
           audit.push(logEntry);
           createdCount++;
+        }
+        else{
+           logEntry.status = "notPromoted";
+            audit.push(logEntry);
+            notPromotedCount++;
+        }
+          
       }
       else{
          logEntry.status = "invalid";
@@ -135,6 +170,7 @@ export const insStudentMarksImport = async (req, res) => {
       total: data.length,
       created: createdCount,
       invalid: invalidCount,
+      notPromoted: notPromotedCount,
       audit
     });
 
