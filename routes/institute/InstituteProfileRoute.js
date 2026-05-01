@@ -12,7 +12,8 @@ import {
   addCompanyByInstitute,
   editCompanyByInstitute,
   getAllCompaniesByInstitute,
-  deleteCompanyByInstitute
+  deleteCompanyByInstitute,
+  addCompanyRequirement
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -145,5 +146,7 @@ InstituteProfileRouter.put(
 InstituteProfileRouter.get("/get_all_companies_by_institute", userAuth, Institutemid, getAllCompaniesByInstitute);
 
 InstituteProfileRouter.delete("/delete_company_by_institute", userAuth, Institutemid, deleteCompanyByInstitute);
+
+InstituteProfileRouter.post("/add_company_requirement", userAuth, Institutemid, upload.none(), addCompanyRequirement);
 
 export default InstituteProfileRouter;

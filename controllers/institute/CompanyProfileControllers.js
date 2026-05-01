@@ -7,6 +7,8 @@ import list_university_colleges from "../../models/monogo_query/universityColleg
 import list_university_course from "../../models/monogo_query/universityCourseModel.js";
 import student_course_details from "../../models/studentCourseModel.js";
 import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
+import CompanyRequirement from "../../models/companyRequirementModel.js";
+import mongoose from "mongoose";
 
 /**
  * @description Add or update a company's details for the authenticated user.
@@ -597,6 +599,71 @@ export const deleteCompanyByInstitute = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+export const addCompanyRequirement = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const {
+      companyName, // this is actually companyId from frontend
+      viva,
+      viva_and_written,
+      date,
+      time,
+      numberOfCandidates,
+    } = req.body;
+
+    // Validation
+    if (
+      !userId ||
+      !companyName ||
+      viva === undefined ||
+      viva_and_written === undefined ||
+      !date ||
+      !time ||
+      !numberOfCandidates
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    // ObjectId validation
+    if (
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !mongoose.Types.ObjectId.isValid(companyName)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId or companyId",
+      });
+    }
+
+    const newRequirement = new CompanyRequirement({
+      userId,
+      companyName,
+      viva,
+      viva_and_written,
+      date,
+      time,
+      numberOfCandidates,
+    });
+
+    const savedData = await newRequirement.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Company requirement added successfully",
+      data: savedData,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
     });
   }
 };
