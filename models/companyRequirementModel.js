@@ -12,13 +12,20 @@ const CompanyRequirementSchema = new mongoose.Schema(
             ref: "CompanyByInstitute",
             required: true,
         },
-        viva: {
-            type: Boolean,
+        // viva: {
+        //     type: Boolean,
+        //     required: true,
+        // },
+        // viva_and_written: {
+        //     type: Boolean,
+        //     required: true,
+        // },
+        examinationType: {
+            type: String, // e.g. "10:30 AM"
             required: true,
         },
-        viva_and_written: {
-            type: Boolean,
-            required: true,
+        remarks: {
+            type: String, // e.g. "10:30 AM"
         },
         date: {
             type: Date,

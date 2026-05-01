@@ -608,19 +608,18 @@ export const addCompanyRequirement = async (req, res) => {
     const userId = req.userId;
     const {
       companyName, // this is actually companyId from frontend
-      viva,
-      viva_and_written,
+      examinationType,
       date,
       time,
       numberOfCandidates,
+      remarks
     } = req.body;
 
     // Validation
     if (
       !userId ||
       !companyName ||
-      viva === undefined ||
-      viva_and_written === undefined ||
+      !examinationType ||
       !date ||
       !time ||
       !numberOfCandidates
@@ -645,11 +644,11 @@ export const addCompanyRequirement = async (req, res) => {
     const newRequirement = new CompanyRequirement({
       userId,
       companyName,
-      viva,
-      viva_and_written,
+      examinationType,
       date,
       time,
       numberOfCandidates,
+      remarks
     });
 
     const savedData = await newRequirement.save();
@@ -675,8 +674,8 @@ export const updateCompanyRequirement = async (req, res) => {
 
     const {
       companyName, // companyId from frontend
-      viva,
-      viva_and_written,
+      examinationType,
+      remarks,
       date,
       time,
       numberOfCandidates,
@@ -704,9 +703,8 @@ export const updateCompanyRequirement = async (req, res) => {
     const updateData = {};
 
     if (companyName) updateData.companyName = companyName;
-    if (viva !== undefined) updateData.viva = viva;
-    if (viva_and_written !== undefined)
-      updateData.viva_and_written = viva_and_written;
+    if (examinationType) updateData.examinationType = examinationType;
+    if (remarks) updateData.remarks = remarks;
     if (date) updateData.date = date;
     if (time) updateData.time = time;
     if (numberOfCandidates)
