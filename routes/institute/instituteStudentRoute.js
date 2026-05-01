@@ -14,6 +14,7 @@ import {
   updateCustomCourse,
   deleteCustomCourse,
   getAllCourses,
+  instituteStudentSearch
 } from "../../controllers/institute/instituteStudentController.js";
 
 import {
@@ -153,5 +154,13 @@ InstituteStudentRouter.delete(
   upload.none(),
   deleteInstituteStudent,
 );
+// Get All Courses
+InstituteStudentRouter.get(
+  "/institute-student-search",
+  userAuth,
+  Institutemid,
+  instituteStudentSearch
+);
+
 
 export default InstituteStudentRouter;

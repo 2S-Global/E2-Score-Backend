@@ -165,7 +165,7 @@ export const addInstituteStudentManually = async (req, res) => {
   try {
     const user = req?.user;
     const audit = [];
-
+    const currentYear = new Date().getFullYear();
     console.log("Here is my User ID: ", user?.userId);
 
     const {
@@ -267,6 +267,12 @@ export const addInstituteStudentManually = async (req, res) => {
     console.log("Program: ", program);
     console.log("Semester: ", semesters);
 
+    const existingData = await InstitueStudent.findOne({
+            USN,
+            instituteId: user.userId,
+            admissionYear
+          })
+
     const student = await InstitueStudent.findOneAndUpdate(
       {
         USN,
@@ -283,7 +289,9 @@ export const addInstituteStudentManually = async (req, res) => {
           twelveTh,
           program: new mongoose.Types.ObjectId(program), // ✅ FIX
           admissionYear,
-          instituteId: user.userId
+          instituteId: user.userId,
+          promotedYear:currentYear,
+          promotedSemester:(existingData?.promotedSemester && existingData?.promotedSemester>semesters?.length)?existingData?.promotedSemester:semesters?.length
         }
       },
       {

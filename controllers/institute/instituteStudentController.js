@@ -875,23 +875,7 @@ export const instituteStudent = async (req, res) => {
     }
   }
 },
- // ✅ Calculate average percentage
-  {
-    $addFields: {
-      averagePercentage: {
-        $round: [
-          {
-            $cond: [
-              { $gt: [{ $size: "$semesters" }, 0] },
-              { $avg: "$semesters.convertedMarks" },
-              0
-            ]
-          },
-          2
-        ]
-      }
-    }
-  }
+
 
     ]);
 
@@ -912,7 +896,6 @@ export const instituteStudent = async (req, res) => {
 
 export const instituteStudentAvgMarks =async(user,ID) => {
   try {
-    console.log("user in instituteStudent controller", user);
     // 2️⃣ Get Institue Student
     const institueStudent = await InstitueStudent.aggregate([
       {
@@ -1055,6 +1038,146 @@ export const instituteStudentAvgMarks =async(user,ID) => {
     return error
   }
 };
+
+
+
+export const instituteStudentSearch = async (req, res) => {
+  try {
+    const { course, semester } = req.query;
+    const user = req?.user
+  
+    const currentYear = new Date().getFullYear();
+    // 🔹 Basic match
+    const match = {
+      instituteId: new Types.ObjectId(user?.userId),
+      status: true,
+      is_del: false,
+      program: new Types.ObjectId(course),
+      promotedSemester:Number(semester),
+      promotedYear:String(currentYear)
+    };
+    console.log("search abc", user,course,semester,match);
+
+    // 2️⃣ Get Institue Student
+    const institueStudent = await InstitueStudent.aggregate([
+      {
+         $match: match 
+      },
+      // ✅ ADD THIS
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $lookup: {
+          from: "instituestudentsemesters",
+          let: { insId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$InstitueStudentId", "$$insId"] },   // join condition
+                    { $eq: ["$is_del", false] }       // ✅ child condition
+                  ]
+                }
+              }
+            }
+          ],
+          as: "semesters",
+        },
+      },
+      {
+        $lookup: {
+          from: "student_course_details",
+          let: { pro: "$program" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$_id", "$$pro"] },   // join condition
+                    { $eq: ["$is_del", 0] }     // ✅ child condition
+                  ]
+                }
+              }
+            },
+            {
+              $project: {
+                name: 1,
+                total_number_of_semesters: 1,
+                type: 1,
+                course_durartion: 1,
+                courseStructure: 1,
+                marksType: 1
+              }
+            }
+          ],
+          as: "programDetails",
+        },
+      },
+
+      { $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true } },
+      {
+  $addFields: {
+    semesters: {
+      $map: {
+        input: "$semesters",
+        as: "sem",
+        in: {
+          $mergeObjects: [
+            "$$sem",
+            {
+              marksType: "$programDetails.marksType",
+              courseStructure: "$programDetails.courseStructure",
+              originalMarks: "$$sem.marks",   // ✅ keep original
+              convertedMarks: {
+                $let: {
+                  vars: {
+                    type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
+                  },
+                  in: {
+                    $cond: [
+                      { $eq: ["$$type", "cgpa"] },
+                      { $multiply: ["$$sem.marks", 10] },
+
+                      {
+                        $cond: [
+                          { $eq: ["$$type", "dgpa"] },
+                          { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
+
+                          "$$sem.marks"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+},
+ 
+
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: institueStudent.length,
+      data: institueStudent,
+    });
+  } catch (error) {
+    console.error("Error fetching student:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
 
 // Add Custom Course
 export const addCustomCourse = async (req, res) => {
