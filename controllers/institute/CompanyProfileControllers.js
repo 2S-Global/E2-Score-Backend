@@ -667,3 +667,155 @@ export const addCompanyRequirement = async (req, res) => {
     });
   }
 };
+
+export const updateCompanyRequirement = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const requirementId = req.body.id;
+
+    const {
+      companyName, // companyId from frontend
+      viva,
+      viva_and_written,
+      date,
+      time,
+      numberOfCandidates,
+    } = req.body;
+
+    // Validate IDs
+    if (
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !mongoose.Types.ObjectId.isValid(requirementId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId or requirementId",
+      });
+    }
+
+    if (companyName && !mongoose.Types.ObjectId.isValid(companyName)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid companyId",
+      });
+    }
+
+    // Build update object dynamically (only update provided fields)
+    const updateData = {};
+
+    if (companyName) updateData.companyName = companyName;
+    if (viva !== undefined) updateData.viva = viva;
+    if (viva_and_written !== undefined)
+      updateData.viva_and_written = viva_and_written;
+    if (date) updateData.date = date;
+    if (time) updateData.time = time;
+    if (numberOfCandidates)
+      updateData.numberOfCandidates = numberOfCandidates;
+
+    // Find and update
+    const updatedRequirement = await CompanyRequirement.findOneAndUpdate(
+      { _id: requirementId, userId: userId }, // ensure user owns the data
+      { $set: updateData },
+      { new: true } // return updated document
+    );
+
+    if (!updatedRequirement) {
+      return res.status(404).json({
+        success: false,
+        message: "Requirement not found or unauthorized",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Company requirement updated successfully",
+      data: updatedRequirement,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+export const getAllCompanyRequirements = async (req, res) => {
+  try {
+    // Optional filters
+    const filter = {};
+
+    // Filter by companyId (optional)
+    if (req.query.companyId) {
+      if (!mongoose.Types.ObjectId.isValid(req.query.companyId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid companyId",
+        });
+      }
+      filter.companyName = req.query.companyId;
+    }
+
+    // Fetch all records
+    const requirements = await CompanyRequirement.find(filter)
+      .populate("companyName") // optional
+      .populate("userId", "name email") // optional: show user info
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "All company requirements fetched successfully",
+      count: requirements.length,
+      data: requirements,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+export const deleteCompanyRequirement = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const requirementId = req.query.id;
+
+    // Validate IDs
+    if (
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !mongoose.Types.ObjectId.isValid(requirementId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId or requirementId",
+      });
+    }
+
+    // Find and delete (with ownership check)
+    const deletedRequirement = await CompanyRequirement.findOneAndDelete({
+      _id: requirementId,
+      userId: userId,
+    });
+
+    if (!deletedRequirement) {
+      return res.status(404).json({
+        success: false,
+        message: "Requirement not found or unauthorized",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Company requirement deleted successfully",
+      data: deletedRequirement,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};

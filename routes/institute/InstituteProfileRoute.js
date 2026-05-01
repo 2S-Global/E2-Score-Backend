@@ -13,7 +13,10 @@ import {
   editCompanyByInstitute,
   getAllCompaniesByInstitute,
   deleteCompanyByInstitute,
-  addCompanyRequirement
+  addCompanyRequirement,
+  updateCompanyRequirement,
+  getAllCompanyRequirements,
+  deleteCompanyRequirement
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -148,5 +151,11 @@ InstituteProfileRouter.get("/get_all_companies_by_institute", userAuth, Institut
 InstituteProfileRouter.delete("/delete_company_by_institute", userAuth, Institutemid, deleteCompanyByInstitute);
 
 InstituteProfileRouter.post("/add_company_requirement", userAuth, Institutemid, upload.none(), addCompanyRequirement);
+
+InstituteProfileRouter.put("/update_company_requirement", userAuth, Institutemid, upload.none(), updateCompanyRequirement);
+
+InstituteProfileRouter.get("/get_company_requirement", userAuth, Institutemid, upload.none(), getAllCompanyRequirements);
+
+InstituteProfileRouter.delete("/delete_company_requirement", userAuth, Institutemid, upload.none(), deleteCompanyRequirement);
 
 export default InstituteProfileRouter;
