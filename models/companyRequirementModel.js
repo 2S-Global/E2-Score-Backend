@@ -19,6 +19,10 @@ const CompanyRequirementSchema = new mongoose.Schema(
         remarks: {
             type: String, // e.g. "10:30 AM"
         },
+        role: {
+            type: String,
+            required: true,
+        },
         date: {
             type: Date,
             required: true,

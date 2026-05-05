@@ -613,7 +613,8 @@ export const addCompanyRequirement = async (req, res) => {
       date,
       time,
       numberOfCandidates,
-      remarks
+      remarks,
+      role
     } = req.body;
 
     // Validation
@@ -649,7 +650,8 @@ export const addCompanyRequirement = async (req, res) => {
       date,
       time,
       numberOfCandidates,
-      remarks
+      remarks,
+      role
     });
 
     const savedData = await newRequirement.save();
