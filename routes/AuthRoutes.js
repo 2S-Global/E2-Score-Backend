@@ -13,6 +13,7 @@ import {
   verifyEmail,
   acceptRejectInterviewInvitation,
   listCompaniesAll,
+  getMyProfile,
 } from "../controllers/AuthController.js"; // Adjust the path according to your project structure
 // Initialize dotenv to load environment variables
 dotenv.config();
@@ -24,6 +25,7 @@ cloudinary.config({
 });
 import userAuth from "../middleware/authMiddleware.js";
 import adminMiddleware from "../middleware/adminMiddleware.js";
+import { getUser } from "../controllers/candidate/userdatacontroller.js";
 
 // Initialize router
 const AuthRouter = express.Router();
@@ -45,6 +47,8 @@ AuthRouter.post("/forgotpass", upload.none(), forgotPassword);
 
 //validate token
 AuthRouter.get("/validtoken", userAuth, validtoken);
+// Get User Details
+AuthRouter.get("/get-user-details", userAuth, getMyProfile);
 // Validate email
 AuthRouter.get("/verify-email/:token", verifyEmail);
 
