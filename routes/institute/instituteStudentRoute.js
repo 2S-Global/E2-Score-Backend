@@ -14,7 +14,9 @@ import {
   updateCustomCourse,
   deleteCustomCourse,
   getAllCourses,
-  instituteStudentSearch
+  instituteStudentSearch,
+  getTotalStudentsCount,
+  getActiveCompanies,
 } from "../../controllers/institute/instituteStudentController.js";
 
 import {
@@ -162,5 +164,18 @@ InstituteStudentRouter.get(
   instituteStudentSearch
 );
 
+InstituteStudentRouter.get(
+  "/get_students_counts",
+  userAuth,
+  Institutemid,
+  getTotalStudentsCount
+);
+
+InstituteStudentRouter.get(
+  "/get-active-companies",
+  userAuth,
+  Institutemid,
+  getActiveCompanies
+);
 
 export default InstituteStudentRouter;

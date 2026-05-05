@@ -16,7 +16,8 @@ import {
   addCompanyRequirement,
   updateCompanyRequirement,
   getAllCompanyRequirements,
-  deleteCompanyRequirement
+  deleteCompanyRequirement,
+  selectStudentForCompany,
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -157,5 +158,7 @@ InstituteProfileRouter.put("/update_company_requirement", userAuth, Institutemid
 InstituteProfileRouter.get("/get_company_requirement", userAuth, Institutemid, upload.none(), getAllCompanyRequirements);
 
 InstituteProfileRouter.delete("/delete_company_requirement", userAuth, Institutemid, upload.none(), deleteCompanyRequirement);
+
+InstituteProfileRouter.post("/add_student_assigned_company", userAuth, Institutemid, upload.none(), selectStudentForCompany);
 
 export default InstituteProfileRouter;

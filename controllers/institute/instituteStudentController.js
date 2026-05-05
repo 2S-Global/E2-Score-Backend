@@ -10,8 +10,9 @@ import CandidateKYC from "../../models/CandidateKYCModel.js";
 import list_education_level from "../../models/monogo_query/educationLevelModel.js";
 import list_course_type from "../../models/monogo_query/courseTypeModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
-import {InstitueStudent,InstitueStudentSemester} from "../../models/InstitueStudentModel.js";
+import { InstitueStudent, InstitueStudentSemester } from "../../models/InstitueStudentModel.js";
 import student_course_details from "../../models/studentCourseModel.js";
+import companyRequirement from "../../models/companyRequirementModel.js";
 import nodemailer from "nodemailer";
 import mongoose from "mongoose";
 import { Types } from 'mongoose';
@@ -605,7 +606,7 @@ export const GetStudentsByVerification = async (req, res) => {
       })
       .populate("userId", "name email profilePicture")
       .lean()
-     
+
 
     if (!studentList.length) {
       return res.status(200).json({
@@ -825,56 +826,56 @@ export const instituteStudent = async (req, res) => {
 
       { $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true } },
 
-    /*   {
-        $addFields: {
-          debugProgramId: "$program",
-          debugMatchedCourseId: "$programDetails._id",
-          debugMarksType: "$programDetails.marksType"
-        }
-      }, */
+      /*   {
+          $addFields: {
+            debugProgramId: "$program",
+            debugMatchedCourseId: "$programDetails._id",
+            debugMarksType: "$programDetails.marksType"
+          }
+        }, */
 
       {
-  $addFields: {
-    semesters: {
-      $map: {
-        input: "$semesters",
-        as: "sem",
-        in: {
-          $mergeObjects: [
-            "$$sem",
-            {
-              marksType: "$programDetails.marksType",
-              courseStructure: "$programDetails.courseStructure",
-              originalMarks: "$$sem.marks",   // ✅ keep original
-              convertedMarks: {
-                $let: {
-                  vars: {
-                    type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
-                  },
-                  in: {
-                    $cond: [
-                      { $eq: ["$$type", "cgpa"] },
-                      { $multiply: ["$$sem.marks", 10] },
+        $addFields: {
+          semesters: {
+            $map: {
+              input: "$semesters",
+              as: "sem",
+              in: {
+                $mergeObjects: [
+                  "$$sem",
+                  {
+                    marksType: "$programDetails.marksType",
+                    courseStructure: "$programDetails.courseStructure",
+                    originalMarks: "$$sem.marks",   // ✅ keep original
+                    convertedMarks: {
+                      $let: {
+                        vars: {
+                          type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
+                        },
+                        in: {
+                          $cond: [
+                            { $eq: ["$$type", "cgpa"] },
+                            { $multiply: ["$$sem.marks", 10] },
 
-                      {
-                        $cond: [
-                          { $eq: ["$$type", "dgpa"] },
-                          { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
+                            {
+                              $cond: [
+                                { $eq: ["$$type", "dgpa"] },
+                                { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
 
-                          "$$sem.marks"
-                        ]
+                                "$$sem.marks"
+                              ]
+                            }
+                          ]
+                        }
                       }
-                    ]
+                    }
                   }
-                }
+                ]
               }
             }
-          ]
+          }
         }
-      }
-    }
-  }
-},
+      },
 
 
     ]);
@@ -894,7 +895,7 @@ export const instituteStudent = async (req, res) => {
 };
 
 
-export const instituteStudentAvgMarks =async(user,ID) => {
+export const instituteStudentAvgMarks = async (user, ID) => {
   try {
     // 2️⃣ Get Institue Student
     const institueStudent = await InstitueStudent.aggregate([
@@ -903,7 +904,7 @@ export const instituteStudentAvgMarks =async(user,ID) => {
           instituteId: new Types.ObjectId(user?.userId),
           status: true,
           is_del: false,
-          _id:ID
+          _id: ID
         },
       },
       // ✅ ADD THIS
@@ -970,69 +971,69 @@ export const instituteStudentAvgMarks =async(user,ID) => {
       },
 
       {
-  $addFields: {
-    semesters: {
-      $map: {
-        input: "$semesters",
-        as: "sem",
-        in: {
-          $mergeObjects: [
-            "$$sem",
-            {
-              marksType: "$programDetails.marksType",
-              courseStructure: "$programDetails.courseStructure",
-              originalMarks: "$$sem.marks",   // ✅ keep original
-              convertedMarks: {
-                $let: {
-                  vars: {
-                    type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
-                  },
-                  in: {
-                    $cond: [
-                      { $eq: ["$$type", "cgpa"] },
-                      { $multiply: ["$$sem.marks", 10] },
+        $addFields: {
+          semesters: {
+            $map: {
+              input: "$semesters",
+              as: "sem",
+              in: {
+                $mergeObjects: [
+                  "$$sem",
+                  {
+                    marksType: "$programDetails.marksType",
+                    courseStructure: "$programDetails.courseStructure",
+                    originalMarks: "$$sem.marks",   // ✅ keep original
+                    convertedMarks: {
+                      $let: {
+                        vars: {
+                          type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
+                        },
+                        in: {
+                          $cond: [
+                            { $eq: ["$$type", "cgpa"] },
+                            { $multiply: ["$$sem.marks", 10] },
 
-                      {
-                        $cond: [
-                          { $eq: ["$$type", "dgpa"] },
-                          { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
+                            {
+                              $cond: [
+                                { $eq: ["$$type", "dgpa"] },
+                                { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
 
-                          "$$sem.marks"
-                        ]
+                                "$$sem.marks"
+                              ]
+                            }
+                          ]
+                        }
                       }
-                    ]
+                    }
                   }
-                }
+                ]
               }
             }
-          ]
+          }
+        }
+      },
+      // ✅ Calculate average percentage
+      {
+        $addFields: {
+          averagePercentage: {
+            $round: [
+              {
+                $cond: [
+                  { $gt: [{ $size: "$semesters" }, 0] },
+                  { $avg: "$semesters.convertedMarks" },
+                  0
+                ]
+              },
+              2
+            ]
+          }
         }
       }
-    }
-  }
-},
- // ✅ Calculate average percentage
-  {
-    $addFields: {
-      averagePercentage: {
-        $round: [
-          {
-            $cond: [
-              { $gt: [{ $size: "$semesters" }, 0] },
-              { $avg: "$semesters.convertedMarks" },
-              0
-            ]
-          },
-          2
-        ]
-      }
-    }
-  }
 
     ]);
 
-    return  institueStudent;
-    
+    return institueStudent;
+
   } catch (error) {
     console.error("Error fetching student:", error);
     return error
@@ -1045,7 +1046,7 @@ export const instituteStudentSearch = async (req, res) => {
   try {
     const { course, semester } = req.query;
     const user = req?.user
-  
+
     const currentYear = new Date().getFullYear();
     // 🔹 Basic match
     const match = {
@@ -1053,15 +1054,15 @@ export const instituteStudentSearch = async (req, res) => {
       status: true,
       is_del: false,
       program: new Types.ObjectId(course),
-      promotedSemester:Number(semester),
-      promotedYear:String(currentYear)
+      promotedSemester: Number(semester),
+      promotedYear: String(currentYear)
     };
-    console.log("search abc", user,course,semester,match);
+    console.log("search abc", user, course, semester, match);
 
     // 2️⃣ Get Institue Student
     const institueStudent = await InstitueStudent.aggregate([
       {
-         $match: match 
+        $match: match
       },
       // ✅ ADD THIS
       {
@@ -1118,48 +1119,48 @@ export const instituteStudentSearch = async (req, res) => {
 
       { $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true } },
       {
-  $addFields: {
-    semesters: {
-      $map: {
-        input: "$semesters",
-        as: "sem",
-        in: {
-          $mergeObjects: [
-            "$$sem",
-            {
-              marksType: "$programDetails.marksType",
-              courseStructure: "$programDetails.courseStructure",
-              originalMarks: "$$sem.marks",   // ✅ keep original
-              convertedMarks: {
-                $let: {
-                  vars: {
-                    type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
-                  },
-                  in: {
-                    $cond: [
-                      { $eq: ["$$type", "cgpa"] },
-                      { $multiply: ["$$sem.marks", 10] },
+        $addFields: {
+          semesters: {
+            $map: {
+              input: "$semesters",
+              as: "sem",
+              in: {
+                $mergeObjects: [
+                  "$$sem",
+                  {
+                    marksType: "$programDetails.marksType",
+                    courseStructure: "$programDetails.courseStructure",
+                    originalMarks: "$$sem.marks",   // ✅ keep original
+                    convertedMarks: {
+                      $let: {
+                        vars: {
+                          type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
+                        },
+                        in: {
+                          $cond: [
+                            { $eq: ["$$type", "cgpa"] },
+                            { $multiply: ["$$sem.marks", 10] },
 
-                      {
-                        $cond: [
-                          { $eq: ["$$type", "dgpa"] },
-                          { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
+                            {
+                              $cond: [
+                                { $eq: ["$$type", "dgpa"] },
+                                { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
 
-                          "$$sem.marks"
-                        ]
+                                "$$sem.marks"
+                              ]
+                            }
+                          ]
+                        }
                       }
-                    ]
+                    }
                   }
-                }
+                ]
               }
             }
-          ]
+          }
         }
-      }
-    }
-  }
-},
- 
+      },
+
 
     ]);
 
@@ -1221,7 +1222,7 @@ export const addCustomCourse = async (req, res) => {
       courseStructure: courseStructure || null,
       marksType: marksType || null,
       is_del: 0,
-    }); 
+    });
 
     return res.status(201).json({
       success: true,
@@ -1403,6 +1404,92 @@ export const getAllCourses = async (req, res) => {
       success: false,
       message: "Internal server error",
       error,
+    });
+  }
+};
+
+export const getTotalStudentsCount = async (req, res) => {
+  try {
+    const instituteId = req.userId; // assuming institute is logged in
+
+    if (!instituteId) {
+      return res.status(400).json({
+        success: false,
+        message: "Institute ID not found",
+      });
+    }
+
+    // Count students for this institute 
+    const totalStudents = await InstitueStudent.countDocuments({ 
+      instituteId: instituteId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      totalStudents,
+    });
+  } catch (error) {
+    console.error("Error in getTotalStudentsCount:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const getActiveCompanies = async (req, res) => {
+  try {
+    const currentDate = new Date();
+
+    const activeCompanies = await companyRequirement.aggregate([
+      {
+        $match: {
+          date: { $gte: currentDate },
+          isDel: false,
+        },
+      },
+      {
+        $lookup: {
+          from: "companybyinstitutes", // collection name in MongoDB
+          localField: "companyName",
+          foreignField: "_id",
+          as: "companyDetails",
+        },
+      },
+      {
+        $unwind: "$companyDetails",
+      },
+      {
+        $match: {
+          "companyDetails.isDel": false,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          examinationType: 1,
+          date: 1,
+          time: 1,
+          numberOfCandidates: 1,
+          remarks: 1,
+          companyDetails: 1,
+        },
+      },
+      {
+        $sort: { date: 1 }, // nearest upcoming first
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: activeCompanies.length,
+      data: activeCompanies,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
     });
   }
 };

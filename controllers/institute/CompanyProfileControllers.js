@@ -8,6 +8,7 @@ import list_university_course from "../../models/monogo_query/universityCourseMo
 import student_course_details from "../../models/studentCourseModel.js";
 import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
 import CompanyRequirement from "../../models/companyRequirementModel.js";
+import SelectedStudent from "../../models/StudentAssignedCompanyModel.js";
 import mongoose from "mongoose";
 
 /**
@@ -814,6 +815,74 @@ export const deleteCompanyRequirement = async (req, res) => {
       success: false,
       message: "Server error",
       error: error.message,
+    });
+  }
+};
+
+export const selectStudentForCompany = async (req, res) => {
+  try {
+    const instituteId = req.userId;
+
+    const {
+      studentId,
+      requirementId,
+      instituteCompanyId,
+    } = req.body;
+
+    // 🔹 Basic Validation
+    if (!instituteId || !studentId || !requirementId || !instituteCompanyId) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    // 🔹 ObjectId validation
+    if (
+      !mongoose.Types.ObjectId.isValid(studentId) ||
+      !mongoose.Types.ObjectId.isValid(requirementId) ||
+      !mongoose.Types.ObjectId.isValid(instituteCompanyId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid IDs provided",
+      });
+    }
+
+    // 🔹 Check duplicate (important)
+    const alreadyExists = await SelectedStudent.findOne({
+      studentId,
+      requirementId,
+      instituteCompanyId,
+    });
+
+    if (alreadyExists) {
+      return res.status(409).json({
+        success: false,
+        message: "Student already scheduled for this company & requirement",
+      });
+    }
+
+    // 🔹 Create entry
+    const selectedStudent = await SelectedStudent.create({
+      studentId,
+      instituteId,
+      requirementId,
+      instituteCompanyId,
+      isPlacement: false,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Student scheduled successfully",
+      data: selectedStudent,
+    });
+
+  } catch (error) {
+    console.error("Error selecting student:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
     });
   }
 };
