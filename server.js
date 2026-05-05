@@ -4,6 +4,7 @@ import helmet from "helmet";
 
 import path from "path";
 import { fileURLToPath } from "url";
+import cookieParser from "cookie-parser";
 
 import db from "./config/db.js";
 
@@ -14,7 +15,19 @@ db();
 
 const app = express();
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://geisil.com",
+      "https://services.geisil.com",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+    ],
+    credentials: true,
+  }),
+);
+
+app.use(cookieParser());
 // app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

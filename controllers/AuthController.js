@@ -674,7 +674,6 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if user exists
     const user = await User.findOne({
       email: { $regex: new RegExp(`^${email}$`, "i") },
       is_active: true,
@@ -690,15 +689,13 @@ export const loginUser = async (req, res) => {
 
     if (!user.isVerified) {
       return res.status(403).json({
-        message: "Your Email is not Verified.Please Verify it first.",
+        message: "Your Email is not Verified. Please verify it first.",
         success: false,
       });
     }
 
-    // If password is hashed, compare using bcrypt
     const isMatch = await bcrypt.compare(password, user.password);
 
-    // If passwords don't match
     if (!isMatch) {
       return res.status(401).json({
         message: "Invalid email or password",
@@ -707,6 +704,7 @@ export const loginUser = async (req, res) => {
     }
 
     let not_dashboard = false;
+
     if (user.role === 2) {
       const companydetails = await CompanyDetails.findOne({
         userId: user._id,
@@ -715,45 +713,44 @@ export const loginUser = async (req, res) => {
         select: "name Has_CIN",
       });
 
-      //console.log("companydetails", companydetails.company_type.Has_CIN);
-
       if (companydetails?.company_type?.Has_CIN === true) {
-        if (!companydetails.cin_id || companydetails.cin_id === null) {
+        if (!companydetails.cin_id) {
           not_dashboard = true;
         }
       }
     }
 
-    // Build payload
-    // let payload = { userId: user._id };
-
-    // If employer role, add companyId
-    // if (user.role === 2 && user.company_id) {
-    //   payload.companyId = user.company_id;
-    // }
-
-    // Generate JWT token
+    // ✅ Generate token
     const token = jwt.sign(
       { userId: user._id, companyId: user.company_id },
       process.env.JWT_SECRET,
-      {
-        expiresIn: "30d",
-      }
+      { expiresIn: "30d" },
     );
 
+    // ✅ 1. Set cookie (for subdomains)
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "None",
+      domain: ".geisil.com",
+      path: "/",
+    });
+
+    // ✅ 2. ALSO send token in response (for frontend/manual use)
     res.status(200).json({
       success: true,
       message: "Login successful!",
-      token,
+      token, // 👈 you still get it
       data: user,
       role: user.role,
       not_dashboard,
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .json({ message: "Error logging in user", error: error.message });
+    res.status(500).json({
+      message: "Error logging in user",
+      error: error.message,
+    });
   }
 };
 
