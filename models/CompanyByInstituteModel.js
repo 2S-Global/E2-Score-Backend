@@ -7,30 +7,61 @@ const CompanyByInstituteSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    name: {
+
+    companyName: {
       type: String,
       required: true,
       trim: true,
     },
+
+    sector: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    status: {
+      type: String,
+      // enum: ["Active", "Inactive", "Pending"],
+      // default: "Active",
+    },
+
+    primaryContact: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     email: {
       type: String,
       required: true,
       lowercase: true,
       match: [/^\S+@\S+\.\S+$/, "Please use a valid email"],
     },
-    contactPerson: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+
     phone: {
       type: String,
       required: true,
       match: [/^[0-9]{10}$/, "Phone must be 10 digits"],
     },
+
+    website: {
+      type: String,
+      trim: true,
+    },
+
+    initialOpenPositions: {
+      type: Number,
+      default: 0,
+    },
+
+    notes: {
+      type: String,
+      trim: true,
+    },
+
     address: {
       type: String,
-      required: true,
     },
 
     isDel: {
@@ -43,6 +74,9 @@ const CompanyByInstituteSchema = new mongoose.Schema(
   }
 );
 
-const CompanyByInstitute = mongoose.model("CompanyByInstitute", CompanyByInstituteSchema);
+const CompanyByInstitute = mongoose.model(
+  "CompanyByInstitute",
+  CompanyByInstituteSchema
+);
 
 export default CompanyByInstitute;

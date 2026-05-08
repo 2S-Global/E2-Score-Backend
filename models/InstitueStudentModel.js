@@ -25,6 +25,7 @@ const InstitueStudentSchema = new mongoose.Schema({
   promotedSemester: { type: Number, default:null},
   attendInterview: { type: Number, default:0},
   placement: { type: Number, default:0},
+  placementReadySemester: { type: Number, default:0},
   promotedDate: { type: Date, default:null },
   is_del: { type: Boolean, default: false },
   status: { type: Boolean, default: true }

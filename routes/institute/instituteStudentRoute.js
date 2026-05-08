@@ -17,6 +17,7 @@ import {
   instituteStudentSearch,
   getTotalStudentsCount,
   getActiveCompanies,
+  instituteStudentByPlacementReady
 } from "../../controllers/institute/instituteStudentController.js";
 
 import {
@@ -176,6 +177,13 @@ InstituteStudentRouter.get(
   userAuth,
   Institutemid,
   getActiveCompanies
+);
+
+InstituteStudentRouter.get(
+  "/institute-student-list-by-placement-ready",
+  userAuth,
+  Institutemid,
+  instituteStudentByPlacementReady
 );
 
 export default InstituteStudentRouter;

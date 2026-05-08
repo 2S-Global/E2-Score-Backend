@@ -441,17 +441,35 @@ export const addCompanyByInstitute = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const { name, email, contactPerson, phone, address } = req.body;
+    const {
+      companyName,
+      sector,
+      status,
+      primaryContact,
+      email,
+      phone,
+      website,
+      initialOpenPositions,
+      notes,
+      address,
+    } = req.body;
 
     // 🔹 Basic validation
-    if (!userId || !name || !email || !contactPerson || !phone || !address) {
+    if (
+      !userId ||
+      !companyName ||
+      !sector ||
+      !primaryContact ||
+      !email ||
+      !phone
+    ) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required",
+        message: "Required fields are missing",
       });
     }
 
-    // 🔹 Check duplicate (same email under same user)
+    // 🔹 Check duplicate company email under same user
     const existingCompany = await CompanyByInstitute.findOne({
       userId,
       email,
@@ -468,10 +486,15 @@ export const addCompanyByInstitute = async (req, res) => {
     // 🔹 Create company
     const newCompany = await CompanyByInstitute.create({
       userId,
-      name,
+      companyName,
+      sector,
+      status,
+      primaryContact,
       email,
-      contactPerson,
       phone,
+      website,
+      initialOpenPositions,
+      notes,
       address,
     });
 
@@ -493,8 +516,22 @@ export const editCompanyByInstitute = async (req, res) => {
     const userId = req.userId;
     const companyId = req.body.id;
 
-    const { name, email, contactPerson, phone, address } = req.body;
+    console.log("Edit API is running: ");
 
+    const {
+      companyName,
+      sector,
+      status,
+      primaryContact,
+      email,
+      phone,
+      website,
+      initialOpenPositions,
+      notes,
+      address,
+    } = req.body;
+
+    // 🔹 Validation
     if (!userId || !companyId) {
       return res.status(400).json({
         success: false,
@@ -519,12 +556,32 @@ export const editCompanyByInstitute = async (req, res) => {
       }
     }
 
+    // 🔹 Update company
     const updatedCompany = await CompanyByInstitute.findOneAndUpdate(
-      { _id: companyId, userId, isDel: false },
-      { name, email, contactPerson, phone, address },
-      { new: true, runValidators: true }
+      {
+        _id: companyId,
+        userId,
+        isDel: false,
+      },
+      {
+        companyName,
+        sector,
+        status,
+        primaryContact,
+        email,
+        phone,
+        website,
+        initialOpenPositions,
+        notes,
+        address,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
     );
 
+    // 🔹 Company not found
     if (!updatedCompany) {
       return res.status(404).json({
         success: false,
@@ -548,11 +605,34 @@ export const editCompanyByInstitute = async (req, res) => {
 export const getAllCompaniesByInstitute = async (req, res) => {
   try {
     const userId = req.userId;
+    const companyId = req.query.id;
 
     if (!userId) {
       return res.status(400).json({
         success: false,
         message: "Invalid user",
+      });
+    }
+
+    // 🔹 If id is provided then return single company details
+    if (companyId) {
+      const company = await CompanyByInstitute.findOne({
+        _id: companyId,
+        userId,
+        isDel: false,
+      });
+
+      if (!company) {
+        return res.status(404).json({
+          success: false,
+          message: "Company not found",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Company details fetched successfully",
+        data: company,
       });
     }
 
