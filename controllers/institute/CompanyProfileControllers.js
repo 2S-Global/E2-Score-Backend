@@ -1121,3 +1121,88 @@ export const countFaculty = async (req, res) => {
     });
   }
 };
+
+export const editFaculty = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const facultyId = req.body.id;
+
+    console.log("Edit Faculty API is running: ");
+
+    const {
+      full_name,
+      role,
+      department,
+      phone_number,
+      email,
+      student_count,
+      course_count,
+    } = req.body;
+
+    // 🔹 Validation
+    if (!userId || !facultyId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request",
+      });
+    }
+
+    // 🔹 Duplicate email check
+    if (email) {
+      const duplicate = await InstituteFaculty.findOne({
+        userId,
+        email,
+        _id: { $ne: facultyId },
+        isDel: false,
+      });
+
+      if (duplicate) {
+        return res.status(409).json({
+          success: false,
+          message: "Another faculty member with this email already exists",
+        });
+      }
+    }
+
+    // 🔹 Update faculty
+    const updatedFaculty = await InstituteFaculty.findOneAndUpdate(
+      {
+        _id: facultyId,
+        userId,
+        isDel: false,
+      },
+      {
+        full_name,
+        role,
+        department,
+        phone_number,       
+        email,
+        student_count,
+        course_count,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    // 🔹 Faculty member not found
+    if (!updatedFaculty) {
+      return res.status(404).json({
+        success: false,
+        message: "Faculty member not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Faculty member updated successfully",
+      data: updatedFaculty,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

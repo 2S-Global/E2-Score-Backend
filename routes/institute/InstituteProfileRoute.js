@@ -21,6 +21,7 @@ import {
   addFaculty,
   getFaculty,
   countFaculty,
+  editFaculty,
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -170,6 +171,8 @@ InstituteProfileRouter.post("/add_faculty", userAuth, Institutemid, upload.none(
 InstituteProfileRouter.get("/get_faculty", userAuth, Institutemid, upload.none(), getFaculty);
 
 InstituteProfileRouter.get("/total_faculty", userAuth, Institutemid, upload.none(), countFaculty);
+
+InstituteProfileRouter.put("/update_faculty", userAuth, Institutemid, upload.none(), editFaculty);
 
 
 export default InstituteProfileRouter;
