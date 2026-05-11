@@ -9,6 +9,7 @@ import student_course_details from "../../models/studentCourseModel.js";
 import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
 import CompanyRequirement from "../../models/companyRequirementModel.js";
 import SelectedStudent from "../../models/StudentAssignedCompanyModel.js";
+import InstituteFaculty from "../../models/InstituteFacultyModel.js";
 import mongoose from "mongoose";
 
 /**
@@ -965,6 +966,158 @@ export const selectStudentForCompany = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error",
+    });
+  }
+};
+
+export const addFaculty = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const {
+      full_name,
+      role,
+      department,
+      phone_number,
+      email,
+      student_count,
+      course_count,
+    } = req.body;
+
+    // 🔹 Basic validation
+    if (
+      !userId ||
+      !full_name ||
+      !role ||
+      !department ||
+      !phone_number ||
+      !email ||
+      !student_count ||
+      !course_count
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Required fields are missing",
+      });
+    }
+
+    // 🔹 Check duplicate company email under same user
+    const existingFaculty = await InstituteFaculty.findOne({
+      userId,
+      email,
+      isDel: false,
+    });
+
+    if (existingFaculty) {
+      return res.status(409).json({
+        success: false,
+        message: "Faculty member with this email already exists",
+      });
+    }
+
+    // 🔹 Create company
+    const newFaculty = await InstituteFaculty.create({
+      userId,
+      full_name,
+      role,
+      department,
+      phone_number,
+      email,
+      student_count,
+      course_count,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Faculty member added successfully",
+      data: newFaculty,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getFaculty = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const facultyId = req.query.id;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    // 🔹 If id is provided then return single company details
+    if (facultyId) {
+      const faculty = await InstituteFaculty.findOne({
+        _id: facultyId,
+        userId,
+        isDel: false,
+      });
+
+      if (!faculty) {
+        return res.status(404).json({
+          success: false,
+          message: "Faculty member not found",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Faculty details fetched successfully",
+        data: faculty,
+      });
+    }
+
+    const faculties = await InstituteFaculty.find({
+      userId,
+      isDel: false,
+    }).sort({ createdAt: -1 }); // latest first
+
+    return res.status(200).json({
+      success: true,
+      message: "Faculty list fetched successfully",
+      data: faculties,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const countFaculty = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    const totalFaculty = await InstituteFaculty.countDocuments({
+      userId,
+      isDel: false,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Faculty count fetched successfully",
+      totalFaculty,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };

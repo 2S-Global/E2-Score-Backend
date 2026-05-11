@@ -18,6 +18,9 @@ import {
   getAllCompanyRequirements,
   deleteCompanyRequirement,
   selectStudentForCompany,
+  addFaculty,
+  getFaculty,
+  countFaculty,
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -160,5 +163,13 @@ InstituteProfileRouter.get("/get_company_requirement", userAuth, Institutemid, u
 InstituteProfileRouter.delete("/delete_company_requirement", userAuth, Institutemid, upload.none(), deleteCompanyRequirement);
 
 InstituteProfileRouter.post("/add_student_assigned_company", userAuth, Institutemid, upload.none(), selectStudentForCompany);
+
+// Add company by Institute
+InstituteProfileRouter.post("/add_faculty", userAuth, Institutemid, upload.none(), addFaculty);
+
+InstituteProfileRouter.get("/get_faculty", userAuth, Institutemid, upload.none(), getFaculty);
+
+InstituteProfileRouter.get("/total_faculty", userAuth, Institutemid, upload.none(), countFaculty);
+
 
 export default InstituteProfileRouter;
