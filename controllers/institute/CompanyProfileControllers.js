@@ -10,6 +10,7 @@ import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
 import CompanyRequirement from "../../models/companyRequirementModel.js";
 import SelectedStudent from "../../models/StudentAssignedCompanyModel.js";
 import InstituteFaculty from "../../models/InstituteFacultyModel.js";
+import StudentEvaluation from "../../models/EvaluationModel.js";
 import mongoose from "mongoose";
 
 /**
@@ -1175,7 +1176,7 @@ export const editFaculty = async (req, res) => {
         full_name,
         role,
         department,
-        phone_number,       
+        phone_number,
         email,
         student_count,
         course_count,
@@ -1203,6 +1204,261 @@ export const editFaculty = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+export const addEvaluation = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const {
+      student_name,
+      role,
+      evaluation_type,
+      status,
+      score,
+      date,
+      evaluator_name,
+      notes,
+    } = req.body;
+
+    // 🔹 Basic validation
+    if (
+      !userId ||
+      !student_name ||
+      !role ||
+      !evaluation_type ||
+      !status ||
+      !evaluator_name
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Required fields are missing",
+      });
+    }
+
+    // 🔹 evaluation_type should be array
+    if (!Array.isArray(evaluation_type)) {
+      return res.status(400).json({
+        success: false,
+        message: "evaluation_type must be an array",
+      });
+    }
+
+    // 🔹 Create evaluation
+    const newEvaluation = await StudentEvaluation.create({
+      userId,
+      student_name,
+      role,
+      evaluation_type,
+      status,
+      score,
+      date,
+      evaluator_name,
+      notes,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Student evaluation added successfully",
+      data: newEvaluation,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getEvaluation = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const evaluationId = req.query.id;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    // 🔹 If id is provided then return single evaluation details
+    if (evaluationId) {
+      const evaluation = await StudentEvaluation.findOne({
+        _id: evaluationId,
+        userId,
+        isDel: false,
+      }).populate("student_name", "name");
+
+      if (!evaluation) {
+        return res.status(404).json({
+          success: false,
+          message: "Evaluation not found",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Evaluation details fetched successfully",
+        data: evaluation,
+      });
+    }
+
+    // 🔹 Get all evaluations
+    const evaluations = await StudentEvaluation.find({
+      userId,
+      isDel: false,
+    })
+      .populate("student_name", "name")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Evaluations fetched successfully",
+      data: evaluations,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const editEvaluation = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const evaluationId = req.body.id;
+
+    console.log("Edit Evaluation API is running: ");
+
+    const {
+      student_name,
+      role,
+      evaluation_type,
+      status,
+      score,
+      date,
+      evaluator_name,
+      notes,
+    } = req.body;
+
+    // 🔹 Validation
+    if (!userId || !evaluationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request",
+      });
+    }
+
+    // 🔹 evaluation_type validation
+    if (
+      evaluation_type &&
+      !Array.isArray(evaluation_type)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "evaluation_type must be an array",
+      });
+    }
+
+    // 🔹 Update evaluation
+    const updatedEvaluation =
+      await StudentEvaluation.findOneAndUpdate(
+        {
+          _id: evaluationId,
+          userId,
+          isDel: false,
+        },
+        {
+          student_name,
+          role,
+          evaluation_type,
+          status,
+          score,
+          date,
+          evaluator_name,
+          notes,
+        },
+        {
+          new: true,
+          runValidators: true,
+        }
+      ).populate("student_name", "name");
+
+    // 🔹 Evaluation not found
+    if (!updatedEvaluation) {
+      return res.status(404).json({
+        success: false,
+        message: "Evaluation not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Evaluation updated successfully",
+      data: updatedEvaluation,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const deleteEvaluation = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const evaluationId = req.query.id;
+
+    // 🔹 Validate IDs
+    if (
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !mongoose.Types.ObjectId.isValid(evaluationId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId or evaluationId",
+      });
+    }
+
+    // 🔹 Soft delete evaluation
+    const deletedEvaluation =
+      await StudentEvaluation.findOneAndUpdate(
+        {
+          _id: evaluationId,
+          userId,
+          isDel: false,
+        },
+        {
+          isDel: true,
+        },
+        {
+          new: true,
+        }
+      );
+
+    // 🔹 Evaluation not found
+    if (!deletedEvaluation) {
+      return res.status(404).json({
+        success: false,
+        message: "Evaluation not found or unauthorized",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Evaluation deleted successfully",
+      data: deletedEvaluation,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
     });
   }
 };

@@ -22,6 +22,10 @@ import {
   getFaculty,
   countFaculty,
   editFaculty,
+  addEvaluation,
+  getEvaluation,
+  editEvaluation,
+  deleteEvaluation,
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -174,5 +178,12 @@ InstituteProfileRouter.get("/total_faculty", userAuth, Institutemid, upload.none
 
 InstituteProfileRouter.put("/update_faculty", userAuth, Institutemid, upload.none(), editFaculty);
 
+InstituteProfileRouter.post("/add_evaluation", userAuth, Institutemid, upload.none(), addEvaluation);
+
+InstituteProfileRouter.get("/get_evaluation", userAuth, Institutemid, upload.none(), getEvaluation);
+
+InstituteProfileRouter.put("/update_evaluation", userAuth, Institutemid, upload.none(), editEvaluation);
+
+InstituteProfileRouter.delete("/delete_evaluation", userAuth, Institutemid, upload.none(), deleteEvaluation);
 
 export default InstituteProfileRouter;
