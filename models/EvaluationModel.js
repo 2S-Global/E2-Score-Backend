@@ -16,12 +16,11 @@ const EvaluationSchema = new mongoose.Schema(
 
         role: {
             type: String,
-            required: true,
             trim: true,
         },
 
         evaluation_type: {
-            type: [String],
+            type: String,
             required: true,
         },
 
@@ -48,6 +47,11 @@ const EvaluationSchema = new mongoose.Schema(
         },
 
         notes: {
+            type: String,
+            trim: true,
+        },
+
+        location: {
             type: String,
             trim: true,
         },

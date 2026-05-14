@@ -1221,6 +1221,7 @@ export const addEvaluation = async (req, res) => {
       date,
       evaluator_name,
       notes,
+      location,
     } = req.body;
 
     // 🔹 Basic validation
@@ -1238,11 +1239,37 @@ export const addEvaluation = async (req, res) => {
       });
     }
 
-    // 🔹 evaluation_type should be array
-    if (!Array.isArray(evaluation_type)) {
+    // ✅ Allowed evaluation types
+    const allowedEvaluationTypes = [
+      "Aptitude_Coding",
+      "Technical",
+      "Case_Study",
+      "Group_Discussion",
+      "Behavioral",
+      "Domain_Knowledge",
+    ];
+
+    // ✅ Validate evaluation type
+    if (!allowedEvaluationTypes.includes(evaluation_type)) {
       return res.status(400).json({
         success: false,
-        message: "evaluation_type must be an array",
+        message: "Invalid evaluation type",
+      });
+    }
+
+    // ✅ Prevent duplicate evaluation type
+    const existingEvaluation = await StudentEvaluation.findOne({
+      userId,
+      student_name,
+      evaluation_type,
+      is_del: false,
+    });
+
+    // ✅ If same evaluation_type already exists
+    if (existingEvaluation) {
+      return res.status(400).json({
+        success: false,
+        message: `${evaluation_type} already exists for ${student_name}`,
       });
     }
 
@@ -1257,6 +1284,7 @@ export const addEvaluation = async (req, res) => {
       date,
       evaluator_name,
       notes,
+      location,
     });
 
     return res.status(201).json({
@@ -1306,13 +1334,43 @@ export const getEvaluation = async (req, res) => {
       });
     }
 
-    // 🔹 Get all evaluations
-    const evaluations = await StudentEvaluation.find({
-      userId,
-      isDel: false,
-    })
-      .populate("student_name", "name")
-      .sort({ createdAt: -1 });
+    // ✅ Group by student_name
+    const evaluations = await StudentEvaluation.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          isDel: false,
+        },
+      },
+
+      // Group by student_name
+      {
+        $group: {
+          _id: "$student_name",
+
+          evaluations: {
+            $push: {
+              evaluation_id: "$_id",
+              role: "$role",
+              evaluation_type: "$evaluation_type",
+              status: "$status",
+              score: "$score",
+              date: "$date",
+              evaluator_name: "$evaluator_name",
+              notes: "$notes",
+              location: "$location",
+            },
+          },
+        },
+      },
+
+      // Optional sorting
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -1343,6 +1401,7 @@ export const editEvaluation = async (req, res) => {
       date,
       evaluator_name,
       notes,
+      location,
     } = req.body;
 
     // 🔹 Validation
@@ -1381,6 +1440,7 @@ export const editEvaluation = async (req, res) => {
           date,
           evaluator_name,
           notes,
+          location,
         },
         {
           new: true,
