@@ -49,6 +49,21 @@ const InstituteFacultySchema = new mongoose.Schema(
       default: 0,
     },
 
+    about: {
+      type: String,
+      trim: true,
+    },
+
+    area_of_experties: {
+      type: [String],
+      trim: true,
+    },
+
+    recognitions: {
+      type: String,
+      trim: true,
+    },
+
     isDel: {
       type: Boolean,
       default: false,

@@ -983,6 +983,9 @@ export const addFaculty = async (req, res) => {
       email,
       student_count,
       course_count,
+      about,
+      area_of_experties,
+      recognitions
     } = req.body;
 
     // 🔹 Basic validation
@@ -1026,6 +1029,9 @@ export const addFaculty = async (req, res) => {
       email,
       student_count,
       course_count,
+      about,
+      area_of_experties,
+      recognitions
     });
 
     return res.status(201).json({
@@ -1138,6 +1144,9 @@ export const editFaculty = async (req, res) => {
       email,
       student_count,
       course_count,
+      about,
+      area_of_experties,
+      recognitions
     } = req.body;
 
     // 🔹 Validation
@@ -1180,6 +1189,9 @@ export const editFaculty = async (req, res) => {
         email,
         student_count,
         course_count,
+        about,
+        area_of_experties,
+        recognitions,
       },
       {
         new: true,
@@ -1282,7 +1294,7 @@ export const addEvaluation = async (req, res) => {
       date,
       evaluator_name,
       notes,
-      location,
+      location
     });
 
     return res.status(201).json({
