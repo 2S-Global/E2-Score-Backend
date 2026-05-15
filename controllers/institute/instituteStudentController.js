@@ -1630,3 +1630,60 @@ export const instituteStudentByPlacementReady = async (req, res) => {
     });
   }
 };
+
+export const studentByDepartments = async (req, res) => {
+  try {
+    const instituteId = req.userId;
+
+    const data = await InstitueStudent.aggregate([
+      {
+        $match: {
+          instituteId: new mongoose.Types.ObjectId(instituteId),
+          is_del: false,
+        },
+      },
+
+      {
+        $lookup: {
+          from: "student_course_details",
+          localField: "program",
+          foreignField: "_id",
+          as: "programDetails",
+        },
+      },
+
+      {
+        $unwind: "$programDetails",
+      },
+
+      {
+        $group: {
+          _id: "$programDetails.name",
+
+          totalStudents: {
+            $sum: 1,
+          },
+        },
+      },
+
+      {
+        $project: {
+          _id: 0,
+          department: "$_id",
+          totalStudents: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Department wise students fetched successfully",
+      data,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
