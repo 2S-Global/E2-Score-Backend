@@ -1228,10 +1228,8 @@ export const addEvaluation = async (req, res) => {
     if (
       !userId ||
       !student_name ||
-      !role ||
       !evaluation_type ||
-      !status ||
-      !evaluator_name
+      !status
     ) {
       return res.status(400).json({
         success: false,
@@ -1269,7 +1267,7 @@ export const addEvaluation = async (req, res) => {
     if (existingEvaluation) {
       return res.status(400).json({
         success: false,
-        message: `${evaluation_type} already exists for ${student_name}`,
+        message: `${evaluation_type} already exists.`,
       });
     }
 
@@ -1343,10 +1341,30 @@ export const getEvaluation = async (req, res) => {
         },
       },
 
+      // 🔹 Join with students collection
+      {
+        $lookup: {
+          from: "instituestudents", // collection name in MongoDB
+          localField: "student_name",
+          foreignField: "_id",
+          as: "student",
+        },
+      },
+
+      // 🔹 Convert array to object
+      {
+        $unwind: "$student",
+      },
+
       // Group by student_name
       {
         $group: {
           _id: "$student_name",
+
+          // return student name
+          student_name: {
+            $first: "$student.name",
+          },
 
           evaluations: {
             $push: {

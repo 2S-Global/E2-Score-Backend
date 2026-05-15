@@ -42,7 +42,6 @@ const EvaluationSchema = new mongoose.Schema(
 
         evaluator_name: {
             type: String,
-            required: true,
             trim: true,
         },
 
