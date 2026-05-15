@@ -1505,7 +1505,7 @@ export const instituteStudentByPlacementReady = async (req, res) => {
           instituteId: new Types.ObjectId(user?.userId),
           status: true,
           is_del: false,
-          placementReadySemester: { $gte: 6 }
+          promotedSemester: { $gte: 6 }
         },
       },
       // ✅ ADD THIS
