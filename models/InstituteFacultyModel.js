@@ -64,6 +64,10 @@ const InstituteFacultySchema = new mongoose.Schema(
       trim: true,
     },
 
+    courses_name: {
+      type: [String],
+    },
+
     isDel: {
       type: Boolean,
       default: false,

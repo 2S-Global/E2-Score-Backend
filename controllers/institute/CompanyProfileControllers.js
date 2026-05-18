@@ -985,7 +985,8 @@ export const addFaculty = async (req, res) => {
       course_count,
       about,
       area_of_experties,
-      recognitions
+      recognitions,
+      courses_name
     } = req.body;
 
     // 🔹 Basic validation
@@ -995,9 +996,7 @@ export const addFaculty = async (req, res) => {
       !role ||
       !department ||
       !phone_number ||
-      !email ||
-      !student_count ||
-      !course_count
+      !email
     ) {
       return res.status(400).json({
         success: false,
@@ -1031,7 +1030,8 @@ export const addFaculty = async (req, res) => {
       course_count,
       about,
       area_of_experties,
-      recognitions
+      recognitions,
+      courses_name,
     });
 
     return res.status(201).json({
