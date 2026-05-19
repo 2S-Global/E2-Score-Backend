@@ -11,6 +11,7 @@ import personalDetails from "../../models/personalDetails.js";
 import list_gender from "../../models/monogo_query/genderModel.js";
 import JobPosting from "../../models/company_Models/JobPostingModel.js";
 import CompanyDetails from "../../models/company_Models/companydetails.js";
+import companyBranchDetailsModel from "../../models/companyBranchDetailsModel.js";
 import nodemailer from "nodemailer";
 
 // Get Conunty
@@ -1057,5 +1058,207 @@ export const getVerifiedUser = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+// Company Branch Details API
+export const addCompanyBranch = async (req, res) => {
+  try {
+    const { branchName, branchType, number_of_employees } = req.body;
+
+    const userId = req.userId;
+
+    // Validate required fields
+    if (
+      !userId ||
+      !branchName ||
+      !branchType ||
+      !number_of_employees
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    // Check user exists
+    const user = await User.findOne({
+      _id: userId,
+      is_del: false,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check duplicate branch
+    const existingBranch = await companyBranchDetailsModel.findOne({
+      userId,
+      branchName,
+      is_del: false,
+    });
+
+    if (existingBranch) {
+      return res.status(409).json({
+        success: false,
+        message: "Branch already exists",
+      });
+    }
+
+    // Create new branch
+    const branch = new companyBranchDetailsModel({
+      userId,
+      branchName,
+      branchType,
+      number_of_employees,
+    });
+
+    await branch.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Branch added successfully",
+      data: branch,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+export const listCompanyBranch = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const branchList = await companyBranchDetailsModel
+      .find({
+        userId,
+        is_del: false,
+      })
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Company branch list fetched successfully",
+      data: branchList,
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+export const editCompanyBranch = async (req, res) => {
+  try {
+    const { branchId } = req.query;
+
+    const {
+      branchName,
+      branchType,
+      number_of_employees,
+    } = req.body;
+
+    const userId = req.userId;
+
+    // Check branch exists
+    const existingBranch = await companyBranchDetailsModel.findOne({
+      _id: branchId,
+      userId,
+      is_del: false,
+    });
+
+    if (!existingBranch) {
+      return res.status(404).json({
+        success: false,
+        message: "Branch not found",
+      });
+    }
+
+    // Duplicate branch name check
+    if (branchName) {
+      const duplicateBranch = await companyBranchDetailsModel.findOne({
+        _id: { $ne: branchId },
+        userId,
+        branchName,
+        is_del: false,
+      });
+
+      if (duplicateBranch) {
+        return res.status(409).json({
+          success: false,
+          message: "Branch name already exists",
+        });
+      }
+    }
+
+    // Update branch
+    existingBranch.branchName =
+      branchName || existingBranch.branchName;
+
+    existingBranch.branchType =
+      branchType || existingBranch.branchType;
+
+    existingBranch.number_of_employees =
+      number_of_employees || existingBranch.number_of_employees;
+
+    await existingBranch.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Branch updated successfully",
+      data: existingBranch,
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+export const deleteCompanyBranch = async (req, res) => {
+  try {
+    const { branchId } = req.query;
+
+    const userId = req.userId;
+
+    // Find branch
+    const branch = await companyBranchDetailsModel.findOne({
+      _id: branchId,
+      userId,
+      is_del: false,
+    });
+
+    if (!branch) {
+      return res.status(404).json({
+        success: false,
+        message: "Branch not found",
+      });
+    }
+
+    // Soft delete
+    branch.is_del = true;
+
+    await branch.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Branch deleted successfully",
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };

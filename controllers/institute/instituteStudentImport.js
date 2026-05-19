@@ -126,7 +126,7 @@ export const insStudentImport = async (req, res) => {
       //insert into DB
       await InstitueStudent.findOneAndUpdate(
         { USN, instituteId: user.userId, admissionYear },
-        { $set: { name, USN, program, gender, dob: dobYMD, admissionYear, tenTh, twelveTh, semester, instituteId: user.userId ,presentYear:currentYear,promotedYear:currentYear,promotedSemester:semester} },
+        { $set: { name, USN, program, gender, dob: dobYMD, admissionYear, tenTh, twelveTh, semester, instituteId: user.userId, presentYear: currentYear, promotedYear: currentYear, promotedSemester: semester } },
         {
           upsert: true,
           new: true,
@@ -178,6 +178,8 @@ export const addInstituteStudentManually = async (req, res) => {
       program,
       semesters,
       admissionYear,
+      email,
+      phoneNumber,
     } = req.body;
 
     console.log("all data: ", req.body);
@@ -268,10 +270,10 @@ export const addInstituteStudentManually = async (req, res) => {
     console.log("Semester: ", semesters);
 
     const existingData = await InstitueStudent.findOne({
-            USN,
-            instituteId: user.userId,
-            admissionYear
-          })
+      USN,
+      instituteId: user.userId,
+      admissionYear
+    })
 
     const student = await InstitueStudent.findOneAndUpdate(
       {
@@ -287,11 +289,13 @@ export const addInstituteStudentManually = async (req, res) => {
           dob: dobYMD,
           tenTh,
           twelveTh,
+          email,
+          phoneNumber,
           program: new mongoose.Types.ObjectId(program), // ✅ FIX
           admissionYear,
           instituteId: user.userId,
-          promotedYear:currentYear,
-          promotedSemester:(existingData?.promotedSemester && existingData?.promotedSemester>semesters?.length)?existingData?.promotedSemester:semesters?.length
+          promotedYear: currentYear,
+          promotedSemester: (existingData?.promotedSemester && existingData?.promotedSemester > semesters?.length) ? existingData?.promotedSemester : semesters?.length
         }
       },
       {
@@ -321,35 +325,35 @@ export const addInstituteStudentManually = async (req, res) => {
       };
     });
 
-    let sem=await InstitueStudentSemester.insertMany(semesterData);
+    let sem = await InstitueStudentSemester.insertMany(semesterData);
 
-    if(sem){
-        let avgMarks=await instituteStudentAvgMarks(req?.user,student._id)
-        console.log('avgMarks',avgMarks?.[0]?.averagePercentage);
-        if(avgMarks?.[0]?.averagePercentage){
-           let  res=await InstitueStudent.findOneAndUpdate(
-            {
-              USN,
-              instituteId: user.userId,
-              admissionYear
-            },
-            {
-              $set: {
-                graduationMarks:avgMarks?.[0]?.averagePercentage
-              }
-            },
-            {
-              upsert: true,
-              new: true,
-              runValidators: true
+    if (sem) {
+      let avgMarks = await instituteStudentAvgMarks(req?.user, student._id)
+      console.log('avgMarks', avgMarks?.[0]?.averagePercentage);
+      if (avgMarks?.[0]?.averagePercentage) {
+        let res = await InstitueStudent.findOneAndUpdate(
+          {
+            USN,
+            instituteId: user.userId,
+            admissionYear
+          },
+          {
+            $set: {
+              graduationMarks: avgMarks?.[0]?.averagePercentage
             }
-         )
-         console.log(res)
-        }
-       
+          },
+          {
+            upsert: true,
+            new: true,
+            runValidators: true
+          }
+        )
+        console.log(res)
+      }
+
     }
 
-    
+
 
     // -----------------------------
     // Success log
