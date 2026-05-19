@@ -35,6 +35,10 @@ import {
   addEmployeeVerificationDetails,
   getVerifiedUser,
   getCompanyLogoByJobId,
+  addCompanyBranch,
+  listCompanyBranch,
+  editCompanyBranch,
+  deleteCompanyBranch
 } from "../../controllers/company/CompanyBranchControllers.js";
 
 // Middleware
@@ -209,10 +213,40 @@ CompanyProfileRouter.get(
   getVerifiedUser
 );
 
-
 CompanyProfileRouter.get(
   "/get-company-logo-by-job",
   getCompanyLogoByJobId
+);
+
+CompanyProfileRouter.post(
+  "/add_company_branch",
+  upload.none(),
+  userAuth,
+  Companymid,
+  addCompanyBranch
+);
+
+CompanyProfileRouter.get(
+  "/get_company_branch_details",
+  userAuth,
+  Companymid,
+  listCompanyBranch
+);
+
+CompanyProfileRouter.put(
+  "/edit_company_branch",
+  upload.none(),
+  userAuth,
+  Companymid,
+  editCompanyBranch
+);
+
+CompanyProfileRouter.delete(
+  "/delete_company_branch",
+  upload.none(),
+  userAuth,
+  Companymid,
+  deleteCompanyBranch
 );
 
 export default CompanyProfileRouter;
