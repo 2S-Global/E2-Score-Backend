@@ -36,6 +36,8 @@ export const processCSV = (buffer) => {
           dob: rowData?.dob,
           tenTh: rowData['10th(%)'],
           twelveTh: rowData['12th(%)'],
+          email:rowData?.email,
+          phoneNumber:rowData?.phoneNumber
         });
       })
       .on('end', () => resolve(results))
@@ -68,6 +70,8 @@ export const insStudentImport = async (req, res) => {
         dob,
         tenTh,
         twelveTh,
+        email,
+        phoneNumber
       } = data[i];
 
       const logEntry = {
@@ -126,7 +130,7 @@ export const insStudentImport = async (req, res) => {
       //insert into DB
       await InstitueStudent.findOneAndUpdate(
         { USN, instituteId: user.userId, admissionYear },
-        { $set: { name, USN, program, gender, dob: dobYMD, admissionYear, tenTh, twelveTh, semester, instituteId: user.userId ,presentYear:currentYear,promotedYear:currentYear,promotedSemester:semester} },
+        { $set: { name, USN, program, gender, dob: dobYMD, admissionYear, tenTh, twelveTh, semester, email,phoneNumber, instituteId: user.userId ,presentYear:currentYear,promotedYear:currentYear,promotedSemester:semester} },
         {
           upsert: true,
           new: true,
