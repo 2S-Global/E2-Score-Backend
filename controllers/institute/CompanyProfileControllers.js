@@ -454,6 +454,7 @@ export const addCompanyByInstitute = async (req, res) => {
       initialOpenPositions,
       notes,
       address,
+      sectors,
     } = req.body;
 
     // 🔹 Basic validation
@@ -498,6 +499,7 @@ export const addCompanyByInstitute = async (req, res) => {
       initialOpenPositions,
       notes,
       address,
+      sectors
     });
 
     return res.status(201).json({
@@ -531,6 +533,7 @@ export const editCompanyByInstitute = async (req, res) => {
       initialOpenPositions,
       notes,
       address,
+      sectors,
     } = req.body;
 
     // 🔹 Validation
@@ -576,6 +579,7 @@ export const editCompanyByInstitute = async (req, res) => {
         initialOpenPositions,
         notes,
         address,
+        sectors
       },
       {
         new: true,

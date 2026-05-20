@@ -54,7 +54,10 @@ const CompanyByInstituteSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-
+    sectors: {
+      type: [String],
+      trim: true,
+    },
     notes: {
       type: String,
       trim: true,
