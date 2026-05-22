@@ -391,7 +391,7 @@ export const registerCompany = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "30d",
-      }
+      },
     );
 
     // Email Verification mail starts from here
@@ -500,7 +500,7 @@ export const registerCompany = async (req, res) => {
         name: 1,
         email: 1,
         profilePicture: 1,
-      }
+      },
     ).lean();
 
     // 6. Build result based on employments (not unique users)
@@ -530,15 +530,18 @@ export const registerCompany = async (req, res) => {
          alt="profile" 
          style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
     <div>
-      <h3 style="margin:0; font-size:16px; color:#0073b1;">${emp.name || "N/A"
-            }</h3>
-      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${emp.jobTitle || "Unknown"
-            }</p>
-      <p style="margin:2px 0; font-size:13px; color:#555;">${emp.email || ""
-            }</p>
+      <h3 style="margin:0; font-size:16px; color:#0073b1;">${
+        emp.name || "N/A"
+      }</h3>
+      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${
+        emp.jobTitle || "Unknown"
+      }</p>
+      <p style="margin:2px 0; font-size:13px; color:#555;">${
+        emp.email || ""
+      }</p>
     </div>
   </div>
-`
+`,
         )
         .join("");
 
@@ -909,8 +912,8 @@ export const verifyEmail = async (req, res) => {
             "Verification Failed",
             "User Not Found",
             "The user associated with this token does not exist.",
-            "red"
-          )
+            "red",
+          ),
         );
     }
 
@@ -922,8 +925,8 @@ export const verifyEmail = async (req, res) => {
             "Email Already Verified",
             "You're Already Verified!",
             "Your email address has already been verified. You can log in now.",
-            "green"
-          )
+            "green",
+          ),
         );
     }
 
@@ -937,8 +940,8 @@ export const verifyEmail = async (req, res) => {
           "Email Verified",
           "Success!",
           "Your email has been verified successfully. You can now access all features.",
-          "#28a745"
-        )
+          "#28a745",
+        ),
       );
   } catch (error) {
     console.error(error);
@@ -949,8 +952,8 @@ export const verifyEmail = async (req, res) => {
           "Invalid or Expired Token",
           "Verification Failed",
           "The verification link is invalid or has expired. Please try again or contact support.",
-          "red"
-        )
+          "red",
+        ),
       );
   }
 };
@@ -1036,8 +1039,8 @@ export const acceptRejectInterviewInvitation = async (req, res) => {
             "Verification Failed",
             "User Not Found",
             "The user associated with this token does not exist.",
-            "red"
-          )
+            "red",
+          ),
         );
     }
 
@@ -1049,8 +1052,8 @@ export const acceptRejectInterviewInvitation = async (req, res) => {
             "Email Already Verified",
             "You're Already Verified!",
             "Your email address has already been verified. You can log in now.",
-            "green"
-          )
+            "green",
+          ),
         );
     }
 
@@ -1064,8 +1067,8 @@ export const acceptRejectInterviewInvitation = async (req, res) => {
           "Email Verified",
           "Success!",
           "Your email has been verified successfully. You can now access all features.",
-          "#28a745"
-        )
+          "#28a745",
+        ),
       );
   } catch (error) {
     console.error(error);
@@ -1076,8 +1079,8 @@ export const acceptRejectInterviewInvitation = async (req, res) => {
           "Invalid or Expired Token",
           "Verification Failed",
           "The verification link is invalid or has expired. Please try again or contact support.",
-          "red"
-        )
+          "red",
+        ),
       );
   }
 };
@@ -1181,10 +1184,7 @@ export const changePassword = async (req, res) => {
     }
 
     // Compare current password
-    const isMatch = await bcrypt.compare(
-      currentPassword,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -1212,13 +1212,35 @@ export const changePassword = async (req, res) => {
       success: true,
       message: "Password changed successfully",
     });
-
   } catch (error) {
     console.error("Change password error:", error);
 
     return res.status(500).json({
       success: false,
       message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const logoutUser = async (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: false,
+      secure: true,
+      sameSite: "None",
+      domain: ".geisil.com",
+      path: "/",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Logout failed",
       error: error.message,
     });
   }

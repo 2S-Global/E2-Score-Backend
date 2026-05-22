@@ -15,6 +15,7 @@ import {
   listCompaniesAll,
   getMyProfile,
   changePassword,
+  logoutUser,
 } from "../controllers/AuthController.js"; // Adjust the path according to your project structure
 // Initialize dotenv to load environment variables
 dotenv.config();
@@ -45,6 +46,7 @@ AuthRouter.post("/company-register", upload.none(), registerCompany);
 AuthRouter.post("/institute-register", upload.none(), registerInstitute);
 
 AuthRouter.post("/forgotpass", upload.none(), forgotPassword);
+AuthRouter.post("/logout", upload.none(), logoutUser);
 
 AuthRouter.post("/changepassword", upload.none(), userAuth, changePassword);
 
