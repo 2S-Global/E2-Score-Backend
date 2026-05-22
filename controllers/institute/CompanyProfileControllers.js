@@ -1150,7 +1150,8 @@ export const editFaculty = async (req, res) => {
       course_count,
       about,
       area_of_experties,
-      recognitions
+      recognitions,
+      courses_name,
     } = req.body;
 
     // 🔹 Validation
