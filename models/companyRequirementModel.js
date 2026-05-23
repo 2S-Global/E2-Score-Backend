@@ -14,7 +14,6 @@ const CompanyRequirementSchema = new mongoose.Schema(
         },
         examinationType: {
             type: String, // e.g. "10:30 AM"
-            required: true,
         },
         remarks: {
             type: String, // e.g. "10:30 AM"
@@ -43,6 +42,10 @@ const CompanyRequirementSchema = new mongoose.Schema(
         },
         ratings: {
             type: Number,
+        },
+        year: {
+            type: Number,
+            default: () => new Date().getFullYear(),
         },
         isDel: {
             type: Boolean,

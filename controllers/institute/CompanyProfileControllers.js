@@ -704,17 +704,13 @@ export const addCompanyRequirement = async (req, res) => {
       role,
       numberOfOpenings,
       numberOfHired,
-      ratings
+      ratings,
     } = req.body;
 
     // Validation
     if (
       !userId ||
-      !companyName ||
-      !examinationType ||
-      !date ||
-      !time ||
-      !numberOfCandidates
+      !companyName
     ) {
       return res.status(400).json({
         success: false,
@@ -736,7 +732,6 @@ export const addCompanyRequirement = async (req, res) => {
     const newRequirement = new CompanyRequirement({
       userId,
       companyName,
-      examinationType,
       date,
       time,
       numberOfCandidates,
