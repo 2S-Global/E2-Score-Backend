@@ -20,19 +20,15 @@ const CompanyRequirementSchema = new mongoose.Schema(
         },
         role: {
             type: String,
-            required: true,
         },
         date: {
             type: Date,
-            required: true,
         },
         time: {
-            type: String, // e.g. "10:30 AM"
-            required: true,
+            type: String,
         },
         numberOfCandidates: {
             type: Number,
-            required: true,
         },
         numberOfOpenings: {
             type: Number,
