@@ -13,10 +13,10 @@ const CompanyRequirementSchema = new mongoose.Schema(
             required: true,
         },
         examinationType: {
-            type: String, // e.g. "10:30 AM"
+            type: String,
         },
         remarks: {
-            type: String, // e.g. "10:30 AM"
+            type: String,
         },
         role: {
             type: String,
