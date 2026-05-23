@@ -701,7 +701,10 @@ export const addCompanyRequirement = async (req, res) => {
       time,
       numberOfCandidates,
       remarks,
-      role
+      role,
+      numberOfOpenings,
+      numberOfHired,
+      ratings
     } = req.body;
 
     // Validation
@@ -738,7 +741,10 @@ export const addCompanyRequirement = async (req, res) => {
       time,
       numberOfCandidates,
       remarks,
-      role
+      role,
+      numberOfOpenings,
+      numberOfHired,
+      ratings
     });
 
     const savedData = await newRequirement.save();
@@ -769,6 +775,9 @@ export const updateCompanyRequirement = async (req, res) => {
       date,
       time,
       numberOfCandidates,
+      numberOfOpenings,
+      numberOfHired,
+      ratings
     } = req.body;
 
     // Validate IDs
@@ -799,6 +808,12 @@ export const updateCompanyRequirement = async (req, res) => {
     if (time) updateData.time = time;
     if (numberOfCandidates)
       updateData.numberOfCandidates = numberOfCandidates;
+    if (numberOfOpenings)
+      updateData.numberOfOpenings = numberOfOpenings;
+    if (numberOfHired)
+      updateData.numberOfHired = numberOfHired;
+    if (ratings)
+      updateData.ratings = ratings;
 
     // Find and update
     const updatedRequirement = await CompanyRequirement.findOneAndUpdate(

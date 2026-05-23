@@ -35,6 +35,15 @@ const CompanyRequirementSchema = new mongoose.Schema(
             type: Number,
             required: true,
         },
+        numberOfOpenings: {
+            type: Number,
+        },
+        numberOfHired: {
+            type: Number,
+        },
+        ratings: {
+            type: Number,
+        },
         isDel: {
             type: Boolean,
             default: false,
