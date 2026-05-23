@@ -19,6 +19,7 @@ import {
   getActiveCompanies,
   instituteStudentByPlacementReady,
   studentByDepartments,
+  instituteStudentDetails,
 } from "../../controllers/institute/instituteStudentController.js";
 
 import {
@@ -105,6 +106,13 @@ InstituteStudentRouter.get(
   userAuth,
   Institutemid,
   instituteStudent
+);
+
+InstituteStudentRouter.get(
+  "/institute-student-details-by-id",
+  userAuth,
+  Institutemid,
+  instituteStudentDetails
 );
 
 // Add Custom Course

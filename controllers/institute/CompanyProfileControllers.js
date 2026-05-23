@@ -38,6 +38,7 @@ import mongoose from "mongoose";
  */
 export const AddorUpdateCompany = async (req, res) => {
   try {
+    console.log("Add ppp");
     const {
       name,
       email,
@@ -990,7 +991,9 @@ export const addFaculty = async (req, res) => {
       about,
       area_of_experties,
       recognitions,
-      courses_name
+      courses_name,
+      office_hours,
+      address
     } = req.body;
 
     // 🔹 Basic validation
@@ -1036,6 +1039,8 @@ export const addFaculty = async (req, res) => {
       area_of_experties,
       recognitions,
       courses_name,
+      office_hours,
+      address
     });
 
     return res.status(201).json({
@@ -1053,6 +1058,8 @@ export const addFaculty = async (req, res) => {
 
 export const getFaculty = async (req, res) => {
   try {
+
+    console.log("API is hitting successfully ! ");
     const userId = req.userId;
     const facultyId = req.query.id;
 
@@ -1078,10 +1085,24 @@ export const getFaculty = async (req, res) => {
         });
       }
 
+      // Fetch corresponding course details
+      const courses = await student_course_details.find(
+        {
+          _id: { $in: faculty.courses_name },
+        },
+        {
+          name: 1,
+        }
+      );
+
+      const facultyData = faculty.toObject();
+
+      facultyData.course_details = courses;
+
       return res.status(200).json({
         success: true,
         message: "Faculty details fetched successfully",
-        data: faculty,
+        data: facultyData,
       });
     }
 
@@ -1152,6 +1173,8 @@ export const editFaculty = async (req, res) => {
       area_of_experties,
       recognitions,
       courses_name,
+      office_hours,
+      address
     } = req.body;
 
     // 🔹 Validation
@@ -1197,6 +1220,8 @@ export const editFaculty = async (req, res) => {
         about,
         area_of_experties,
         recognitions,
+        office_hours,
+        address
       },
       {
         new: true,

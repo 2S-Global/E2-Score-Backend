@@ -68,6 +68,14 @@ const InstituteFacultySchema = new mongoose.Schema(
       type: [String],
     },
 
+    office_hours: {
+      type: String
+    },
+
+    address: {
+      type: String
+    },
+
     isDel: {
       type: Boolean,
       default: false,
