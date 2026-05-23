@@ -1195,23 +1195,6 @@ export const editFaculty = async (req, res) => {
       });
     }
 
-    // 🔹 Duplicate email check
-    if (email) {
-      const duplicate = await InstituteFaculty.findOne({
-        userId,
-        email,
-        _id: { $ne: facultyId },
-        isDel: false,
-      });
-
-      if (duplicate) {
-        return res.status(409).json({
-          success: false,
-          message: "Another faculty member with this email already exists",
-        });
-      }
-    }
-
     // 🔹 Update faculty
     const updatedFaculty = await InstituteFaculty.findOneAndUpdate(
       {
@@ -1230,6 +1213,7 @@ export const editFaculty = async (req, res) => {
         about,
         area_of_experties,
         recognitions,
+        courses_name,
         office_hours,
         address
       },
