@@ -43,6 +43,15 @@ const CompanyRequirementSchema = new mongoose.Schema(
             type: Number,
             default: () => new Date().getFullYear(),
         },
+        courses: {
+            type: [String],
+        },
+        tenth: {
+            type: Number,
+        },
+        twelvth: {
+            type: Number,
+        },
         isDel: {
             type: Boolean,
             default: false,

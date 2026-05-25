@@ -705,6 +705,9 @@ export const addCompanyRequirement = async (req, res) => {
       numberOfOpenings,
       numberOfHired,
       ratings,
+      courses,
+      tenth,
+      twelvth
     } = req.body;
 
     // Validation
@@ -739,7 +742,10 @@ export const addCompanyRequirement = async (req, res) => {
       role,
       numberOfOpenings,
       numberOfHired,
-      ratings
+      ratings,
+      courses,
+      tenth,
+      twelvth
     });
 
     const savedData = await newRequirement.save();
