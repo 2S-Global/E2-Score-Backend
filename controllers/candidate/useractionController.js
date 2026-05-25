@@ -19,6 +19,7 @@ import list_education_boards from "../../models/monogo_query/educationBoardModel
 import list_university_colleges from "../../models/monogo_query/universityCollegesModel.js";
 import list_university_course from "../../models/monogo_query/universityCourseModel.js";
 import list_school_list from "../../models/monogo_query/schoolListModel.js";
+import CompanyDetails from "../../models/company_Models/companydetails.js";
 import nodemailer from "nodemailer";
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -1073,6 +1074,7 @@ async function getOrInsertId(
  */
 export const submitUserEducation = async (req, res) => {
   try {
+    console.log("Chandra Sarkar successfully running ! ");
     const data = req.body;
     const user = req.userId;
     const levelId = data.level;
@@ -1082,6 +1084,9 @@ export const submitUserEducation = async (req, res) => {
     let certificateUrl = null;
 
     const userdtl = await User.findById(user);
+
+    console.log("All Data is present here - ", data);
+    console.log("institute name - ", data.institute_name);
 
     // Upload transcript file if available
     if (transcript) {
@@ -1228,6 +1233,8 @@ export const submitUserEducation = async (req, res) => {
       },
     });
 
+    console.log("This is the Actual Mail: ", userdtl.email);
+
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
@@ -1237,10 +1244,49 @@ export const submitUserEducation = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
+    // New code added here
+
+    const company = await CompanyDetails.findOne({
+      name: data.institute_name.trim(),
+    });
+
+    console.log("Company Details:", company);
+
+    if (company?.email) {
+      const companyHtml = `
+    <div style="font-family: Arial, sans-serif;">
+      <h2>Institute Reference Notification</h2>
+
+      <p>Hello,</p>
+
+      <p>
+        Candidate <strong>${userdtl.name}</strong> has added
+        <strong>${data.institute_name}</strong> as their institute name
+        in their education details.
+      </p>
+
+      <p>Please review this information.</p>
+
+      <br/>
+
+      <p>
+        Regards,<br/>
+        Geisil Team
+      </p>
+    </div>
+  `;
+
+      await transporter.sendMail({
+        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+        to: company.email,
+        subject: "Candidate Added Your Institute Name",
+        html: companyHtml,
+      });
+    }
+
     res.status(201).json({
-      message: `Education ${
-        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-      } successfully`,
+      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+        } successfully`,
       data: savedRecord,
     });
   } catch (error) {
@@ -1485,9 +1531,8 @@ export const updateUserEducation = async (req, res) => {
     await transporter.sendMail(mailOptions);
 
     res.status(201).json({
-      message: `Education ${
-        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-      } successfully`,
+      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+        } successfully`,
       data: savedRecord,
     });
   } catch (error) {
@@ -1906,27 +1951,27 @@ export const getCareerProfileBySql = async (req, res) => {
       await Promise.all([
         CurrentIndustry
           ? db_sql.execute("SELECT job_industry FROM industries WHERE id = ?", [
-              CurrentIndustry,
-            ])
+            CurrentIndustry,
+          ])
           : Promise.resolve([[]]),
         CurrentDepartment
           ? db_sql.execute(
-              "SELECT job_department FROM departments WHERE id = ?",
-              [CurrentDepartment]
-            )
+            "SELECT job_department FROM departments WHERE id = ?",
+            [CurrentDepartment]
+          )
           : Promise.resolve([[]]),
         JobRole
           ? db_sql.execute("SELECT job_role FROM job_roles WHERE id = ?", [
-              JobRole,
-            ])
+            JobRole,
+          ])
           : Promise.resolve([[]]),
         locationIds.length > 0
           ? db_sql.execute(
-              `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
-                .map(() => "?")
-                .join(", ")})`,
-              locationIds
-            )
+            `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
+              .map(() => "?")
+              .join(", ")})`,
+            locationIds
+          )
           : Promise.resolve([[]]),
       ]);
 
@@ -2009,24 +2054,24 @@ export const getCareerProfile = async (req, res) => {
       await Promise.all([
         CurrentIndustry
           ? list_industries
-              .findOne({ id: CurrentIndustry })
-              .select("job_industry")
-              .lean()
+            .findOne({ id: CurrentIndustry })
+            .select("job_industry")
+            .lean()
           : null,
         CurrentDepartment
           ? list_department
-              .findOne({ id: CurrentDepartment })
-              .select("job_department")
-              .lean()
+            .findOne({ id: CurrentDepartment })
+            .select("job_department")
+            .lean()
           : null,
         JobRole
           ? list_job_role.findById(JobRole).select("job_role").lean()
           : null,
         locationIds.length > 0
           ? list_india_cities
-              .find({ _id: { $in: locationIds } })
-              .select("city_name")
-              .lean()
+            .find({ _id: { $in: locationIds } })
+            .select("city_name")
+            .lean()
           : [],
       ]);
 
