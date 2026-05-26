@@ -2069,7 +2069,7 @@ export const getCareerProfile = async (req, res) => {
           : null,
         locationIds.length > 0
           ? list_india_cities
-            .find({ _id: { $in: locationIds } })
+            .find({ id: { $in: locationIds } })
             .select("city_name")
             .lean()
           : [],
