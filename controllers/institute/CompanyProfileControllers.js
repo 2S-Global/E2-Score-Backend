@@ -1559,6 +1559,123 @@ export const getEvaluation = async (req, res) => {
   }
 };
 
+export const getEvaluationByDecending = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const evaluationId = req.query.id;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    // 🔹 If id is provided then return single evaluation details
+    if (evaluationId) {
+      const evaluation = await StudentEvaluation.findOne({
+        _id: evaluationId,
+        userId,
+        isDel: false,
+      }).populate("student_name", "name");
+
+      if (!evaluation) {
+        return res.status(404).json({
+          success: false,
+          message: "Evaluation not found",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Evaluation details fetched successfully",
+        data: evaluation,
+      });
+    }
+
+    // ✅ Group by student_name
+    const evaluations = await StudentEvaluation.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          isDel: false,
+        },
+      },
+
+      // 🔹 Join with students collection
+      {
+        $lookup: {
+          from: "instituestudents", // collection name in MongoDB
+          localField: "student_name",
+          foreignField: "_id",
+          as: "student",
+        },
+      },
+
+      // 🔹 Convert array to object
+      {
+        $unwind: "$student",
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      // Group by student_name
+      {
+        $group: {
+          _id: "$student_name",
+
+          // return student name
+          student_name: {
+            $first: "$student.name",
+          },
+
+          latestEvaluationDate: {
+            $first: "$createdAt",
+          },
+
+          evaluations: {
+            $push: {
+              evaluation_id: "$_id",
+              role: "$role",
+              evaluation_type: "$evaluation_type",
+              status: "$status",
+              score: "$score",
+              date: "$date",
+              evaluator_name: "$evaluator_name",
+              notes: "$notes",
+              location: "$location",
+            },
+          },
+        },
+      },
+      {
+        $sort: {
+          latestEvaluationDate: -1,
+        },
+      },
+      // Optional sorting
+      // {
+      //   $sort: {
+      //     _id: 1,
+      //   },
+      // },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Evaluations fetched successfully",
+      data: evaluations,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const editEvaluation = async (req, res) => {
   try {
     const userId = req.userId;

@@ -26,6 +26,7 @@ import {
   getEvaluation,
   editEvaluation,
   deleteEvaluation,
+  getEvaluationByDecending,
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -181,6 +182,8 @@ InstituteProfileRouter.put("/update_faculty", userAuth, Institutemid, upload.non
 InstituteProfileRouter.post("/add_evaluation", userAuth, Institutemid, upload.none(), addEvaluation);
 
 InstituteProfileRouter.get("/get_evaluation", userAuth, Institutemid, upload.none(), getEvaluation);
+
+InstituteProfileRouter.get("/get_evaluation_by_decending", userAuth, Institutemid, upload.none(), getEvaluationByDecending);
 
 InstituteProfileRouter.put("/update_evaluation", userAuth, Institutemid, upload.none(), editEvaluation);
 
