@@ -34,7 +34,8 @@ import {
   getUserVerificationList,
   getNonTechSkills,
   getMatchingCourses,
-  getCityBasedOnCountry
+  getCityBasedOnCountry,
+  getCities,
 } from "../../controllers/mongo/mongoDropdownController.js";
 
 const MongoDropdownRouter = express.Router();
@@ -122,6 +123,7 @@ MongoDropdownRouter.get("/get_job_roles", getJobRoles);
 
 //Get India Cities
 MongoDropdownRouter.get("/get_india_cities", getIndiaCities);
+MongoDropdownRouter.get("/get_cities", getCities);
 
 //Get Tech Skills
 MongoDropdownRouter.get("/get_tech_skills", getTechSkills);

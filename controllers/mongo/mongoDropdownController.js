@@ -1383,7 +1383,70 @@ export const getIndiaCities = async (req, res) => {
   }
 };
 
+export const getCities = async (req, res) => {
+  try {
+    // const { stateId } = req.query;
 
+    // if (!stateId) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "stateId is required",
+    //   });
+    // }
+
+    const cities = await list_india_cities.aggregate([
+      {
+        $match: {
+          is_del: 0,
+          is_active: 1,
+          // stateId: { $in: [Number(stateId), stateId] }, // ✅ safe match
+        },
+      },
+      {
+        $addFields: {
+          remote_priority: {
+            $cond: [
+              {
+                $regexMatch: {
+                  input: { $toLower: "$city_name" },
+                  regex: "remote",
+                },
+              },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+      {
+        $sort: {
+          popular_location: -1,
+          remote_priority: 1,
+          city_name: 1,
+        },
+      },
+      {
+        $project: {
+          id: 1,
+          city_name: 1,
+          popular_location: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: cities,
+      message: "Cities by state",
+    });
+  } catch (error) {
+    console.error("MongoDB error →", error);
+    res.status(500).json({
+      success: false,
+      message: "Database query failed",
+    });
+  }
+};
 
 /**
  * @description Get all tech skills from the database
