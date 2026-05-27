@@ -96,9 +96,13 @@ export const submitPersonalDetails = async (req, res) => {
       changeListHTML += `<li>Hometown</li>`;
     }
 
-    if (new Date(candidate.dob).getTime() !== new Date(data.dob).getTime()) {
-      changeListHTML += `<li>Date of Birth</li>`;
-    }
+  if (
+    candidate &&
+    candidate.dob &&
+    new Date(candidate.dob).getTime() !== new Date(data.dob).getTime()
+  ) {
+    changeListHTML += `<li>Date of Birth</li>`;
+  }
 
     await candidateDetails.findOneAndUpdate(
       { userId: userId },
