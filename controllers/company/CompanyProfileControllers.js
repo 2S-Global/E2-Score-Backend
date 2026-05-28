@@ -151,10 +151,10 @@ export const AddorUpdateCompany = async (req, res) => {
         : null,
       cover
         ? uploadToCloudinary(
-            cover.buffer,
-            "e2score/cover",
-            `cover-${Date.now()}`
-          )
+          cover.buffer,
+          "e2score/cover",
+          `cover-${Date.now()}`
+        )
         : null,
     ]);
 
@@ -233,6 +233,15 @@ export const GetCompanyDetails = async (req, res) => {
         .select("job_industry")
         .lean();
       company.industryName = industryDoc?.job_industry || industryName;
+    }
+
+    let company_type_name = "Not specified";
+    if (company?.company_type) {
+      const industryDoc = await CompanyType
+        .findOne({ _id: company.company_type })
+        .lean();
+
+      company.company_type_name = industryDoc?.Legal_Structure || company_type_name;
     }
 
     if (company) {
