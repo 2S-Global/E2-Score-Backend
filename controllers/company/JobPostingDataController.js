@@ -1629,6 +1629,42 @@ export const getJobPreviewDetails = async (req, res) => {
 
     //Optimized return statement started
 
+    const applicationStats = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: new mongoose.Types.ObjectId(job._id),
+          isDel: false
+        }
+      },
+      {
+        $group: {
+          _id: null,
+
+          total_job_applicants: { $sum: 1 },
+
+          total_shortlisted: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "shortlisted"] }, 1, 0]
+            }
+          },
+
+          total_interview_scheduled: {
+            $sum: {
+              $cond: [{ $eq: ["$interviewInvitationAccepted", true] }, 1, 0]
+            }
+          },
+
+          total_rejected: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "rejected"] }, 1, 0]
+            }
+          }
+        }
+      }
+    ]);
+
+    const stats = applicationStats[0] || {};
+
     const response = {
       jobId: job._id,
       title: job.jobTitle,
@@ -1657,6 +1693,10 @@ export const getJobPreviewDetails = async (req, res) => {
       coverImage: coverImage,
       companyWebsite: companyWebsite,
       companyName: companyDetails?.name || "",
+      totalApplicants: stats.total_job_applicants || 0,
+      totalShortlisted: stats.total_shortlisted || 0,
+      totalInterviewScheduled: stats.total_interview_scheduled || 0,
+      totalRejected: stats.total_rejected || 0,
       // company: {
       //   name: company.name,
       //   phoneNumber: company.phone_number,

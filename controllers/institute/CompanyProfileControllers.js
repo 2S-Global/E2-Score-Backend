@@ -775,6 +775,160 @@ export const getAllCompaniesByInstitute = async (req, res) => {
   }
 };
 
+export const getAllCompaniesByInstituteByLatestRequirement1234 = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const companyId = req.query.id;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    // 🔹 If id is provided then return single company details
+    if (companyId) {
+      const company = await CompanyByInstitute.findOne({
+        _id: companyId,
+        userId,
+        isDel: false,
+      });
+
+      if (!company) {
+        return res.status(404).json({
+          success: false,
+          message: "Company not found",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Company details fetched successfully",
+        data: company,
+      });
+    }
+
+    const companies = await CompanyByInstitute.find({
+      userId,
+      isDel: false,
+    }).sort({ createdAt: -1 }); // latest first
+
+    return res.status(200).json({
+      success: true,
+      message: "Company list fetched successfully",
+      data: companies,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getAllCompaniesByInstituteByLatestRequirement = async (
+  req,
+  res
+) => {
+  try {
+    const userId = req.userId;
+    const companyId = req.query.id;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    // Single company details
+    if (companyId) {
+      const company = await CompanyByInstitute.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(companyId),
+            userId: new mongoose.Types.ObjectId(userId),
+            isDel: false,
+          },
+        },
+        {
+          $lookup: {
+            from: "companyrequirements",
+            localField: "_id",
+            foreignField: "companyName",
+            as: "requirements",
+          },
+        },
+        {
+          $addFields: {
+            latestRequirementDate: {
+              $max: "$requirements.createdAt",
+            },
+          },
+        },
+      ]);
+
+      if (!company.length) {
+        return res.status(404).json({
+          success: false,
+          message: "Company not found",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Company details fetched successfully",
+        data: company[0],
+      });
+    }
+
+    // All companies sorted by latest requirement
+    const companies = await CompanyByInstitute.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          isDel: false,
+        },
+      },
+
+      {
+        $lookup: {
+          from: "companyrequirements",
+          localField: "_id",
+          foreignField: "companyName",
+          as: "requirements",
+        },
+      },
+
+      {
+        $addFields: {
+          latestRequirementDate: {
+            $max: "$requirements.createdAt",
+          },
+        },
+      },
+
+      {
+        $sort: {
+          latestRequirementDate: -1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Company list fetched successfully",
+      data: companies,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const deleteCompanyByInstitute = async (req, res) => {
   try {
     const userId = req.userId;

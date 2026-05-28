@@ -27,6 +27,7 @@ import {
   editEvaluation,
   deleteEvaluation,
   getEvaluationByDecending,
+  getAllCompaniesByInstituteByLatestRequirement,
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -157,6 +158,8 @@ InstituteProfileRouter.put(
 );
 
 InstituteProfileRouter.get("/get_all_companies_by_institute", userAuth, Institutemid, getAllCompaniesByInstitute);
+
+InstituteProfileRouter.get("/get_all_companies_by_institute_by_latest_requirement", userAuth, Institutemid, getAllCompaniesByInstituteByLatestRequirement);
 
 InstituteProfileRouter.delete("/delete_company_by_institute", userAuth, Institutemid, deleteCompanyByInstitute);
 
