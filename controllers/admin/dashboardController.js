@@ -29,7 +29,6 @@ export const getTotal = async (req, res) => {
 
     const TotalPayment = '0.00';
 
-
     res.status(200).json({
       success: true,
       totalCompany,
