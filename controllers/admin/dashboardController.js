@@ -846,6 +846,22 @@ export const getAllJobApplicantsList = async (req, res) => {
       },
       { $unwind: { path: "$career", preserveNullAndEmptyArrays: true } },
 
+      // 🔹 Job Details
+      {
+        $lookup: {
+          from: "jobpostinglists", // collection name of Job model
+          localField: "jobId",
+          foreignField: "_id",
+          as: "jobDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
       // 🔹 Convert JobRole string → ObjectId
       {
         $addFields: {
@@ -875,6 +891,22 @@ export const getAllJobApplicantsList = async (req, res) => {
       },
       { $unwind: { path: "$jobRoleData", preserveNullAndEmptyArrays: true } },
 
+      // 8️⃣ Interview Feedback
+      {
+        $lookup: {
+          from: "interviewfeedbacks", // confirm name
+          localField: "_id",
+          foreignField: "applicationId",
+          as: "feedback",
+        },
+      },
+      {
+        $unwind: {
+          path: "$feedback",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
       // ✅ SAME RESPONSE AS BEFORE
       {
         $project: {
@@ -895,7 +927,20 @@ export const getAllJobApplicantsList = async (req, res) => {
           currentLocation: "$candidateDetails.currentLocation",
 
           jobRole: "$jobRoleData.job_role",
+          jobTitle: "$jobDetails.jobTitle",
           expectedSalary: "$career.expectedSalary",
+          // 📝 Feedback details
+          feedback: {
+            communicationSkillScore:
+              "$feedback.communicationSkillScore",
+            technicalSkillScore: "$feedback.technicalSkillScore",
+            aptitudeScore: "$feedback.aptitudeScore",
+            overallScore: "$feedback.overallScore",
+            lastDrawnSalary: "$feedback.lastDrawnSalary",
+            expectedSalary: "$feedback.expectedSalary",
+            message: "$feedback.message",
+            createdAt: "$feedback.createdAt",
+          },
         },
       },
     ]);
