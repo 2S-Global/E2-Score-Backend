@@ -338,7 +338,7 @@ export const getCandidateDetails = async (req, res) => {
         : Promise.resolve([]),
       userPref?.location
         ? list_india_cities
-          .find({ _id: { $in: userPref.location } })
+          .find({ id: { $in: userPref.location } })
           .select("city_name")
           .lean()
         : Promise.resolve([]),
@@ -1102,26 +1102,26 @@ export const getAllCandidates = async (req, res) => {
           localField: "_id",
           foreignField: "userId",
           as: "userEducations",
-          pipeline:[{$match:{isDel:false}}]
+          pipeline: [{ $match: { isDel: false } }]
         }
       },
       //all education level one array
-    {
-  $addFields: {
-    levels: {
-        $setUnion: [
-            {
+      {
+        $addFields: {
+          levels: {
+            $setUnion: [
+              {
                 $map: {
                   input: "$userEducations",
                   as: "level",
                   in: "$$level.level"
                 }
-            },
-        []
-      ]
-    }
-  }
-},
+              },
+              []
+            ]
+          }
+        }
+      },
 
       // 5️⃣ Convert skills to string array ["Skill1", "Skill2"]
       {
@@ -1139,7 +1139,7 @@ export const getAllCandidates = async (req, res) => {
             $first: "$jobRoleData.job_role"
           },
 
-         
+
         }
       },
 
