@@ -906,6 +906,37 @@ export const getAllJobApplicantsList = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $addFields: {
+          interviewInvitationStatus: {
+            $cond: {
+              // 1️⃣ Check if interviewInvitationAccepted exists
+              if: { $ne: [{ $ifNull: ["$interviewInvitationAccepted", null] }, null] },
+              then: {
+                $cond: {
+                  if: { $eq: ["$interviewInvitationAccepted", true] },
+                  then: "accepted",
+                  else: {
+                    $cond: {
+                      if: { $eq: ["$interviewInvitationAccepted", false] },
+                      then: "rejected",
+                      else: "pending",
+                    },
+                  },
+                },
+              },
+              else: {
+                // 2️⃣ Only if interviewInvitationAccepted does NOT exist
+                $cond: {
+                  if: { $eq: ["$requestReschedule", true] },
+                  then: "reschedule_request",
+                  else: "pending",
+                },
+              },
+            },
+          },
+        },
+      },
 
       // ✅ SAME RESPONSE AS BEFORE
       {
@@ -929,6 +960,8 @@ export const getAllJobApplicantsList = async (req, res) => {
           jobRole: "$jobRoleData.job_role",
           jobTitle: "$jobDetails.jobTitle",
           expectedSalary: "$career.expectedSalary",
+          isInterviewFeedbackSubmitted: 1,
+          interviewInvitationStatus: 1,
           // 📝 Feedback details
           feedback: {
             communicationSkillScore:
