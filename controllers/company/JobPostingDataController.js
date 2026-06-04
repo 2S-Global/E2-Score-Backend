@@ -4278,3 +4278,118 @@ export const getRescheduleRequestByApplication = async (req, res) => {
     });
   }
 };
+
+export const getTotalApplicants123 = async (req, res) => {
+  try {
+    const totalApplicants = await JobApplication.countDocuments({
+      isDel: false, // optional
+    });
+
+    return res.status(200).json({
+      success: true,
+      totalApplicants,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching total applicants",
+      error: error.message,
+    });
+  }
+};
+
+export const getTotalApplicants = async (req, res) => {
+  try {
+    const [
+      totalApplicants,
+      totalShortlistedCandidates,
+      totalInterviewAttended,
+      totalOfferSent,
+    ] = await Promise.all([
+      JobApplication.countDocuments({ isDel: false }),
+      JobApplication.countDocuments({
+        isDel: false,
+        status: "shortlisted",
+      }),
+      JobApplication.countDocuments({
+        isDel: false,
+        // status: "interview_attended",
+        interviewInvitationAccepted: true
+      }),
+      JobApplication.countDocuments({
+        isDel: false,
+        status: "offer_sent",
+      }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalApplicants,
+        totalShortlistedCandidates,
+        totalInterviewAttended,
+        totalOfferSent,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching applicant statistics",
+      error: error.message,
+    });
+  }
+};
+
+export const getCandidateApplicationStats = async (req, res) => {
+  try {
+    const { candidateId } = req.query;
+
+    const applications = await JobApplication.find({
+      userId: candidateId,
+    });
+    console.log(applications);
+
+    const [
+      totalApplications,
+      totalShortlisted,
+      totalInterviewAttended,
+      totalOfferSent,
+    ] = await Promise.all([
+      JobApplication.countDocuments({
+        userId: candidateId,
+        isDel: false,
+      }),
+      JobApplication.countDocuments({
+        userId: candidateId,
+        isDel: false,
+        status: "shortlisted",
+      }),
+      JobApplication.countDocuments({
+        userId: candidateId,
+        isDel: false,
+        isInterviewFeedbackSubmitted: true, // to ensure interview was actually attended
+      }),
+      JobApplication.countDocuments({
+        userId: candidateId,
+        isDel: false,
+        status: "offer_sent",
+      }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalApplications,
+        totalShortlisted,
+        totalInterviewAttended,
+        totalOfferSent,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching candidate statistics",
+      error: error.message,
+    });
+  }
+};

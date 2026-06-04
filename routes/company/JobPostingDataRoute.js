@@ -38,6 +38,8 @@ import {
   requestRescheduleByCandidate,
   getRescheduleRequestByApplication,
   acceptRejectOfferLetter,
+  getTotalApplicants,
+  getCandidateApplicationStats
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -299,6 +301,19 @@ jobPostingDataRouter.get(
   "/get-request-reschedule-data",
   userAuth,
   getRescheduleRequestByApplication
+);
+
+// Get Total Job Applications By Job API
+jobPostingDataRouter.get(
+  "/get-total-job-applications",
+  userAuth,
+  getTotalApplicants
+);
+
+jobPostingDataRouter.get(
+  "/get-total-job-applications-by-id",
+  userAuth,
+  getCandidateApplicationStats
 );
 
 export default jobPostingDataRouter;
