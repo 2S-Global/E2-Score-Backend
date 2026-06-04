@@ -330,7 +330,7 @@ export const getResume = async (req, res) => {
       // Getting Locations
       userPref?.location
         ? list_india_cities
-            .find({ _id: { $in: userPref.location } })
+            .find({ id: { $in: userPref.location } })
             .select("city_name")
             .lean()
         : Promise.resolve([]),
@@ -992,7 +992,7 @@ export const AdmingetResume123 = async (req, res) => {
       // Getting Locations
       userPref?.location
         ? list_india_cities
-            .find({ _id: { $in: userPref.location } })
+            .find({ id: { $in: userPref.location } })
             .select("city_name")
             .lean()
         : Promise.resolve([]),
@@ -1652,7 +1652,7 @@ export const AdmingetResume = async (req, res) => {
       // Getting Locations
       userPref?.location
         ? list_india_cities
-            .find({ _id: { $in: userPref.location } })
+            .find({ id: { $in: userPref.location } })
             .select("city_name")
             .lean()
         : Promise.resolve([]),
