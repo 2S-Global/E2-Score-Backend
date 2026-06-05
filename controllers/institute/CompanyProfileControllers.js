@@ -1726,7 +1726,7 @@ export const getEvaluationByUserId = async (req, res) => {
     }
 
     const evaluations = await StudentEvaluation.find({
-      userId,
+      student_name: userId,
       isDel: false,
     })
       .populate("student_name", "name")
