@@ -97,6 +97,7 @@ const userSchema = new mongoose.Schema(
       ref: "companylist",
       // required: true
     },
+    usn: { type: String, trim: true },
     isVerified: { type: Boolean, default: false },
     numberVerified: { type: Boolean, default: false },
   },
