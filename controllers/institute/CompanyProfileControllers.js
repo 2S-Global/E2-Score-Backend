@@ -1713,6 +1713,39 @@ export const getEvaluation = async (req, res) => {
   }
 };
 
+
+export const getEvaluationByUserId = async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "UserId is required",
+      });
+    }
+
+    const evaluations = await StudentEvaluation.find({
+      userId,
+      isDel: false,
+    })
+      .populate("student_name", "name")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Evaluations fetched successfully",
+      count: evaluations.length,
+      data: evaluations,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const getEvaluationByDecending = async (req, res) => {
   try {
     const userId = req.userId;
