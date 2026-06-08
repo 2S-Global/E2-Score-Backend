@@ -6,6 +6,11 @@ const InstitueStudentSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
+  userCreatedId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
   name: { type: String, required: true, trim: true },
   USN: { type: String, required: true, trim: true },
   program: {

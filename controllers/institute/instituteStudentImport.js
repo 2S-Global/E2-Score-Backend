@@ -150,16 +150,34 @@ export const insStudentImport = async (req, res) => {
          duplicateCount++;
          continue;
        } */
+
+      // Check if email already exists in InstitueStudent
+      const existingStudentEmail = await InstitueStudent.findOne({
+        email: email.toLowerCase(),
+        instituteId: user.userId
+      });
+
+      if (
+        existingStudentEmail &&
+        existingStudentEmail.USN !== USN
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Student with this email already exists."
+        });
+      }
+
       //insert into DB
-      await InstitueStudent.findOneAndUpdate(
-        { USN, instituteId: user.userId, admissionYear },
-        { $set: { name, USN, program, gender, dob: dobYMD, admissionYear, tenTh, twelveTh, semester, email, phoneNumber, instituteId: user.userId, presentYear: currentYear, promotedYear: currentYear, promotedSemester: semester } },
-        {
-          upsert: true,
-          new: true,
-          runValidators: true
-        }
-      );
+      const student =
+        await InstitueStudent.findOneAndUpdate(
+          { USN, instituteId: user.userId, admissionYear },
+          { $set: { name, USN, program, gender, dob: dobYMD, admissionYear, tenTh, twelveTh, semester, email, phoneNumber, instituteId: user.userId, presentYear: currentYear, promotedYear: currentYear, promotedSemester: semester } },
+          {
+            upsert: true,
+            new: true,
+            runValidators: true
+          }
+        );
 
       logEntry.status = "created";
       audit.push(logEntry);
@@ -198,6 +216,17 @@ export const insStudentImport = async (req, res) => {
         usn: USN
       });
       await newUser.save();
+
+      await InstitueStudent.findByIdAndUpdate(
+        student._id,
+        {
+          $set: {
+            userCreatedId: newUser._id
+          }
+        },
+        { new: true }
+      );
+
       const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
         expiresIn: "30d",
       });
@@ -430,6 +459,22 @@ export const addInstituteStudentManually = async (req, res) => {
       admissionYear
     })
 
+    // Check if email already exists in InstitueStudent
+    const existingStudentEmail = await InstitueStudent.findOne({
+      email: email.toLowerCase(),
+      instituteId: user.userId
+    });
+
+    if (
+      existingStudentEmail &&
+      existingStudentEmail.USN !== USN
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Student with this email already exists."
+      });
+    }
+
     const student = await InstitueStudent.findOneAndUpdate(
       {
         USN,
@@ -550,6 +595,17 @@ export const addInstituteStudentManually = async (req, res) => {
       usn: USN
     });
     await newUser.save();
+
+    await InstitueStudent.findByIdAndUpdate(
+      student._id,
+      {
+        $set: {
+          userCreatedId: newUser._id
+        }
+      },
+      { new: true }
+    );
+
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
     });

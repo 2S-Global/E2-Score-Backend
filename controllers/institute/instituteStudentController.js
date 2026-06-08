@@ -1332,8 +1332,6 @@ export const instituteStudentSearch = async (req, res) => {
   }
 };
 
-
-
 // Add Custom Course
 export const addCustomCourse = async (req, res) => {
   try {
