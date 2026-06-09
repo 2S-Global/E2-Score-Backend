@@ -909,7 +909,6 @@ export const instituteStudent = async (req, res) => {
       data: studentsWithProgress,
     });
 
-
   } catch (error) {
     console.error("Error fetching student:", error);
     return res.status(500).json({
