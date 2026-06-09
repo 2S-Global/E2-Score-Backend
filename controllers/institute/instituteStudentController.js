@@ -763,6 +763,8 @@ export const instituteStudent = async (req, res) => {
   try {
     const user = req?.user
     console.log("user in instituteStudent controller", user);
+
+    // const progress = await GetProgress(user.user_id);
     // 2️⃣ Get Institue Student
     const institueStudent = await InstitueStudent.aggregate([
       {
@@ -881,11 +883,33 @@ export const instituteStudent = async (req, res) => {
 
     ]);
 
+    const studentsWithProgress = await Promise.all(
+      institueStudent.map(async (student) => {
+        const progress = student.userCreatedId
+          ? await GetProgress(student.userCreatedId)
+          : 0;
+
+        return {
+          ...student,
+          progress
+        };
+      })
+    );
+
+
+    // return res.status(200).json({
+    //   success: true,
+    //   count: institueStudent.length,
+    //   data: institueStudent,
+    // });
+
     return res.status(200).json({
       success: true,
-      count: institueStudent.length,
-      data: institueStudent,
+      count: studentsWithProgress.length,
+      data: studentsWithProgress,
     });
+
+
   } catch (error) {
     console.error("Error fetching student:", error);
     return res.status(500).json({
