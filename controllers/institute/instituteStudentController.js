@@ -16,6 +16,7 @@ import companyRequirement from "../../models/companyRequirementModel.js";
 import nodemailer from "nodemailer";
 import mongoose from "mongoose";
 import { Types } from 'mongoose';
+import { GetProgress } from "../../utility/helper/getprogress.js";
 export const GetunverifiedStudents = async (req, res) => {
   try {
     const userId = req.userId;
@@ -1650,6 +1651,10 @@ export const instituteStudentByPlacementReady = async (req, res) => {
   try {
     const user = req?.user
     console.log("user in instituteStudent controller", user);
+
+    const progress = await GetProgress(user.user_id);
+
+
     // 2️⃣ Get Institue Student
     const institueStudent = await InstitueStudent.aggregate([
       {
@@ -1769,11 +1774,34 @@ export const instituteStudentByPlacementReady = async (req, res) => {
 
     ]);
 
+    const studentsWithProgress = await Promise.all(
+      institueStudent.map(async (student) => {
+        const progress = student.userCreatedId
+          ? await GetProgress(student.userCreatedId)
+          : 0;
+
+        return {
+          ...student,
+          progress
+        };
+      })
+    );
+
+    /*
     return res.status(200).json({
       success: true,
       count: institueStudent.length,
       data: institueStudent,
+      progress
     });
+    */
+
+    return res.status(200).json({
+      success: true,
+      count: studentsWithProgress.length,
+      data: studentsWithProgress,
+    });
+
   } catch (error) {
     console.error("Error fetching student:", error);
     return res.status(500).json({
