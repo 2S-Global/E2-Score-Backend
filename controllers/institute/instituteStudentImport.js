@@ -335,6 +335,7 @@ export const addInstituteStudentManually = async (req, res) => {
     console.log("Here is my User ID: ", user?.userId);
 
     const {
+      _id,
       name,
       USN,
       gender,
@@ -468,8 +469,10 @@ export const addInstituteStudentManually = async (req, res) => {
     //  here code Updation starts
 
     let student;
-    if (existingStudentEmail) {
-
+    let isNewStudent = false;
+    let message;
+    if (_id && existingStudentEmail && existingStudentEmail._id.toString() === _id) {
+      message = "Student updated successfully.";
       student = await InstitueStudent.findByIdAndUpdate(
         existingStudentEmail._id,
         {
@@ -496,8 +499,9 @@ export const addInstituteStudentManually = async (req, res) => {
         { new: true }
       );
 
-    } else {
-      const student = await InstitueStudent.findOneAndUpdate(
+    } else if (!_id && !existingStudentEmail) {
+      message = "Student created successfully.";
+      student = await InstitueStudent.findOneAndUpdate(
         {
           USN,
           instituteId: user.userId,
@@ -698,6 +702,12 @@ export const addInstituteStudentManually = async (req, res) => {
     );
     */
 
+    if (!student && existingStudentEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "Student already exists"
+      });
+    }
 
     // -----------------------------
     // Handle Semesters
@@ -759,9 +769,20 @@ export const addInstituteStudentManually = async (req, res) => {
     // -----------------------------
     // Final Response
     // -----------------------------
-    return res.status(200).json({
-      message: "Student & semesters saved successfully",
-      success: true,
+
+    if (message) {
+      return res.status(200).json({
+        success: true,
+        message,
+        created: createdCount,
+        studentId: student._id,
+        audit,
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: "Something went wrong.",
       created: createdCount,
       studentId: student._id,
       audit,
