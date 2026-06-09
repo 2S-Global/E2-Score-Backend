@@ -137,19 +137,6 @@ export const insStudentImport = async (req, res) => {
       }
       let dobYMD = convertDate(dob)
       const currentYear = new Date().getFullYear();
-      /*  // ---- Duplicate Check ----
-       const existingUser = await InstitueStudent.findOne({
-         USN,
-         is_del: false,
-       })
- 
-       if (existingUser) {
-         logEntry.errors.push("Student already exists");
-         logEntry.status = "duplicate";
-         audit.push(logEntry);
-         duplicateCount++;
-         continue;
-       } */
 
       // Check if email already exists in InstitueStudent
       const existingStudentEmail = await InstitueStudent.findOne({
@@ -157,21 +144,38 @@ export const insStudentImport = async (req, res) => {
         instituteId: user.userId
       });
 
-      if (
-        existingStudentEmail &&
-        existingStudentEmail.USN !== USN
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Student with this email already exists."
-        });
-      }
+      //  here code Updation starts
 
-      //insert into DB
-      const student =
-        await InstitueStudent.findOneAndUpdate(
-          { USN, instituteId: user.userId, admissionYear },
-          { $set: { name, USN, program, gender, dob: dobYMD, admissionYear, tenTh, twelveTh, semester, email, phoneNumber, instituteId: user.userId, presentYear: currentYear, promotedYear: currentYear, promotedSemester: semester } },
+      let student;
+      let isNewStudent = false;
+      let message;
+      if (!existingStudentEmail) {
+        message = "Student created successfully.";
+        student = await InstitueStudent.findOneAndUpdate(
+          {
+            USN,
+            instituteId: user.userId,
+            admissionYear
+          },
+          {
+            $set: {
+              name,
+              USN,
+              gender,
+              dob: dobYMD,
+              tenTh,
+              twelveTh,
+              semester,
+              email,
+              phoneNumber,
+              program: new mongoose.Types.ObjectId(program),// ✅ FIX 
+              admissionYear,
+              instituteId: user.userId,
+              presentYear: currentYear,
+              promotedYear: currentYear,
+              promotedSemester: semester
+            }
+          },
           {
             upsert: true,
             new: true,
@@ -179,74 +183,71 @@ export const insStudentImport = async (req, res) => {
           }
         );
 
-      logEntry.status = "created";
-      audit.push(logEntry);
-      createdCount++;
 
-      // User Account Creation Starts from here
+        // User Account Creation Starts from here
 
-      // Check if user already exists
-      const existingUser = await User.findOne({ email, is_del: false });
-      if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
-      }
-
-      const generatePassword = () => {
-        const chars =
-          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#";
-        let password = "";
-        for (let i = 0; i < 10; i++) {
-          password += chars.charAt(Math.floor(Math.random() * chars.length));
+        // Check if user already exists
+        const existingUser = await User.findOne({ email, is_del: false });
+        if (existingUser) {
+          return res.status(400).json({ message: "User already exists" });
         }
-        return password;
-      };
 
-      const newPassword = generatePassword();
-
-      // Hash new password
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-      // Create a new user with hashed password
-      const newUser = new User({
-        name,
-        email,
-        password: hashedPassword,
-        role: 1,
-        phone_number: phoneNumber,
-        usn: USN
-      });
-      await newUser.save();
-
-      await InstitueStudent.findByIdAndUpdate(
-        student._id,
-        {
-          $set: {
-            userCreatedId: newUser._id
+        const generatePassword = () => {
+          const chars =
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#";
+          let password = "";
+          for (let i = 0; i < 10; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
           }
-        },
-        { new: true }
-      );
+          return password;
+        };
 
-      const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
-        expiresIn: "30d",
-      });
+        const newPassword = generatePassword();
 
-      // Send email with login credentials
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-      const mailOptions = {
-        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Access Credentials for Geisil",
-        html: `
+        // Create a new user with hashed password
+        const newUser = new User({
+          name,
+          email,
+          password: hashedPassword,
+          role: 1,
+          phone_number: phoneNumber,
+          usn: USN
+        });
+        await newUser.save();
+
+        await InstitueStudent.findByIdAndUpdate(
+          student._id,
+          {
+            $set: {
+              userCreatedId: newUser._id
+            }
+          },
+          { new: true }
+        );
+
+        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
+          expiresIn: "30d",
+        });
+
+        // Send email with login credentials
+        const transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST,
+          port: process.env.EMAIL_PORT,
+          secure: true,
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+
+        const mailOptions = {
+          from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+          to: email,
+          subject: "Access Credentials for Geisil",
+          html: `
       <div style="text-align: center; margin-bottom: 20px;">
     <img src="https://res.cloudinary.com/da4unxero/image/upload/v1765884063/addacademics_asbt5b.jpg" alt="Banner" style="width: 100%; height: auto;" />
   </div>
@@ -300,9 +301,20 @@ export const insStudentImport = async (req, res) => {
       <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png%22 alt="Footer" style="width:97px; height: 116px;" />
     </div>
       `,
-      };
+        };
 
-      await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
+
+        // User Account Creation Ends here
+
+      }
+      // Here code Updation ends
+
+      logEntry.status = "created";
+      audit.push(logEntry);
+      createdCount++;
+
+      // User Account Creation Starts from here
 
     }
 
@@ -657,50 +669,6 @@ export const addInstituteStudentManually = async (req, res) => {
 
     }
     // Here code Updation ends
-
-    /*
-    if (
-      existingStudentEmail &&
-      existingStudentEmail.USN !== USN
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Student with this email already exists."
-      });
-    }
-    */
-
-    /*
-    const student = await InstitueStudent.findOneAndUpdate(
-      {
-        USN,
-        instituteId: user.userId,
-        admissionYear
-      },
-      {
-        $set: {
-          name,
-          USN,
-          gender,
-          dob: dobYMD,
-          tenTh,
-          twelveTh,
-          email,
-          phoneNumber,
-          program: new mongoose.Types.ObjectId(program), // ✅ FIX
-          admissionYear,
-          instituteId: user.userId,
-          promotedYear: currentYear,
-          promotedSemester: (existingData?.promotedSemester && existingData?.promotedSemester > semesters?.length) ? existingData?.promotedSemester : semesters?.length
-        }
-      },
-      {
-        upsert: true,
-        new: true,
-        runValidators: true
-      }
-    );
-    */
 
     if (!student && existingStudentEmail) {
       return res.status(400).json({
