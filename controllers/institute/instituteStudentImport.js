@@ -146,6 +146,15 @@ export const insStudentImport = async (req, res) => {
         instituteId: user.userId
       });
 
+      const existingUser = await User.findOne({ email, is_del: false });
+
+      if ((existingUser && !existingStudentEmail) || (!existingUser && existingStudentEmail) || (existingUser && existingStudentEmail)) {
+        return res.status(400).json({
+          success: false,
+          message: "Student already exists."
+        });
+      }
+
       //  here code Updation starts
 
       let student;
@@ -480,7 +489,16 @@ export const addInstituteStudentManually = async (req, res) => {
       instituteId: user.userId
     });
 
+    const existingUser = await User.findOne({ email, is_del: false });
+
     //  here code Updation starts
+
+    if ((existingUser && !existingStudentEmail) || (!existingUser && existingStudentEmail) || (existingUser && existingStudentEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Student already exists."
+      });
+    }
 
     let student;
     let isNewStudent = false;
@@ -954,7 +972,7 @@ export const sendProgressScoreMail = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Progress score email sent successfully",
+      message: "Email sent successfully",
       progress,
     });
   } catch (error) {
