@@ -26,6 +26,7 @@ import {
   insStudentImport,
   addInstituteStudentManually,
   deleteInstituteStudent,
+  sendProgressScoreMail
 } from "../../controllers/institute/instituteStudentImport.js";
 
 import {
@@ -200,6 +201,13 @@ InstituteStudentRouter.get(
   userAuth,
   Institutemid,
   studentByDepartments
+);
+
+InstituteStudentRouter.get(
+  "/send-progress-mail",
+  userAuth,
+  Institutemid,
+  sendProgressScoreMail
 );
 
 export default InstituteStudentRouter;

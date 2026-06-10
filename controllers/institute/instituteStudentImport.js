@@ -9,6 +9,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import mongoose from "mongoose";
+import { GetProgress } from "../../utility/helper/getprogress.js";
+
 function convertDate(dateStr) {
 
   if (dateStr.includes('/')) {
@@ -821,6 +823,146 @@ export const deleteInstituteStudent = async (req, res) => {
     return res.status(500).json({
       message: "Delete failed",
       error: err.message,
+    });
+  }
+};
+
+// Send progress mail
+export const sendProgressScoreMail = async (req, res) => {
+  try {
+    // const { userId } = req.body;
+    const studentId = req.query._id;
+
+    if (!studentId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    // Find user
+    // InstituteStudent
+    const user = await InstitueStudent.findById(studentId).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Get progress score
+    const progress = await GetProgress(studentId);
+
+    // Send email with login credentials
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // Email Template
+    // const emailHtml = `
+    //   <div style="font-family: Arial, sans-serif;">
+    //     <h2>Hello ${user.first_name || "Candidate"},</h2>
+
+    //     <p>Your current profile completion score is:</p>
+
+    //     <h1 style="color:#007bff;">
+    //       ${progress}%
+    //     </h1>
+
+    //     <p>
+    //       To improve your profile completion score and increase your chances of
+    //       getting noticed by recruiters, please update your profile by:
+    //     </p>
+
+    //     <ul>
+    //       <li>Adding educational details</li>
+    //       <li>Uploading your resume</li>
+    //       <li>Adding skills and certifications</li>
+    //       <li>Completing personal information</li>
+    //       <li>Adding project and work experience details</li>
+    //     </ul>
+
+    //     <p>
+    //       A complete profile improves visibility and job opportunities.
+    //     </p>
+
+    //     <br/>
+
+    //     <p>
+    //       Best Regards,<br/>
+    //       Placement Team
+    //     </p>
+    //   </div>
+    // `;
+
+    const mailOptions = {
+      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `Profile Completion Reminder - Current Score: ${progress}%`,
+      html: `
+      <div style="font-family: Arial, sans-serif;">
+        <h2>Hello ${user.name || "Candidate"},</h2>
+
+        <p>Your current profile completion score is:</p>
+
+        <h1 style="color:#007bff;">
+          ${progress}%
+        </h1>
+
+        <p>
+          To improve your profile completion score and increase your chances of
+          getting noticed by recruiters, please update your profile by:
+        </p>
+
+        <ul>
+          <li>Adding educational details</li>
+          <li>Uploading your resume</li>
+          <li>Adding skills and certifications</li>
+          <li>Completing personal information</li>
+          <li>Adding project and work experience details</li>
+        </ul>
+
+        <p>
+          A complete profile improves visibility and job opportunities.
+        </p>
+
+        <br/>
+
+        <p>
+          Best Regards,<br/>
+          Placement Team
+        </p>
+      </div>
+    `,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    // Send mail
+    // await sendMail({
+    //   to: user.email,
+    //   subject: "Improve Your Profile Completion Score",
+    //   html: emailHtml,
+    // });
+
+    return res.status(200).json({
+      success: true,
+      message: "Progress score email sent successfully",
+      progress,
+    });
+  } catch (error) {
+    console.error("Error sending progress score email:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };
