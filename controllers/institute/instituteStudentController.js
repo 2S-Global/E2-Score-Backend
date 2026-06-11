@@ -883,6 +883,114 @@ export const instituteStudent = async (req, res) => {
 
     ]);
 
+    // Here I have started my new code for independent candidates from user   --  started
+
+    // ✅ Step 2: Verify institute
+    const instituteDetails = await CompanyDetails.findOne({
+      userId: user.userId,
+      isDel: false,
+    });
+
+    if (!instituteDetails) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Institute not found." });
+    }
+
+    let selfRegisteredStudents = [];
+    let formattedSelfRegisteredStudents = [];
+
+    if (instituteDetails) {
+      const listOfInstitutes = await list_university_colleges.find({
+        name: instituteDetails.name,
+        is_del: 0,
+      });
+
+      const instituteIds = listOfInstitutes.map((inst) =>
+        inst.id.toString()
+      );
+
+      const currentYear = new Date().getFullYear();
+
+      selfRegisteredStudents = await usereducation
+        .find({
+          isDel: false,
+          instituteName: { $in: instituteIds },
+          "duration.to": {
+            $exists: true,
+            $gte: currentYear
+          }
+        })
+        .populate("userId", "name email profilePicture gender")
+        .lean();
+
+      console.log("All Students List is here: ", selfRegisteredStudents);
+
+
+      const genderIds = [
+        ...new Set(
+          selfRegisteredStudents
+            .map(s => s.userId?.gender)
+            .filter(Boolean)
+        )
+      ];
+
+      const genders = await list_gender.find({
+        _id: { $in: genderIds }
+      }).lean();
+
+      const genderMap = genders.reduce((acc, gender) => {
+        acc[gender._id.toString()] = gender.name;
+        return acc;
+      }, {});
+
+
+      // ✅ Step 6: Course mapping
+      const courseIds = [...new Set(selfRegisteredStudents.map((s) => s.courseName))];
+
+      const courses = await list_university_course.find({
+        id: { $in: courseIds },
+        is_del: 0,
+      });
+
+      // const courseMap = courses.reduce((acc, course) => {
+      //   acc[course.id] = course.name;
+      //   return acc;
+      // }, {});
+
+      const courseMap = courses.reduce((acc, course) => {
+        acc[course.id] = {
+          _id: course._id,
+          type: course.type,
+          name: course.name
+        };
+        return acc;
+      }, {});
+
+      console.log("Here is my Course Map: ", courseMap);
+
+
+      formattedSelfRegisteredStudents = selfRegisteredStudents.map(
+        (student) => ({
+          _id: student.userId?._id || null,
+          employmentId: student._id,
+          name: student.userId?.name,
+          email: student.userId?.email,
+          profilePicture: student.userId?.profilePicture,
+          isSelfRegistered: true,
+          gender: genderMap[student.userId?.gender] || null,
+          programDetails: courseMap[student.courseName] || null,
+        })
+      );
+
+      console.log("formattedSelfRegisteredStudents all value: ", formattedSelfRegisteredStudents);
+
+
+    }
+
+
+    // Here I have started my new code for independent candidates from user   --  ended
+
     const studentsWithProgress = await Promise.all(
       institueStudent.map(async (student) => {
         const progress = student.userCreatedId
@@ -896,6 +1004,22 @@ export const instituteStudent = async (req, res) => {
       })
     );
 
+    const selfRegisteredWithProgress = await Promise.all(
+      formattedSelfRegisteredStudents.map(async (student) => ({
+        ...student,
+        progress: student._id
+          ? await GetProgress(student._id)
+          : 0,
+      }))
+    );
+
+    const finalStudents = [
+      ...studentsWithProgress,
+      ...selfRegisteredWithProgress,
+    ];
+
+    console.log("selfRegisteredWithProgress is result: ", selfRegisteredWithProgress);
+
 
     // return res.status(200).json({
     //   success: true,
@@ -903,10 +1027,17 @@ export const instituteStudent = async (req, res) => {
     //   data: institueStudent,
     // });
 
+
+    // return res.status(200).json({
+    //   success: true,
+    //   count: studentsWithProgress.length,
+    //   data: studentsWithProgress,
+    // });
+
     return res.status(200).json({
       success: true,
-      count: studentsWithProgress.length,
-      data: studentsWithProgress,
+      count: finalStudents.length,
+      data: finalStudents,
     });
 
   } catch (error) {
