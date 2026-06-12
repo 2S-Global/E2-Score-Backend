@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const campusSchema = new mongoose.Schema(
   {
+     
+    institute_id: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
     campus_name: {
       type: String,
       trim: true,

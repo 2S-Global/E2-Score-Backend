@@ -3,9 +3,12 @@ import Campus from "../../models/instituteCampusModel.js";
 // Add Campus
 export const addCampus = async (req, res) => {
   try {
+    const user = req.user;
+
     const { campus_name, campus_type, city, total_students } = req.body;
 
     const campus = await Campus.create({
+      institute_id: user.userId, // or user._id depending on your structure
       campus_name,
       campus_type,
       city,
@@ -28,7 +31,11 @@ export const addCampus = async (req, res) => {
 // List Campus
 export const getCampuses = async (req, res) => {
   try {
-    const campuses = await Campus.find().sort({
+    const user = req.user;
+
+    const campuses = await Campus.find({
+      institute_id: user.userId,
+    }).sort({
       createdAt: -1,
     });
 
