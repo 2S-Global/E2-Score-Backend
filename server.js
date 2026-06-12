@@ -93,6 +93,8 @@ import clientRoute from "./routes/admin/clientRoute.js";
 import homeRouter from "./routes/allHomePageRoutes.js";
 import contactRoutes from "./routes/admin/contactinfoRoutes.js";
 
+import campusRoutes from "./routes/institute/instituteCampusRoute.js";
+
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
 // This file is reserved for internal use and should remain untouched.
@@ -172,6 +174,7 @@ app.use("/api/institute-course", InstituteCourseRoute);
 app.use("/api/home", homeRouter);
 app.use("/api/contact", contactRoutes);
 
+app.use("/api/campus", campusRoutes);
 const PORT = process.env.PORT || 3015;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
