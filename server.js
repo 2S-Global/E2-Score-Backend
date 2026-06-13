@@ -81,6 +81,7 @@ import InstituteStudentRouter from "./routes/institute/instituteStudentRoute.js"
 import InstituteCourseRoute from "./routes/institute/instituteCourseRoute.js";
 // Payment Routes
 import paymentRoutes from "./routes/paymentRoutes.js";
+import reviewRoutes from "./routes/institute/instituteFeedbackRoute.js"
 
 //admin Routes
 import userAdminRouter from "./routes/admin/userRoute.js";
@@ -173,6 +174,7 @@ app.use("/api/institute-course", InstituteCourseRoute);
 // API for Home Pages
 app.use("/api/home", homeRouter);
 app.use("/api/contact", contactRoutes);
+app.use("/api/review", reviewRoutes);
 
 app.use("/api/campus", campusRoutes);
 const PORT = process.env.PORT || 3015;
