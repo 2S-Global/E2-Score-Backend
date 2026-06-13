@@ -50,7 +50,7 @@ export const validtoken = async (req, res) => {
 export const registerUser = async (req, res) => {
   try {
     dotenv.config();
-    const { name, email, password, phone_number } = req.body;
+    const { name, email, password, phone_number, father_name, dob } = req.body;
     const role = 1;
     // Validate required fields
     if (!name || !email || !password) {
@@ -63,6 +63,21 @@ export const registerUser = async (req, res) => {
     const existingUser = await User.findOne({ email, is_del: false });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
+    }
+
+    // Check if same name, father_name and dob already exist
+    const duplicateUser = await User.findOne({
+      name: name.trim(),
+      father_name: father_name.trim(),
+      dob,
+      is_del: false,
+    });
+
+    if (duplicateUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
     }
 
     // Hash the password before saving
@@ -530,15 +545,12 @@ export const registerCompany = async (req, res) => {
          alt="profile" 
          style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
     <div>
-      <h3 style="margin:0; font-size:16px; color:#0073b1;">${
-        emp.name || "N/A"
-      }</h3>
-      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${
-        emp.jobTitle || "Unknown"
-      }</p>
-      <p style="margin:2px 0; font-size:13px; color:#555;">${
-        emp.email || ""
-      }</p>
+      <h3 style="margin:0; font-size:16px; color:#0073b1;">${emp.name || "N/A"
+            }</h3>
+      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${emp.jobTitle || "Unknown"
+            }</p>
+      <p style="margin:2px 0; font-size:13px; color:#555;">${emp.email || ""
+            }</p>
     </div>
   </div>
 `,
