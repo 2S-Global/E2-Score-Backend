@@ -16,6 +16,7 @@ import {
   addCompanyRequirement,
   updateCompanyRequirement,
   getAllCompanyRequirements,
+  getCompanyRequirementById,
   deleteCompanyRequirement,
   selectStudentForCompany,
   addFaculty,
@@ -168,7 +169,9 @@ InstituteProfileRouter.post("/add_company_requirement", userAuth, Institutemid, 
 
 InstituteProfileRouter.put("/update_company_requirement", userAuth, Institutemid, upload.none(), updateCompanyRequirement);
 
-InstituteProfileRouter.get("/get_company_requirement", userAuth, Institutemid, upload.none(), getAllCompanyRequirements);
+InstituteProfileRouter.get("/get_company_requirement", userAuth, Institutemid, getAllCompanyRequirements);
+
+InstituteProfileRouter.get("/get_company_requirement_by_id", userAuth, Institutemid, getCompanyRequirementById);
 
 InstituteProfileRouter.delete("/delete_company_requirement", userAuth, Institutemid, upload.none(), deleteCompanyRequirement);
 

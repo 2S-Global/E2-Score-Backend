@@ -1149,6 +1149,42 @@ export const getAllCompanyRequirements = async (req, res) => {
   }
 };
 
+export const getCompanyRequirementById = async (req, res) => {
+  try {
+    const { id } = req.query;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid requirement id",
+      });
+    }
+
+    const requirement = await CompanyRequirement.findById(id)
+      .populate("companyName")
+      .populate("userId", "name email");
+
+    if (!requirement) {
+      return res.status(404).json({
+        success: false,
+        message: "Requirement not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Requirement fetched successfully",
+      data: requirement,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 export const deleteCompanyRequirement = async (req, res) => {
   try {
     const userId = req.userId;
