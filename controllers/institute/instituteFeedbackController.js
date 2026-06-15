@@ -1,9 +1,9 @@
-import Review from "../../models/InterviewFeedbackModel.js";
+import Review from "../../models/instituteFeedback.js";
 
 // Create or Update Review
 export const upsertReview = async (req, res) => {
   try {
-    const institute_id = req.user._id;
+    const institute_id = req.userId;
     const { recruiter_id, star } = req.body;
 
     const review = await Review.findOneAndUpdate(
