@@ -12,7 +12,7 @@ import SelectedStudent from "../../models/StudentAssignedCompanyModel.js";
 import InstituteFaculty from "../../models/InstituteFacultyModel.js";
 import StudentEvaluation from "../../models/EvaluationModel.js";
 import mongoose from "mongoose";
-
+import Review from "../../models/instituteFeedback.js";
 /**
  * @description Add or update a company's details for the authenticated user.
  * @route POST /api/companyprofile/add_or_update_company
@@ -661,6 +661,7 @@ export const getAllCompaniesByInstitute123 = async (req, res) => {
   }
 };
 
+
 export const getAllCompaniesByInstitute = async (req, res) => {
   try {
     const userId = req.userId;
@@ -702,6 +703,48 @@ export const getAllCompaniesByInstitute = async (req, res) => {
           },
         },
         {
+          $lookup: {
+            from: "reviews",
+            let: {
+              companyId: "$_id",
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      {
+                        $eq: [
+                          "$institute_id",
+                          new mongoose.Types.ObjectId(userId),
+                        ],
+                      },
+                      {
+                        $eq: ["$recruiter_id", "$$companyId"],
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: "review",
+          },
+        },
+        {
+          $addFields: {
+            rating: {
+              $ifNull: [{ $arrayElemAt: ["$review.star", 0] }, 0],
+            },
+          },
+        },
+        {
+          $addFields: {
+            rating: {
+              $ifNull: [{ $arrayElemAt: ["$review.star", 0] }, 0],
+            },
+          },
+        },
+        {
           $unwind: {
             path: "$latestRequirement",
             preserveNullAndEmptyArrays: true,
@@ -724,44 +767,81 @@ export const getAllCompaniesByInstitute = async (req, res) => {
     }
 
     // Company list with latest requirement
-    const companies = await CompanyByInstitute.aggregate([
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(userId),
-          isDel: false,
-        },
-      },
-      {
-        $lookup: {
-          from: "companyrequirements",
-          let: { companyId: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ["$companyName", "$$companyId"],
-                },
-              },
-            },
-            { $sort: { createdAt: -1 } }, // latest requirement first
-            { $limit: 1 }, // take only latest
-          ],
-          as: "latestRequirement",
-        },
-      },
-      {
-        $unwind: {
-          path: "$latestRequirement",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $sort: {
-          "latestRequirement.createdAt": -1,
-        },
-      },
-    ]);
+   const companies = await CompanyByInstitute.aggregate([
+     {
+       $match: {
+         userId: new mongoose.Types.ObjectId(userId),
+         isDel: false,
+       },
+     },
+     {
+       $lookup: {
+         from: "companyrequirements",
+         let: { companyId: "$_id" },
+         pipeline: [
+           {
+             $match: {
+               $expr: {
+                 $eq: ["$companyName", "$$companyId"],
+               },
+             },
+           },
+           { $sort: { createdAt: -1 } },
+           { $limit: 1 },
+         ],
+         as: "latestRequirement",
+       },
+     },
+     {
+       $unwind: {
+         path: "$latestRequirement",
+         preserveNullAndEmptyArrays: true,
+       },
+     },
 
+     // ADD THIS
+     {
+       $lookup: {
+         from: "reviews",
+         let: {
+           companyId: "$_id",
+         },
+         pipeline: [
+           {
+             $match: {
+               $expr: {
+                 $and: [
+                   {
+                     $eq: [
+                       "$institute_id",
+                       new mongoose.Types.ObjectId(userId),
+                     ],
+                   },
+                   {
+                     $eq: ["$recruiter_id", "$$companyId"],
+                   },
+                 ],
+               },
+             },
+           },
+         ],
+         as: "review",
+       },
+     },
+     {
+       $addFields: {
+         rating: {
+           $ifNull: [{ $arrayElemAt: ["$review.star", 0] }, 0],
+         },
+       },
+     },
+
+     {
+       $sort: {
+         "latestRequirement.createdAt": -1,
+       },
+     },
+   ]);
     return res.status(200).json({
       success: true,
       message: "Company list fetched successfully",
