@@ -30,6 +30,7 @@ import {
   getEvaluationByDecending,
   getAllCompaniesByInstituteByLatestRequirement,
   getEvaluationByUserId,
+  getAllCompaniesByInstituteByStatus,
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -160,6 +161,12 @@ InstituteProfileRouter.put(
 );
 
 InstituteProfileRouter.get("/get_all_companies_by_institute", userAuth, Institutemid, getAllCompaniesByInstitute);
+InstituteProfileRouter.get(
+  "/get_all_companies_by_institute_status",
+  userAuth,
+  Institutemid,
+  getAllCompaniesByInstituteByStatus,
+);
 
 InstituteProfileRouter.get("/get_all_companies_by_institute_by_latest_requirement", userAuth, Institutemid, getAllCompaniesByInstituteByLatestRequirement);
 

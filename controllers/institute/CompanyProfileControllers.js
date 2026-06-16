@@ -855,6 +855,202 @@ export const getAllCompaniesByInstitute = async (req, res) => {
   }
 };
 
+
+export const getAllCompaniesByInstituteByStatus = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const companyId = req.query.id;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    // Single company details
+    if (companyId) {
+      const company = await CompanyByInstitute.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(companyId),
+            userId: new mongoose.Types.ObjectId(userId),
+            status:"Active",
+            isDel: false,
+          },
+        },
+        {
+          $lookup: {
+            from: "companyrequirements",
+            let: { companyId: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$company", "$$companyId"],
+                  },
+                },
+              },
+              { $sort: { createdAt: -1 } },
+              { $limit: 1 },
+            ],
+            as: "latestRequirement",
+          },
+        },
+        {
+          $lookup: {
+            from: "reviews",
+            let: {
+              companyId: "$_id",
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      {
+                        $eq: [
+                          "$institute_id",
+                          new mongoose.Types.ObjectId(userId),
+                        ],
+                      },
+                      {
+                        $eq: ["$recruiter_id", "$$companyId"],
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: "review",
+          },
+        },
+        {
+          $addFields: {
+            rating: {
+              $ifNull: [{ $arrayElemAt: ["$review.star", 0] }, 0],
+            },
+          },
+        },
+        {
+          $addFields: {
+            rating: {
+              $ifNull: [{ $arrayElemAt: ["$review.star", 0] }, 0],
+            },
+          },
+        },
+        {
+          $unwind: {
+            path: "$latestRequirement",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+      ]);
+
+      if (!company.length) {
+        return res.status(404).json({
+          success: false,
+          message: "Company not found",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Company details fetched successfully",
+        data: company[0],
+      });
+    }
+
+    // Company list with latest requirement
+    const companies = await CompanyByInstitute.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          isDel: false,
+          status: "Active"
+        },
+      },
+      {
+        $lookup: {
+          from: "companyrequirements",
+          let: { companyId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$companyName", "$$companyId"],
+                },
+              },
+            },
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "latestRequirement",
+        },
+      },
+      {
+        $unwind: {
+          path: "$latestRequirement",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // ADD THIS
+      {
+        $lookup: {
+          from: "reviews",
+          let: {
+            companyId: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: [
+                        "$institute_id",
+                        new mongoose.Types.ObjectId(userId),
+                      ],
+                    },
+                    {
+                      $eq: ["$recruiter_id", "$$companyId"],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "review",
+        },
+      },
+      {
+        $addFields: {
+          rating: {
+            $ifNull: [{ $arrayElemAt: ["$review.star", 0] }, 0],
+          },
+        },
+      },
+
+      {
+        $sort: {
+          "latestRequirement.createdAt": -1,
+        },
+      },
+    ]);
+    return res.status(200).json({
+      success: true,
+      message: "Company list fetched successfully",
+      data: companies,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const getAllCompaniesByInstituteByLatestRequirement1234 = async (req, res) => {
   try {
     const userId = req.userId;
