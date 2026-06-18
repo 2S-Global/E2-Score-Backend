@@ -21,7 +21,8 @@ import {
   studentByDepartments,
   instituteStudentDetails,
   getCompanyRequirementSudents,
-  StudentInterview
+  StudentInterview,
+  getTotalRecruit,
 } from "../../controllers/institute/instituteStudentController.js";
 
 import {
@@ -196,6 +197,13 @@ InstituteStudentRouter.get(
   userAuth,
   Institutemid,
   getTotalStudentsCount
+);
+
+InstituteStudentRouter.get(
+  "/get_total_recruit",
+  userAuth,
+  Institutemid,
+  getTotalRecruit,
 );
 
 InstituteStudentRouter.get(

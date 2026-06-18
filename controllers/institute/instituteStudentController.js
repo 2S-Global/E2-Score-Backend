@@ -72,6 +72,7 @@ export const sendMailSudent=async(email,studentName,companyName,role)=>{
     await transporter.sendMail(mailOptions);
 }
 
+import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
 export const GetunverifiedStudents = async (req, res) => {
   try {
     const userId = req.userId;
@@ -2163,6 +2164,36 @@ export const getTotalStudentsCount = async (req, res) => {
     // Count students for this institute 
     const totalStudents = await InstitueStudent.countDocuments({
       instituteId: instituteId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      totalStudents,
+    });
+  } catch (error) {
+    console.error("Error in getTotalStudentsCount:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const getTotalRecruit = async (req, res) => {
+  try {
+    const instituteId = req.userId; // assuming institute is logged in
+
+    if (!instituteId) {
+      return res.status(400).json({
+        success: false,
+        message: "Institute ID not found",
+      });
+    }
+
+    // Count students for this institute
+    const totalStudents = await CompanyByInstitute.countDocuments({
+      userId: instituteId,
+      status:"Active"
     });
 
     return res.status(200).json({
