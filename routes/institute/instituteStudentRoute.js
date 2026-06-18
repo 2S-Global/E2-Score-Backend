@@ -20,6 +20,8 @@ import {
   instituteStudentByPlacementReady,
   studentByDepartments,
   instituteStudentDetails,
+  getCompanyRequirementSudents,
+  StudentInterview
 } from "../../controllers/institute/instituteStudentController.js";
 
 import {
@@ -107,6 +109,20 @@ InstituteStudentRouter.get(
   userAuth,
   Institutemid,
   instituteStudent
+);
+
+InstituteStudentRouter.get(
+  "/company-requirement-sudents",
+  userAuth,
+  Institutemid,
+  getCompanyRequirementSudents
+);
+
+InstituteStudentRouter.post(
+  "/student-interview",
+  userAuth,
+  Institutemid,
+  StudentInterview
 );
 
 InstituteStudentRouter.get(

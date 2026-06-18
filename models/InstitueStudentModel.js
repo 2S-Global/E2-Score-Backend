@@ -60,3 +60,45 @@ export const InstitueStudentSemester = mongoose.model("InstitueStudentSemester",
 
 
 
+const StudentPlacementSchema = new mongoose.Schema({
+   instituteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+  sudentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+  sudentName: { type: String, trim: true },
+  sudentEmail: { type: String, trim: true },
+  recruiterId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "companybyinstitutes",
+    required: true
+  },
+   recruiterName: { type: String, trim: true },
+   recruiterEmail: { type: String, trim: true },
+    companyRequirementId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "CompanyRequirement",
+    required: true
+  },
+   
+   institueStudentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "instituestudents",
+    required: true
+  },
+  placement: { type: Number, default:0 },
+  is_del: { type: Boolean, default: false },
+},
+  { timestamps: true }
+);
+
+export const StudentPlacement = mongoose.model("StudentPlacement", StudentPlacementSchema);
+
+
+
+

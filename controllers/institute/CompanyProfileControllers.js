@@ -12,7 +12,6 @@ import SelectedStudent from "../../models/StudentAssignedCompanyModel.js";
 import InstituteFaculty from "../../models/InstituteFacultyModel.js";
 import StudentEvaluation from "../../models/EvaluationModel.js";
 import mongoose from "mongoose";
-
 /**
  * @description Add or update a company's details for the authenticated user.
  * @route POST /api/companyprofile/add_or_update_company
@@ -1046,7 +1045,10 @@ export const updateCompanyRequirement = async (req, res) => {
       numberOfCandidates,
       numberOfOpenings,
       numberOfHired,
-      ratings
+      ratings,
+      courses,
+      tenth,
+      twelvth
     } = req.body;
 
     // Validate IDs
@@ -1083,6 +1085,12 @@ export const updateCompanyRequirement = async (req, res) => {
       updateData.numberOfHired = numberOfHired;
     if (ratings)
       updateData.ratings = ratings;
+     if (courses)
+      updateData.courses = courses;
+     if (tenth)
+      updateData.tenth = tenth;
+     if (twelvth)
+      updateData.twelvth = twelvth;
 
     // Find and update
     const updatedRequirement = await CompanyRequirement.findOneAndUpdate(

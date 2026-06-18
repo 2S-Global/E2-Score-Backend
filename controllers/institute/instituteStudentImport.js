@@ -370,6 +370,7 @@ export const addInstituteStudentManually = async (req, res) => {
       admissionYear,
       email,
       phoneNumber,
+      isSelfRegistered
     } = req.body;
 
     console.log("all data: ", req.body);
@@ -493,7 +494,13 @@ export const addInstituteStudentManually = async (req, res) => {
 
     //  here code Updation starts
 
-    if ((existingUser && !existingStudentEmail) || (!existingUser && existingStudentEmail) || (existingUser && existingStudentEmail)) {
+    if(existingStudentEmail?._id.toString()){
+
+    }
+    else if(isSelfRegistered){
+      
+    }
+    else if ((existingUser && !existingStudentEmail) || (!existingUser && existingStudentEmail) || (existingUser && existingStudentEmail)) {
       return res.status(400).json({
         success: false,
         message: "Student already exists."
@@ -503,7 +510,7 @@ export const addInstituteStudentManually = async (req, res) => {
     let student;
     let isNewStudent = false;
     let message;
-    if (_id && existingStudentEmail && existingStudentEmail._id.toString() === _id) {
+    if (_id && existingStudentEmail && existingStudentEmail?._id.toString() === _id) {
       message = "Student updated successfully.";
       student = await InstitueStudent.findByIdAndUpdate(
         existingStudentEmail._id,
