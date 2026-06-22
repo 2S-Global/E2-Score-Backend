@@ -12,20 +12,20 @@ const InstitueStudentSchema = new mongoose.Schema({
     required: true
   },
   name: { type: String, required: true, trim: true },
-  USN: { type: String, required: true, trim: true },
+  USN: { type: String,  trim: true },
   program: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "student_course_details",
     required: true
   },
   gender: { type: String, required: true, trim: true },
-  dob: { type: Date, required: true, trim: true },
+  dob: { type: Date, trim: true },
   admissionYear: { type: String, required: true, trim: true },
   presentYear: { type: String, required: true, trim: true },
-  semester: { type: Number, required: true, trim: true },
-  tenTh: { type: Number, required: true },
-  twelveTh: { type: Number, required: true },
-  graduationMarks: { type: Number, required: true },
+  semester: { type: Number, trim: true },
+  tenTh: { type: Number },
+  twelveTh: { type: Number },
+  graduationMarks: { type: Number },
   promotedYear: { type: String, default: null },
   promotedSemester: { type: Number, default: null },
   attendInterview: { type: Number, default: 0 },
@@ -35,7 +35,9 @@ const InstitueStudentSchema = new mongoose.Schema({
   email: { type: String },
   phoneNumber: { type: String },
   is_del: { type: Boolean, default: false },
-  status: { type: Boolean, default: true }
+  status: { type: Boolean, default: true },
+  isSelfRegistered: { type: String, default: 'no' },
+  endYear: { type: String, default: null },
 },
   { timestamps: true }
 );
@@ -92,6 +94,9 @@ const StudentPlacementSchema = new mongoose.Schema({
     required: true
   },
   placement: { type: Number, default:0 },
+  role: { type: String, trim: true },
+  date: { type: Date},
+  time: { type: String, trim: true },
   is_del: { type: Boolean, default: false },
 },
   { timestamps: true }

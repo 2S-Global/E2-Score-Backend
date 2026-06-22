@@ -484,6 +484,12 @@ export const addInstituteStudentManually = async (req, res) => {
       admissionYear
     })
 
+    const usnCheck = await InstitueStudent.find({
+      USN,
+      instituteId: user.userId,
+      admissionYear
+    })
+
     // Check if email already exists in InstitueStudent
     const existingStudentEmail = await InstitueStudent.findOne({
       email: email.toLowerCase(),
@@ -511,32 +517,40 @@ export const addInstituteStudentManually = async (req, res) => {
     let isNewStudent = false;
     let message;
     if (_id && existingStudentEmail && existingStudentEmail?._id.toString() === _id) {
-      message = "Student updated successfully.";
-      student = await InstitueStudent.findByIdAndUpdate(
-        existingStudentEmail._id,
-        {
-          $set: {
-            name,
-            USN,
-            gender,
-            dob: dobYMD,
-            tenTh,
-            twelveTh,
-            // email, // keep this
-            phoneNumber,
-            program: new mongoose.Types.ObjectId(program),
-            admissionYear,
-            instituteId: user.userId,
-            promotedYear: currentYear,
-            promotedSemester:
-              (existingData?.promotedSemester &&
-                existingData.promotedSemester > semesters?.length)
-                ? existingData.promotedSemester
-                : semesters?.length
-          }
-        },
-        { new: true }
-      );
+       const checkData = await InstitueStudent.findOne({_id})
+       console.log('checkData kkkkkkkkkkkkkkkkkkkkkkkk jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj',usnCheck?.length,checkData,USN)
+      if((usnCheck?.length === 1 && checkData?.USN===USN && checkData?.admissionYear===admissionYear )|| usnCheck?.length === 0){
+            message = "Student updated successfully.";
+            student = await InstitueStudent.findByIdAndUpdate(
+            existingStudentEmail._id,
+            {
+              $set: {
+                name,
+                USN,
+                gender,
+                dob: dobYMD,
+                tenTh,
+                twelveTh,
+                // email, // keep this
+                phoneNumber,
+                program: new mongoose.Types.ObjectId(program),
+                admissionYear,
+                instituteId: user.userId,
+                promotedYear: currentYear,
+                promotedSemester:
+                  (existingData?.promotedSemester &&
+                    existingData.promotedSemester > semesters?.length)
+                    ? existingData.promotedSemester
+                    : semesters?.length
+              }
+            },
+            { new: true }
+          );
+   }
+      else{
+        message = "USN number already exist.";
+      } 
+      
 
     } else if (!_id && !existingStudentEmail) {
       message = "Student created successfully.";

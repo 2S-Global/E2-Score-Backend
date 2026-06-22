@@ -4,7 +4,7 @@ import list_university_course from "../models/monogo_query/universityCourseModel
 import student_course_details from "../models/studentCourseModel.js";
 import usereducation from "../models/userEducationModel.js";
 import list_gender from "../models/monogo_query/genderModel.js";
-export const studentDetails= async (user, stuId) => {
+export const studentDetails= async (user, stuId,level) => {
    try {
       // Here I have started my new code for independent candidates from user   --  started
       // ✅ Step 2: Verify institute
@@ -26,7 +26,7 @@ export const studentDetails= async (user, stuId) => {
         const instituteIds = listOfInstitutes.map((inst) =>
           inst.id.toString()
         );
-   console.log('instituteDetails',instituteDetails,listOfInstitutes,instituteIds)
+   
         const currentYear = new Date().getFullYear();
   
         selfRegisteredStudents = await usereducation
@@ -37,12 +37,12 @@ export const studentDetails= async (user, stuId) => {
               $exists: true,
               $gte: currentYear
             },
-           
+            userId:stuId,
+            level:level,
+            is_verified:true
           })
-          .populate("userId", "name email profilePicture gender")
+          .populate("userId", "name email profilePicture gender phone_number")
           .lean();
-  
-        console.log("All Students List is here: ", selfRegisteredStudents);
   
   
         const genderIds = [
@@ -65,7 +65,6 @@ export const studentDetails= async (user, stuId) => {
   
         // ✅ Step 6: Course mapping
         const courseIds = [...new Set(selfRegisteredStudents.map((s) => s.courseName))];
-         console.log('courseIds 1 ',courseIds)
         const coursesOld = await list_university_course.find({
           id: { $in: courseIds },
           is_del: 0,
@@ -97,6 +96,7 @@ export const studentDetails= async (user, stuId) => {
             employmentId: student._id,
             name: student.userId?.name,
             email: student.userId?.email,
+            phone_number: student.userId?.phone_number,
             "tenTh":student.level==1?student.marks:"",
             "twelveTh": student.level==2?student.marks:"",
             profilePicture: student.userId?.profilePicture,
@@ -108,11 +108,7 @@ export const studentDetails= async (user, stuId) => {
         );
   
       }
-
-   const finalStudents = [
-      ...formattedSelfRegisteredStudents,
-    ];
-return finalStudents
+      return formattedSelfRegisteredStudents
     } catch (error) {
      return false
     }

@@ -18,8 +18,8 @@ import mongoose from "mongoose";
 import { Types } from 'mongoose';
 import { GetProgress } from "../../utility/helper/getprogress.js";
 import {studentDetails} from "../../utility/student.js"
-
-export const sendMailSudent=async(email,studentName,companyName,role)=>{
+import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
+export const sendMailSudent=async(data)=>{
       const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,
@@ -30,49 +30,32 @@ export const sendMailSudent=async(email,studentName,companyName,role)=>{
       },
     });
 
-    let verificationStatus = `
+    let dateTime= `
         <ul>
-          <li><strong>Level:</strong> ${updatedUserEducation.level_verified ? "Verified" : "Not Verified"
-      }</li>
-          <li><strong>Course Type:</strong> ${updatedUserEducation.courseType_verified
-        ? "Verified"
-        : "Not Verified"
-      }</li>
-          <li><strong>Course Name:</strong> ${updatedUserEducation.courseName_verified
-        ? "Verified"
-        : "Not Verified"
-      }</li>
-          <li><strong>Duration:</strong> ${updatedUserEducation.duration_verified ? "Verified" : "Not Verified"
-      }</li>
-          <li><strong>Grading System:</strong> ${updatedUserEducation.gradingSystem_verified
-        ? "Verified"
-        : "Not Verified"
-      }</li>
-          <li><strong>Marks:</strong> ${updatedUserEducation.marks_verified ? "Verified" : "Not Verified"
-      }</li>
-          <li><strong>Remarks:</strong> ${updatedUserEducation.remarks}</li>
+          <li><strong>Date:</strong> ${data?.date}</li>
+          <li><strong>Time:</strong> ${data?.time}</li>
+          
         </ul>
       `;
 
-    const emailcontent = `<p>Dear <strong>${user.name}</strong>,</p>
-        <p>Your academic verification details have been updated by <strong>${instituteDetails.name}</strong>.</p>
-        <p>Here is the status of your verification:</p>
-        ${verificationStatus}
-        <p>If you believe there is an error, please contact our support team.</p>
+    const emailcontent = `<p>Dear <strong>${data?.studentName}</strong>,</p>
+        <p>We are pleased to invite you to an interview for the position of ${data?.role} at ${data?.recruiterName}.</p>
+        <p>Interview Details:</p>
+        ${dateTime}
+        <p>If you have any questions, feel free to contact us.</p>
         <br/>
         <p>Regards,<br/>E2Score Verification Team</p>`;
 
     const mailOptions = {
       from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Academic Verification Status Updated",
+      to: data?.sudentEmail,
+      subject: `Interview Invitation for ${data?.role} Position`,
       html: emailcontent,
     };
 
     await transporter.sendMail(mailOptions);
 }
 
-import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
 export const GetunverifiedStudents = async (req, res) => {
   try {
     const userId = req.userId;
@@ -481,9 +464,11 @@ export const UpdatestudentStatus = async (req, res) => {
       marks_verified,
       remarks,
     } = req.body;
-
     const instituteId = req.userId;
     console.log(instituteId);
+
+    
+
 
     // ✅ Step 1: Verify institute linked to user
     const instituteDetails = await CompanyDetails.findOne({
@@ -525,7 +510,32 @@ export const UpdatestudentStatus = async (req, res) => {
       },
       { new: true }
     );
+  
+  if(updatedUserEducation && is_studied_here){
+          let student= await studentDetails(instituteId,updatedUserEducation?.userId,updatedUserEducation?.level)
+          const currentYear = new Date().getFullYear();
+          if(student?.length){
+              const stu= {
+                            name:student?.[0]?.name,
+                            gender:student?.[0]?.gender,
+                            program:student?.[0]?.program,
+                            admissionYear:updatedUserEducation?.duration?.from,
+                            email:student?.[0]?.email,
+                            phoneNumber:student?.[0]?.phone_number,
+                            isSelfRegistered:'yes',
+                            userCreatedId:student?.[0]?._id,
+                            instituteId:new mongoose.Types.ObjectId(instituteId),
+                            endYear:updatedUserEducation?.duration?.to,
+                            presentYear: currentYear
+                          }
+                let abc=await InstitueStudent.create(stu);
+                  console.log('is_studied_here',student,abc)
+                      
+            }
 
+          
+             
+          }
     // Handle not found
     if (!updatedUserEducation) {
       return res.status(404).json({
@@ -821,16 +831,29 @@ export const instituteStudent = async (req, res) => {
   try {
     const user = req?.user
     console.log("user in instituteStudent controller", user);
-
+     let currentYear=new Date().getFullYear()
+     console.log("currentYear",currentYear)
     // const progress = await GetProgress(user.user_id);
     // 2️⃣ Get Institue Student
     const institueStudent = await InstitueStudent.aggregate([
       {
-        $match: {
-          instituteId: new Types.ObjectId(user?.userId),
-          status: true,
-          is_del: false,
-        },
+       $match: {
+    instituteId: new Types.ObjectId(user?.userId),
+    status: true,
+    is_del: false,
+    $or: [
+      {
+        isSelfRegistered: { $exists: false }
+      },
+      {
+        isSelfRegistered: "no"
+      },
+      {
+        isSelfRegistered: "yes",
+        endYear: { $gte: String(currentYear) }
+      }
+    ]
+  }
       },
       // ✅ ADD THIS
       {
@@ -944,7 +967,7 @@ export const instituteStudent = async (req, res) => {
     // Here I have started my new code for independent candidates from user   --  started
 
     // ✅ Step 2: Verify institute
-    const instituteDetails = await CompanyDetails.findOne({
+  /*   const instituteDetails = await CompanyDetails.findOne({
       userId: user.userId,
       isDel: false,
     });
@@ -1094,9 +1117,9 @@ const mongoCourseIds=coursesOld.map((item)=>item?._id.toString())
     const finalStudents = [
       ...studentsWithProgress,
       ...selfRegisteredWithProgress,
-    ];
+    ]; */
 
-    console.log("selfRegisteredWithProgress is result: ", selfRegisteredWithProgress);
+    //console.log("selfRegisteredWithProgress is result: ", selfRegisteredWithProgress);
 
 
 
@@ -1117,8 +1140,8 @@ const mongoCourseIds=coursesOld.map((item)=>item?._id.toString())
 
     return res.status(200).json({
       success: true,
-      count: finalStudents.length,
-      data: finalStudents,
+      count: institueStudent.length,
+      data: institueStudent,
     });
 
   } catch (error) {
@@ -1279,7 +1302,7 @@ export const getCompanyRequirementSudents= async (req, res) => {
       // Here I have started my new code for independent candidates from user   --  started
   
       // ✅ Step 2: Verify institute
-      const instituteDetails = await CompanyDetails.findOne({
+     /*  const instituteDetails = await CompanyDetails.findOne({
         userId: user.userId,
         isDel: false,
       });
@@ -1397,7 +1420,7 @@ export const getCompanyRequirementSudents= async (req, res) => {
   
   
       }
-  
+   */
   
       // Here I have started my new code for independent candidates from user   --  ended
   
@@ -1423,15 +1446,15 @@ export const getCompanyRequirementSudents= async (req, res) => {
       }))
     ); */
 
-    const finalStudents = [
+ /*    const finalStudents = [
       ...institueStudent,
       ...formattedSelfRegisteredStudents,
-    ];
+    ]; */
   
       return res.status(200).json({
         success: true,
-        count: finalStudents.length,
-        data: finalStudents,
+        count: institueStudent.length,
+        data: institueStudent,
       });
   
     } catch (error) {
@@ -1454,6 +1477,7 @@ export const StudentInterview= async (req, res) => {
         message: "Please select a student",
       });
       }
+      console.log('Interview Details:',students, recruiter)
       let allStudent=students?.map((item)=>(
         {
           companyRequirementId:recruiter?._id,
@@ -1464,10 +1488,21 @@ export const StudentInterview= async (req, res) => {
           recruiterId:recruiter?.companyName?._id,
           recruiterName:recruiter?.companyName?.companyName,
           recruiterEmail:recruiter?.companyName?.email,
+          role:recruiter?.role,
+          date:recruiter?.date,
+          time:recruiter?.time,
           institueStudentId:item?._id,
         }
       ))
       const result = await StudentPlacement.insertMany(allStudent);
+      if(allStudent?.length>0){
+            allStudent?.map(async(item)=>{
+             return await sendMailSudent(item);
+            })
+      }
+
+
+
       return res.status(200).json({
         success: true,
         count:result?.length,
@@ -2179,36 +2214,6 @@ export const getTotalStudentsCount = async (req, res) => {
   }
 };
 
-export const getTotalRecruit = async (req, res) => {
-  try {
-    const instituteId = req.userId; // assuming institute is logged in
-
-    if (!instituteId) {
-      return res.status(400).json({
-        success: false,
-        message: "Institute ID not found",
-      });
-    }
-
-    // Count students for this institute
-    const totalStudents = await CompanyByInstitute.countDocuments({
-      userId: instituteId,
-      status:"Active"
-    });
-
-    return res.status(200).json({
-      success: true,
-      totalStudents,
-    });
-  } catch (error) {
-    console.error("Error in getTotalStudentsCount:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-};
-
 export const getActiveCompanies = async (req, res) => {
   try {
     const currentDate = new Date();
@@ -2483,6 +2488,37 @@ export const studentByDepartments = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+
+export const getTotalRecruit = async (req, res) => {
+  try {
+    const instituteId = req.userId; // assuming institute is logged in
+
+    if (!instituteId) {
+      return res.status(400).json({
+        success: false,
+        message: "Institute ID not found",
+      });
+    }
+
+    // Count students for this institute
+    const totalStudents = await CompanyByInstitute.countDocuments({
+      userId: instituteId,
+      status:"Active"
+    });
+
+    return res.status(200).json({
+      success: true,
+      totalStudents,
+    });
+  } catch (error) {
+    console.error("Error in getTotalStudentsCount:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
     });
   }
 };
