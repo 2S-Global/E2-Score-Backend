@@ -73,8 +73,8 @@ const StudentPlacementSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
-  sudentName: { type: String, trim: true },
-  sudentEmail: { type: String, trim: true },
+  studentName: { type: String, trim: true },
+  studentEmail: { type: String, trim: true },
   recruiterId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "companybyinstitutes",
@@ -97,6 +97,10 @@ const StudentPlacementSchema = new mongoose.Schema({
   role: { type: String, trim: true },
   date: { type: Date},
   time: { type: String, trim: true },
+  tenTh: { type: String, trim: true },
+  twelveTh: { type: String, trim: true },
+  course: { type: String, trim: true },
+  studentPhone: { type: String, trim: true },
   is_del: { type: Boolean, default: false },
 },
   { timestamps: true }

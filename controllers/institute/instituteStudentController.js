@@ -32,9 +32,8 @@ export const sendMailSudent=async(data)=>{
 
     let dateTime= `
         <ul>
-          <li><strong>Date:</strong> ${data?.date}</li>
+          <li><strong>Date:</strong> ${data?.date &&  new Date(data?.date).toISOString().split("T")[0]}</li>
           <li><strong>Time:</strong> ${data?.time}</li>
-          
         </ul>
       `;
 
@@ -48,11 +47,72 @@ export const sendMailSudent=async(data)=>{
 
     const mailOptions = {
       from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-      to: data?.sudentEmail,
+      to: data?.studentEmail,
       subject: `Interview Invitation for ${data?.role} Position`,
       html: emailcontent,
     };
+    await transporter.sendMail(mailOptions);
+}
 
+
+export const sendMailRecruiter=async(data,students)=>{
+
+let stu=""
+
+if(students?.length>0){
+  stu=`
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-family:Arial,sans-serif;border:1px solid #dbe2ea;border-radius:8px;overflow:hidden;">
+      <thead>
+        <tr style="background:#0f4c81;">
+          <th style="padding:14px;color:#ffffff;text-align:left;font-size:14px;font-weight:600;">Name</th>
+          <th style="padding:14px;color:#ffffff;text-align:left;font-size:14px;font-weight:600;">Email</th>
+          <th style="padding:14px;color:#ffffff;text-align:left;font-size:14px;font-weight:600;">Phone</th>
+          <th style="padding:14px;color:#ffffff;text-align:left;font-size:14px;font-weight:600;">10th</th>
+          <th style="padding:14px;color:#ffffff;text-align:left;font-size:14px;font-weight:600;">12th</th>
+          <th style="padding:14px;color:#ffffff;text-align:left;font-size:14px;font-weight:600;">Course</th>
+        </tr>
+      </thead>
+      <tbody>
+      `
+      for (const item of students) {
+        stu+=`<tr style="background:#ffffff;">
+        <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.studentName}</td>
+        <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.studentEmail}</td>
+        <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.studentPhone}</td>
+        <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.tenTh}%</td>
+        <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.twelveTh}%</td>
+        <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.course}</td>
+      </tr>`
+      }
+       stu+=`</tbody></table>`
+}
+     
+   
+
+      const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const emailcontent = `<p>Dear <strong>Recruiter</strong>,</p>
+        <p>Please find the details of  ${data?.total} candidates scheduled for interviews on  ${data?.date &&  new Date(data?.date).toISOString().split("T")[0]} for the position of ${data?.role}.</p>
+        <div>${stu}</div>
+        <p>Kindly review the candidate list and confirm the interview schedule. Please let me know if any additional information or documentation is required.</p>
+        <p>Thank you for your assistance.</p>
+        <br/>
+        <p>Regards,<br/>E2Score Verification Team</p>`;
+
+    const mailOptions = {
+      from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
+      to: data?.recruiterEmail,
+      subject: `Position Interview Schedule Submission – ${data?.total} Candidates for ${data?.role}`,
+      html: emailcontent,
+    };
     await transporter.sendMail(mailOptions);
 }
 
@@ -1471,6 +1531,7 @@ export const StudentInterview= async (req, res) => {
    try {
       const user = req?.user
       const { students, recruiter } = req.body;
+      console.log('students',students)
       if(students?.length===0){
         return res.status(500).json({
         success: false,
@@ -1483,8 +1544,12 @@ export const StudentInterview= async (req, res) => {
           companyRequirementId:recruiter?._id,
           instituteId:user?.userId,
           sudentId:item?.userCreatedId,
-          sudentName:item?.name,
-          sudentEmail:item?.email,
+          studentName:item?.name,
+          studentEmail:item?.email,
+          tenTh:item?.tenTh,
+          twelveTh:item?.twelveTh,
+          course:item?.programDetails?.name,
+          studentPhone:item?.phoneNumber,
           recruiterId:recruiter?.companyName?._id,
           recruiterName:recruiter?.companyName?.companyName,
           recruiterEmail:recruiter?.companyName?.email,
@@ -1495,10 +1560,14 @@ export const StudentInterview= async (req, res) => {
         }
       ))
       const result = await StudentPlacement.insertMany(allStudent);
+
       if(allStudent?.length>0){
             allStudent?.map(async(item)=>{
              return await sendMailSudent(item);
             })
+            let rec=allStudent[0]
+                rec["total"]=allStudent?.length||0
+            await sendMailRecruiter(rec,allStudent);
       }
 
 
