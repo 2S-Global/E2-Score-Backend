@@ -338,3 +338,38 @@ export const getMySavedJobs = async (req, res) => {
     });
   }
 };
+
+export const getJobsByUserIndustry = async (req, res) => {
+  try {
+    const userId = req.userId;
+ 
+    // Fetch user career details
+    const userCareer = await UserCareer.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+    });
+ 
+    if (!userCareer) {
+      return res.status(404).json({
+        success: false,
+        message: "User career details not found",
+      });
+    }
+ 
+    const jobs = await JobPosting.find({
+      industry: userCareer.CurrentIndustry,
+    }).populate("jobType", "name");
+ 
+    return res.status(200).json({
+      success: true,
+      currentIndustry: userCareer.CurrentIndustry,
+      totalJobs: jobs.length,
+      jobs,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

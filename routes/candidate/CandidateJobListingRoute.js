@@ -9,6 +9,7 @@ import {
   saveJob,
   removeSavedJob,
   getMySavedJobs,
+  getJobsByUserIndustry,
 } from "../../controllers/candidate/CandidateJobListingController.js";
 
 //import middleware
@@ -65,5 +66,10 @@ CandidateJobListingRouter.post(
   upload.none(),
   jobsearchFilters
 );
-
+CandidateJobListingRouter.get(
+  "/get_job_recommendation",
+  userAuth,
+  Candimid,
+  getJobsByUserIndustry
+);
 export default CandidateJobListingRouter;
