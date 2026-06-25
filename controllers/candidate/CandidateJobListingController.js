@@ -3,6 +3,7 @@ import CompanyDetails from "../../models/company_Models/companydetails.js";
 import SavedJob from "../../models/SavedJob.js";
 import JobPosting from "../../models/company_Models/JobPostingModel.js";
 import list_job_experience_level from "../../models/ListJobExperienceLevelModel.js";
+import mongoose from "mongoose"
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
 dayjs.extend(relativeTime);
