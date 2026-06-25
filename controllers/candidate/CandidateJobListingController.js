@@ -7,7 +7,7 @@ import mongoose from "mongoose"
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
 dayjs.extend(relativeTime);
-
+import UserCareer from "../../models/CareerModel.js";
 import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
 
 export const getAllJobList = async (req, res) => {
