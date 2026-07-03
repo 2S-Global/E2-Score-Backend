@@ -3645,30 +3645,43 @@ export const getMyAppliedJobs = async (req, res) => {
       companyLogoMap[c.userId.toString()] = c.logo;
     });
 
-    // 🔹 Attach logo without changing existing structure
-    applications.forEach((app) => {
-      if (app?.jobId?.userId?._id) {
-        app.jobId.userId = {
-          ...app.jobId.userId.toObject(),
-          companyLogo:
-            companyLogoMap[app.jobId.userId._id.toString()] || null,
-        };
+    // 🔹 Convert to plain objects and attach logo & interviewInvitationStatus
+    const formattedApplications = applications.map((app) => {
+      const appObj = app.toObject();
+
+      // Compute interviewInvitationStatus
+      let interviewInvitationStatus = "pending";
+      if (appObj.interviewInvitationAccepted !== undefined && appObj.interviewInvitationAccepted !== null) {
+        if (appObj.interviewInvitationAccepted === true) {
+          interviewInvitationStatus = "accepted";
+        } else if (appObj.interviewInvitationAccepted === false) {
+          interviewInvitationStatus = "rejected";
+        }
+      } else if (appObj.requestReschedule === true) {
+        interviewInvitationStatus = "reschedule_request";
       }
+      appObj.interviewInvitationStatus = interviewInvitationStatus;
+
+      // Attach logo
+      if (appObj?.jobId?.userId?._id) {
+        appObj.jobId.userId.companyLogo =
+          companyLogoMap[appObj.jobId.userId._id.toString()] || null;
+      }
+      return appObj;
     });
 
     /* ================= ADD END ================= */
 
     return res.status(200).json({
       success: true,
-      count: applications.length,
-      data: applications,
+      count: formattedApplications.length,
+      data: formattedApplications,
     });
   } catch (error) {
     console.error("getMyAppliedJobs error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 // Save Interview Feedback API
 export const submitInterviewFeedback = async (req, res) => {

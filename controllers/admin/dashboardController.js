@@ -953,7 +953,7 @@ export const getAllJobApplicantsList = async (req, res) => {
 
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
-
+          interviewInvitationAccepted: 1,
           skills: "$personalDetails.skills",
           currentLocation: "$candidateDetails.currentLocation",
 
@@ -977,6 +977,9 @@ export const getAllJobApplicantsList = async (req, res) => {
         },
       },
     ]);
+
+
+    console.log("is it wokring==>", appliedCandidates)
 
     return res.status(200).json({
       success: true,
