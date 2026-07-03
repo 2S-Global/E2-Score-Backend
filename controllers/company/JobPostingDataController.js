@@ -22,6 +22,7 @@ import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
 import nodemailer from "nodemailer";
+import SavedJob from "../../models/SavedJob.js";
 //import CompanyDetails from "../../models/company_Models/companydetails.js";
 
 dayjs.extend(relativeTime);
@@ -1587,6 +1588,21 @@ export const getJobPreviewDetails = async (req, res) => {
       });
     }
 
+
+    //newly added
+    const [application, bookmark] = await Promise.all([
+      JobApplication.findOne({
+        jobId: job._id,
+        userId,
+        isDel: false,
+      }).select("_id"),
+
+      SavedJob.findOne({
+        jobId: job._id,
+        userId,
+      }).select("_id"),
+    ]);
+
     // Fetch industry name (if applicable)
     let industryName = "";
     if (job.industry) {
@@ -1697,6 +1713,8 @@ export const getJobPreviewDetails = async (req, res) => {
       totalShortlisted: stats.total_shortlisted || 0,
       totalInterviewScheduled: stats.total_interview_scheduled || 0,
       totalRejected: stats.total_rejected || 0,
+      isApplied: !!application,
+      isBookmarked: !!bookmark,
       // company: {
       //   name: company.name,
       //   phoneNumber: company.phone_number,

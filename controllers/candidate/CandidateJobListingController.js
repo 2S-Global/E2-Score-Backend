@@ -9,6 +9,7 @@ import relativeTime from "dayjs/plugin/relativeTime.js";
 dayjs.extend(relativeTime);
 import UserCareer from "../../models/CareerModel.js";
 import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
+import JobApplication from "../../models/jobApplicationModel.js";
 
 export const getAllJobList = async (req, res) => {
   try {
@@ -47,6 +48,18 @@ export const getAllJobList = async (req, res) => {
        STEP 2: FETCH SAVED JOBS
     =============================== */
     const jobIds = jobs.map((job) => job._id);
+
+    const appliedJobs = await JobApplication.find({
+      userId,
+      jobId: { $in: jobIds },
+      isDel: false,
+    })
+      .select("jobId")
+      .lean();
+
+    const appliedJobSet = new Set(
+      appliedJobs.map((item) => item.jobId.toString())
+    );
 
     const savedJobs = await SavedJob.find({
       userId,
@@ -103,6 +116,18 @@ export const getAllJobList = async (req, res) => {
         location = [city, country].filter(Boolean).join(", ");
       }
 
+      // const appliedJobs = await JobApplication.find({
+      //   userId,
+      //   jobId: { $in: jobIds },
+      //   isDel: false,
+      // })
+      //   .select("jobId")
+      //   .lean();
+
+      // const appliedJobSet = new Set(
+      //   appliedJobs.map((item) => item.jobId.toString())
+      // );
+
       return {
         _id: job._id,
         jobTitle: job.jobTitle,
@@ -119,6 +144,7 @@ export const getAllJobList = async (req, res) => {
 
         // ✅ BOOKMARK FLAG
         isBookmarked: savedJobSet.has(job._id.toString()),
+        isApplied: appliedJobSet.has(job._id.toString()),
       };
     });
 
@@ -343,23 +369,23 @@ export const getMySavedJobs = async (req, res) => {
 export const getJobsByUserIndustry = async (req, res) => {
   try {
     const userId = req.userId;
- 
+
     // Fetch user career details
     const userCareer = await UserCareer.findOne({
       userId: new mongoose.Types.ObjectId(userId),
     });
- 
+
     if (!userCareer) {
       return res.status(404).json({
         success: false,
         message: "User career details not found",
       });
     }
- 
+
     const jobs = await JobPosting.find({
       industry: userCareer.CurrentIndustry,
     }).populate("jobType", "name");
- 
+
     return res.status(200).json({
       success: true,
       currentIndustry: userCareer.CurrentIndustry,
