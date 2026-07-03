@@ -507,12 +507,12 @@ export const GetTempJobPostingDetails = async (req, res) => {
 
     // 🔹 Find TEMP job by id, status, and userId
     let job = await JobPostingTemp.findOne({
-      _id: tempId,
+      originalJobId: tempId,
       userId,
       status: "preview",
     })
       .populate(
-        "specialization jobType benefits careerLevel experienceLevel gender qualification country city branch jobSkills"
+        "specialization jobType benefits careerLevel experienceLevel gender qualification country city branch jobSkills",
       )
       .lean(); // 👈 SAME as live API
 
@@ -566,7 +566,6 @@ export const GetTempJobPostingDetails = async (req, res) => {
       message: "Temp job fetched successfully",
       data: job,
     });
-
   } catch (error) {
     console.error("Error fetching temp job posting:", error);
     res.status(500).json({
@@ -1040,12 +1039,13 @@ export const ConfirmJobPostingDetails = async (req, res) => {
 // EditLiveJobPostingDetails
 export const EditLiveJobPostingDetails = async (req, res) => {
   try {
-
     const userId = req.userId;
 
     const { jobId } = req.query;
     if (!jobId) {
-      return res.status(404).json({ message: "jobId not provided in query parameter." });
+      return res
+        .status(404)
+        .json({ message: "jobId not provided in query parameter." });
     }
 
     // const id = mongoose.Types.ObjectId(jobId);
@@ -1100,7 +1100,7 @@ export const EditLiveJobPostingDetails = async (req, res) => {
       advertiseCity,
       advertiseCityName,
       resumeRequired,
-      jobSkills
+      jobSkills,
     } = req.body;
 
     console.log("Here is the body data", req.body);
@@ -1129,7 +1129,7 @@ export const EditLiveJobPostingDetails = async (req, res) => {
       });
     }
 
-    if (!jobSkills.every(skill => typeof skill === "string")) {
+    if (!jobSkills.every((skill) => typeof skill === "string")) {
       return res.status(400).json({
         message: "All skills must be strings.",
       });
@@ -1143,67 +1143,12 @@ export const EditLiveJobPostingDetails = async (req, res) => {
       });
     }
 
-    if (!specialization.every(spec => typeof spec === "string")) {
+    if (!specialization.every((spec) => typeof spec === "string")) {
       return res.status(400).json({
         message: "All specializations must be strings.",
       });
     }
     // new block of code for Specialization ended
-
-
-    /*
-    // Iterrate Skills from name to array starts from here  --- 31th october
-
-    if (!Array.isArray(jobSkills) || jobSkills.length === 0) {
-      return res.status(400).json({
-        message: "Skills must be a non-empty array of strings.",
-      });
-    }
-
-    // Case: If skills came as a string from form-data
-    let parsedSkills = jobSkills;
-    if (typeof jobSkills === "string") {
-      try {
-        parsedSkills = JSON.parse(jobSkills);
-      } catch (e) {
-        return res.status(400).json({ message: "Invalid skills format." });
-      }
-    }
-
-    const allStrings = parsedSkills.every((skill) => typeof skill === "string");
-    if (!allStrings) {
-      return res.status(400).json({ message: "All skills must be strings." });
-    }
-
-    // Find matching skills in MongoDB
-    const matchedSkills = await list_key_skill.find({
-      Skill: { $in: parsedSkills },
-      is_del: 0,
-      is_active: 1,
-    }, "_id Skill");
-
-    const skillMap = {};
-    matchedSkills.forEach((row) => {
-      skillMap[row.Skill] = row._id;
-    });
-
-    const missingSkills = parsedSkills.filter((skill) => !skillMap[skill]);
-    if (missingSkills.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Some skills not found in the database.",
-        missingSkills,
-      });
-    }
-
-    const skillObjectIds = parsedSkills.map((skill) => skillMap[skill]);
-
-
-
-    console.log("Here is my all skill object IDS --", skillObjectIds);
-
-    */
-
 
     // Iterrate Skills from name to array ends here   -- 31th october
 
@@ -1219,7 +1164,7 @@ export const EditLiveJobPostingDetails = async (req, res) => {
         specialization: specialization,
         // jobSkills: skillObjectIds,
         jobSkills: jobSkills,
-        jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
+        jobType: parseToArray(jobType).map((id) => mongoose.Types.ObjectId(id)),
         positionAvailable,
         showBy,
         expectedHours,
@@ -1236,12 +1181,18 @@ export const EditLiveJobPostingDetails = async (req, res) => {
           amount: salary?.amount ? Number(salary.amount) : null,
           rate: salary?.rate || "per year",
         },
-        benefits: parseToArray(benefits).map(id => mongoose.Types.ObjectId(id)),
+        benefits: parseToArray(benefits).map((id) =>
+          mongoose.Types.ObjectId(id),
+        ),
         careerLevel: careerLevel ? mongoose.Types.ObjectId(careerLevel) : null,
-        experienceLevel: experienceLevel ? mongoose.Types.ObjectId(experienceLevel) : null,
-        gender: parseToArray(gender).map(id => mongoose.Types.ObjectId(id)),
+        experienceLevel: experienceLevel
+          ? mongoose.Types.ObjectId(experienceLevel)
+          : null,
+        gender: parseToArray(gender).map((id) => mongoose.Types.ObjectId(id)),
         industry,
-        qualification: parseToArray(qualification).map(id => mongoose.Types.ObjectId(id)),
+        qualification: parseToArray(qualification).map((id) =>
+          mongoose.Types.ObjectId(id),
+        ),
         jobLocationType,
         // country: country ? mongoose.Types.ObjectId(country) : null,
         // city: city ? mongoose.Types.ObjectId(city) : null,
@@ -1256,7 +1207,7 @@ export const EditLiveJobPostingDetails = async (req, res) => {
         status: "preview",
         // status: "draft"
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     console.log("New Job Object:", updatedJob);
@@ -1266,7 +1217,7 @@ export const EditLiveJobPostingDetails = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Job posting created successfully",
-      jobId: updatedJob._id,
+      jobId: updatedJob.originalJobId,
       data: updatedJob,
     });
   } catch (error) {
@@ -1314,7 +1265,7 @@ export const ConfirmLiveJobPostingDetails = async (req, res) => {
 
     // 🔹 Fetch temp job
     const tempJob = await JobPostingTemp.findOne({
-      _id: tempId,
+      originalJobId: tempId,
       userId,
       status: "preview",
     }).lean();
@@ -1343,23 +1294,20 @@ export const ConfirmLiveJobPostingDetails = async (req, res) => {
 
     // ❌ Remove TEMP-ONLY fields (IMPORTANT)
     const {
-      _id,              // temp _id
-      originalJobId,    // ❌ must NOT go into JobPosting
-      status,           // preview
+      _id, // temp _id
+      originalJobId, // ❌ must NOT go into JobPosting
+      status, // preview
       createdAt,
       updatedAt,
       __v,
-      ...jobData        // ✅ only real job fields remain
+      ...jobData // ✅ only real job fields remain
     } = tempJob;
 
     // ✅ Update live job
-    await JobPosting.findByIdAndUpdate(
-      originalJobId,
-      {
-        ...jobData,
-        status: "completed",
-      }
-    );
+    await JobPosting.findByIdAndUpdate(originalJobId, {
+      ...jobData,
+      status: "completed",
+    });
 
     // ✅ Delete temp record after successful update
     await JobPostingTemp.findByIdAndDelete(tempId);
@@ -1368,7 +1316,6 @@ export const ConfirmLiveJobPostingDetails = async (req, res) => {
       success: true,
       message: "Job updated successfully",
     });
-
   } catch (error) {
     console.error("Error confirming live job posting:", error);
     return res.status(500).json({
