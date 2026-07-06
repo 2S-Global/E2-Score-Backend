@@ -1652,6 +1652,7 @@ export const getJobPreviewDetails = async (req, res) => {
         day: "numeric",
       }) : "",
       salary: job.salary,
+      opening: job.positionAvailable,
       logoImage: logoImage,
       coverImage: coverImage,
       companyWebsite: companyWebsite,
