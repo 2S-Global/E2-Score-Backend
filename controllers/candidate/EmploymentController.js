@@ -425,20 +425,16 @@ export const addEmploymentDetails = async (req, res) => {
         // Build LinkedIn-style employee card using this user’s data
         const employeeCardHtml = `
       <div style="display:flex; align-items:center; border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:12px; background:#fff; font-family:Arial, sans-serif;">
-        <img src="${
-          newEmployeeUser.profilePicture || "https://via.placeholder.com/50"
-        }" 
+        <img src="${newEmployeeUser.profilePicture || "https://via.placeholder.com/50"
+          }" 
              alt="profile" 
              style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
         <div>
-          <h3 style="margin:0; font-size:16px; color:#0073b1;">${
-            newEmployeeUser.name || "N/A"
+          <h3 style="margin:0; font-size:16px; color:#0073b1;">${newEmployeeUser.name || "N/A"
           }</h3>
-          <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${
-            job_title || "Unknown"
+          <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${job_title || "Unknown"
           }</p>
-          <p style="margin:2px 0; font-size:13px; color:#555;">${
-            newEmployeeUser.email || ""
+          <p style="margin:2px 0; font-size:13px; color:#555;">${newEmployeeUser.email || ""
           }</p>
         </div>
       </div>
@@ -660,12 +656,15 @@ export const getEmploymentDetailsBySql = async (req, res) => {
 };
 
 export const getEmploymentDetails = async (req, res) => {
+
   try {
+
     const userId = req.userId;
 
     if (!userId) {
       return res.status(400).json({ message: "User ID is required." });
     }
+
 
     // Fetch employment data
     const employmentData = await Employment.find({
@@ -687,6 +686,8 @@ export const getEmploymentDetails = async (req, res) => {
         employmentData.map((emp) => emp.companyName?.toString()).filter(Boolean)
       ),
     ];
+
+
     const noticePeriodIds = [
       ...new Set(
         employmentData
@@ -694,6 +695,8 @@ export const getEmploymentDetails = async (req, res) => {
           .filter(Boolean)
       ),
     ];
+
+
 
     // Fetch companies
     const companies = await companylist
@@ -905,14 +908,14 @@ export const editEmploymentDetails = async (req, res) => {
       NoticePeriod: notice_period,
     };
 
- const updatedEmployment = await Employment.findByIdAndUpdate(
-   _id,
-   {
-     $set: updatedFields,
-     $unset: { workedInCompany: 1 }, // ✅ removes field completely
-   },
-   { new: true },
- );
+    const updatedEmployment = await Employment.findByIdAndUpdate(
+      _id,
+      {
+        $set: updatedFields,
+        $unset: { workedInCompany: 1 }, // ✅ removes field completely
+      },
+      { new: true },
+    );
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,

@@ -334,7 +334,10 @@ export const getMySavedJobs = async (req, res) => {
 
     const companies = await CompanyDetails.find({
       userId: { $in: employerIds }
-    }).select("userId logo").lean();
+    }).select("userId logo name").lean();
+
+
+    console.log("companies", companies);
 
     const logoMap = {};
     companies.forEach(c => {
@@ -342,10 +345,17 @@ export const getMySavedJobs = async (req, res) => {
     });
 
 
+    //total applied
+    const totalApplied = await JobApplication.countDocuments({
+      userId,
+      isDel: false,
+    });
+
     // console.log("Fetched saved jobs to see all the result:", savedJobs);
 
     return res.json({
       success: true,
+      totalApplied,
       data: savedJobs.map((item) => ({
         savedJobId: item._id,
         savedAt: item.savedAt,
@@ -354,6 +364,7 @@ export const getMySavedJobs = async (req, res) => {
           logo: logoMap[item.jobId?.userId?.toString()] || null,
           jobType: item.jobId?.jobType?.map((t) => t.name) || [],
           jobExperienceLevel: item.jobId?.experienceLevel?.name || "",
+          companyName: companies.find(c => c.userId.toString() === item.jobId?.userId?.toString())?.name || "",
         },
       })),
     });
