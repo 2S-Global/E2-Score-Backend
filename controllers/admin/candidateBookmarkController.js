@@ -1,10 +1,13 @@
 import User from "../../models/userModel.js";
 import CandidateBookmark from "../../models/candidateBookmarkModel.js";
+
+
+
 export const addCandidateBookmark = async (req, res) => {
+    console.log("candidate bookmarked==>" , )
     try {
         const { bookmark, _id } = req.body;
         const user_id = req.userId;
-
         // Validate input fields
         if (typeof bookmark !== "boolean" || !_id) {
             return res.status(400).json({

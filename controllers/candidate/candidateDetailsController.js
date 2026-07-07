@@ -44,6 +44,7 @@ import list_non_tech_skill from "../../models/monogo_query/nonTechSkillModel.js"
 import CandidateKYC from "../../models/CandidateKYCModel.js";
 import Otherskill from "../../models/OtherSkillModel.js";
 import JobApplication from "../../models/jobApplicationModel.js";
+import list_notice from "../../models/monogo_query/noticeModel.js";
 import mongoose from "mongoose";
 
 const getUniqueIds = (arr, field) => [
@@ -998,6 +999,9 @@ export const getAllCandidates789 = async (req, res) => {
       }
     ]);
 
+
+
+
     return res.status(200).json({
       success: true,
       count: candidates.length,
@@ -1158,14 +1162,55 @@ export const getAllCandidates = async (req, res) => {
           "personalDetails.userId": 0,
           "personalDetails.skills": 0,
         }
-      },
 
+      },
+      {
+        $lookup: {
+          from: "employments",
+          localField: "_id",
+          foreignField: "user",
+          as: "employments",
+          pipeline: [{ $match: { isDel: false } }]
+
+        }
+      },
+      {
+        $lookup: {
+          from: "candidatebookmarks",
+          localField: "_id",
+          foreignField: "userId",
+          as: "bookmark"
+        }
+      },
+      {
+        $unwind: {
+          path: "$bookmark",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $addFields: {
+          isBookmarked: {
+            $cond: [
+              { $and: [{ $eq: ["$bookmark.isArchived", true] }, { $eq: ["$bookmark.isDel", false] }] },
+              true,
+              false
+            ]
+          }
+        }
+      },
+      {
+        $project: {
+          bookmark: 0
+        }
+      },
       // 7️⃣ Latest first
       {
         $sort: { createdAt: -1 }
       }
     ]);
 
+    console.log("candidates===>", candidates);
     return res.status(200).json({
       success: true,
       count: candidates.length,

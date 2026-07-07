@@ -6,6 +6,8 @@ const Adminmid = async (req, res, next) => {
         if (!req.user || !req.userId) {
             return res.status(401).json({ message: 'Unauthorized: Please log in to access this resource.' });
         }
+
+        
         // Fetch the user by userId
         const user = await User.findById(req.userId);
         // Check if the user exists

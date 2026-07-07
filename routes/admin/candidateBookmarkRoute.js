@@ -8,6 +8,7 @@ import { addCandidateBookmark, getCandidateBookmarkStatus } from "../../controll
 //Middleware
 import userAuth from "../../middleware/authMiddleware.js";
 import adminMiddleware from "../../middleware/adminMiddleware.js";
+import Companymid from "../../middleware/companyMiddleware.js";
 
 // Initialize dotenv to load environment variables
 dotenv.config();
@@ -30,7 +31,7 @@ candidateBookmarkRouter.post(
     "/add_candidate_bookmark",
     upload.none(),
     userAuth,
-    adminMiddleware,
+    Companymid,
     addCandidateBookmark
 );
 
