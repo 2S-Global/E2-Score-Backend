@@ -1148,7 +1148,8 @@ export const getMyProfile = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const user = await User.findById(userId).select("-password");
+    const user = await User.findById(userId).select("-password").lean()
+
 
     if (!user) {
       return res.status(404).json({
@@ -1156,6 +1157,20 @@ export const getMyProfile = async (req, res) => {
         message: "User not found",
       });
     }
+
+
+
+    //get profile picture from employer and institute cause except user no-one has profile picture in the user
+    if (user.role === 2 || user.role === 3) {
+      const companyDetails = await CompanyDetails.findOne({ userId })
+        .select("logo")
+        .lean();
+
+      user.profilePicture = companyDetails?.logo || null;
+    }
+
+
+    console.log("Final user=======>", user)
 
     res.status(200).json({
       success: true,
