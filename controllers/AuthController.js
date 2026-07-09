@@ -9,6 +9,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import dotenv from "dotenv";
 import CompanyDetails from "../models/company_Models/companydetails.js";
 import UserVerification from "../models/userVerificationModel.js";
+import CandidateDetails from "../models/CandidateDetailsModel.js";
 dotenv.config();
 
 /**
@@ -66,6 +67,8 @@ export const registerUser = async (req, res) => {
     }
 
     // Check if same name, father_name and dob already exist
+
+    //mohan : wrong cause fathername isnt in the same table 
     const duplicateUser = await User.findOne({
       name: name.trim(),
       father_name: father_name.trim(),
@@ -107,6 +110,11 @@ export const registerUser = async (req, res) => {
       profilePicture: `${process.env.CLIENT_BASE_URL}/images/no_user.png`,
     });
     await newUser.save();
+    await CandidateDetails.create({
+      userId: newUser._id,
+      fatherName: father_name,
+      dob,
+    });
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
     });
@@ -230,6 +238,8 @@ export const registerInstituteft = async (req, res) => {
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
     });
+
+
 
     // Email Verification mail starts from here
 
