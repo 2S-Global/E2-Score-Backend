@@ -812,7 +812,7 @@ export const forgotPassword = async (req, res) => {
 
     // Send email with new password
     const transporter = nodemailer.createTransport({
-      host: "smtp.hostinger.com",
+      host: "smtp.zoho.in",
       port: 465,
       secure: true,
       auth: {
@@ -820,6 +820,9 @@ export const forgotPassword = async (req, res) => {
         pass: process.env.EMAIL_PASS,
       },
     });
+
+    console.log("EMAIL_USER:", process.env.EMAIL_USER);
+    console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Loaded" : "Missing");
 
     const mailOptions = {
       from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
