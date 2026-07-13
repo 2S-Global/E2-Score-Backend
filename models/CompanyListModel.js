@@ -47,6 +47,17 @@ const CompanyListSchema = new mongoose.Schema(
   }
 );
 
+
+CompanyListSchema.index({
+  isActive: 1,
+  isDel: 1,
+  companyname: 1
+})
+
 const companylist = mongoose.model("companylists", CompanyListSchema);
+
+
+
+
 
 export default companylist;

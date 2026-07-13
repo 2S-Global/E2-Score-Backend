@@ -93,9 +93,9 @@ export const formatLanguageDetails = async (languages) => {
   const { languageMap, proficiencyMap } = await getLanguageAndProficiencyMaps();
 
   return languages.map((lang) => ({
-    language: languageMap[String(lang.language)] || `ID ${lang.language}`,
+    language: languageMap[String(lang.language)] ?? lang.language,
     proficiency:
-      proficiencyMap[String(lang.proficiency)] || `ID ${lang.proficiency}`,
+      proficiencyMap[String(lang.proficiency)] ?? lang.proficiency,
     read: lang.read,
     write: lang.write,
     speak: lang.speak,
@@ -175,12 +175,12 @@ export const formatUserData = (result) => {
   const formattedLanguages =
     Array.isArray(languages) && languages.length
       ? languages.map((lang) => ({
-          language: lang.language || "",
-          proficiency: lang.proficiency || "",
-          read: !!lang.read,
-          write: !!lang.write,
-          speak: !!lang.speak,
-        }))
+        language: lang.language || "",
+        proficiency: lang.proficiency || "",
+        read: !!lang.read,
+        write: !!lang.write,
+        speak: !!lang.speak,
+      }))
       : [];
 
   // Precompute career break data (no repeated logic)

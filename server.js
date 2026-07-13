@@ -5,7 +5,7 @@ import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
-
+import morgan from 'morgan'
 import db from "./config/db.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -31,11 +31,12 @@ app.use(cookieParser());
 // app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
 // app.use("/images", express.static(path.join(__dirname, "public", "images")));
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 
 app.use("/upload", express.static(path.join(process.cwd(), "upload")));
-
+app.use(morgan('dev')); 
 // Import routes
 import contactRouter from "./routes/contactRoutes.js";
 import AuthRouter from "./routes/AuthRoutes.js";

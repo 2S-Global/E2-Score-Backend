@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 
-import { getMatchingCompany, getRandomCompany, addEmploymentDetails, getEmploymentDetails,editEmploymentDetails, getNoticePeriod, deleteEmploymentDetails, getAllCompany } from "../../controllers/candidate/EmploymentController.js";
+import { getMatchingCompany, getRandomCompany, addEmploymentDetails, getEmploymentDetails, editEmploymentDetails, getNoticePeriod, deleteEmploymentDetails, getAllCompany } from "../../controllers/candidate/EmploymentController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
 

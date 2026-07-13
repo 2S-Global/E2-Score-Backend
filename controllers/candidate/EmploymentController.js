@@ -113,35 +113,46 @@ export const getRandomCompanyOnly = async (req, res) => {
 
 export const getRandomCompany = async (req, res) => {
   try {
-    const { company_name } = req.query;
+    const { company_name = "" } = req.query;
 
-    // Step 1: Fetch 50 random companies (excluding the one already selected)
-    const randomCompanies = await companylist.aggregate([
-      {
-        $match: {
-          isDel: false,
-          isActive: true,
-          ...(company_name && { companyname: { $ne: company_name } }), // exclude if passed
-        },
-      },
-      { $sample: { size: 20 } },
-    ]);
-    // Convert to array of strings
-    const companyNames = randomCompanies.map((row) => row.companyname);
-
-    // Ensure company_name is included (if provided)
-    if (company_name && !companyNames.includes(company_name)) {
-      companyNames.push(company_name);
+    if (!company_name.trim()) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+      });
     }
 
-    res.status(200).json({
+    const companies = await companylist
+      .find(
+        {
+          isActive: true,
+          isDel: false,
+          companyname: {
+            $regex: company_name,
+            $options: "i",
+          },
+        },
+        {
+          _id: 0,
+          companyname: 1,
+        }
+      )
+      .limit(100)
+      .lean();
+
+    console.log("is data coming", companies)
+
+    return res.status(200).json({
       success: true,
-      data: companyNames,
-      message: "Random 50 Company",
+      data: companies.map((c) => c.companyname),
     });
   } catch (error) {
-    console.error("MySQL error →", error);
-    res.status(500).json({ success: false, message: "Database query failed" });
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Database query failed",
+    });
   }
 };
 
