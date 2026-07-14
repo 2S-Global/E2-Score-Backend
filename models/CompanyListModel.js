@@ -54,6 +54,9 @@ CompanyListSchema.index({
   companyname: 1
 })
 
+
+
+
 const companylist = mongoose.model("companylists", CompanyListSchema);
 
 

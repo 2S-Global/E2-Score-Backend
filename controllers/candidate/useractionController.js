@@ -791,71 +791,106 @@ export const addKeySkills = async (req, res) => {
     const user = req.userId;
 
     if (!user) {
-      return res.status(400).json({ message: "User ID is missing." });
-    }
-    const userdtl = await User.findById(user);
-    if (!userdtl) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    if (!Array.isArray(skills) || skills.length === 0) {
       return res.status(400).json({
-        message: "Skills must be a non-empty array of strings.",
+        success: false,
+        message: "User ID is missing.",
       });
     }
 
-    // Case: If skills came as a string from form-data
+    const userdtl = await User.findById(user).select("name email").lean();
+
+    if (!userdtl) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // Handle form-data JSON string
     let parsedSkills = skills;
-    if (typeof skills === "string") {
+
+    if (typeof parsedSkills === "string") {
       try {
-        parsedSkills = JSON.parse(skills);
-      } catch (e) {
-        return res.status(400).json({ message: "Invalid skills format." });
+        parsedSkills = JSON.parse(parsedSkills);
+      } catch (err) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid skills format.",
+        });
       }
     }
 
-    const allStrings = parsedSkills.every((skill) => typeof skill === "string");
-    if (!allStrings) {
-      return res.status(400).json({ message: "All skills must be strings." });
+    if (!Array.isArray(parsedSkills) || parsedSkills.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Skills must be a non-empty array.",
+      });
     }
 
-    // ✅ Normalize: lowercase and trim spaces
-    parsedSkills = parsedSkills.map((s) => s.trim().toLowerCase());
+    if (!parsedSkills.every((skill) => typeof skill === "string")) {
+      return res.status(400).json({
+        success: false,
+        message: "All skills must be strings.",
+      });
+    }
+
+    // Normalize & remove duplicates
+    parsedSkills = [
+      ...new Set(parsedSkills.map((skill) => skill.trim().toLowerCase())),
+    ];
+
+    // Escape regex characters
+    const escapeRegex = (str) =>
+      str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
     const regexArray = parsedSkills.map(
-      (skill) => new RegExp(`^${skill}$`, "i")
-    );
-    // Find matching skills in MongoDB
-    const matchedSkills = await list_key_skill.find(
-      {
-        Skill: { $in: regexArray },
-        is_del: 0,
-        is_active: 1,
-      },
-      "_id Skill"
+      (skill) => new RegExp(`^${escapeRegex(skill)}$`, "i")
     );
 
+    const matchedSkills = await list_key_skill
+      .find(
+        {
+          Skill: { $in: regexArray },
+          is_del: 0,
+          is_active: 1,
+        },
+        "_id Skill"
+      )
+      .lean();
+
+    // Build lookup map using lowercase keys
     const skillMap = {};
+
     matchedSkills.forEach((row) => {
-      skillMap[row.Skill] = row._id;
+      skillMap[row.Skill.trim().toLowerCase()] = row._id;
     });
 
     const missingSkills = parsedSkills.filter((skill) => !skillMap[skill]);
+
     if (missingSkills.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "Some skills not found in the database.",
+        message: "Some skills were not found in the database.",
         missingSkills,
       });
     }
 
     const skillObjectIds = parsedSkills.map((skill) => skillMap[skill]);
 
-    // Save ObjectIds array to skills field
     await PersonalDetails.findOneAndUpdate(
       { user: new mongoose.Types.ObjectId(user) },
-      { skills: skillObjectIds },
-      { upsert: true, new: true }
+      {
+        $set: {
+          skills: skillObjectIds,
+        },
+        $setOnInsert: {
+          user: new mongoose.Types.ObjectId(user),
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+      }
     );
 
     const transporter = nodemailer.createTransport({
@@ -867,63 +902,74 @@ export const addKeySkills = async (req, res) => {
         pass: process.env.EMAIL_PASS,
       },
     });
+
     const mailOptions = {
       from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
       to: userdtl.email,
       subject: "Your Key Skill List Has Been Updated",
       html: `
-  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-     <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changekeyskill.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-      <h2 style="color:#fff; margin:0; font-size:20px;">Key Skill List Update Notification</h2>
-    </div>
+      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+        <div>
+          <img src="${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changekeyskill.png"
+               alt="GEISIL Banner"
+               style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+        </div>
 
-    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-      <p>Dear <strong>${userdtl.name}</strong>,</p>
+        <div style="background:#0052cc; padding:15px 20px;">
+          <h2 style="color:#fff; margin:0;">Key Skill List Update Notification</h2>
+        </div>
 
-      <p>We are writing to inform you that your <strong>Key Skill List</strong> has been successfully updated on your GEISIL account.</p>
+        <div style="padding:20px; background:#fff;">
+          <p>Dear <strong>${userdtl.name}</strong>,</p>
 
-      <p>If you did not make this change or believe this action is unauthorized, please contact our support team immediately.</p>
+          <p>Your <strong>Key Skill List</strong> has been successfully updated.</p>
 
-      <p>You can visit your dashboard anytime by clicking the link below:</p>
+          <p>If you did not make this change, please contact our support team immediately.</p>
 
-      <p>
-        <a href="${process.env.ORIGIN}" 
-           style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-          Visit Dashboard
-        </a>
-      </p>
+          <p>
+            <a href="${process.env.ORIGIN}"
+               style="background:#0052cc;color:#fff;padding:10px 16px;text-decoration:none;border-radius:5px;display:inline-block;">
+              Visit Dashboard
+            </a>
+          </p>
 
-      <p>If the button above does not work, copy and paste the following URL into your browser:</p>
-      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+          <p>Or visit:</p>
 
-      <br />
+          <p>
+            <a href="${process.env.ORIGIN}">
+              ${process.env.ORIGIN}
+            </a>
+          </p>
 
-      <p>Sincerely,<br />
-      <strong>Admin Team</strong><br />
-      Global Employability Information Services India Limited</p>
+          <br>
 
-    </div>
-  </div>
-  `,
+          <p>
+            Sincerely,<br>
+            <strong>Admin Team</strong><br>
+            Global Employability Information Services India Limited
+          </p>
+        </div>
+      </div>
+      `,
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (mailError) {
+      console.error("Email sending failed:", mailError);
+    }
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
-      message: "Skills saved successfully!",
+      message: "Skills saved successfully.",
       data: skillObjectIds,
     });
   } catch (error) {
     console.error("Error saving skills:", error);
+
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Internal server error.",
       error: error.message,
     });
   }
