@@ -94,8 +94,7 @@ export const formatLanguageDetails = async (languages) => {
 
   return languages.map((lang) => ({
     language: languageMap[String(lang.language)] ?? lang.language,
-    proficiency:
-      proficiencyMap[String(lang.proficiency)] ?? lang.proficiency,
+    proficiency: proficiencyMap[String(lang.proficiency)] ?? lang.proficiency,
     read: lang.read,
     write: lang.write,
     speak: lang.speak,
@@ -107,7 +106,7 @@ export const getMoreInfoNames = async (ids) => {
 
   // Remove duplicates and filter invalid ObjectIds
   const uniqueValidIds = [...new Set(ids)].filter((id) =>
-    mongoose.Types.ObjectId.isValid(id)
+    mongoose.Types.ObjectId.isValid(id),
   );
 
   try {
@@ -150,6 +149,7 @@ export const formatUserData = (result) => {
     permanent_address,
     pincode,
     languages,
+    languagesDetails,
     career_break,
     career_break_reason,
     career_break_start_month,
@@ -175,12 +175,12 @@ export const formatUserData = (result) => {
   const formattedLanguages =
     Array.isArray(languages) && languages.length
       ? languages.map((lang) => ({
-        language: lang.language || "",
-        proficiency: lang.proficiency || "",
-        read: !!lang.read,
-        write: !!lang.write,
-        speak: !!lang.speak,
-      }))
+          language: lang.language || "",
+          proficiency: lang.proficiency || "",
+          read: !!lang.read,
+          write: !!lang.write,
+          speak: !!lang.speak,
+        }))
       : [];
 
   // Precompute career break data (no repeated logic)
@@ -213,6 +213,7 @@ export const formatUserData = (result) => {
     workPermit: work_permit_other_countries || "",
     address: addrParts,
     languages: formattedLanguages,
+    languagesDetails: languagesDetails,
     ...careerBreakData,
   };
 };

@@ -62,19 +62,23 @@ export const getPersonalDetailsWithName = async (req, res) => {
       getColumnValueById(
         "list_disability_type",
         personal.disability_type,
-        "name"
+        "name",
       ),
       getColumnValueById("list_visa_type", personal.usaPermit, "visa_name"),
       // getCountryNamesByIds(personal.workPermitOther),
       personal.workPermitOther && personal.workPermitOther.length > 0
         ? (
-          await list_tbl_countrie.find({ id: { $in: personal.workPermitOther } })
-        ).map(c => c.name).join(", ")
+            await list_tbl_countrie.find({
+              id: { $in: personal.workPermitOther },
+            })
+          )
+            .map((c) => c.name)
+            .join(", ")
         : "",
       getColumnValueById(
         "list_marital_status",
         personal.maritialStatus,
-        "status"
+        "status",
       ),
       getMoreInfoNames(personal.additionalInformation || []),
       formatLanguageDetails(personal.languageProficiency || []),
@@ -102,6 +106,7 @@ export const getPersonalDetailsWithName = async (req, res) => {
       permanent_address: personal.permanentAddress,
       pincode: personal.pincode,
       languages,
+      languagesDetails: personal.languageProficiency,
       marital_status: maritalStatus,
       partner_name: personal?.partnerName ?? "",
       more_info: moreInfo,
