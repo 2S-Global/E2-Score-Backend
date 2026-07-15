@@ -121,26 +121,26 @@ export const getRandomCompany = async (req, res) => {
         data: [],
       });
     }
-
+    const escaped = company_name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const companies = await companylist
       .find(
         {
           isActive: true,
           isDel: false,
           companyname: {
-            $regex: company_name,
+            $regex: "^" + escaped,
             $options: "i",
-          },
+          }
         },
         {
           _id: 0,
           companyname: 1,
         }
       )
-      .limit(100)
+      .limit(10)
       .lean();
 
-    console.log("is data coming", companies)
+
 
     return res.status(200).json({
       success: true,

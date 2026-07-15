@@ -81,7 +81,7 @@ export const getSkill = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getMatchingSkill = async (req, res) => {
-  const { skill_name } = req.query;
+  const { skill_name } = req.query.trim();
 
   if (!skill_name || skill_name.trim() === "") {
     return res.status(400).json({
@@ -98,8 +98,11 @@ export const getMatchingSkill = async (req, res) => {
       [`${skill_name}%`]
     );
 
-    const skills = rows.map((row) => row.Skill);
+    console.log("rows " , rows);
+   
 
+    const skills = rows.map((row) => row.Skill);
+    console.log("is it wokring ==>" , skills)
     res.status(200).json({
       success: true,
       data: skills,

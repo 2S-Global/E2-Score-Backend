@@ -5,6 +5,7 @@ import list_non_tech_skill from "../../models/monogo_query/nonTechSkillModel.js"
 import User from "../../models/userModel.js";
 import nodemailer from "nodemailer";
 import mongoose from "mongoose";
+import CandidateDetails from "../../models/CandidateDetailsModel.js";
 export const getOrInsertId = async (value) => {
   try {
     // 1. Normalize input (optional)
@@ -117,97 +118,214 @@ export const getOrInsertIdForOtherSkill = async (value) => {
 export const additskill = async (req, res) => {
   try {
     const userId = req.userId;
-    const { skillSearch, version, lastUsed, experienceyear, experiencemonth } =
-      req.body;
+    const {
+      skillSearch,
+      version,
+      lastUsed,
+      experienceyear,
+      experiencemonth,
+    } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
-    if (!skillSearch) {
-      return res.status(400).json({ message: "Skill Search is required" });
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
     }
 
-    const skillId = await getOrInsertId(skillSearch.toLowerCase());
+    if (!skillSearch?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Skill Search is required",
+      });
+    }
+
+    const candidate = await CandidateDetails.findOne({ userId }).lean();
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate doesn't exist",
+      });
+    }
+
+    if (!candidate.dob) {
+      return res.status(400).json({
+        success: false,
+        message: "Candidate date of birth is missing",
+      });
+    }
+
+    const dob = new Date(candidate.dob);
+
+    if (isNaN(dob.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid candidate date of birth",
+      });
+    }
+
+    const today = new Date();
+
+    let age = today.getFullYear() - dob.getFullYear();
+
+    const hasBirthdayPassed =
+      today.getMonth() > dob.getMonth() ||
+      (today.getMonth() === dob.getMonth() &&
+        today.getDate() >= dob.getDate());
+
+    if (!hasBirthdayPassed) {
+      age--;
+    }
+
+    const years = Number(experienceyear) || 0;
+    const months = Number(experiencemonth) || 0;
+
+    if (years < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Experience year cannot be negative",
+      });
+    }
+
+    if (months < 0 || months > 11) {
+      return res.status(400).json({
+        success: false,
+        message: "Experience month must be between 0 and 11",
+      });
+    }
+
+    const totalExperience = years + months / 12;
+
+    const maxAllowedExperience = age - 18;
+
+    if (totalExperience > maxAllowedExperience) {
+      return res.status(400).json({
+        success: false,
+        message: `Maximum allowed experience for a ${age}-year-old candidate is ${maxAllowedExperience.toFixed(
+          1
+        )} years`,
+      });
+    }
+
+    const normalizedSkill = skillSearch.trim().toLowerCase();
+
+    const skillId = await getOrInsertId(normalizedSkill);
+
+    const existingSkill = await Itskill.exists({
+      userId,
+      skillSearch: skillId,
+    });
+
+    if (existingSkill) {
+      return res.status(400).json({
+        success: false,
+        message: "Skill already exists",
+      });
+    }
+
+    const userdtl = await User.findById(userId).lean();
+
+    if (!userdtl) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     const itskill = new Itskill({
       userId,
       skillSearch: skillId,
       version,
       lastUsed,
-      experienceyear,
-      experiencemonth,
+      experienceyear: years,
+      experiencemonth: months,
     });
 
     await itskill.save();
 
-    const userdtl = await User.findById(userId);
-
-    const htmlEmail = `
+    try {
+      const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/additskill.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Itskill List Update Notification</h2>
+        <div>
+          <img src="${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/additskill.png"
+               alt="GEISIL Banner"
+               style="width:100%; border-radius:8px 8px 0 0; display:block;" />
         </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+
+        <div style="background:#0052cc; padding:15px 20px;">
+          <h2 style="color:#fff; margin:0;">
+            Itskill List Update Notification
+          </h2>
+        </div>
+
+        <div style="padding:20px; background:#fff;">
           <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>New Itskill details have been <strong>added</strong> to your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
+
           <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
+            New Itskill details have been <strong>added</strong> to your profile.
+          </p>
+
+          <p>
+            If you did not make this change, please contact support immediately.
+          </p>
+
+          <p>
+            <a href="${process.env.ORIGIN}"
+               style="background:#0052cc;color:#fff;padding:10px 16px;text-decoration:none;border-radius:5px;">
+               Visit Dashboard
             </a>
           </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
+
+          <p>
+            <a href="${process.env.ORIGIN}">
+              ${process.env.ORIGIN}
+            </a>
+          </p>
+
           <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-          Global Employability Information Services India Limited
+
+          <p>
+            Sincerely,<br />
+            <strong>Admin Team</strong><br />
+            Global Employability Information Services India Limited
           </p>
         </div>
       </div>
       `;
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+        to: userdtl.email,
+        subject: "Itskill List Update Notification",
+        html: htmlEmail,
+      });
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Itskill added successfully",
     });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Itskill List Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
-
-    res
-      .status(201)
-      .json({ message: "itskill added successfully", success: true });
   } catch (error) {
     console.error("Error adding itskill:", error);
-    res
-      .status(500)
-      .json({ message: "Error adding itskill", error: error.message });
+
+    return res.status(500).json({
+      success: false,
+      message: "Error adding itskill",
+      error: error.message,
+    });
   }
 };
 
@@ -228,6 +346,7 @@ export const additskill = async (req, res) => {
 export const edititskill = async (req, res) => {
   try {
     const userId = req.userId;
+
     const {
       _id,
       skillSearch,
@@ -238,97 +357,238 @@ export const edititskill = async (req, res) => {
     } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
-    if (!skillSearch) {
-      return res.status(400).json({ message: "Skill Search is required" });
-    }
-    if (!_id) {
-      return res.status(400).json({ message: "itskill ID is required" });
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
     }
 
-    const skillId = await getOrInsertId(skillSearch.toLowerCase());
+    if (!_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Itskill ID is required",
+      });
+    }
+
+    if (!skillSearch?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Skill Search is required",
+      });
+    }
+
+    // ---------------- Candidate Validation ----------------
+
+    const candidate = await CandidateDetails.findOne({ userId }).lean();
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate doesn't exist",
+      });
+    }
+
+    if (!candidate.dob) {
+      return res.status(400).json({
+        success: false,
+        message: "Candidate date of birth is missing",
+      });
+    }
+
+    const dob = new Date(candidate.dob);
+
+    if (isNaN(dob.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid candidate date of birth",
+      });
+    }
+
+    const today = new Date();
+
+    let age = today.getFullYear() - dob.getFullYear();
+
+    const hasBirthdayPassed =
+      today.getMonth() > dob.getMonth() ||
+      (today.getMonth() === dob.getMonth() &&
+        today.getDate() >= dob.getDate());
+
+    if (!hasBirthdayPassed) {
+      age--;
+    }
+
+    const years = Number(experienceyear) || 0;
+    const months = Number(experiencemonth) || 0;
+
+    if (years < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Experience year cannot be negative",
+      });
+    }
+
+    if (months < 0 || months > 11) {
+      return res.status(400).json({
+        success: false,
+        message: "Experience month must be between 0 and 11",
+      });
+    }
+
+    const totalExperience = years + months / 12;
+
+    const maxAllowedExperience = age - 18;
+
+    if (totalExperience > maxAllowedExperience) {
+      return res.status(400).json({
+        success: false,
+        message: `Maximum allowed experience for a ${age}-year-old candidate is ${maxAllowedExperience.toFixed(
+          1
+        )} years.`,
+      });
+    }
+
+    // ---------------- Skill Validation ----------------
+
+    const normalizedSkill = skillSearch.trim().toLowerCase();
+
+    const skillId = await getOrInsertId(normalizedSkill);
+
+    // Prevent duplicate skills except this record
+    const duplicateSkill = await Itskill.exists({
+      userId,
+      skillSearch: skillId,
+      _id: { $ne: _id },
+    });
+
+    if (duplicateSkill) {
+      return res.status(400).json({
+        success: false,
+        message: "Skill already exists",
+      });
+    }
+
+    // ---------------- Update ----------------
 
     const itskill = await Itskill.findOneAndUpdate(
-      { _id, userId },
+      {
+        _id,
+        userId,
+      },
       {
         skillSearch: skillId,
         version,
         lastUsed,
-        experienceyear,
-        experiencemonth,
+        experienceyear: years,
+        experiencemonth: months,
       },
-      { new: true }
+      {
+        new: true,
+      }
     );
 
-    const userdtl = await User.findById(userId);
+    if (!itskill) {
+      return res.status(404).json({
+        success: false,
+        message: "Itskill record not found",
+      });
+    }
 
-    const htmlEmail = `
+    // ---------------- User ----------------
+
+    const userdtl = await User.findById(userId).lean();
+
+    if (!userdtl) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // ---------------- Email ----------------
+
+    try {
+      const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editskill.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Itskill List Update Notification</h2>
+        <div>
+          <img src="${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editskill.png"
+               alt="GEISIL Banner"
+               style="width:100%; border-radius:8px 8px 0 0; display:block;" />
         </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+
+        <div style="background:#0052cc;padding:15px 20px;">
+          <h2 style="color:#fff;margin:0;">
+            Itskill List Update Notification
+          </h2>
+        </div>
+
+        <div style="padding:20px;background:#fff;">
           <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>One of the Itskill details have been <strong>updated</strong> in your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
+
           <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+            One of your IT Skills has been <strong>updated</strong>.
+          </p>
+
+          <p>
+            If you did not make this change, please contact support immediately.
+          </p>
+
+          <p>
+            <a href="${process.env.ORIGIN}"
+               style="background:#0052cc;color:#fff;padding:10px 16px;text-decoration:none;border-radius:5px;">
               Visit Dashboard
             </a>
           </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-          Global Employability Information Services India Limited
+
+          <p>
+            <a href="${process.env.ORIGIN}">
+              ${process.env.ORIGIN}
+            </a>
+          </p>
+
+          <br>
+
+          <p>
+            Sincerely,<br>
+            <strong>Admin Team</strong><br>
+            Global Employability Information Services India Limited
           </p>
         </div>
       </div>
       `;
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+        to: userdtl.email,
+        subject: "Itskill List Update Notification",
+        html: htmlEmail,
+      });
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Itskill updated successfully",
+      data: itskill,
     });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Itskill List Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
-
-    res
-      .status(200)
-      .json({ message: "itskill updated successfully", success: true });
   } catch (error) {
-    console.error("Error adding itskill:", error);
-    res
-      .status(500)
-      .json({ message: "Error adding itskill", error: error.message });
+    console.error("Error updating itskill:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Error updating itskill",
+      error: error.message,
+    });
   }
 };
 
@@ -485,91 +745,163 @@ export const addOtherSkill = async (req, res) => {
     const { skillSearch, experienceyear, experiencemonth } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
-    if (!skillSearch) {
-      return res.status(400).json({ message: "Skill Search is required" });
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
     }
 
-    const skillId = await getOrInsertIdForOtherSkill(skillSearch.toLowerCase());
+    if (!skillSearch?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Skill Search is required",
+      });
+    }
+
+    // ---------------- Candidate Validation ----------------
+
+    const candidate = await CandidateDetails.findOne({ userId }).lean();
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate doesn't exist",
+      });
+    }
+
+    if (!candidate.dob) {
+      return res.status(400).json({
+        success: false,
+        message: "Candidate date of birth is missing.",
+      });
+    }
+
+    const dob = new Date(candidate.dob);
+
+    if (isNaN(dob.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid candidate date of birth.",
+      });
+    }
+
+    const today = new Date();
+
+    let age = today.getFullYear() - dob.getFullYear();
+
+    const hasBirthdayPassed =
+      today.getMonth() > dob.getMonth() ||
+      (today.getMonth() === dob.getMonth() &&
+        today.getDate() >= dob.getDate());
+
+    if (!hasBirthdayPassed) {
+      age--;
+    }
+
+    const years = Number(experienceyear) || 0;
+    const months = Number(experiencemonth) || 0;
+
+    if (years < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Experience year cannot be negative.",
+      });
+    }
+
+    if (months < 0 || months > 11) {
+      return res.status(400).json({
+        success: false,
+        message: "Experience month must be between 0 and 11.",
+      });
+    }
+
+    const totalExperience = years + months / 12;
+    const maxAllowedExperience = age - 18;
+
+    if (totalExperience > maxAllowedExperience) {
+      return res.status(400).json({
+        success: false,
+        message: `Maximum allowed experience for a ${age}-year-old candidate is ${maxAllowedExperience.toFixed(
+          1
+        )} years.`,
+      });
+    }
+
+    // ---------------- Skill ----------------
+
+    const normalizedSkill = skillSearch.trim().toLowerCase();
+
+    const skillId = await getOrInsertIdForOtherSkill(normalizedSkill);
+
+    const exists = await Otherskill.exists({
+      userId,
+      skillSearch: skillId,
+    });
+
+    if (exists) {
+      return res.status(400).json({
+        success: false,
+        message: "Skill already exists.",
+      });
+    }
+
+    // ---------------- User ----------------
+
+    const userdtl = await User.findById(userId).lean();
+
+    if (!userdtl) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // ---------------- Save ----------------
 
     const otherskill = new Otherskill({
       userId,
       skillSearch: skillId,
-      experienceyear,
-      experiencemonth,
+      experienceyear: years,
+      experiencemonth: months,
     });
 
     await otherskill.save();
 
-    const userdtl = await User.findById(userId);
+    // ---------------- Email ----------------
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addotherskill.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Otherskill List Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>New Otherskill details have been <strong>added</strong> to your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-          Global Employability Information Services India Limited
-          </p>
-        </div>
-      </div>
-      `;
+    try {
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+      await transporter.sendMail({
+        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+        to: userdtl.email,
+        subject: "Otherskill List Update Notification",
+        html: htmlEmail, // Your existing HTML
+      });
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Otherskill added successfully",
     });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Otherskill List Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
-
-    res
-      .status(201)
-      .json({ message: "Otherskill added successfully", success: true });
   } catch (error) {
     console.error("Error adding otherskill:", error);
-    res
-      .status(500)
-      .json({ message: "Error adding otherskill", error: error.message });
+
+    return res.status(500).json({
+      success: false,
+      message: "Error adding otherskill",
+      error: error.message,
+    });
   }
 };
 
@@ -593,103 +925,238 @@ export const editotherskill = async (req, res) => {
     const {
       _id,
       skillSearch,
-      version,
-      lastUsed,
       experienceyear,
       experiencemonth,
     } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
-    if (!skillSearch) {
-      return res.status(400).json({ message: "Skill Search is required" });
-    }
-    if (!_id) {
-      return res.status(400).json({ message: "otherskill ID is required" });
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
     }
 
-    const skillId = await getOrInsertIdForOtherSkill(skillSearch.toLowerCase());
+    if (!_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Other Skill ID is required",
+      });
+    }
+
+    if (!skillSearch?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Skill Search is required",
+      });
+    }
+
+    // ---------------- Candidate Validation ----------------
+
+    const candidate = await CandidateDetails.findOne({ userId }).lean();
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate doesn't exist",
+      });
+    }
+
+    if (!candidate.dob) {
+      return res.status(400).json({
+        success: false,
+        message: "Candidate date of birth is missing.",
+      });
+    }
+
+    const dob = new Date(candidate.dob);
+
+    if (isNaN(dob.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid candidate date of birth.",
+      });
+    }
+
+    const today = new Date();
+
+    let age = today.getFullYear() - dob.getFullYear();
+
+    const hasBirthdayPassed =
+      today.getMonth() > dob.getMonth() ||
+      (today.getMonth() === dob.getMonth() &&
+        today.getDate() >= dob.getDate());
+
+    if (!hasBirthdayPassed) {
+      age--;
+    }
+
+    const years = Number(experienceyear) || 0;
+    const months = Number(experiencemonth) || 0;
+
+    if (years < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Experience year cannot be negative.",
+      });
+    }
+
+    if (months < 0 || months > 11) {
+      return res.status(400).json({
+        success: false,
+        message: "Experience month must be between 0 and 11.",
+      });
+    }
+
+    const totalExperience = years + months / 12;
+    const maxAllowedExperience = age - 18;
+
+    if (totalExperience > maxAllowedExperience) {
+      return res.status(400).json({
+        success: false,
+        message: `Maximum allowed experience for a ${age}-year-old candidate is ${maxAllowedExperience.toFixed(
+          1
+        )} years.`,
+      });
+    }
+
+    // ---------------- Skill Validation ----------------
+
+    const normalizedSkill = skillSearch.trim().toLowerCase();
+
+    const skillId = await getOrInsertIdForOtherSkill(normalizedSkill);
+
+    const duplicateSkill = await Otherskill.exists({
+      userId,
+      skillSearch: skillId,
+      _id: { $ne: _id },
+    });
+
+    if (duplicateSkill) {
+      return res.status(400).json({
+        success: false,
+        message: "Skill already exists.",
+      });
+    }
+
+    // ---------------- Update ----------------
 
     const otherskill = await Otherskill.findOneAndUpdate(
-      { _id, userId },
+      {
+        _id,
+        userId,
+      },
       {
         skillSearch: skillId,
-        version,
-        lastUsed,
-        experienceyear,
-        experiencemonth,
+        experienceyear: years,
+        experiencemonth: months,
       },
-      { new: true }
+      {
+        new: true,
+      }
     );
-    const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
+    if (!otherskill) {
+      return res.status(404).json({
+        success: false,
+        message: "Other Skill not found.",
+      });
+    }
+
+    // ---------------- User ----------------
+
+    const userdtl = await User.findById(userId).lean();
+
+    if (!userdtl) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // ---------------- Email ----------------
+
+    try {
+      const htmlEmail = `
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editotherskill.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Otherskill List Update Notification</h2>
+        <div>
+          <img src="${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editotherskill.png"
+               alt="GEISIL Banner"
+               style="width:100%; border-radius:8px 8px 0 0; display:block;" />
         </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+
+        <div style="background:#0052cc;padding:15px 20px;">
+          <h2 style="color:#fff;margin:0;">
+            Other Skill Update Notification
+          </h2>
+        </div>
+
+        <div style="padding:20px;background:#fff;">
           <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>One of the Otherskill details have been <strong>updated</strong> in your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
+
           <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+            One of your Other Skills has been <strong>updated</strong>.
+          </p>
+
+          <p>
+            If you did not make this change, please contact support immediately.
+          </p>
+
+          <p>
+            <a href="${process.env.ORIGIN}"
+               style="background:#0052cc;color:#fff;padding:10px 16px;text-decoration:none;border-radius:5px;">
               Visit Dashboard
             </a>
           </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-          Global Employability Information Services India Limited
+
+          <p>
+            <a href="${process.env.ORIGIN}">
+              ${process.env.ORIGIN}
+            </a>
+          </p>
+
+          <br>
+
+          <p>
+            Sincerely,<br>
+            <strong>Admin Team</strong><br>
+            Global Employability Information Services India Limited
           </p>
         </div>
-      </div>
-      `;
+      </div>`;
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+        to: userdtl.email,
+        subject: "Other Skill Update Notification",
+        html: htmlEmail,
+      });
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Other Skill updated successfully",
+      data: otherskill,
     });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Otherskill List Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
-
-    res
-      .status(200)
-      .json({ message: "otherskill updated successfully", success: true });
   } catch (error) {
-    console.error("Error adding otherskill:", error);
-    res
-      .status(500)
-      .json({ message: "Error adding otherskill", error: error.message });
+    console.error("Error updating Other Skill:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Error updating Other Skill",
+      error: error.message,
+    });
   }
 };
 
