@@ -96,18 +96,18 @@ export const submitPersonalDetails = async (req, res) => {
       changeListHTML += `<li>Hometown</li>`;
     }
 
-  if (
-    candidate &&
-    candidate.dob &&
-    new Date(candidate.dob).getTime() !== new Date(data.dob).getTime()
-  ) {
-    changeListHTML += `<li>Date of Birth</li>`;
-  }
+    if (
+      candidate &&
+      candidate.dob &&
+      new Date(candidate.dob).getTime() !== new Date(data.dob).getTime()
+    ) {
+      changeListHTML += `<li>Date of Birth</li>`;
+    }
 
     await candidateDetails.findOneAndUpdate(
       { userId: userId },
       { $set: candidateUpdate },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     const personalPayload = {
@@ -137,7 +137,7 @@ export const submitPersonalDetails = async (req, res) => {
       maritialStatus: String(data.marital_status),
       partnerName: String(data.partner_name),
       additionalInformation: (data.more_info || []).filter(
-        (id) => id && id !== "null" && id !== ""
+        (id) => id && id !== "null" && id !== "",
       ),
       have_usa_visa: data.have_usa_visa || false,
     };
@@ -241,11 +241,11 @@ export const submitPersonalDetails = async (req, res) => {
 
       // --- Apply normalization ---
       const existingLanguages = sortLanguages(
-        normalizeLanguages(existingPersonal.languageProficiency)
+        normalizeLanguages(existingPersonal.languageProficiency),
       );
 
       const newLanguages = sortLanguages(
-        normalizeLanguages(personalPayload.languageProficiency)
+        normalizeLanguages(personalPayload.languageProficiency),
       );
 
       // --- Deep comparison ---
@@ -287,7 +287,7 @@ export const submitPersonalDetails = async (req, res) => {
     await personalDetails.findOneAndUpdate(
       { user: userId },
       { $set: personalPayload },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     const htmlEmail = `
@@ -422,5 +422,38 @@ export const getPersonalDetails = async (req, res) => {
     res
       .status(500)
       .json({ message: "Server error while fetching personal details" });
+  }
+};
+
+export const deleteLanguages = async (req, res) => {
+  try {
+    const data = req.body;
+    const userId = req.userId;
+    const { Id } = req.params;
+    const personal = await personalDetails.findOne({
+      user: userId,
+    });
+    if (!personal) {
+      return res
+        .status(400)
+        .json({ message: "No personal data found for this user." });
+    }
+    const result = await personalDetails.updateOne(
+      {
+        user: userId,
+      },
+      {
+        $pull: {
+          languageProficiency: { _id: Id },
+        },
+      },
+    );
+    res.status(200).json({
+      message: "languages details deleted successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error in languages details:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

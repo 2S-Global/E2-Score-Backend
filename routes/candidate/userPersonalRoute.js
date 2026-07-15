@@ -5,6 +5,7 @@ import {
   test,
   submitPersonalDetails,
   getPersonalDetails,
+  deleteLanguages,
 } from "../../controllers/candidate/userPersonalController.js";
 import { getPersonalDetailsWithName } from "../../controllers/candidate/backuppersonal.js";
 import userAuth from "../../middleware/authMiddleware.js";
@@ -22,7 +23,7 @@ userPersonalRouter.post(
   "/submit_personal_details",
   userAuth,
   upload.none(),
-  submitPersonalDetails
+  submitPersonalDetails,
 );
 // Get Personal Details Data
 userPersonalRouter.get("/get_personal_details", userAuth, getPersonalDetails);
@@ -31,7 +32,9 @@ userPersonalRouter.get("/get_personal_details", userAuth, getPersonalDetails);
 userPersonalRouter.get(
   "/get_personal_details_with_name",
   userAuth,
-  getPersonalDetailsWithName
+  getPersonalDetailsWithName,
 );
+
+userPersonalRouter.delete("/language/:Id", userAuth, deleteLanguages);
 
 export default userPersonalRouter;
