@@ -13,12 +13,11 @@
     html,
     body {
       margin: 0;
-      /* padding: 0; */
       padding: 0 0 80px 0; /* creates space before footer */
       height: 100%;
       font-family: Arial, sans-serif;
       background-color: white;
-      color: #3b3b3b;
+      color: #222222;
       font-size: 13px;
     }
 
@@ -29,48 +28,66 @@
       padding: 30px;
     }
 
+    /* ---------- Header ---------- */
     .header {
       display: flex;
       align-items: center;
-      border-bottom: 1px solid #ccc;
+      border-bottom: 1px solid #000;
       padding-bottom: 20px;
     }
 
     .photo {
       width: 100px;
       height: 100px;
-      background-color: #eee;
-      border: 1px solid #ccc;
+      background-color: #f0f0f0;
+      border: 2px solid #000;
+      border-radius: 50%;
+      overflow: hidden;
       margin-right: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
       color: #888;
+      flex-shrink: 0;
     }
 
     .header-content h2 {
       margin: 0;
-      font-size: 24px;
+      font-size: 26px;
+      font-weight: bold;
+      color: #000;
     }
 
     .header-content p {
       margin: 4px 0;
       color: #333;
-      line-height: 1.2;
+      line-height: 1.3;
     }
 
+    .header-content .headline {
+      font-style: italic;
+      color: #444;
+    }
+
+    /* ---------- Sections ---------- */
     .section {
-      margin-top: 30px;
+      margin-top: 26px;
     }
 
     .section h3 {
-      margin-bottom: 10px;
-      color: #333;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 5px;
+      margin: 0 0 12px 0;
+      color: #ffffff;
+      background-color: #000000;
+      text-align: center;
+      padding: 7px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      letter-spacing: 0.3px;
+      text-transform: none;
     }
 
+    /* ---------- Tables ---------- */
     .info-table {
       width: 100%;
       border-collapse: collapse;
@@ -79,17 +96,19 @@
 
     .info-table td,
     .info-table th {
-      border: 1px solid #ccc;
+      border: 1px solid #999;
       padding: 8px 10px;
       text-align: left;
     }
 
     .info-table th {
-      background-color: #f0f0f0;
+      background-color: #000;
+      color: #fff;
     }
 
     .info-table .left-column {
       background-color: #f0f0f0;
+      color: #000;
     }
 
     ul {
@@ -105,32 +124,16 @@
       margin-bottom: 8px;
     }
 
-    /* .page-break-group-education {
-      page-break-before: always;
-      page-break-inside: avoid;
-      font-size: 13px;
-    } */
-
     .page-break-group-education {
-      /* page-break-before: always; */
-      /* page-break-inside: avoid; */
       font-size: 13px;
       page-break-before: auto;
     }
 
     .page-break-group-employments {
-      /* page-break-before: always; */
       page-break-before: auto;
-      /* page-break-inside: avoid; */
     }
 
     .page-break-group-employment {
-      page-break-before: auto;
-    }
-
-    .page-break-group-projects {
-      /* page-break-before: always; */
-      /* page-break-inside: avoid; */
       page-break-before: auto;
     }
 
@@ -139,8 +142,6 @@
     }
 
     .page-break-group-others {
-      /* page-break-before: always; */
-      /* page-break-inside: avoid; */
       page-break-before: auto;
     }
 
@@ -152,31 +153,25 @@
       page-break-before: auto;
     }
 
-
-    .page-break-group-presentations {
-      /* page-break-before: always; */
-      /* page-break-inside: avoid; */
-      page-break-before: auto;
-    }
-
     .page-break-group-presentations {
       page-break-before: auto;
     }
 
     ul a {
-      color: #61c2f4
+      color: #000000;
+      text-decoration: underline;
     }
 
     /* Below CSS is only for KYC Details Section */
 
     .check {
-      color: #0b8a3e;
+      color: #000;
       font-weight: bold;
       font-size: 13px;
     }
 
     .cross {
-      color: #d23b3b;
+      color: #666;
       font-weight: bold;
       font-size: 13px;
     }
@@ -188,28 +183,19 @@
   <div class="container">
     <div class="header">
       <div class="photo">
-        <!-- <img src="<%= user.profilePicture %>" alt="Profile Photo"
-          style="width: 100%; height: 100%; object-fit: cover;" /> -->
-        <!-- <img 
-        src="<%= user && user.profilePicture ? user.profilePicture : 'https://api.geisil.com/images/no_user.png' %>" 
-        alt="Profile Photo" 
-        style="width: 100%; height: 100%; object-fit: cover;" 
-      /> -->
       <% const photoUrl = user && user.profilePicture ? user.profilePicture : defaultImageDataUrl %>
       <img 
         src="<%= photoUrl %>" 
         alt="Profile Photo" 
         style="width: 100%; height: 100%; object-fit: cover;" 
       />
-
-
       </div>
 
       <div class="header-content">
         <h2>
           <%= user.name %>
         </h2>
-        <p style="color: #61c2f4">
+        <p class="headline">
           <% if (userDetails.resumeHeadline) { %>
            <%= userDetails.resumeHeadline %>
           <% } else { %>
@@ -769,47 +755,47 @@
         <h3>Languages</h3>
 
         <% if (userPersonalDetails.languageProficiency && userPersonalDetails.languageProficiency.length > 0) { %>
-          <table style="width: 100%; border-collapse: collapse;">
+          <table class="info-table" style="width: 100%; border-collapse: collapse;">
             <thead>
-              <tr style="background-color: #f0f0f0;">
-                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Language</th>
-                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Proficiency</th>
-                <th style="text-align: center; padding: 8px; border: 1px solid #ccc;">Read</th>
-                <th style="text-align: center; padding: 8px; border: 1px solid #ccc;">Write</th>
-                <th style="text-align: center; padding: 8px; border: 1px solid #ccc;">Speak</th>
+              <tr>
+                <th style="text-align: left; padding: 8px; border: 1px solid #999;">Language</th>
+                <th style="text-align: left; padding: 8px; border: 1px solid #999;">Proficiency</th>
+                <th style="text-align: center; padding: 8px; border: 1px solid #999;">Read</th>
+                <th style="text-align: center; padding: 8px; border: 1px solid #999;">Write</th>
+                <th style="text-align: center; padding: 8px; border: 1px solid #999;">Speak</th>
               </tr>
             </thead>
 
             <tbody>
               <% userPersonalDetails.languageProficiency.forEach(lang => { %>
                 <tr>
-                  <td style="padding: 8px; border: 1px solid #ccc;"><%= lang.languageName || 'N/A' %></td>
-                  <td style="padding: 8px; border: 1px solid #ccc;"><%= lang.proficiencyName || 'N/A' %></td>
+                  <td style="padding: 8px; border: 1px solid #999;"><%= lang.languageName || 'N/A' %></td>
+                  <td style="padding: 8px; border: 1px solid #999;"><%= lang.proficiencyName || 'N/A' %></td>
 
                   <!-- Read -->
-                  <td style="padding: 8px; border: 1px solid #ccc; text-align:center;">
+                  <td style="padding: 8px; border: 1px solid #999; text-align:center;">
                     <% if (lang.read) { %>
-                      <span style="color: green; font-size: 18px;">&#10003;</span>
+                      <span style="color: #000; font-size: 18px;">&#10003;</span>
                     <% } else { %>
-                      <span style="color: red; font-size: 18px;">&#10007;</span>
+                      <span style="color: #999; font-size: 18px;">&#10007;</span>
                     <% } %>
                   </td>
 
                   <!-- Write -->
-                  <td style="padding: 8px; border: 1px solid #ccc; text-align:center;">
+                  <td style="padding: 8px; border: 1px solid #999; text-align:center;">
                     <% if (lang.write) { %>
-                      <span style="color: green; font-size: 18px;">&#10003;</span>
+                      <span style="color: #000; font-size: 18px;">&#10003;</span>
                     <% } else { %>
-                      <span style="color: red; font-size: 18px;">&#10007;</span>
+                      <span style="color: #999; font-size: 18px;">&#10007;</span>
                     <% } %>
                   </td>
 
                   <!-- Speak -->
-                  <td style="padding: 8px; border: 1px solid #ccc; text-align:center;">
+                  <td style="padding: 8px; border: 1px solid #999; text-align:center;">
                     <% if (lang.speak) { %>
-                      <span style="color: green; font-size: 18px;">&#10003;</span>
+                      <span style="color: #000; font-size: 18px;">&#10003;</span>
                     <% } else { %>
-                      <span style="color: red; font-size: 18px;">&#10007;</span>
+                      <span style="color: #999; font-size: 18px;">&#10007;</span>
                     <% } %>
                   </td>
 
@@ -1227,28 +1213,28 @@
       <div class="section">
         <h3>IT Skills</h3>
         <% if (itSkills && itSkills.length> 0) { %>
-          <table style="width: 100%; border-collapse: collapse;">
+          <table class="info-table" style="width: 100%; border-collapse: collapse;">
             <thead>
-              <tr style="background-color: #f0f0f0;">
-                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Skill</th>
-                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Version</th>
-                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Last Used</th>
-                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Experience</th>
+              <tr>
+                <th style="text-align: left; padding: 8px; border: 1px solid #999;">Skill</th>
+                <th style="text-align: left; padding: 8px; border: 1px solid #999;">Version</th>
+                <th style="text-align: left; padding: 8px; border: 1px solid #999;">Last Used</th>
+                <th style="text-align: left; padding: 8px; border: 1px solid #999;">Experience</th>
               </tr>
             </thead>
             <tbody>
               <% itSkills?.forEach(skill=> { %>
                 <tr>
-                  <td style="padding: 8px; border: 1px solid #ccc;">
+                  <td style="padding: 8px; border: 1px solid #999;">
                     <%= skill.skillName || 'N/A' %>
                   </td>
-                  <td style="padding: 8px; border: 1px solid #ccc;">
+                  <td style="padding: 8px; border: 1px solid #999;">
                     <%= skill.version || 'N/A' %>
                   </td>
-                  <td style="padding: 8px; border: 1px solid #ccc;">
+                  <td style="padding: 8px; border: 1px solid #999;">
                     <%= skill.lastUsed || 'N/A' %>
                   </td>
-                  <td style="padding: 8px; border: 1px solid #ccc;">
+                  <td style="padding: 8px; border: 1px solid #999;">
                     <% if ((skill.experienceyear && skill.experienceyear !== 0) || (skill.experiencemonth && skill.experiencemonth !== 0)) { %>
                       <%= skill.experienceyear || 0 %> yr <%= skill.experiencemonth || 0 %> mo
                     <% } else { %>
@@ -1269,20 +1255,20 @@
       <div class="section">
         <h3>Other Skills</h3>
         <% if (nonTtSkills && nonTtSkills.length> 0) { %>
-          <table style="width: 100%; border-collapse: collapse;">
+          <table class="info-table" style="width: 100%; border-collapse: collapse;">
             <thead>
-              <tr style="background-color: #f0f0f0;">
-                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Skill</th>
-                <th style="text-align: left; padding: 8px; border: 1px solid #ccc;">Experience</th>
+              <tr>
+                <th style="text-align: left; padding: 8px; border: 1px solid #999;">Skill</th>
+                <th style="text-align: left; padding: 8px; border: 1px solid #999;">Experience</th>
               </tr>
             </thead>
             <tbody>
               <% nonTtSkills?.forEach(skill=> { %>
                 <tr>
-                  <td style="padding: 8px; border: 1px solid #ccc;">
+                  <td style="padding: 8px; border: 1px solid #999;">
                     <%= skill.skillName %>
                   </td>
-                  <td style="padding: 8px; border: 1px solid #ccc;">
+                  <td style="padding: 8px; border: 1px solid #999;">
                     <% if ((skill.experienceyear && skill.experienceyear !== 0) || (skill.experiencemonth && skill.experiencemonth !== 0)) { %>
                       <%= skill.experienceyear || 0 %> yr <%= skill.experiencemonth || 0 %> mo
                     <% } else { %>
