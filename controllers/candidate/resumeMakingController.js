@@ -99,6 +99,8 @@ export const getResume = async (req, res) => {
 
     const userDetails = userDetailsArr[0] || {};
     const candidateDetails = candidateDetailsArr[0] || {};
+    console.log(" Here I am getting all data from userDetails", candidateDetails.dob)
+    console.log(console.log(" Here I am getting all data from userDetails", user.gender))
 
     const getFormattedDOB = (dob) => {
       if (!dob) return "";
@@ -451,6 +453,32 @@ export const getResume = async (req, res) => {
 
     user.gender_name = userGender?.name || "";
     candidateDetails.countryName = candidateDetailsCountryName?.name || "";
+
+    // Age and Gender combination (year-based age calculation)
+    let gender_age = "";
+    if (user.gender_name || candidateDetails.dob) {
+      const parts = [];
+      if (user.gender_name) {
+        parts.push(user.gender_name.charAt(0).toUpperCase() + user.gender_name.slice(1).toLowerCase());
+      }
+      if (candidateDetails.dob) {
+        const birthDate = new Date(candidateDetails.dob);
+        if (!isNaN(birthDate.getTime())) {
+          const birthYear = birthDate.getFullYear();
+          const currentYear = new Date().getFullYear();
+          parts.push(currentYear - birthYear);
+        }
+      }
+      gender_age = `(${parts.join("/")})`;
+    }
+
+    function toTitleCase(str) {
+      if (!str) return "";
+      return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+
+    user.name = toTitleCase(user.name);
+    user.gender_age = gender_age;
 
     const locationNames =
       locations?.map((city) => city.city_name).join(", ") || "";
@@ -1171,6 +1199,25 @@ export const AdmingetResume123 = async (req, res) => {
     user.gender_name = userGender?.name || "";
     candidateDetails.countryName = candidateDetailsCountryName?.name || "";
 
+    // Age and Gender combination (year-based age calculation)
+    let gender_age = "";
+    if (user.gender_name || candidateDetails.dob) {
+      const parts = [];
+      if (user.gender_name) {
+        parts.push(user.gender_name.charAt(0).toUpperCase() + user.gender_name.slice(1).toLowerCase());
+      }
+      if (candidateDetails.dob) {
+        const birthDate = new Date(candidateDetails.dob);
+        if (!isNaN(birthDate.getTime())) {
+          const birthYear = birthDate.getFullYear();
+          const currentYear = new Date().getFullYear();
+          parts.push(currentYear - birthYear);
+        }
+      }
+      gender_age = `[${parts.join("/")}]`;
+    }
+    user.gender_age = gender_age;
+
     const locationNames =
       locations?.map((city) => city.city_name).join(", ") || "";
 
@@ -1885,6 +1932,25 @@ export const AdmingetResume = async (req, res) => {
 
     user.gender_name = userGender?.name || "";
     candidateDetails.countryName = candidateDetailsCountryName?.name || "";
+
+    // Age and Gender combination (year-based age calculation)
+    let gender_age = "";
+    if (user.gender_name || candidateDetails.dob) {
+      const parts = [];
+      if (user.gender_name) {
+        parts.push(user.gender_name.charAt(0).toUpperCase() + user.gender_name.slice(1).toLowerCase());
+      }
+      if (candidateDetails.dob) {
+        const birthDate = new Date(candidateDetails.dob);
+        if (!isNaN(birthDate.getTime())) {
+          const birthYear = birthDate.getFullYear();
+          const currentYear = new Date().getFullYear();
+          parts.push(currentYear - birthYear);
+        }
+      }
+      gender_age = `[${parts.join("/")}]`;
+    }
+    user.gender_age = gender_age;
 
     const locationNames =
       locations?.map((city) => city.city_name).join(", ") || "";

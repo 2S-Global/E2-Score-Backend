@@ -5,352 +5,100 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Resume</title>
-  <style>
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #ffffff;
-      color: #000000;
-      font-size: 13px;
-      line-height: 1.5;
+  <script  src="https://cdn.tailwindcss.com" ></script>
+  <style type="text/tailwindcss">
+    /* Bullet markers for list items that used a custom ::before in the original CSS.
+       Kept as a tiny utility layer since Tailwind's `content-['•']` needs the `before:` variant
+       repeated on every element — centralizing it here keeps the markup clean. */
+    @layer utilities {
+      .bullet-item {
+        @apply relative pl-3;
+      }
+      .bullet-item::before {
+        content: "•";
+        @apply absolute left-0 text-black font-bold;
+      }
     }
 
-    .container {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 0;
-    }
-
-    /* ---------- Header ---------- */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 25px;
-    }
-
-    .header-left {
-      flex-grow: 1;
-      padding-right: 20px;
-    }
-
-    .header-title-row {
-      display: flex;
-      align-items: baseline;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .header-left h2 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 700;
-      color: #000000;
-    }
-
-    .header-left .headline {
-      margin: 0;
-      font-size: 16px;
-      font-style: italic;
-      color: #000000;
-      font-weight: 500;
-    }
-
-    /* Contact Info Grid in Header */
-    .contact-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px 20px;
-      font-size: 12.5px;
-      color: #000000;
-    }
-
-    .contact-item {
-      display: flex;
-      align-items: center;
-    }
-
-    .contact-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 18px;
-      height: 18px;
-      background-color: #000000;
-      color: #ffffff;
-      border-radius: 3px;
-      margin-right: 8px;
-      flex-shrink: 0;
-    }
-
-    .contact-badge svg {
-      width: 11px;
-      height: 11px;
-      stroke-width: 2.5;
-    }
-
-    .photo {
-      width: 110px;
-      height: 110px;
-      background-color: #ffffff;
-      border-radius: 50%;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    /* ---------- Sections ---------- */
-    .section {
-      margin-top: 22px;
-    }
-
-    .section h3 {
-      margin: 0 0 14px 0;
-      color: #000000;
-      background-color: #f2f2f2;
-      text-align: center;
-      padding: 6px 0;
-      font-size: 13.5px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: capitalize;
-      border-radius: 2px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    /* ---------- 2-Column Timeline Layout (Experience, Education, Projects) ---------- */
-    .entry-item {
-      display: flex;
-      margin-bottom: 16px;
-      line-height: 1.45;
-    }
-
-    .entry-date-col {
-      width: 150px;
-      flex-shrink: 0;
-      color: #000000;
-      font-size: 12px;
-      font-weight: 600;
-      padding-right: 15px;
-    }
-
-    .entry-content-col {
-      flex-grow: 1;
-    }
-
-    .entry-title {
-      font-weight: 700;
-      color: #000000;
-      font-size: 13.5px;
-    }
-
-    .entry-subtitle {
-      font-style: italic;
-      color: #000000;
-      margin-bottom: 6px;
-      display: block;
-    }
-
-    /* ---------- Multi-Column Lists (Skills, Languages, Certificates) ---------- */
-    .grid-list {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px 15px;
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .grid-list li {
-      position: relative;
-      padding-left: 14px;
-    }
-
-    .grid-list li::before {
-      content: "•";
-      position: absolute;
-      left: 0;
-      color: #000000;
-      font-weight: bold;
-    }
-
-    /* ---------- Detail Rows (Candidate & Personal Details) ---------- */
-    .info-list {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px 20px;
-      margin-top: 8px;
-    }
-
-    .info-row {
-      display: flex;
-      line-height: 1.4;
-    }
-
-    .info-label {
-      font-weight: 600;
-      width: 170px;
-      color: #000000;
-      flex-shrink: 0;
-    }
-
-    .info-val {
-      color: #000000;
-      flex-grow: 1;
-    }
-
-    /* ---------- General Typography & Lists ---------- */
-    p {
-      margin: 0 0 8px 0;
-      text-align: justify;
-    }
-
-    ul {
-      margin: 4px 0 0 0;
-      padding-left: 18px;
-    }
-
-    li {
-      margin-bottom: 6px;
-    }
-
-    a {
-      color: #000000;
-      text-decoration: underline;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    /* ---------- Page Breaks ---------- */
-    .entry-item,
-    .info-list,
-    .grid-list,
-    .contact-grid {
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    .section h3 {
-      page-break-after: avoid;
-      break-after: avoid;
-    }
-
-    /* ---------- KYC Badges ---------- */
-    .check {
-      color: #000000;
-      font-weight: bold;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .cross {
-      color: #000000;
-      font-weight: bold;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .check svg,
-    .cross svg {
-      width: 12px;
-      height: 12px;
-      stroke-width: 3;
-    }
-
-    .link-icon {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      font-size: 11px;
-      font-weight: 600;
-      margin-left: 5px;
-    }
-
-    .link-icon svg {
-      width: 12px;
-      height: 12px;
-      stroke-width: 2.5;
-    }
-
-    i[data-lucide] {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      stroke-width: 2.5;
-      vertical-align: middle;
+    /* Ensure the exact same font type is used globally across all elements */
+    * {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
     }
   </style>
 </head>
 
-<body>
-  <div class="container">
+<body class="m-0 p-0 font-['Segoe_UI',Tahoma,Geneva,Verdana,sans-serif] bg-white text-black text-xs leading-[1.45]">
+  <div class="w-full box-border p-0">
+
     <!-- Header Section -->
-    <div class="header">
-      <div class="header-left">
-        <div class="header-title-row">
-          <h2><%= user.name %></h2>
+    <div class="flex justify-between items-start mb-5">
+      <div class="flex-grow pr-5">
+        <div class="flex flex-col gap-0.5 mb-2.5">
+          <h2 class="m-0 text-2xl font-bold text-black">
+            <%= user.name %><% if (user.gender_age) { %><span class="text-[13px] font-medium text-[#555555] ml-1.5 align-middle"><%= user.gender_age %></span><% } %>
+          </h2>
           <% if (userDetails.resumeHeadline) { %>
-            <span class="headline"><%= userDetails.resumeHeadline %></span>
+            <span class="m-0 text-sm text-black font-medium"><%= userDetails.resumeHeadline %></span>
           <% } %>
         </div>
 
-        <div class="contact-grid">
-          <div class="contact-item">
-            <span class="contact-badge"><i data-lucide="mail"></i></span>
+        <div class="grid grid-cols-2 gap-x-[15px] gap-y-1.5 text-[11.5px] text-black">
+          <div class="flex items-center">
+            <span class="inline-flex items-center justify-center w-4 h-4 bg-black text-white rounded-[3px] mr-1.5 flex-shrink-0">
+              <i data-lucide="mail" class="inline-block w-2.5 h-2.5 [stroke-width:2.5]"></i>
+            </span>
             <span><%= user.email || 'N/A' %></span>
           </div>
-          <div class="contact-item">
-            <span class="contact-badge"><i data-lucide="phone"></i></span>
+          <div class="flex items-center">
+            <span class="inline-flex items-center justify-center w-4 h-4 bg-black text-white rounded-[3px] mr-1.5 flex-shrink-0">
+              <i data-lucide="phone" class="inline-block w-2.5 h-2.5 [stroke-width:2.5]"></i>
+            </span>
             <span><%= user.phone_number || 'N/A' %></span>
           </div>
-          <div class="contact-item">
-            <span class="contact-badge"><i data-lucide="map-pin"></i></span>
+          <div class="flex items-center">
+            <span class="inline-flex items-center justify-center w-4 h-4 bg-black text-white rounded-[3px] mr-1.5 flex-shrink-0">
+              <i data-lucide="map-pin" class="inline-block w-2.5 h-2.5 [stroke-width:2.5]"></i>
+            </span>
             <span><%= (typeof userPersonalDetails !== 'undefined' && userPersonalDetails?.permanentAddress && userPersonalDetails.permanentAddress !== 'N/A' && userPersonalDetails.permanentAddress.trim() !== '') ? userPersonalDetails.permanentAddress : (candidateDetails?.currentLocation || 'N/A') %></span>
           </div>
           <% if (candidateDetails?.countryName) { %>
-          <div class="contact-item">
-            <span class="contact-badge"><i data-lucide="flag"></i></span>
+          <div class="flex items-center">
+            <span class="inline-flex items-center justify-center w-4 h-4 bg-black text-white rounded-[3px] mr-1.5 flex-shrink-0">
+              <i data-lucide="flag" class="inline-block w-2.5 h-2.5 [stroke-width:2.5]"></i>
+            </span>
             <span><%= candidateDetails.countryName %></span>
           </div>
           <% } %>
           <% if (candidateDetails?.formattedDOB) { %>
-          <div class="contact-item">
-            <span class="contact-badge"><i data-lucide="calendar"></i></span>
+          <div class="flex items-center">
+            <span class="inline-flex items-center justify-center w-4 h-4 bg-black text-white rounded-[3px] mr-1.5 flex-shrink-0">
+              <i data-lucide="calendar" class="inline-block w-2.5 h-2.5 [stroke-width:2.5]"></i>
+            </span>
             <span><%= candidateDetails.formattedDOB %></span>
           </div>
           <% } %>
         </div>
       </div>
 
-      <div class="photo">
+      <div class="w-[100px] h-[100px] bg-white rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
         <% const photoUrl = user && user.profilePicture ? user.profilePicture : defaultImageDataUrl %>
-        <img src="<%= photoUrl %>" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover;" />
+        <img src="<%= photoUrl %>" alt="Profile Photo" class="w-full h-full object-cover" />
       </div>
     </div>
 
     <!-- Profile Summary Section -->
     <% if (userDetails && userDetails.profileSummary) { %>
-    <div class="section">
-      <h3>Summary</h3>
-      <p><%= userDetails.profileSummary %></p>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Summary</h3>
+      <p class="mb-1.5 text-justify"><%= userDetails.profileSummary %></p>
     </div>
     <% } %>
 
     <!-- Employment History Section -->
     <% if (employment && employment.length > 0) { %>
-    <div class="section page-break-group">
-      <h3>Professional Experience</h3>
-      <% employment.forEach(job => { 
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Professional Experience</h3>
+      <% employment.forEach(job => {
         const monthNames = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
         const startMonth = job.joiningDate?.month ? monthNames[job.joiningDate.month - 1] : null;
         const startYear = job.joiningDate?.year;
@@ -359,14 +107,14 @@
         const formattedStart = startMonth && startYear ? `${startMonth}/${startYear}` : "Unknown";
         const formattedEnd = job.currentEmployment ? "Present" : (endMonth && endYear ? `${endMonth}/${endYear}` : "Unknown");
       %>
-      <div class="entry-item">
-        <div class="entry-date-col">
+      <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
+        <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">
           <%= formattedStart %> – <%= formattedEnd %><br>
-          <span style="font-weight: normal; color: #000000;"><%= job.location || '' %></span>
+          <span class="font-normal text-black"><%= job.location || '' %></span>
         </div>
-        <div class="entry-content-col">
-          <span class="entry-title"><%= job.companyName %></span>, <span class="entry-subtitle" style="display:inline;"><%= job.jobTitle %></span>
-          <div style="margin-top: 6px;">
+        <div class="flex-grow">
+          <span class="font-bold text-black text-[12.5px]"><%= job.companyName %></span>, <span class="text-black inline"><%= job.jobTitle %></span>
+          <div class="mt-1.5">
             <%- job.jobDescription %>
           </div>
         </div>
@@ -377,28 +125,28 @@
 
     <!-- Education Section -->
     <% if (education && education.length > 0) { %>
-    <div class="section page-break-group">
-      <h3>Education</h3>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Academic Achievements</h3>
       <% education.forEach(edu => { %>
-      <div class="entry-item">
-        <div class="entry-date-col">
+      <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
+        <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">
           <% if (edu.levelId === '1' || edu.levelId === '2') { %>
             <%= edu.year_of_passing %>
           <% } else { %>
             <%= edu.from %> – <%= edu.to %>
           <% } %>
         </div>
-        <div class="entry-content-col">
-          <span class="entry-title"><%= edu.levelName %></span>
-          <span class="entry-subtitle">
+        <div class="flex-grow">
+          <span class="font-bold text-black text-[12.5px]"><%= edu.levelName %></span>
+          <span class="text-black mb-1 block">
             <% if (edu.levelId === '1' || edu.levelId === '2') { %>
               <%= edu.board %>
             <% } else { %>
               <%= edu.universityName %>
             <% } %>
           </span>
-          <div style="font-size: 12px; color: #000000;">
-            Marks/Grade: 
+          <div class="text-xs text-black">
+            Marks/Grade:
             <% if (edu.levelId === '1' || edu.levelId === '2') { %>
               <%= edu.marks %>%
             <% } else { %>
@@ -418,14 +166,14 @@
     <% } %>
 
     <!-- Skills Section -->
-    <% if (userPersonalDetails && userPersonalDetails.skillsResolved && userPersonalDetails.skillsResolved.length > 0) { 
+    <% if (userPersonalDetails && userPersonalDetails.skillsResolved && userPersonalDetails.skillsResolved.length > 0) {
       const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
     %>
-    <div class="section page-break-group">
-      <h3>Skills</h3>
-      <ul class="grid-list">
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Skills</h3>
+      <ul class="grid grid-cols-3 gap-x-3 gap-y-1.5 list-none p-0 m-0 [page-break-inside:avoid] [break-inside:avoid]">
         <% userPersonalDetails.skillsResolved.forEach(skill => { %>
-          <li><%= skill.split(' ').map(capitalize).join(' ') %></li>
+          <li class="bullet-item"><%= skill.split(' ').map(capitalize).join(' ') %></li>
         <% }); %>
       </ul>
     </div>
@@ -433,54 +181,37 @@
 
     <!-- Languages Section -->
     <% if (userPersonalDetails && userPersonalDetails.languageProficiency && userPersonalDetails.languageProficiency.length > 0) { %>
-    <div class="section page-break-group">
-      <h3>Languages</h3>
-      <ul class="grid-list">
-        <% userPersonalDetails.languageProficiency.forEach(lang => { 
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Languages</h3>
+      <ul class="grid grid-cols-3 gap-x-3 gap-y-1.5 list-none p-0 m-0 [page-break-inside:avoid] [break-inside:avoid]">
+        <% userPersonalDetails.languageProficiency.forEach(lang => {
              let skills = [];
              if (lang.read) skills.push("R");
              if (lang.write) skills.push("W");
              if (lang.speak) skills.push("S");
              const skillsText = skills.length > 0 ? ` (${skills.join('/')})` : "";
         %>
-          <li><strong><%= lang.languageName || 'N/A' %></strong><%= skillsText %></li>
+          <li class="bullet-item"><strong><%= lang.languageName || 'N/A' %></strong><%= skillsText %></li>
         <% }); %>
-      </ul>
-    </div>
-    <% } %>
-
-    <!-- Certifications Section -->
-    <% if (userCertifications && userCertifications.length > 0) { %>
-    <div class="section page-break-group">
-      <h3>Certificates</h3>
-      <ul class="grid-list">
-        <% userCertifications.forEach(cert => { %>
-          <li>
-            <strong><%= cert.title || "Untitled Certification" %></strong>
-            <% if (cert.url) { %>
-              <a href="<%= cert.url %>" target="_blank" class="link-icon">Link <i data-lucide="external-link"></i></a>
-            <% } %>
-          </li>
-        <% }) %>
       </ul>
     </div>
     <% } %>
 
     <!-- Projects Section -->
     <% if (projectDetails && projectDetails.length > 0) { %>
-    <div class="section page-break-group">
-      <h3>Projects</h3>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Projects</h3>
       <% projectDetails.forEach(proj => {
         const fromMonth = String(proj.workedFrom?.month || '').padStart(2, '0');
         const toMonth = String(proj.workedTill?.month || '').padStart(2, '0');
       %>
-      <div class="entry-item">
-        <div class="entry-date-col">
+      <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
+        <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">
           <%= fromMonth %>/<%= proj.workedFrom?.year || '' %> – <%= toMonth %>/<%= proj.workedTill?.year || '' %>
         </div>
-        <div class="entry-content-col">
-          <span class="entry-title"><%= proj.projectTitle %></span>
-          <p style="margin-top: 4px;"><%= proj.description %></p>
+        <div class="flex-grow">
+          <span class="font-bold text-black text-[12.5px]"><%= proj.projectTitle %></span>
+          <p class="mt-1 mb-1.5 text-justify"><%= proj.description %></p>
         </div>
       </div>
       <% }) %>
@@ -489,14 +220,14 @@
 
     <!-- IT Skills & Other Skills Section -->
     <% if ((itSkills && itSkills.length > 0) || (nonTtSkills && nonTtSkills.length > 0)) { %>
-    <div class="section page-break-group">
-      <h3>Technical & IT Skills</h3>
-      <ul class="grid-list">
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Technical & IT Skills</h3>
+      <ul class="grid grid-cols-3 gap-x-3 gap-y-1.5 list-none p-0 m-0 [page-break-inside:avoid] [break-inside:avoid]">
         <% itSkills?.forEach(skill => { %>
-          <li><strong><%= skill.skillName %></strong> <%= skill.version ? `(v${skill.version})` : '' %></li>
+          <li class="bullet-item"><strong><%= skill.skillName %></strong> <%= skill.version ? `(v${skill.version})` : '' %></li>
         <% }) %>
         <% nonTtSkills?.forEach(skill => { %>
-          <li><strong><%= skill.skillName %></strong></li>
+          <li class="bullet-item"><strong><%= skill.skillName %></strong></li>
         <% }) %>
       </ul>
     </div>
@@ -516,39 +247,39 @@
       );
     %>
     <% if (hasPersonalDetails) { %>
-    <div class="section page-break-group">
-      <h3>Personal Details</h3>
-      <div class="info-list">
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Personal Details</h3>
+      <div class="grid grid-cols-2 gap-x-[15px] gap-y-1.5 mt-1.5 [page-break-inside:avoid] [break-inside:avoid]">
         <% if (candidateDetails?.fatherName && candidateDetails.fatherName !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Father's Name</div><div class="info-val"><%= candidateDetails.fatherName %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Father's Name</div><div class="text-black flex-grow"><%= candidateDetails.fatherName %></div></div>
         <% } %>
         <% if (candidateDetails?.motherName && candidateDetails.motherName !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Mother's Name</div><div class="info-val"><%= candidateDetails.motherName %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Mother's Name</div><div class="text-black flex-grow"><%= candidateDetails.motherName %></div></div>
         <% } %>
         <% if (typeof user !== 'undefined' && user?.gender_name && user.gender_name !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Gender</div><div class="info-val"><%= user.gender_name %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Gender</div><div class="text-black flex-grow"><%= user.gender_name %></div></div>
         <% } %>
         <% if (typeof userPersonalDetails !== 'undefined' && userPersonalDetails?.maritalStatusName && userPersonalDetails.maritalStatusName !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Marital Status</div><div class="info-val"><%= userPersonalDetails.maritalStatusName %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Marital Status</div><div class="text-black flex-grow"><%= userPersonalDetails.maritalStatusName %></div></div>
         <% } %>
         <% if (candidateDetails?.totalExperience && (candidateDetails.totalExperience.year || candidateDetails.totalExperience.month)) { %>
-          <div class="info-row"><div class="info-label">Total Experience</div><div class="info-val"><%= candidateDetails.totalExperience.year || 0 %> yrs <%= candidateDetails.totalExperience.month || 0 %> mos</div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Total Experience</div><div class="text-black flex-grow"><%= candidateDetails.totalExperience.year || 0 %> yrs <%= candidateDetails.totalExperience.month || 0 %> mos</div></div>
         <% } %>
         <% if (candidateDetails?.hometown && candidateDetails.hometown !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Hometown</div><div class="info-val"><%= candidateDetails.hometown %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Hometown</div><div class="text-black flex-grow"><%= candidateDetails.hometown %></div></div>
         <% } %>
         <% if (typeof userPersonalDetails !== 'undefined' && userPersonalDetails?.permanentAddress && userPersonalDetails.permanentAddress !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Permanent Address</div><div class="info-val"><%= userPersonalDetails.permanentAddress %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Permanent Address</div><div class="text-black flex-grow"><%= userPersonalDetails.permanentAddress %></div></div>
         <% } %>
         <% if (typeof userPersonalDetails !== 'undefined' && userPersonalDetails && userPersonalDetails.have_usa_visa !== undefined) { %>
-          <div class="info-row"><div class="info-label">Work Permit USA</div><div class="info-val"><%= userPersonalDetails.have_usa_visa ? 'Yes' : 'No' %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Work Permit USA</div><div class="text-black flex-grow"><%= userPersonalDetails.have_usa_visa ? 'Yes' : 'No' %></div></div>
         <% } %>
       </div>
     </div>
     <% } %>
 
     <!-- Career Profile Section -->
-    <% 
+    <%
       const hasCareerProfile = typeof candidateCareerProfile !== 'undefined' && candidateCareerProfile && (
         (candidateCareerProfile.industry_name && candidateCareerProfile.industry_name !== "N/A") ||
         (candidateCareerProfile.department_name && candidateCareerProfile.department_name !== "N/A") ||
@@ -559,26 +290,26 @@
       );
     %>
     <% if (hasCareerProfile) { %>
-    <div class="section page-break-group">
-      <h3>Career Profile</h3>
-      <div class="info-list">
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Career Profile</h3>
+      <div class="grid grid-cols-2 gap-x-[15px] gap-y-1.5 mt-1.5 [page-break-inside:avoid] [break-inside:avoid]">
         <% if (candidateCareerProfile.industry_name && candidateCareerProfile.industry_name !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Industry</div><div class="info-val"><%= candidateCareerProfile.industry_name %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Industry</div><div class="text-black flex-grow"><%= candidateCareerProfile.industry_name %></div></div>
         <% } %>
         <% if (candidateCareerProfile.department_name && candidateCareerProfile.department_name !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Department</div><div class="info-val"><%= candidateCareerProfile.department_name %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Department</div><div class="text-black flex-grow"><%= candidateCareerProfile.department_name %></div></div>
         <% } %>
         <% if (candidateCareerProfile.job_role_name && candidateCareerProfile.job_role_name !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Job Role</div><div class="info-val"><%= candidateCareerProfile.job_role_name %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Job Role</div><div class="text-black flex-grow"><%= candidateCareerProfile.job_role_name %></div></div>
         <% } %>
         <% if (candidateCareerProfile.job_type && candidateCareerProfile.job_type !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Job Type</div><div class="info-val"><%= candidateCareerProfile.job_type %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Job Type</div><div class="text-black flex-grow"><%= candidateCareerProfile.job_type %></div></div>
         <% } %>
         <% if (candidateCareerProfile.shift && candidateCareerProfile.shift !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Preferred Shift</div><div class="info-val"><%= candidateCareerProfile.shift %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Preferred Shift</div><div class="text-black flex-grow"><%= candidateCareerProfile.shift %></div></div>
         <% } %>
         <% if (candidateCareerProfile.expected_salary && candidateCareerProfile.expected_salary !== "N/A") { %>
-          <div class="info-row"><div class="info-label">Expected Salary</div><div class="info-val"><%= candidateCareerProfile.expected_salary %></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Expected Salary</div><div class="text-black flex-grow"><%= candidateCareerProfile.expected_salary %></div></div>
         <% } %>
       </div>
     </div>
@@ -586,34 +317,34 @@
 
     <!-- Publications, Presentations & Patents Section -->
     <% if ((researchPublications && researchPublications.length > 0) || (userPresentations && userPresentations.length > 0) || (userPatents && userPatents.length > 0)) { %>
-    <div class="section page-break-group">
-      <h3>Publications, Presentations & Patents</h3>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Publications, Presentations & Patents</h3>
       <% researchPublications?.forEach(sample => { %>
-        <div class="entry-item">
-          <div class="entry-date-col">Publication</div>
-          <div class="entry-content-col">
-            <span class="entry-title"><%= sample.title || "Untitled" %></span>
-            <% if (sample.url) { %><a href="<%= sample.url %>" class="link-icon">Link <i data-lucide="external-link"></i></a><% } %>
-            <p style="margin-top: 4px;"><%- sample.description %></p>
+        <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
+          <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">Publication</div>
+          <div class="flex-grow">
+            <span class="font-bold text-black text-[12.5px]"><%= sample.title || "Untitled" %></span>
+            <% if (sample.url) { %><a href="<%= sample.url %>" class="text-black underline inline-flex items-center gap-[3px] text-[10px] font-semibold ml-[5px]">Link <i data-lucide="external-link" class="inline-block w-[11px] h-[11px] [stroke-width:2.5]"></i></a><% } %>
+            <p class="mt-1 mb-1.5 text-justify"><%- sample.description %></p>
           </div>
         </div>
       <% }) %>
       <% userPresentations?.forEach(presentation => { %>
-        <div class="entry-item">
-          <div class="entry-date-col">Presentation</div>
-          <div class="entry-content-col">
-            <span class="entry-title"><%= presentation.title || "Untitled" %></span>
-            <% if (presentation.url) { %><a href="<%= presentation.url %>" class="link-icon">Link <i data-lucide="external-link"></i></a><% } %>
-            <p style="margin-top: 4px;"><%- presentation.description %></p>
+        <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
+          <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">Presentation</div>
+          <div class="flex-grow">
+            <span class="font-bold text-black text-[12.5px]"><%= presentation.title || "Untitled" %></span>
+            <% if (presentation.url) { %><a href="<%= presentation.url %>" class="text-black underline inline-flex items-center gap-[3px] text-[10px] font-semibold ml-[5px]">Link <i data-lucide="external-link" class="inline-block w-[11px] h-[11px] [stroke-width:2.5]"></i></a><% } %>
+            <p class="mt-1 mb-1.5 text-justify"><%- presentation.description %></p>
           </div>
         </div>
       <% }) %>
       <% userPatents?.forEach(patent => { %>
-        <div class="entry-item">
-          <div class="entry-date-col">Patent (<%= patent.status || 'N/A' %>)</div>
-          <div class="entry-content-col">
-            <span class="entry-title"><%= patent.title || "Untitled" %></span> - Office: <%= patent.patent_office || 'N/A' %>
-            <p style="margin-top: 4px;"><%- patent.description %></p>
+        <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
+          <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">Patent (<%= patent.status || 'N/A' %>)</div>
+          <div class="flex-grow">
+            <span class="font-bold text-black text-[12.5px]"><%= patent.title || "Untitled" %></span> - Office: <%= patent.patent_office || 'N/A' %>
+            <p class="mt-1 mb-1.5 text-justify"><%- patent.description %></p>
           </div>
         </div>
       <% }) %>
@@ -621,30 +352,74 @@
     <% } %>
 
     <!-- KYC Information Section -->
-    <% 
+    <%
       const hasKycData = typeof kycResult !== 'undefined' && kycResult && (
         kycResult.pan_verified || kycResult.aadhar_verified || kycResult.dl_verified || kycResult.passport_verified
       );
     %>
     <% if (hasKycData) { %>
-    <div class="section page-break-group">
-      <h3>KYC Verification Status</h3>
-      <div class="info-list">
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">KYC Verification Status</h3>
+      <div class="grid grid-cols-2 gap-x-[15px] gap-y-1.5 mt-1.5 [page-break-inside:avoid] [break-inside:avoid]">
         <% if (kycResult.pan_verified) { %>
-          <div class="info-row"><div class="info-label">PAN Card</div><div class="info-val"><span class="check">Verified <i data-lucide="check"></i></span></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">PAN Card</div><div class="text-black flex-grow"><span class="text-black font-bold inline-flex items-center gap-1">Verified <i data-lucide="check" class="inline-block w-[11px] h-[11px] [stroke-width:3]"></i></span></div></div>
         <% } %>
         <% if (kycResult.aadhar_verified) { %>
-          <div class="info-row"><div class="info-label">Aadhar Card</div><div class="info-val"><span class="check">Verified <i data-lucide="check"></i></span></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Aadhar Card</div><div class="text-black flex-grow"><span class="text-black font-bold inline-flex items-center gap-1">Verified <i data-lucide="check" class="inline-block w-[11px] h-[11px] [stroke-width:3]"></i></span></div></div>
         <% } %>
         <% if (kycResult.dl_verified) { %>
-          <div class="info-row"><div class="info-label">Driving License</div><div class="info-val"><span class="check">Verified <i data-lucide="check"></i></span></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Driving License</div><div class="text-black flex-grow"><span class="text-black font-bold inline-flex items-center gap-1">Verified <i data-lucide="check" class="inline-block w-[11px] h-[11px] [stroke-width:3]"></i></span></div></div>
         <% } %>
         <% if (kycResult.passport_verified) { %>
-          <div class="info-row"><div class="info-label">Passport</div><div class="info-val"><span class="check">Verified <i data-lucide="check"></i></span></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Passport</div><div class="text-black flex-grow"><span class="text-black font-bold inline-flex items-center gap-1">Verified <i data-lucide="check" class="inline-block w-[11px] h-[11px] [stroke-width:3]"></i></span></div></div>
         <% } %>
       </div>
     </div>
     <% } %>
+
+    <!-- Certificates Section (Full Width, No Grid) -->
+    <% if (userCertifications && userCertifications.length > 0) { %>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Certificates</h3>
+      <div class="flex flex-col gap-1.5">
+        <% userCertifications.forEach(cert => { %>
+          <div class="bullet-item w-full box-border leading-[1.4] mb-1 [page-break-inside:avoid] [break-inside:avoid]">
+            <strong><%= cert.title || "Untitled Certification" %></strong>
+            <% if (cert.url) { %>
+              <a href="<%= cert.url %>" target="_blank" class="text-black underline inline-flex items-center gap-[3px] text-[10px] font-semibold ml-[5px]">Link <i data-lucide="external-link" class="inline-block w-[11px] h-[11px] [stroke-width:2.5]"></i></a>
+            <% } %>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Decorative Divider: Line - Circle - Line -->
+    
+
+    <!-- Acknowledgement & Signature Section -->
+    <div class="mt-[25px] [page-break-inside:avoid] [break-inside:avoid]">
+      <div class="mb-5 leading-[1.4] flex items-start gap-1.5">
+        <span class="inline-flex items-center justify-center w-[13px] h-[13px] border border-black rounded-[2px] mr-1.5 flex-shrink-0 mt-0.5">
+          <i data-lucide="check" class="inline-block w-2.5 h-2.5 [stroke-width:3.5]"></i>
+        </span>
+        <span>I hereby declare that all the information provided above is true, correct, and complete to the best of my knowledge and belief.</span>
+      </div>
+      <div class="flex justify-end items-end mt-[25px]">
+        
+        <div class="text-center">
+          <div class="mb-[5px]">___________________________</div>
+          <div class="font-semibold">( <%= user.name %> )</div>
+          <div class="mt-[5px] font-normal text-[11px]">Date: _________________</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-center my-5 mx-auto w-3/5 gap-[15px]">
+      <span class="flex-grow h-px bg-black"></span>
+      <span class="w-2 h-2 border-[1.5px] border-black rounded-full bg-transparent flex-shrink-0"></span>
+      <span class="flex-grow h-px bg-black"></span>
+    </div>
 
   </div>
   <script src="https://unpkg.com/lucide@latest"></script>
