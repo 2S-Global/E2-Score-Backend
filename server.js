@@ -16,15 +16,7 @@ db();
 const app = express();
 // Middleware
 app.use(
-  cors({
-    origin: [
-      "https://geisil.com",
-      "https://services.geisil.com",
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-    ],
-    credentials: true,
-  }),
+  cors({ origin: ["https://geisil.com", "https://services.geisil.com", "http://localhost:3000", "http://127.0.0.1:3000",], credentials: true, }),
 );
 
 app.use(cookieParser());
@@ -36,7 +28,7 @@ app.use(express.json());
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 
 app.use("/upload", express.static(path.join(process.cwd(), "upload")));
-app.use(morgan('dev')); 
+app.use(morgan('dev'));
 // Import routes
 import contactRouter from "./routes/contactRoutes.js";
 import AuthRouter from "./routes/AuthRoutes.js";

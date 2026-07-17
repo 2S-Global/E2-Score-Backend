@@ -4,6 +4,7 @@ import companylist from "../../models/CompanyListModel.js";
 import list_notice from "../../models/monogo_query/noticeModel.js";
 import User from "../../models/userModel.js";
 import nodemailer from "nodemailer";
+import { apiResponse } from "../../utility/apiResponse.js";
 
 /**
  * @description Search for matching Company based on the query parameter company_name
@@ -361,6 +362,20 @@ export const addEmploymentDetails = async (req, res) => {
 
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
+    }
+
+
+
+    //check cureent employee or not
+    if (currentlyWorking) {
+      const currentEmployment = await Employment.find({
+        user: userId,
+        currentEmployment: true
+      }).select("_id")
+
+      if (currentEmployment.length > 0) {
+        return apiResponse(res, 400, false, "Already have a current employment", null, null);
+      }
     }
 
     const existingCompany = await companylist

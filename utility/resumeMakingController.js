@@ -22,7 +22,7 @@ import Itskill from "../../models/itskillModel.js";
 import list_tech_skill from "../../models/monogo_query/techSkillModel.js";
 import ProjectDetails from "../../models/projectModel.js";
 import list_project_tag from "../../models/monogo_query/project_tagModel.js";
-import generateResumePDF from "../../services/pdfGenerator.js";
+import generateResumePDF from "../services/pdfGenerator.js";
 import UserCareer from "../../models/CareerModel.js";
 import list_industries from "../../models/monogo_query/industryModel.js";
 import list_department from "../../models/monogo_query/departmentsModel.js";
@@ -48,6 +48,7 @@ const createMap = (arr, key = "id", value = "name") =>
   Object.fromEntries(arr.map((item) => [item[key], item[value]]));
 
 export const getResume = async (req, res) => {
+  console.log("started")
   try {
     const userId = req.userId;
 
@@ -86,6 +87,7 @@ export const getResume = async (req, res) => {
     console.log("Project Details:", userProjects);
 
     const userDetails = userDetailsArr[0] || {};
+    console.log("userDetails.languageProficiency " , userDetails.languageProficiency)
     const candidateDetails = candidateDetailsArr[0] || {};
 
     const universityIds = getUniqueIds(educationRaw, "universityName");

@@ -149,7 +149,9 @@ export const getUser = async (req, res) => {
     user.phone_number = displayPhone;
 
     // Fetch gender name from SQL
-    let gender_name = "";
+    let gender_name = ""
+    console.log("Value123:", user.gender);
+    console.log("Type123:", typeof user.gender);;
     if (user.gender) {
       const genderObjectId = new mongoose.Types.ObjectId(user.gender);
       const genderResult = await list_gender.findOne({
@@ -522,53 +524,53 @@ export const getUserEducation = async (req, res) => {
     ] = await Promise.all([
       levelIds.length
         ? list_education_level
-            .find({ id: { $in: levelIds } }, { id: 1, level: 1, _id: 0 })
-            .lean()
+          .find({ id: { $in: levelIds } }, { id: 1, level: 1, _id: 0 })
+          .lean()
         : [],
       stateIds.length
         ? list_university_state
-            .find({ id: { $in: stateIds } }, { id: 1, name: 1, _id: 0 })
-            .lean()
+          .find({ id: { $in: stateIds } }, { id: 1, name: 1, _id: 0 })
+          .lean()
         : [],
       universityIds.length
         ? list_university_univercities
-            .find({ id: { $in: universityIds } }, { id: 1, name: 1, _id: 0 })
-            .lean()
+          .find({ id: { $in: universityIds } }, { id: 1, name: 1, _id: 0 })
+          .lean()
         : [],
       instituteIds.length
         ? list_university_colleges
-            .find({ id: { $in: instituteIds } }, { id: 1, name: 1, _id: 0 })
-            .lean()
+          .find({ id: { $in: instituteIds } }, { id: 1, name: 1, _id: 0 })
+          .lean()
         : [],
       courseIds.length
         ? list_university_course
-            .find({ id: { $in: courseIds } }, { id: 1, name: 1, _id: 0 })
-            .lean()
+          .find({ id: { $in: courseIds } }, { id: 1, name: 1, _id: 0 })
+          .lean()
         : [],
       courseTypeIds.length
         ? list_course_type
-            .find({ id: { $in: courseTypeIds } }, { id: 1, name: 1, _id: 0 })
-            .lean()
+          .find({ id: { $in: courseTypeIds } }, { id: 1, name: 1, _id: 0 })
+          .lean()
         : [],
       gradingSystemIds.length
         ? list_grading_system
-            .find({ id: { $in: gradingSystemIds } }, { id: 1, name: 1, _id: 0 })
-            .lean()
+          .find({ id: { $in: gradingSystemIds } }, { id: 1, name: 1, _id: 0 })
+          .lean()
         : [],
       mediumIds.length
         ? list_medium_of_education
-            .find({ id: { $in: mediumIds } }, { id: 1, name: 1, _id: 0 })
-            .lean()
+          .find({ id: { $in: mediumIds } }, { id: 1, name: 1, _id: 0 })
+          .lean()
         : [],
       boardIds.length
         ? list_education_boards
-            .find({ id: { $in: boardIds } }, { id: 1, board_name: 1, _id: 0 })
-            .lean()
+          .find({ id: { $in: boardIds } }, { id: 1, board_name: 1, _id: 0 })
+          .lean()
         : [],
       schoolIds.length
         ? list_school_list
-            .find({ id: { $in: schoolIds } }, { id: 1, school_name: 1, _id: 0 })
-            .lean()
+          .find({ id: { $in: schoolIds } }, { id: 1, school_name: 1, _id: 0 })
+          .lean()
         : [],
     ]);
 
@@ -836,15 +838,15 @@ export const getEditUserData = async (req, res) => {
       const [boardVal, school_nameVal] = await Promise.all([
         board
           ? list_education_boards
-              .findOne({ id: board }, { board_name: 1, _id: 0 })
-              .lean()
-              .then((doc) => doc?.board_name || "")
+            .findOne({ id: board }, { board_name: 1, _id: 0 })
+            .lean()
+            .then((doc) => doc?.board_name || "")
           : Promise.resolve(""),
         school_name
           ? list_school_list
-              .findOne({ id: school_name }, { school_name: 1, _id: 0 })
-              .lean()
-              .then((doc) => doc?.school_name || "")
+            .findOne({ id: school_name }, { school_name: 1, _id: 0 })
+            .lean()
+            .then((doc) => doc?.school_name || "")
           : Promise.resolve(""),
       ]);
 
@@ -855,21 +857,21 @@ export const getEditUserData = async (req, res) => {
         await Promise.all([
           universityName
             ? list_university_univercities
-                .findOne({ id: universityName }, { name: 1, _id: 0 })
-                .lean()
-                .then((doc) => doc?.name || "")
+              .findOne({ id: universityName }, { name: 1, _id: 0 })
+              .lean()
+              .then((doc) => doc?.name || "")
             : Promise.resolve(""),
           courseName
             ? list_university_course
-                .findOne({ id: courseName }, { name: 1, _id: 0 })
-                .lean()
-                .then((doc) => doc?.name || "")
+              .findOne({ id: courseName }, { name: 1, _id: 0 })
+              .lean()
+              .then((doc) => doc?.name || "")
             : Promise.resolve(""),
           instituteName
             ? list_university_colleges
-                .findOne({ id: instituteName }, { name: 1, _id: 0 })
-                .lean()
-                .then((doc) => doc?.name || "")
+              .findOne({ id: instituteName }, { name: 1, _id: 0 })
+              .lean()
+              .then((doc) => doc?.name || "")
             : Promise.resolve(""),
         ]);
 
@@ -880,10 +882,10 @@ export const getEditUserData = async (req, res) => {
 
     const levelType = level
       ? (
-          await list_education_level
-            .findOne({ id: level }, { level: 1, _id: 0 })
-            .lean()
-        )?.level || ""
+        await list_education_level
+          .findOne({ id: level }, { level: 1, _id: 0 })
+          .lean()
+      )?.level || ""
       : "";
 
     return res.status(200).json({

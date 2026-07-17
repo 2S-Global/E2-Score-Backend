@@ -107,7 +107,7 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
       role,
       phone_number: dbPhoneNumber,
-      profilePicture: `${process.env.CLIENT_BASE_URL}/images/no_user.png`,
+      profilePicture: null
     });
     await newUser.save();
     await CandidateDetails.create({
