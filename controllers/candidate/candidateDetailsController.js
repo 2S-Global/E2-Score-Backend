@@ -345,7 +345,12 @@ export const getCandidateDetails = async (req, res) => {
         : Promise.resolve([]),
       languageIds?.length
         ? list_language
-          .find({ _id: { $in: languageIds } })
+          .find({
+            $or: [
+              { _id: { $in: languageIds.filter((id) => mongoose.Types.ObjectId.isValid(id)) } },
+              { name: { $in: languageIds } }
+            ]
+          })
           .select("name")
           .lean()
         : Promise.resolve([]),

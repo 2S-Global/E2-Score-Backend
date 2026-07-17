@@ -342,7 +342,12 @@ export const getResume = async (req, res) => {
       // Getting Language Name
       languageIds?.length
         ? list_language
-          .find({ name: { $in: languageIds } })
+          .find({
+            $or: [
+              { _id: { $in: languageIds.filter((id) => mongoose.Types.ObjectId.isValid(id)) } },
+              { name: { $in: languageIds } }
+            ]
+          })
           .select("name")
           .lean()
         : Promise.resolve([]),
@@ -713,7 +718,7 @@ export const getResume = async (req, res) => {
 
     console.log(
       "did it worked ===>>>>",
-      userPersonalDetails.permanentAddress
+      userPersonalDetails
     );
 
     // KYC Details
@@ -1059,7 +1064,12 @@ export const AdmingetResume123 = async (req, res) => {
       // Getting Language Name
       languageIds?.length
         ? list_language
-          .find({ _id: { $in: languageIds } })
+          .find({
+            $or: [
+              { _id: { $in: languageIds.filter((id) => mongoose.Types.ObjectId.isValid(id)) } },
+              { name: { $in: languageIds } }
+            ]
+          })
           .select("name")
           .lean()
         : Promise.resolve([]),
@@ -1770,7 +1780,12 @@ export const AdmingetResume = async (req, res) => {
       // Getting Language Name
       languageIds?.length
         ? list_language
-          .find({ _id: { $in: languageIds } })
+          .find({
+            $or: [
+              { _id: { $in: languageIds.filter((id) => mongoose.Types.ObjectId.isValid(id)) } },
+              { name: { $in: languageIds } }
+            ]
+          })
           .select("name")
           .lean()
         : Promise.resolve([]),
