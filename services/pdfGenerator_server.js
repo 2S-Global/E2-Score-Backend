@@ -62,6 +62,7 @@ const generateResumePDF = async (data) => {
     footerTemplate: `
     <div style="
       width: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       font-size: 10px;
       padding: 5px 30px;
       color: #666;

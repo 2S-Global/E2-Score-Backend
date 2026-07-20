@@ -33,7 +33,7 @@
     "mysql2": "^3.14.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^7.0.9",
-    "puppeteer": "^24.12.1",
+    "puppeteer": "^25.3.0",
     "puppeteer-core": "^24.28.0",
     "razorpay": "^2.9.6",
     "react-select": "^5.10.2",

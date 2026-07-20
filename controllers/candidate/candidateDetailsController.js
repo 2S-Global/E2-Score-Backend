@@ -54,6 +54,32 @@ const getUniqueIds = (arr, field) => [
 const createMap = (arr, key = "id", value = "name") =>
   Object.fromEntries(arr.map((item) => [item[key], item[value]]));
 
+const sortWorkSamples = (samples) => {
+  return (samples || []).sort((a, b) => {
+    const isOngoingA = a.currentlyWorking === true;
+    const isOngoingB = b.currentlyWorking === true;
+    if (isOngoingA && !isOngoingB) return -1;
+    if (!isOngoingA && isOngoingB) return 1;
+    if (isOngoingA && isOngoingB) {
+      const yearA = Number(a.durationFrom?.year) || 0;
+      const yearB = Number(b.durationFrom?.year) || 0;
+      if (yearA !== yearB) return yearB - yearA;
+      return (Number(b.durationFrom?.month) || 0) - (Number(a.durationFrom?.month) || 0);
+    }
+    const toYearA = Number(a.durationTo?.year) || 0;
+    const toYearB = Number(b.durationTo?.year) || 0;
+    if (toYearA !== toYearB) return toYearB - toYearA;
+    const toMonthA = Number(a.durationTo?.month) || 0;
+    const toMonthB = Number(b.durationTo?.month) || 0;
+    if (toMonthA !== toMonthB) return toMonthB - toMonthA;
+    const fromYearA = Number(a.durationFrom?.year) || 0;
+    const fromYearB = Number(b.durationFrom?.year) || 0;
+    if (fromYearA !== fromYearB) return fromYearB - fromYearA;
+    return (Number(b.durationFrom?.month) || 0) - (Number(a.durationFrom?.month) || 0);
+  });
+};
+
+
 const calculateAge = (dob) => {
   if (!dob) return ""; // handle missing DOB safely
 
@@ -148,6 +174,7 @@ export const getCandidateDetails = async (req, res) => {
     const userDetails = userDetailsArr[0] || {};
     const candidateDetails = candidateDetailsArr[0] || {};
     const userPref = careerProfile[0] || {};
+    sortWorkSamples(workSamples);
 
     // Collect unique IDs
     const universityIds = educationRaw?.length
@@ -345,7 +372,12 @@ export const getCandidateDetails = async (req, res) => {
         : Promise.resolve([]),
       languageIds?.length
         ? list_language
-          .find({ _id: { $in: languageIds } })
+          .find({
+            $or: [
+              { _id: { $in: languageIds.filter((id) => mongoose.Types.ObjectId.isValid(id)) } },
+              { name: { $in: languageIds } }
+            ]
+          })
           .select("name")
           .lean()
         : Promise.resolve([]),

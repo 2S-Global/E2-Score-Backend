@@ -8,7 +8,7 @@ import UserEducation from "../../models/userEducationModel.js";
 
 export const GetProgress = async (userId) => {
   // console.log("from helper", userId);
-  let progress = 15;
+  let progress = 5;
 
   // Parallel DB queries
   const [career, resume, employment, user, personal, education] =
@@ -28,6 +28,9 @@ export const GetProgress = async (userId) => {
     if (career.location?.length) sections.push("desired_job_location");
     if (career.CurrentDepartment?.length) sections.push("Department");
     if (career.CurrentIndustry?.length) sections.push("Industry type");
+  }
+  if (user.numberVerified) {
+    sections.push("verified_mobile")
   }
 
   if (resume) {
@@ -56,6 +59,8 @@ export const GetProgress = async (userId) => {
     sections.push("Education");
   }
 
+
+  console.log("total sections ==.", sections)
   // Fetch all progress values in one DB call
   const progresses = await Progress.find({
     section_name: { $in: sections },

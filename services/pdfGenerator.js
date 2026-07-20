@@ -8,6 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const generateResumePDF = async (data) => {
+  console.log("data hey ", data)
 
   const templatePath = path.join(__dirname, "../templates/resume.ejs");
 
@@ -15,14 +16,14 @@ const generateResumePDF = async (data) => {
   const defaultImagePath = path.join(__dirname, "../public/images/no_user.png");
   const defaultImageBase64 = fs.readFileSync(defaultImagePath).toString("base64");
   const defaultImageDataUrl = `data:image/png;base64,${defaultImageBase64}`;
- 
+
   const htmlContent = await ejs.renderFile(templatePath, {
     ...data,
     defaultImageDataUrl,
   });
-  // Added Today Ended
 
-  // const htmlContent = await ejs.renderFile(templatePath, { ...data });
+  console.log("HTML length:", htmlContent.length);
+
 
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
@@ -53,13 +54,14 @@ const generateResumePDF = async (data) => {
     footerTemplate: `
     <div style="
       width: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       font-size: 10px;
       padding: 5px 30px;
-      color: #666;
+      color: #000000;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-top: 0.5px solid #ccc;
+      border-top: 0.5px solid #000000;
     ">
       <div>Generated on: ${generatedDate}</div>
       <div>Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>

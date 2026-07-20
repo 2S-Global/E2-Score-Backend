@@ -6,6 +6,8 @@ dotenv.config();
 
 mongoose.set("strictQuery", true);
 
+const BATCH_SIZE = 1000;
+
 function toPascalCase(str) {
     if (!str) return str;
 
@@ -17,32 +19,60 @@ function toPascalCase(str) {
         .join(" ");
 }
 
-
 async function run() {
     try {
         await mongoose.connect(process.env.MONGO_URL);
         console.log("✅ Connected");
 
-        const cursor = companylist.find({}).cursor();
+        const cursor = companylist.find({}).lean().cursor();
 
-        let updated = 0;
+        let operations = [];
+        let checked = 0;
+        let modified = 0;
 
         for await (const company of cursor) {
-            const oldName = company.companyname;
-            const newName = toPascalCase(oldName);
+            checked++;
 
-            if (oldName !== newName) {
-                await companylist.updateOne(
-                    { _id: company._id },
-                    { $set: { companyname: newName } }
+            const newName = toPascalCase(company.companyname);
+
+            if (company.companyname !== newName) {
+                operations.push({
+                    updateOne: {
+                        filter: { _id: company._id },
+                        update: {
+                            $set: {
+                                companyname: newName,
+                            },
+                        },
+                    },
+                });
+            }
+
+            if (operations.length >= BATCH_SIZE) {
+                const result = await companylist.bulkWrite(operations, {
+                    ordered: false,
+                });
+
+                modified += result.modifiedCount;
+                console.log(
+                    `Checked: ${checked.toLocaleString()} | Updated: ${modified.toLocaleString()}`
                 );
 
-                updated++;
-                console.log(`${oldName} -> ${newName}`);
-                console.log(`✅ Updated ${updated} documents`);
+                operations = [];
             }
         }
 
+        if (operations.length) {
+            const result = await companylist.bulkWrite(operations, {
+                ordered: false,
+            });
+
+            modified += result.modifiedCount;
+        }
+
+        console.log("\n========== FINISHED ==========");
+        console.log(`Checked : ${checked.toLocaleString()}`);
+        console.log(`Updated : ${modified.toLocaleString()}`);
     } catch (err) {
         console.error(err);
     } finally {

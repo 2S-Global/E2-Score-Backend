@@ -98,11 +98,11 @@ export const getMatchingSkill = async (req, res) => {
       [`${skill_name}%`]
     );
 
-    console.log("rows " , rows);
-   
+    console.log("rows ", rows);
+
 
     const skills = rows.map((row) => row.Skill);
-    console.log("is it wokring ==>" , skills)
+    console.log("is it wokring ==>", skills)
     res.status(200).json({
       success: true,
       data: skills,
@@ -144,6 +144,7 @@ export const getEducationLevel = async (req, res) => {
  * @error {object} 500 - Database query failed
  */
 export const getAllState = async (req, res) => {
+  console.log("working===>")
   try {
     const [rows] = await db_sql.execute(
       "SELECT id, name FROM `university_state` WHERE is_del = 0 AND is_active = 1 ORDER BY name ASC;"

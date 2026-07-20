@@ -16,15 +16,7 @@ db();
 const app = express();
 // Middleware
 app.use(
-  cors({
-    origin: [
-      "https://geisil.com",
-      "https://services.geisil.com",
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-    ],
-    credentials: true,
-  }),
+  cors({ origin: ["https://geisil.com", "https://services.geisil.com", "http://localhost:3000", "http://127.0.0.1:3000",], credentials: true, }),
 );
 
 app.use(cookieParser());
@@ -36,7 +28,7 @@ app.use(express.json());
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 
 app.use("/upload", express.static(path.join(process.cwd(), "upload")));
-app.use(morgan('dev')); 
+app.use(morgan('dev'));
 // Import routes
 import contactRouter from "./routes/contactRoutes.js";
 import AuthRouter from "./routes/AuthRoutes.js";
@@ -96,6 +88,7 @@ import homeRouter from "./routes/allHomePageRoutes.js";
 import contactRoutes from "./routes/admin/contactinfoRoutes.js";
 
 import campusRoutes from "./routes/institute/instituteCampusRoute.js";
+import DemoRouter from "./routes/Demo/DemoRoute.js";
 
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
@@ -108,6 +101,11 @@ app.use("/api/modify", Mrouter); */
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
 });
+
+app.use("/api/demo" ,DemoRouter )
+
+
+
 app.use("/api/auth", AuthRouter);
 app.use("/api/skills", userSkillsRoutes);
 app.use("/api/projects", userProjectsRoutes);

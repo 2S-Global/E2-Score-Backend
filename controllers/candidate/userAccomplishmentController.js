@@ -8,6 +8,34 @@ import db_sql from "../../config/sqldb.js";
 import User from "../../models/userModel.js";
 import list_social_profile from "../../models/monogo_query/socialProfileModel.js";
 import nodemailer from "nodemailer";
+import CandidateDetails from "../../models/CandidateDetailsModel.js";
+import { apiResponse } from "../../utility/apiResponse.js";
+
+const sortWorkSamples = (samples) => {
+  return (samples || []).sort((a, b) => {
+    const isOngoingA = a.currentlyWorking === true;
+    const isOngoingB = b.currentlyWorking === true;
+    if (isOngoingA && !isOngoingB) return -1;
+    if (!isOngoingA && isOngoingB) return 1;
+    if (isOngoingA && isOngoingB) {
+      const yearA = Number(a.durationFrom?.year) || 0;
+      const yearB = Number(b.durationFrom?.year) || 0;
+      if (yearA !== yearB) return yearB - yearA;
+      return (Number(b.durationFrom?.month) || 0) - (Number(a.durationFrom?.month) || 0);
+    }
+    const toYearA = Number(a.durationTo?.year) || 0;
+    const toYearB = Number(b.durationTo?.year) || 0;
+    if (toYearA !== toYearB) return toYearB - toYearA;
+    const toMonthA = Number(a.durationTo?.month) || 0;
+    const toMonthB = Number(b.durationTo?.month) || 0;
+    if (toMonthA !== toMonthB) return toMonthB - toMonthA;
+    const fromYearA = Number(a.durationFrom?.year) || 0;
+    const fromYearB = Number(b.durationFrom?.year) || 0;
+    if (fromYearA !== fromYearB) return fromYearB - fromYearA;
+    return (Number(b.durationFrom?.month) || 0) - (Number(a.durationFrom?.month) || 0);
+  });
+};
+
 /**
  * @description Add a new online profile for the authenticated user
  * @route POST /api/candidate/accomplishments/add_online_profile
@@ -628,6 +656,8 @@ export const getWorkSamples = async (req, res) => {
       isDel: false,
     }).sort({ createdAt: -1 });
 
+    sortWorkSamples(workSamples);
+
     const monthNames = [
       "January",
       "February",
@@ -980,6 +1010,24 @@ export const addResearchPublication = async (req, res) => {
 
     const userId = req.userId;
 
+    const { dob } = await CandidateDetails.findOne({ userId }).select("dob");
+    console.log("compare both===>", dob.getUTCFullYear() + 18 > publishYear)
+    if (!dob) {
+      return apiResponse(res, 400, false, "Date of Birth not found", null, null);
+    }
+
+    const birthYear = dob.getUTCFullYear();
+
+    if (birthYear + 18 > publishYear) {
+      return apiResponse(
+        res,
+        400,
+        false,
+        "You must be at least 18 years old at the time of publishing.",
+        null,
+        null
+      );
+    }
     //Validate required fields
     if (
       !userId ||
@@ -992,6 +1040,10 @@ export const addResearchPublication = async (req, res) => {
         message: "Required fields: title and url must be non-empty strings.",
       });
     }
+
+
+
+
 
     const newResearchModel = new UserResearch({
       userId,
@@ -1176,6 +1228,27 @@ export const updateResearchPublication = async (req, res) => {
         message: "Required fields: _id is missing.",
       });
     }
+
+
+    const { dob } = await CandidateDetails.findOne({ userId }).select("dob");
+
+    if (!dob) {
+      return apiResponse(res, 400, false, "Date of Birth not found", null, null);
+    }
+
+    const birthYear = dob.getUTCFullYear();
+
+    if (birthYear + 18 > publishYear) {
+      return apiResponse(
+        res,
+        400,
+        false,
+        "You must be at least 18 years old at the time of publishing.",
+        null,
+        null
+      );
+    }
+
 
     // Find the existing document
     const userResearch = await UserResearch.findOne({
