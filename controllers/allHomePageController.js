@@ -2,27 +2,27 @@ import homeBannerDetails from "../models/allHomePageModels.js";
 import ServiceDetails from "../models/ServiceDetailsModel.js";
 import HomepagecontactModel from "../models/HomePageContactModel.js";
 import nodemailer from "nodemailer";
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary } from "cloudinary";
 
 export const getAllFields = async (req, res) => {
   try {
-
     res.status(200).json({
       success: true,
       message: "Home Page Testing API is running successfully ! ",
     });
-
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching fields", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching fields",
+      error: error.message,
+    });
   }
 };
 
 export const getAllBannerDetails = async (req, res) => {
   try {
     // Fetch all banners (latest first optional)
-    const banners = await homeBannerDetails
-      .find()
-      .sort({ createdAt: -1 }); // optional: latest first
+    const banners = await homeBannerDetails.find().sort({ createdAt: -1 }); // optional: latest first
 
     // If no banners found
     if (!banners || banners.length === 0) {
@@ -36,7 +36,6 @@ export const getAllBannerDetails = async (req, res) => {
       success: true,
       data: banners,
     });
-
   } catch (error) {
     console.error("Get All Banners Error:", error);
 
@@ -74,7 +73,6 @@ export const addServiceDetails = async (req, res) => {
       message: "Service details added successfully",
       data: newService,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -122,7 +120,6 @@ export const updateServiceDetails = async (req, res) => {
       message: "Service details updated successfully",
       data: existingService,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -135,15 +132,15 @@ export const updateServiceDetails = async (req, res) => {
 export const getAllServiceDetails = async (req, res) => {
   try {
     // 🔹 Fetch all non-deleted services
-    const services = await ServiceDetails.find({ isDel: false })
-      .sort({ createdAt: -1 }); // latest first
+    const services = await ServiceDetails.find({ isDel: false }).sort({
+      createdAt: -1,
+    }); // latest first
 
     return res.status(200).json({
       success: true,
       message: "Service details fetched successfully",
       data: services,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -169,7 +166,7 @@ export const deleteServiceDetails = async (req, res) => {
     const deletedService = await ServiceDetails.findOneAndUpdate(
       { _id: id, isDel: false },
       { isDel: true },
-      { new: true }
+      { new: true },
     );
 
     // 🔹 If not found
@@ -184,7 +181,6 @@ export const deleteServiceDetails = async (req, res) => {
       success: true,
       message: "Service deleted successfully",
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -322,17 +318,12 @@ export const listContact = async (req, res) => {
 
 export const addBanner = async (req, res) => {
   try {
-    const {
-      banner_title,
-    } = req.body;
+    const { banner_title, description } = req.body;
 
-    if (
-      !banner_title
-    ) {
+    if (!banner_title) {
       return res.status(400).json({
         success: false,
-        message:
-          "All fields are required:  banner_title",
+        message: "All fields are required:  banner_title",
       });
     }
     let updatedImage = null;
@@ -354,14 +345,12 @@ export const addBanner = async (req, res) => {
             } else {
               resolve(result);
             }
-          }
+          },
         );
         stream.end(req.file.buffer);
       });
       updatedImage = uploadResult.secure_url;
     }
-
-
 
     const newTestimonial = new homeBannerDetails({
       banner_title,
@@ -369,9 +358,13 @@ export const addBanner = async (req, res) => {
     });
 
     const savedTestimonial = await newTestimonial.save();
-    res.status(201).json({ message: "Banner added successfully", data: savedTestimonial });
+    res
+      .status(201)
+      .json({ message: "Banner added successfully", data: savedTestimonial });
   } catch (error) {
-    res.status(500).json({ message: "Error adding Banner", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error adding Banner", error: error.message });
   }
 };
 
@@ -392,18 +385,12 @@ export const getAllBannners = async (req, res) => {
 
 export const updateBanner = async (req, res) => {
   try {
-    const {
-      id,
-      banner_title,
-    } = req.body;
+    const { id, banner_title, description } = req.body;
     // ✅ Validate required fields
-    if (
-      !id
-    ) {
+    if (!id) {
       return res.status(400).json({
         success: false,
-        message:
-          "Banner id is required",
+        message: "Banner id is required",
       });
     }
 
@@ -419,7 +406,6 @@ export const updateBanner = async (req, res) => {
     let updatedImage = existingBanner.banner_image;
     // ✅ If new image is uploaded → replace it
     if (req.file) {
-
       if (!req.file.buffer) {
         return res.status(400).json({
           success: false,
@@ -436,7 +422,7 @@ export const updateBanner = async (req, res) => {
             } else {
               resolve(result);
             }
-          }
+          },
         );
         stream.end(req.file.buffer);
       });
@@ -449,19 +435,19 @@ export const updateBanner = async (req, res) => {
       if (oldImage) {
         // Extract the public ID from the old image URL
         const oldImageUrlParts = oldImage.split("/");
-        oldPublicId = oldImageUrlParts[oldImageUrlParts.length - 1].split(".")[0];
+        oldPublicId =
+          oldImageUrlParts[oldImageUrlParts.length - 1].split(".")[0];
       }
       // If there was an old image, delete it from Cloudinary
       if (oldPublicId) {
         try {
-          await cloudinary.uploader.destroy(`homepageitems/banner/${oldPublicId}`);
+          await cloudinary.uploader.destroy(
+            `homepageitems/banner/${oldPublicId}`,
+          );
+        } catch (err) {
+          console.log("file delete failed");
         }
-        catch (err) {
-          console.log("file delete failed")
-        }
-
       }
-
     }
 
     // ✅ Build dynamic update object
@@ -484,11 +470,9 @@ export const updateBanner = async (req, res) => {
     }
 
     // ✅ Update the Testimonial with the new data (replace verifications)
-    const updated = await homeBannerDetails.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
+    const updated = await homeBannerDetails.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     res.status(200).json({
       success: true,
@@ -536,9 +520,7 @@ export const deleteBanner = async (req, res) => {
         const fileName = parts[parts.length - 1];
         const publicId = fileName.split(".")[0];
 
-        await cloudinary.uploader.destroy(
-          `homepageitems/banner/${publicId}`
-        );
+        await cloudinary.uploader.destroy(`homepageitems/banner/${publicId}`);
       } catch (err) {
         console.log("Cloudinary delete failed");
       }
@@ -551,7 +533,6 @@ export const deleteBanner = async (req, res) => {
       success: true,
       message: "Banner deleted successfully",
     });
-
   } catch (error) {
     console.error("Delete Banner Error:", error);
     return res.status(500).json({

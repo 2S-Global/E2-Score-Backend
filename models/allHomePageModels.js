@@ -7,6 +7,10 @@ const bannerDetailsSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    description: {
+      type: String,
+      trim: true,
+    },
     banner_image: {
       type: String, // Cloudinary URL
       required: true,
@@ -14,11 +18,14 @@ const bannerDetailsSchema = new mongoose.Schema(
     is_del: {
       type: Boolean,
       default: false,
-    }
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const homeBannerDetails = mongoose.model("HomeBannerDetails", bannerDetailsSchema);
+const homeBannerDetails = mongoose.model(
+  "HomeBannerDetails",
+  bannerDetailsSchema,
+);
 
 export default homeBannerDetails;

@@ -167,7 +167,7 @@ export const getOnlineProfileBySql = async (req, res) => {
     // Get unique socialProfile values
     const socialProfileIds = [
       ...new Set(
-        profiles.map((p) => parseInt(p.socialProfile)).filter(Boolean)
+        profiles.map((p) => parseInt(p.socialProfile)).filter(Boolean),
       ),
     ];
     if (socialProfileIds.length === 0) {
@@ -180,7 +180,7 @@ export const getOnlineProfileBySql = async (req, res) => {
     const placeholders = socialProfileIds.map(() => "?").join(",");
     const [socialRows] = await db_sql.execute(
       `SELECT id, name FROM social_profile WHERE id IN (${placeholders}) AND is_del = 0 AND is_active = 1`,
-      socialProfileIds
+      socialProfileIds,
     );
 
     const socialMap = {};
@@ -734,6 +734,8 @@ export const editWorkSample = async (req, res) => {
       currentlyWorking,
     } = req.body;
 
+    console.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww", req.body);
+
     const userId = req.userId;
 
     // Required fields check
@@ -775,9 +777,9 @@ export const editWorkSample = async (req, res) => {
     workSample.url = url.trim();
     workSample.description = description.trim();
 
-    if (currentlyWorking === "true") {
+    if (currentlyWorking === true) {
       workSample.currentlyWorking = true;
-    } else if (currentlyWorking === "false") {
+    } else if (currentlyWorking === false) {
       workSample.currentlyWorking = false;
     }
 
