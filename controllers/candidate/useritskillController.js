@@ -215,6 +215,7 @@ export const additskill = async (req, res) => {
     const existingSkill = await Itskill.exists({
       userId,
       skillSearch: skillId,
+      is_del: false
     });
 
     if (existingSkill) {
