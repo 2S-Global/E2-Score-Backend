@@ -88,6 +88,7 @@ import homeRouter from "./routes/allHomePageRoutes.js";
 import contactRoutes from "./routes/admin/contactinfoRoutes.js";
 
 import campusRoutes from "./routes/institute/instituteCampusRoute.js";
+import DemoRouter from "./routes/Demo/DemoRoute.js";
 
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
@@ -100,6 +101,11 @@ app.use("/api/modify", Mrouter); */
 app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
 });
+
+app.use("/api/demo" ,DemoRouter )
+
+
+
 app.use("/api/auth", AuthRouter);
 app.use("/api/skills", userSkillsRoutes);
 app.use("/api/projects", userProjectsRoutes);

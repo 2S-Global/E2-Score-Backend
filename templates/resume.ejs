@@ -24,10 +24,25 @@
     * {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
     }
+
+    /* Force text-justify on all descendants within a text-justify block */
+    .text-justify, .text-justify * {
+      text-align: justify !important;
+    }
   </style>
 </head>
 
 <body class="m-0 p-0 font-['Segoe_UI',Tahoma,Geneva,Verdana,sans-serif] bg-white text-black text-xs leading-[1.45]">
+  <%
+    const toTitleCase = (str) => {
+      if (!str) return '';
+      return str
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    };
+  %>
   <div class="w-full box-border p-0">
 
     <!-- Header Section -->
@@ -100,7 +115,7 @@
       <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Professional Experience</h3>
       <% employment.forEach(job => {
         const monthNames = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
-        const startMonth = job.joiningDate?.month ? monthNames[job.joiningDate.month - 1] : null;
+        const startMonth = job.joiningDate?.month ? monthNames[job.joiningDate.month - 1] : null; 
         const startYear = job.joiningDate?.year;
         const endMonth = job.leavingDate?.month ? monthNames[job.leavingDate.month - 1] : null;
         const endYear = job.leavingDate?.year;
@@ -114,7 +129,7 @@
         </div>
         <div class="flex-grow">
           <span class="font-bold text-black text-[12.5px]"><%= job.companyName %></span>, <span class="text-black inline"><%= job.jobTitle %></span>
-          <div class="mt-1.5">
+          <div class="mt-1.5 text-justify">
             <%- job.jobDescription %>
           </div>
         </div>
@@ -210,8 +225,8 @@
           <%= fromMonth %>/<%= proj.workedFrom?.year || '' %> – <%= toMonth %>/<%= proj.workedTill?.year || '' %>
         </div>
         <div class="flex-grow">
-          <span class="font-bold text-black text-[12.5px]"><%= proj.projectTitle %></span>
-          <p class="mt-1 mb-1.5 text-justify"><%= proj.description %></p>
+          <span class="font-bold text-black text-[12.5px]"><%= toTitleCase(proj.projectTitle) %></span>
+          <div class="mt-1 mb-1.5 text-justify"><%= proj.description %></div>
         </div>
       </div>
       <% }) %>
@@ -224,10 +239,10 @@
       <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Technical & IT Skills</h3>
       <ul class="grid grid-cols-3 gap-x-3 gap-y-1.5 list-none p-0 m-0 [page-break-inside:avoid] [break-inside:avoid]">
         <% itSkills?.forEach(skill => { %>
-          <li class="bullet-item"><strong><%= skill.skillName %></strong> <%= skill.version ? `(v${skill.version})` : '' %></li>
+          <li class="bullet-item"><strong><%= toTitleCase(skill.skillName) %></strong> <%= skill.version ? `(v${skill.version})` : '' %></li>
         <% }) %>
         <% nonTtSkills?.forEach(skill => { %>
-          <li class="bullet-item"><strong><%= skill.skillName %></strong></li>
+          <li class="bullet-item"><strong><%= toTitleCase(skill.skillName) %></strong></li>
         <% }) %>
       </ul>
     </div>
@@ -323,9 +338,9 @@
         <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
           <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">Publication</div>
           <div class="flex-grow">
-            <span class="font-bold text-black text-[12.5px]"><%= sample.title || "Untitled" %></span>
+            <span class="font-bold text-black text-[12.5px]"><%= toTitleCase(sample.title || "Untitled") %></span>
             <% if (sample.url) { %><a href="<%= sample.url %>" class="text-black underline inline-flex items-center gap-[3px] text-[10px] font-semibold ml-[5px]">Link <i data-lucide="external-link" class="inline-block w-[11px] h-[11px] [stroke-width:2.5]"></i></a><% } %>
-            <p class="mt-1 mb-1.5 text-justify"><%- sample.description %></p>
+            <div class="mt-1 mb-1.5 text-justify"><%- sample.description %></div>
           </div>
         </div>
       <% }) %>
@@ -333,9 +348,9 @@
         <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
           <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">Presentation</div>
           <div class="flex-grow">
-            <span class="font-bold text-black text-[12.5px]"><%= presentation.title || "Untitled" %></span>
+            <span class="font-bold text-black text-[12.5px]"><%= toTitleCase(presentation.title || "Untitled") %></span>
             <% if (presentation.url) { %><a href="<%= presentation.url %>" class="text-black underline inline-flex items-center gap-[3px] text-[10px] font-semibold ml-[5px]">Link <i data-lucide="external-link" class="inline-block w-[11px] h-[11px] [stroke-width:2.5]"></i></a><% } %>
-            <p class="mt-1 mb-1.5 text-justify"><%- presentation.description %></p>
+            <div class="mt-1 mb-1.5 text-justify"><%- presentation.description %></div>
           </div>
         </div>
       <% }) %>
@@ -343,8 +358,8 @@
         <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
           <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">Patent (<%= patent.status || 'N/A' %>)</div>
           <div class="flex-grow">
-            <span class="font-bold text-black text-[12.5px]"><%= patent.title || "Untitled" %></span> - Office: <%= patent.patent_office || 'N/A' %>
-            <p class="mt-1 mb-1.5 text-justify"><%- patent.description %></p>
+            <span class="font-bold text-black text-[12.5px]"><%= toTitleCase(patent.title || "Untitled") %></span> - Office: <%= patent.patent_office || 'N/A' %>
+            <div class="mt-1 mb-1.5 text-justify"><%- patent.description %></div>
           </div>
         </div>
       <% }) %>
@@ -354,7 +369,7 @@
     <!-- KYC Information Section -->
     <%
       const hasKycData = typeof kycResult !== 'undefined' && kycResult && (
-        kycResult.pan_verified || kycResult.aadhar_verified || kycResult.dl_verified || kycResult.passport_verified
+        kycResult.pan_verified || kycResult.aadhar_verified || kycResult.dl_verified || kycResult.passport_verified || kycResult.epic_verified
       );
     %>
     <% if (hasKycData) { %>
@@ -362,16 +377,19 @@
       <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">KYC Verification Status</h3>
       <div class="grid grid-cols-2 gap-x-[15px] gap-y-1.5 mt-1.5 [page-break-inside:avoid] [break-inside:avoid]">
         <% if (kycResult.pan_verified) { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">PAN Card</div><div class="text-black flex-grow"><span class="text-black font-bold inline-flex items-center gap-1">Verified <i data-lucide="check" class="inline-block w-[11px] h-[11px] [stroke-width:3]"></i></span></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">PAN Number</div><div class="text-black flex-grow"><i data-lucide="check-circle" class="inline-block w-[14px] h-[14px] [stroke-width:2.5] align-middle"></i></div></div>
         <% } %>
         <% if (kycResult.aadhar_verified) { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Aadhar Card</div><div class="text-black flex-grow"><span class="text-black font-bold inline-flex items-center gap-1">Verified <i data-lucide="check" class="inline-block w-[11px] h-[11px] [stroke-width:3]"></i></span></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Aadhaar Number</div><div class="text-black flex-grow"><i data-lucide="check-circle" class="inline-block w-[14px] h-[14px] [stroke-width:2.5] align-middle"></i></div></div>
+        <% } %>
+        <% if (kycResult.epic_verified) { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">EPIC Number</div><div class="text-black flex-grow"><i data-lucide="check-circle" class="inline-block w-[14px] h-[14px] [stroke-width:2.5] align-middle"></i></div></div>
         <% } %>
         <% if (kycResult.dl_verified) { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Driving License</div><div class="text-black flex-grow"><span class="text-black font-bold inline-flex items-center gap-1">Verified <i data-lucide="check" class="inline-block w-[11px] h-[11px] [stroke-width:3]"></i></span></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Driving License Number</div><div class="text-black flex-grow"><i data-lucide="check-circle" class="inline-block w-[14px] h-[14px] [stroke-width:2.5] align-middle"></i></div></div>
         <% } %>
         <% if (kycResult.passport_verified) { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Passport</div><div class="text-black flex-grow"><span class="text-black font-bold inline-flex items-center gap-1">Verified <i data-lucide="check" class="inline-block w-[11px] h-[11px] [stroke-width:3]"></i></span></div></div>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Passport Number</div><div class="text-black flex-grow"><i data-lucide="check-circle" class="inline-block w-[14px] h-[14px] [stroke-width:2.5] align-middle"></i></div></div>
         <% } %>
       </div>
     </div>
@@ -398,26 +416,31 @@
     
 
     <!-- Acknowledgement & Signature Section -->
-    <div class="mt-[25px] [page-break-inside:avoid] [break-inside:avoid]">
+    <div class="mt-[40px] [page-break-inside:avoid] [break-inside:avoid]">
       <div class="mb-5 leading-[1.4] flex items-start gap-1.5">
         <span class="inline-flex items-center justify-center w-[13px] h-[13px] border border-black rounded-[2px] mr-1.5 flex-shrink-0 mt-0.5">
           <i data-lucide="check" class="inline-block w-2.5 h-2.5 [stroke-width:3.5]"></i>
         </span>
         <span>I hereby declare that all the information provided above is true, correct, and complete to the best of my knowledge and belief.</span>
       </div>
-      <div class="flex justify-end items-end mt-[25px]">
-        
-        <div class="text-center">
-          <div class="mb-[5px]">___________________________</div>
-          <div class="font-semibold">( <%= user.name %> )</div>
-          <div class="mt-[5px] font-normal text-[11px]">Date: _________________</div>
-        </div>
-      </div>
+      <div class="flex flex-col items-end gap-4 mt-[50px]">
+  <!-- Signature -->
+  <div class="flex flex-col items-center">
+    <div class="w-[120px] border-t border-black"></div>
+    <div class="mt-1 font-semibold">( <%= user.name %> )</div>
+  </div>
+
+  <!-- Date -->
+  <div class="flex mt-4 items-center text-[11px] font-semibold">
+    <span class="mr-2">Date:</span>
+    <div class="w-[120px] border-b border-black"></div>
+  </div>
+</div>
     </div>
 
-    <div class="flex items-center justify-center my-5 mx-auto w-3/5 gap-[15px]">
+    <div class="flex items-center justify-center mt-[80px] mb-[30px] mx-auto w-3/5 gap-[15px]">
       <span class="flex-grow h-px bg-black"></span>
-      <span class="w-2 h-2 border-[1.5px] border-black rounded-full bg-transparent flex-shrink-0"></span>
+      <span class="w-2 h-2 border-[1.5px] border-black rounded-full bg-black   flex-shrink-0"></span>
       <span class="flex-grow h-px bg-black"></span>
     </div>
 
