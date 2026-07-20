@@ -212,6 +212,23 @@
     </div>
     <% } %>
 
+    <!-- Online Profiles Section -->
+    <% if (typeof onlineProfiles !== 'undefined' && onlineProfiles && onlineProfiles.length > 0) { %>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Online Profiles</h3>
+      <ul class="grid grid-cols-3 gap-x-3 gap-y-1.5 list-none p-0 m-0 [page-break-inside:avoid] [break-inside:avoid]">
+        <% onlineProfiles.forEach(profile => { %>
+          <li class="bullet-item">
+            <span class="font-semibold text-black"><%= profile.name %></span>
+            <% if (profile.url) { %>
+              <a href="<%= profile.url %>" target="_blank" class="text-black underline inline-flex items-center gap-[3px] text-[10px] font-semibold ml-[5px]">Link <i data-lucide="external-link" class="inline-block w-[11px] h-[11px] [stroke-width:2.5]"></i></a>
+            <% } %>
+          </li>
+        <% }); %>
+      </ul>
+    </div>
+    <% } %>
+
     <!-- Projects Section -->
     <% if (projectDetails && projectDetails.length > 0) { %>
     <div class="mt-[18px]">
@@ -227,6 +244,37 @@
         <div class="flex-grow">
           <span class="font-bold text-black text-[12.5px]"><%= toTitleCase(proj.projectTitle) %></span>
           <div class="mt-1 mb-1.5 text-justify"><%= proj.description %></div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <!-- Work Samples Section -->
+    <% if (typeof workSamples !== 'undefined' && workSamples && workSamples.length > 0) { %>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Work Samples</h3>
+      <% workSamples.forEach(sample => {
+        const fromMonth = sample.durationFrom?.month ? String(sample.durationFrom.month).padStart(2, '0') : '';
+        const fromYear = sample.durationFrom?.year || '';
+        const toMonth = sample.durationTo?.month ? String(sample.durationTo.month).padStart(2, '0') : '';
+        const toYear = sample.durationTo?.year || '';
+        const formattedStart = fromMonth && fromYear ? `${fromMonth}/${fromYear}` : "";
+        const formattedEnd = sample.currentlyWorking ? "Present" : (toMonth && toYear ? `${toMonth}/${toYear}` : "");
+        const dateRange = formattedStart || formattedEnd ? (formattedStart && formattedEnd ? `${formattedStart} – ${formattedEnd}` : (formattedStart || formattedEnd)) : "";
+      %>
+      <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
+        <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">
+          <%= dateRange %>
+        </div>
+        <div class="flex-grow">
+          <span class="font-bold text-black text-[12.5px]"><%= toTitleCase(sample.workTitle) %></span>
+          <% if (sample.url) { %>
+            <a href="<%= sample.url %>" target="_blank" class="text-black underline inline-flex items-center gap-[3px] text-[10px] font-semibold ml-[5px]">Link <i data-lucide="external-link" class="inline-block w-[11px] h-[11px] [stroke-width:2.5]"></i></a>
+          <% } %>
+          <% if (sample.description) { %>
+            <div class="mt-1 mb-1.5 text-justify"><%- sample.description %></div>
+          <% } %>
         </div>
       </div>
       <% }) %>

@@ -5,6 +5,7 @@ import list_notice from "../../models/monogo_query/noticeModel.js";
 import User from "../../models/userModel.js";
 import nodemailer from "nodemailer";
 import { apiResponse } from "../../utility/apiResponse.js";
+import CandidateDetails from "../../models/CandidateDetailsModel.js";
 
 /**
  * @description Search for matching Company based on the query parameter company_name
@@ -378,6 +379,27 @@ export const addEmploymentDetails = async (req, res) => {
       }
     }
 
+
+
+    const { dob } = await CandidateDetails.findOne({ userId }).select("dob");
+
+    if (!dob) {
+      return apiResponse(res, 400, false, "Date of Birth not found", null, null);
+    }
+
+    const birthYear = dob.getUTCFullYear();
+
+    if (birthYear + 18 > joining_year) {
+      return apiResponse(
+        res,
+        400,
+        false,
+        "You must be at least 18 years old at the time of joining.",
+        null,
+        null
+      );
+    }
+
     const existingCompany = await companylist
       .findOne({
         companyname: company_name.trim(),
@@ -551,6 +573,12 @@ export const addEmploymentDetails = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+
 
 /**
  * @description Fetch all Employment Details for the authenticated user.
@@ -868,6 +896,27 @@ export const editEmploymentDetails = async (req, res) => {
     if (!existingEmployment) {
       return res.status(404).json({ message: "Employment record not found" });
     }
+
+
+    const { dob } = await CandidateDetails.findOne({ userId }).select("dob");
+
+    if (!dob) {
+      return apiResponse(res, 400, false, "Date of Birth not found", null, null);
+    }
+
+    const birthYear = dob.getUTCFullYear();
+
+    if (birthYear + 18 > joining_year) {
+      return apiResponse(
+        res,
+        400,
+        false,
+        "You must be at least 18 years old at the time of joining.",
+        null,
+        null
+      );
+    }
+
 
     // Checking Company name exist in database. If not exist then insert that value in database
 

@@ -47,6 +47,32 @@ const getUniqueIds = (arr, field) => [
 const createMap = (arr, key = "id", value = "name") =>
   Object.fromEntries(arr.map((item) => [item[key], item[value]]));
 
+const sortWorkSamples = (samples) => {
+  return (samples || []).sort((a, b) => {
+    const isOngoingA = a.currentlyWorking === true;
+    const isOngoingB = b.currentlyWorking === true;
+    if (isOngoingA && !isOngoingB) return -1;
+    if (!isOngoingA && isOngoingB) return 1;
+    if (isOngoingA && isOngoingB) {
+      const yearA = Number(a.durationFrom?.year) || 0;
+      const yearB = Number(b.durationFrom?.year) || 0;
+      if (yearA !== yearB) return yearB - yearA;
+      return (Number(b.durationFrom?.month) || 0) - (Number(a.durationFrom?.month) || 0);
+    }
+    const toYearA = Number(a.durationTo?.year) || 0;
+    const toYearB = Number(b.durationTo?.year) || 0;
+    if (toYearA !== toYearB) return toYearB - toYearA;
+    const toMonthA = Number(a.durationTo?.month) || 0;
+    const toMonthB = Number(b.durationTo?.month) || 0;
+    if (toMonthA !== toMonthB) return toMonthB - toMonthA;
+    const fromYearA = Number(a.durationFrom?.year) || 0;
+    const fromYearB = Number(b.durationFrom?.year) || 0;
+    if (fromYearA !== fromYearB) return fromYearB - fromYearA;
+    return (Number(b.durationFrom?.month) || 0) - (Number(a.durationFrom?.month) || 0);
+  });
+};
+
+
 export const getResume = async (req, res) => {
   console.log("started")
   try {
@@ -89,6 +115,7 @@ export const getResume = async (req, res) => {
     const userDetails = userDetailsArr[0] || {};
     console.log("userDetails.languageProficiency " , userDetails.languageProficiency)
     const candidateDetails = candidateDetailsArr[0] || {};
+    sortWorkSamples(workSamples);
 
     const universityIds = getUniqueIds(educationRaw, "universityName");
     const instituteIds = getUniqueIds(educationRaw, "instituteName");
@@ -445,6 +472,7 @@ export const AdmingetResume = async (req, res) => {
 
     const userDetails = userDetailsArr[0] || {};
     const candidateDetails = candidateDetailsArr[0] || {};
+    sortWorkSamples(workSamples);
 
     const universityIds = getUniqueIds(educationRaw, "universityName");
     const instituteIds = getUniqueIds(educationRaw, "instituteName");

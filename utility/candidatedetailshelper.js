@@ -11,6 +11,32 @@ import CandidateKYC from "../models/CandidateKYCModel.js";
 import OnlineProfile from "../models/OnlineProfile.js";
 import mongoose from "mongoose";
 
+const sortWorkSamples = (samples) => {
+  return (samples || []).sort((a, b) => {
+    const isOngoingA = a.currentlyWorking === true;
+    const isOngoingB = b.currentlyWorking === true;
+    if (isOngoingA && !isOngoingB) return -1;
+    if (!isOngoingA && isOngoingB) return 1;
+    if (isOngoingA && isOngoingB) {
+      const yearA = Number(a.durationFrom?.year) || 0;
+      const yearB = Number(b.durationFrom?.year) || 0;
+      if (yearA !== yearB) return yearB - yearA;
+      return (Number(b.durationFrom?.month) || 0) - (Number(a.durationFrom?.month) || 0);
+    }
+    const toYearA = Number(a.durationTo?.year) || 0;
+    const toYearB = Number(b.durationTo?.year) || 0;
+    if (toYearA !== toYearB) return toYearB - toYearA;
+    const toMonthA = Number(a.durationTo?.month) || 0;
+    const toMonthB = Number(b.durationTo?.month) || 0;
+    if (toMonthA !== toMonthB) return toMonthB - toMonthA;
+    const fromYearA = Number(a.durationFrom?.year) || 0;
+    const fromYearB = Number(b.durationFrom?.year) || 0;
+    if (fromYearA !== fromYearB) return fromYearB - fromYearA;
+    return (Number(b.durationFrom?.month) || 0) - (Number(a.durationFrom?.month) || 0);
+  });
+};
+
+
 //model for educations
 //import list_education_level from "../models/monogo_query/educationLevelModel.js";
 import list_university_state from "../models/monogo_query/universityStateModel.js";
@@ -412,6 +438,8 @@ export const getWorkSamples = async (candidateId) => {
     userId,
     isDel: false,
   }).sort({ createdAt: -1 });
+
+  sortWorkSamples(workSamples);
 
   const monthNames = [
     "January",
