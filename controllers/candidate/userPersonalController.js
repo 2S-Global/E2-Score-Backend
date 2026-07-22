@@ -3,6 +3,7 @@ import personalDetails from "../../models/personalDetails.js";
 import candidateDetails from "../../models/CandidateDetailsModel.js";
 
 import nodemailer from "nodemailer";
+import { apiResponse } from "../../utility/apiResponse.js";
 export const test = async (req, res) => {
   try {
     res.status(200).json({ message: "Test route is working!" });
@@ -51,6 +52,9 @@ export const submitPersonalDetails = async (req, res) => {
     let changeListHTML = "";
 
     const user = await User.findById(userId);
+    if (!user) {
+      return apiResponse(res,404,"User not found",false);
+    }
 
     if (user.gender !== data.gender) {
       changeListHTML += `<li>Gender</li>`;
@@ -283,11 +287,11 @@ export const submitPersonalDetails = async (req, res) => {
         changeListHTML += `<li>USA Visa Status</li>`;
       }
     }
-    const userDetails = await personalDetails.findOne({ user: userId });
+    // const userDetails = await personalDetails.findOne({ user: userId });
 
-    if (!userDetails) {
-      return res.status(404).json({ message: "User details not found" });
-    }
+    // if (!userDetails) { 
+    //   return res.status(404).json({ message: "User details not found" });
+    // }
     console.log("data.languageProficiency==>", personalPayload.languageProficiency)
 
     const languages = personalPayload.languageProficiency.map((lp) =>
