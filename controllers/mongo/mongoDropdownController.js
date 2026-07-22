@@ -29,6 +29,7 @@ import list_school_list from "../../models/monogo_query/schoolListModel.js";
 import ListVerificationList from "../../models/monogo_query/verificationListModel.js";
 import list_non_it_skills from "../../models/monogo_query/nonTechSkillModel.js";
 import list_tbl_state from "../../models/monogo_query/StatesModel.js";
+import slugify from "slugify";
 //Get Courses for search
 
 /**
@@ -489,11 +490,17 @@ export const getCourseByUniversity = async (req, res) => {
           .lean();
 
         if (universityRows) {
+          const collegeSlug = slugify(college_name.trim(), {
+            lower: true,
+            strict: true,
+            trim: true,
+          });
+
           const collegeRows = await list_university_colleges
             .findOne(
               {
                 university_id: universityRows.id,
-                name: college_name.trim(),
+                slug: collegeSlug,
                 is_del: 0,
                 is_active: 1,
               },

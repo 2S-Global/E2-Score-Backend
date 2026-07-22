@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import slugify from 'slugify'
 const universityCollegeSchema = new mongoose.Schema({
   id: {
     type: Number,
@@ -50,6 +50,29 @@ const universityCollegeSchema = new mongoose.Schema({
     required: true,
   },
 });
+
+
+universityCollegeSchema.index({
+  slug: 1,
+  name: 1,
+  isActive: 1,
+  is_del: 1
+})
+
+
+
+
+universityCollegeSchema.pre('save', function () {
+  if (!this.isModified("name")) {
+    return;
+  }
+
+  this.slug = slugify(this.name.trim(), {
+    lower: true,
+    strict: true,
+    trim: true,
+  })
+})
 
 const list_university_colleges = mongoose.model(
   "list_university_colleges",

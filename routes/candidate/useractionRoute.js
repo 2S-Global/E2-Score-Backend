@@ -14,7 +14,8 @@ import {
   deleteUserEducation,
   deleteProfileSummary,
   addCareerProfile,
-  getCareerProfile
+  getCareerProfile,
+  removeProfilePicture
 } from "../../controllers/candidate/useractionController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -33,6 +34,18 @@ userRouter.post(
   upload.single("profile_picture"),
   addProfilePicture
 );
+//remove profile picture 
+
+userRouter.post(
+  "/remove-profile-picture",
+  userAuth,
+  removeProfilePicture
+);
+
+
+
+
+
 // Update user details
 userRouter.post(
   "/update-user-details",

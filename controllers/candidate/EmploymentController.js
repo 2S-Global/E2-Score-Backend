@@ -2,6 +2,7 @@ import db_sql from "../../config/sqldb.js";
 import Employment from "../../models/Employment.js";
 import companylist from "../../models/CompanyListModel.js";
 import list_notice from "../../models/monogo_query/noticeModel.js";
+import slugify from "slugify";
 import User from "../../models/userModel.js";
 import nodemailer from "nodemailer";
 import { apiResponse } from "../../utility/apiResponse.js";
@@ -48,6 +49,7 @@ export const getMatchingCompanyBySql = async (req, res) => {
 
 export const getMatchingCompany = async (req, res) => {
   const { company_name } = req.query;
+  console.log("working==>", company_name)
 
   if (!company_name || company_name.trim() === "") {
     return res.status(400).json({
@@ -57,11 +59,27 @@ export const getMatchingCompany = async (req, res) => {
   }
 
   try {
+    const querySlug = slugify(company_name.trim(), {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+
+    console.log("mainj thing ==>", querySlug)
+
+    if (!querySlug) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        message: `Matching companies for "${company_name}"`,
+      });
+    }
+
     const companies = await companylist
       .find({
         isDel: false,
         isActive: true,
-        companyname: { $regex: `^${company_name}`, $options: "i" }, // prefix + case-insensitive
+        slug: { $regex: `^${querySlug}`, $options: "i" }, // prefix match on slug
       })
       .sort({ companyname: 1 })
       .limit(20)
@@ -371,7 +389,8 @@ export const addEmploymentDetails = async (req, res) => {
     if (currentlyWorking) {
       const currentEmployment = await Employment.find({
         user: userId,
-        currentEmployment: true
+        currentEmployment: true,
+        isDel: false,
       }).select("_id")
 
       if (currentEmployment.length > 0) {
@@ -400,12 +419,21 @@ export const addEmploymentDetails = async (req, res) => {
       );
     }
 
+    const companySlug = slugify(company_name.trim(), {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+
+
+    console.log("Main sluuuggg ===>", companySlug)
+
     const existingCompany = await companylist
       .findOne({
-        companyname: company_name.trim(),
+        slug: companySlug,
         isDel: false,
       })
-      .select("_id companyname");
+      .select("_id companyname slug");
 
     let companyId;
     if (existingCompany) {
@@ -413,6 +441,7 @@ export const addEmploymentDetails = async (req, res) => {
     } else {
       const newCompany = new companylist({
         companyname: company_name.trim(),
+        slug: companySlug,
         isActive: false,
         isDel: false,
         flag: 1,
@@ -897,6 +926,18 @@ export const editEmploymentDetails = async (req, res) => {
       return res.status(404).json({ message: "Employment record not found" });
     }
 
+    if (currentlyWorking) {
+      const currentEmployment = await Employment.find({
+        user: userId,
+        currentEmployment: true,
+        isDel: false,
+        _id: { $ne: _id },
+      }).select("_id");
+
+      if (currentEmployment.length > 0) {
+        return apiResponse(res, 400, false, "Already have a current employment", null, null);
+      }
+    }
 
     const { dob } = await CandidateDetails.findOne({ userId }).select("dob");
 
@@ -920,12 +961,18 @@ export const editEmploymentDetails = async (req, res) => {
 
     // Checking Company name exist in database. If not exist then insert that value in database
 
+    const companySlug = slugify(company_name.trim(), {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+
     const existingCompany = await companylist
       .findOne({
-        companyname: company_name.trim(),
+        slug: companySlug,
         isDel: false,
       })
-      .select("_id companyname");
+      .select("_id companyname slug");
 
     let companyId;
     if (existingCompany) {
@@ -933,6 +980,7 @@ export const editEmploymentDetails = async (req, res) => {
     } else {
       const newCompany = new companylist({
         companyname: company_name.trim(),
+        slug: companySlug,
         isActive: false,
         isDel: false,
         flag: 1,

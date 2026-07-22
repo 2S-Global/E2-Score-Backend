@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import slugify from 'slugify'
 const CompanyListSchema = new mongoose.Schema(
   {
     cinnumber: {
@@ -56,6 +56,24 @@ CompanyListSchema.index({
   companyname: 1,
   slug: 1,
 });
+
+
+
+
+//default slug creation
+CompanyListSchema.pre("save", function () {
+  if (!this.isModified("companyname")) {
+    return;
+  }
+
+  this.slug = slugify(this.companyname.trim(), {
+    lower: true,
+    strict: true,
+    trim: true,
+  });
+});
+
+
 
 const companylist = mongoose.model("companylists", CompanyListSchema);
 

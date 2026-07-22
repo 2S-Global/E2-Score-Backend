@@ -53,7 +53,7 @@ export const submitPersonalDetails = async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) {
-      return apiResponse(res,404,"User not found",false);
+      return apiResponse(res, 404, "User not found", false);
     }
 
     if (user.gender !== data.gender) {

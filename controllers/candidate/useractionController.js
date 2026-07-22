@@ -21,6 +21,7 @@ import list_university_course from "../../models/monogo_query/universityCourseMo
 import list_school_list from "../../models/monogo_query/schoolListModel.js";
 import CompanyDetails from "../../models/company_Models/companydetails.js";
 import nodemailer from "nodemailer";
+import { apiResponse } from "../../utility/apiResponse.js";
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -2151,3 +2152,51 @@ export const getCareerProfile = async (req, res) => {
     });
   }
 };
+
+
+
+
+export const removeProfilePicture = async (req, res) => {
+  const userId = req.userId
+
+  try {
+
+    const userDetails = await User.findOne({
+      _id: userId
+    })
+
+    if (!userDetails) {
+      return apiResponse(res, 404, false, "User not found", null, null)
+    }
+
+
+    const profilePicture = userDetails?.profilePicture
+    if (!profilePicture) {
+      return apiResponse(res, 400, false, "No profile picture Uploaded yet", null, null)
+    }
+
+    const publicId = profilePicture?.split("/").pop()?.split(".")[0];
+    await cloudinary.uploader.destroy(
+      `e2score/profile_picture/${publicId}`
+    );
+
+    userDetails.profilePicture = ""
+    await userDetails.save()
+
+    return apiResponse(res, 200, true, "Profile picture removed successfully", null, null)
+
+
+  } catch (error) {
+    console.error(error);
+
+    return apiResponse(
+      res,
+      500,
+      false,
+      "Something went wrong"
+    );
+  }
+}
+
+
+
