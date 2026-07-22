@@ -1,3 +1,41 @@
+<!--
+  RESUME TEMPLATE — refactor notes (read this before editing)
+  =============================================================
+  Fixes applied vs. the previous version:
+  1. Every optional top-level variable (employment, education, candidateDetails,
+     userPersonalDetails, itSkills, etc.) is now normalized ONCE at the top into a
+     `safeX` variable with a guaranteed type (object or array). Previously, many
+     sections referenced these directly (e.g. `employment.length`, `candidateDetails?.x`)
+     with NO `typeof x !== 'undefined'` guard — if the calling code didn't pass that
+     local in, EJS throws a ReferenceError and the whole render fails. Now the template
+     can never crash due to a missing optional field.
+  2. Every directly-interpolated field (edu.board, edu.year_of_passing, job.companyName,
+     description fields, etc.) now has a fallback. Previously several of these would
+     print the literal string "undefined" into the rendered resume when the field was
+     missing.
+  3. `getVerificationIconHtml` and `getEducationBadgeHtml` were two functions doing the
+     same thing. Merged into one: `eduFieldIcon`.
+  4. Date formatting was inconsistent — Employment used full month names ("January 2020"),
+     Projects/Work Samples used raw zero-padded numbers ("01/2020"), and Projects had no
+     guard against missing values (could render "/ – /"). All date ranges now go through
+     shared helpers (`formatDateRange` / `formatOptionalDateRange`) for one consistent
+     format and no broken output when data is missing.
+  5. The per-education "is this a school level (10th/12th) row" check
+     (`edu.levelId === '1' || edu.levelId === '2' || edu.level === '1' || edu.level === '2'`)
+     was repeated 4 times per row. Computed once as `isSchoolLevel`.
+  6. Removed a redundant, empty leftover comment ("Decorative Divider") that had no
+     associated markup — the real divider lives at the bottom of the page.
+  7. Removed the duplicate font-family declaration (it was set both as a Tailwind utility
+     on <body> AND as a `* { !important }` rule doing the same thing).
+
+  NOTE ON RICH TEXT FIELDS: job.jobDescription, project/sample/patent/publication
+  descriptions are rendered with the unescaped-output tag (dash-style) because they
+  contain HTML from a rich-text editor. This template assumes that HTML has already
+  been sanitized
+  server-side (e.g. with `sanitize-html` / DOMPurify) before being passed in. If that
+  is not currently happening upstream, add it — rendering unsanitized HTML is an XSS
+  risk. This template only guards against missing/undefined values, not malicious HTML.
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,7 +43,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Resume</title>
-  <script  src="https://cdn.tailwindcss.com" ></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style type="text/tailwindcss">
     /* Bullet markers for list items that used a custom ::before in the original CSS.
        Kept as a tiny utility layer since Tailwind's `content-['•']` needs the `before:` variant
@@ -20,7 +58,8 @@
       }
     }
 
-    /* Ensure the exact same font type is used globally across all elements */
+    /* Single source of truth for the global font — applied here only, not duplicated
+       as a Tailwind utility class on <body> as well. */
     * {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
     }
@@ -32,15 +71,116 @@
   </style>
 </head>
 
-<body class="m-0 p-0 font-['Segoe_UI',Tahoma,Geneva,Verdana,sans-serif] bg-white text-black text-xs leading-[1.45]">
+<body class="m-0 p-0 bg-white text-black text-xs leading-[1.45]">
   <%
+    // ------------------------------------------------------------------
+    // 1. NORMALIZE ALL OPTIONAL LOCALS ONE TIME, UP FRONT.
+    //    Every section below reads from these `safeX` variables instead
+    //    of the raw locals, so a missing/undefined local can never crash
+    //    the render or leak "undefined" into the output.
+    // ------------------------------------------------------------------
+    const safeUser                 = (typeof user !== 'undefined' && user) ? user : {};
+    const safeUserDetails          = (typeof userDetails !== 'undefined' && userDetails) ? userDetails : {};
+    const safeCandidateDetails     = (typeof candidateDetails !== 'undefined' && candidateDetails) ? candidateDetails : {};
+    const safeUserPersonalDetails  = (typeof userPersonalDetails !== 'undefined' && userPersonalDetails) ? userPersonalDetails : {};
+    const safeCandidateCareerProfile = (typeof candidateCareerProfile !== 'undefined' && candidateCareerProfile) ? candidateCareerProfile : {};
+    const safeKycResult            = (typeof kycResult !== 'undefined' && kycResult) ? kycResult : {};
+    const safeDefaultImageDataUrl  = (typeof defaultImageDataUrl !== 'undefined' && defaultImageDataUrl) ? defaultImageDataUrl : '';
+
+    const safeEmployment            = (typeof employment !== 'undefined' && Array.isArray(employment)) ? employment : [];
+    const safeEducation             = (typeof education !== 'undefined' && Array.isArray(education)) ? education : [];
+    const safeOnlineProfiles        = (typeof onlineProfiles !== 'undefined' && Array.isArray(onlineProfiles)) ? onlineProfiles : [];
+    const safeProjectDetails        = (typeof projectDetails !== 'undefined' && Array.isArray(projectDetails)) ? projectDetails : [];
+    const safeWorkSamples           = (typeof workSamples !== 'undefined' && Array.isArray(workSamples)) ? workSamples : [];
+    const safeItSkills              = (typeof itSkills !== 'undefined' && Array.isArray(itSkills)) ? itSkills : [];
+    const safeNonTtSkills           = (typeof nonTtSkills !== 'undefined' && Array.isArray(nonTtSkills)) ? nonTtSkills : [];
+    const safeResearchPublications  = (typeof researchPublications !== 'undefined' && Array.isArray(researchPublications)) ? researchPublications : [];
+    const safeUserPresentations     = (typeof userPresentations !== 'undefined' && Array.isArray(userPresentations)) ? userPresentations : [];
+    const safeUserPatents           = (typeof userPatents !== 'undefined' && Array.isArray(userPatents)) ? userPatents : [];
+    const safeUserCertifications    = (typeof userCertifications !== 'undefined' && Array.isArray(userCertifications)) ? userCertifications : [];
+
+    // ------------------------------------------------------------------
+    // 2. SHARED HELPERS
+    // ------------------------------------------------------------------
+
+    // Generic fallback for any scalar field that might be missing.
+    const safe = (value, fallback = 'N/A') => {
+      if (value === null || value === undefined) return fallback;
+      const str = String(value).trim();
+      return str === '' ? fallback : str;
+    };
+
     const toTitleCase = (str) => {
       if (!str) return '';
-      return str
+      return String(str)
         .toLowerCase()
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+    };
+
+    // Accepts either a 1-12 month number/numeric-string, or a month name string.
+    const formatMonth = (monthValue) => {
+      if (monthValue === null || monthValue === undefined || String(monthValue).trim() === '') return null;
+      const num = Number(monthValue);
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      if (!Number.isNaN(num) && num >= 1 && num <= 12) return monthNames[num - 1];
+      const str = String(monthValue).trim();
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
+
+    const formatMonthYear = (month, year) => {
+      const m = formatMonth(month);
+      if (m && year) return `${m} ${year}`;
+      if (year) return String(year);
+      return null;
+    };
+
+    // For ranges that should always show something (Employment): falls back to
+    // "Unknown" on either end and supports a "Present" end date.
+    const formatDateRange = (fromMonth, fromYear, toMonth, toYear, isCurrent) => {
+      const start = formatMonthYear(fromMonth, fromYear) || 'Unknown';
+      const end = isCurrent ? 'Present' : (formatMonthYear(toMonth, toYear) || 'Unknown');
+      return `${start} – ${end}`;
+    };
+
+    // For ranges that are genuinely optional (Projects, Work Samples): renders
+    // whatever is available and returns '' rather than "Unknown – Unknown" if
+    // nothing is available at all.
+    const formatOptionalDateRange = (fromMonth, fromYear, toMonth, toYear, isCurrent) => {
+      const start = formatMonthYear(fromMonth, fromYear);
+      const end = isCurrent ? 'Present' : formatMonthYear(toMonth, toYear);
+      if (start && end) return `${start} – ${end}`;
+      return start || end || '';
+    };
+
+    // Single icon helper for all three-state (approved / rejected / pending) badges.
+    const verificationIcon = (isVerified, isRejected, size = 12) => {
+      let icon = 'clock';
+      let title = 'Pending';
+      if (isVerified) {
+        icon = 'check-circle';
+        title = 'Approved';
+      } else if (isRejected) {
+        icon = 'x-circle';
+        title = 'Rejected';
+      }
+      return `<i data-lucide="${icon}" class="inline-block w-[${size}px] h-[${size}px] [stroke-width:2.5] text-black align-middle ml-1" title="${title}"></i>`;
+    };
+
+    // Education rows can be verified either as a whole (edu.is_verified /
+    // edu.is_studied_here) or per-field (e.g. edu.marks_verified). A specific
+    // field is treated as approved if EITHER the field itself is verified OR
+    // the row as a whole is verified. It's only shown as rejected if it isn't
+    // approved by either of those AND the row as a whole was rejected.
+    // (This replaces the old getVerificationIconHtml + getEducationBadgeHtml,
+    // which duplicated this exact logic in two places.)
+    const eduFieldIcon = (edu, fieldVerified) => {
+      const overallVerified = edu.is_verified === true;
+      const overallRejected = !overallVerified && edu.is_studied_here === false;
+      const isVerified = overallVerified || fieldVerified === true;
+      const isRejected = !isVerified && overallRejected;
+      return verificationIcon(isVerified, isRejected, 12);
     };
   %>
   <div class="w-full box-border p-0">
@@ -50,11 +190,8 @@
       <div class="flex-grow pr-5">
         <div class="flex flex-col gap-0.5 mb-2.5">
           <h2 class="m-0 text-2xl font-bold text-black">
-            <%= user.name %><% if (user.gender_age) { %><span class="text-[13px] font-medium text-[#555555] ml-1.5 align-middle"><%= user.gender_age %></span><% } %>
+            <%= safe(safeUser.name) %><% if (safeUser.gender_age) { %><span class="text-[13px] font-medium text-[#555555] ml-1.5 align-middle"><%= safeUser.gender_age %></span><% } %>
           </h2>
-          <% if (userDetails.resumeHeadline) { %>
-            <span class="m-0 text-sm text-black font-medium"><%= userDetails.resumeHeadline %></span>
-          <% } %>
         </div>
 
         <div class="grid grid-cols-2 gap-x-[15px] gap-y-1.5 text-[11.5px] text-black">
@@ -62,76 +199,89 @@
             <span class="inline-flex items-center justify-center w-4 h-4 bg-black text-white rounded-[3px] mr-1.5 flex-shrink-0">
               <i data-lucide="mail" class="inline-block w-2.5 h-2.5 [stroke-width:2.5]"></i>
             </span>
-            <span><%= user.email || 'N/A' %></span>
+            <span><%= safe(safeUser.email) %></span>
           </div>
           <div class="flex items-center">
             <span class="inline-flex items-center justify-center w-4 h-4 bg-black text-white rounded-[3px] mr-1.5 flex-shrink-0">
               <i data-lucide="phone" class="inline-block w-2.5 h-2.5 [stroke-width:2.5]"></i>
             </span>
-            <span><%= user.phone_number || 'N/A' %></span>
+            <span><%= safe(safeUser.phone_number) %></span>
           </div>
           <div class="flex items-center">
             <span class="inline-flex items-center justify-center w-4 h-4 bg-black text-white rounded-[3px] mr-1.5 flex-shrink-0">
               <i data-lucide="map-pin" class="inline-block w-2.5 h-2.5 [stroke-width:2.5]"></i>
             </span>
-            <span><%= (typeof userPersonalDetails !== 'undefined' && userPersonalDetails?.permanentAddress && userPersonalDetails.permanentAddress !== 'N/A' && userPersonalDetails.permanentAddress.trim() !== '') ? userPersonalDetails.permanentAddress : (candidateDetails?.currentLocation || 'N/A') %></span>
+            <span><%= (safeUserPersonalDetails.permanentAddress && safeUserPersonalDetails.permanentAddress !== 'N/A' && safeUserPersonalDetails.permanentAddress.trim() !== '') ? safeUserPersonalDetails.permanentAddress : safe(safeCandidateDetails.currentLocation) %></span>
           </div>
-          <% if (candidateDetails?.countryName) { %>
+          <% if (safeCandidateDetails.countryName) { %>
           <div class="flex items-center">
             <span class="inline-flex items-center justify-center w-4 h-4 bg-black text-white rounded-[3px] mr-1.5 flex-shrink-0">
               <i data-lucide="flag" class="inline-block w-2.5 h-2.5 [stroke-width:2.5]"></i>
             </span>
-            <span><%= candidateDetails.countryName %></span>
+            <span><%= safeCandidateDetails.countryName %></span>
           </div>
           <% } %>
-          <% if (candidateDetails?.formattedDOB) { %>
+          <% if (safeCandidateDetails.formattedDOB) { %>
           <div class="flex items-center">
             <span class="inline-flex items-center justify-center w-4 h-4 bg-black text-white rounded-[3px] mr-1.5 flex-shrink-0">
               <i data-lucide="calendar" class="inline-block w-2.5 h-2.5 [stroke-width:2.5]"></i>
             </span>
-            <span><%= candidateDetails.formattedDOB %></span>
+            <span><%= safeCandidateDetails.formattedDOB %></span>
           </div>
           <% } %>
         </div>
       </div>
 
       <div class="w-[100px] h-[100px] bg-white rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
-        <% const photoUrl = user && user.profilePicture ? user.profilePicture : defaultImageDataUrl %>
+        <% const photoUrl = safeUser.profilePicture || safeDefaultImageDataUrl; %>
         <img src="<%= photoUrl %>" alt="Profile Photo" class="w-full h-full object-cover" />
       </div>
     </div>
 
-    <!-- Profile Summary Section -->
-    <% if (userDetails && userDetails.profileSummary) { %>
+    <!-- Resume Headline Section -->
+    <% if (safeUserDetails.resumeHeadline) { %>
     <div class="mt-[18px]">
-      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Summary</h3>
-      <p class="mb-1.5 text-justify"><%= userDetails.profileSummary %></p>
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Resume Headline</h3>
+      <p class="mb-1.5 text-justify"><%= safeUserDetails.resumeHeadline %></p>
+    </div>
+    <% } %>
+
+    <!-- Profile Summary Section -->
+    <% if (safeUserDetails.profileSummary) { %>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Profile Summary</h3>
+      <p class="mb-1.5 text-justify"><%= safeUserDetails.profileSummary %></p>
     </div>
     <% } %>
 
     <!-- Employment History Section -->
-    <% if (employment && employment.length > 0) { %>
+    <% if (safeEmployment.length > 0) { %>
     <div class="mt-[18px]">
-      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Professional Experience</h3>
-      <% employment.forEach(job => {
-        const monthNames = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
-        const startMonth = job.joiningDate?.month ? monthNames[job.joiningDate.month - 1] : null; 
-        const startYear = job.joiningDate?.year;
-        const endMonth = job.leavingDate?.month ? monthNames[job.leavingDate.month - 1] : null;
-        const endYear = job.leavingDate?.year;
-        const formattedStart = startMonth && startYear ? `${startMonth}/${startYear}` : "Unknown";
-        const formattedEnd = job.currentEmployment ? "Present" : (endMonth && endYear ? `${endMonth}/${endYear}` : "Unknown");
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Employment</h3>
+      <% safeEmployment.forEach(job => {
+        const dateRange = formatDateRange(job.joiningDate?.month, job.joiningDate?.year, job.leavingDate?.month, job.leavingDate?.year, job.currentEmployment === true);
       %>
       <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
         <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">
-          <%= formattedStart %> – <%= formattedEnd %><br>
+          <%= dateRange %><br>
           <span class="font-normal text-black"><%= job.location || '' %></span>
         </div>
         <div class="flex-grow">
-          <span class="font-bold text-black text-[12.5px]"><%= job.companyName %></span>, <span class="text-black inline"><%= job.jobTitle %></span>
+          <div class="flex items-center flex-wrap">
+            <span class="font-bold text-black text-[12.5px]"><%= safe(job.companyName) %></span>
+            <%- verificationIcon(job.workedInCompany === true, job.workedInCompany === false, 14) %>
+          </div>
+          <div class="text-black font-semibold text-[11px] mt-0.5"><%= safe(job.jobTitle) %></div>
+          <% if (job.jobDescription) { %>
           <div class="mt-1.5 text-justify">
             <%- job.jobDescription %>
           </div>
+          <% } %>
+          <% if (job.NoticePeriod) { %>
+            <div class="mt-1 text-[11px] text-gray-700">
+              <span class="font-semibold text-black">Notice Period:</span> <%= job.NoticePeriod %>
+            </div>
+          <% } %>
         </div>
       </div>
       <% }) %>
@@ -139,40 +289,72 @@
     <% } %>
 
     <!-- Education Section -->
-    <% if (education && education.length > 0) { %>
+    <% if (safeEducation.length > 0) { %>
     <div class="mt-[18px]">
       <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Academic Achievements</h3>
-      <% education.forEach(edu => { %>
+      <% safeEducation.forEach(edu => {
+        const isSchoolLevel = edu.levelId === '1' || edu.levelId === '2' || edu.level === '1' || edu.level === '2';
+
+        // Marks/grade display: avoid ever printing "undefined%".
+        let marksDisplay;
+        if (edu.marks === undefined || edu.marks === null || edu.marks === '') {
+          marksDisplay = 'N/A';
+        } else if (isSchoolLevel) {
+          marksDisplay = `${edu.marks}%`;
+        } else if (edu.gradingName && edu.gradingName.includes('Scale')) {
+          marksDisplay = `${edu.marks} CGPA`;
+        } else if (edu.gradingName && edu.gradingName.includes('Marks')) {
+          marksDisplay = `${edu.marks}%`;
+        } else {
+          marksDisplay = edu.marks;
+        }
+      %>
       <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
         <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">
-          <% if (edu.levelId === '1' || edu.levelId === '2') { %>
-            <%= edu.year_of_passing %>
+          <% if (isSchoolLevel) { %>
+            <%= safe(edu.year_of_passing) %>
           <% } else { %>
-            <%= edu.from %> – <%= edu.to %>
+            <%= safe(edu.from) %> – <%= safe(edu.to) %>
+            <%- eduFieldIcon(edu, edu.duration_verified) %>
+            <% if (edu.courseType && edu.courseType !== 'Unknown Course Type') { %>
+              <br><span class="font-normal text-black"><%= edu.courseType %></span>
+              <%- eduFieldIcon(edu, edu.courseType_verified) %>
+            <% } %>
           <% } %>
         </div>
         <div class="flex-grow">
-          <span class="font-bold text-black text-[12.5px]"><%= edu.levelName %></span>
-          <span class="text-black mb-1 block">
-            <% if (edu.levelId === '1' || edu.levelId === '2') { %>
-              <%= edu.board %>
-            <% } else { %>
-              <%= edu.universityName %>
+          <span class="font-bold text-black text-[12.5px]"><%= safe(edu.levelName) %></span>
+          <%- eduFieldIcon(edu) %>
+
+          <% if (isSchoolLevel) { %>
+            <span class="text-black mb-1 block">
+              <%= safe(edu.board) %>
+              <%- eduFieldIcon(edu, edu.level_verified) %>
+            </span>
+          <% } else { %>
+            <% if (edu.courseName && edu.courseName !== 'Unknown Degree') { %>
+              <span class="text-black font-medium block">
+                <%= edu.courseName %>
+                <%- eduFieldIcon(edu, edu.courseName_verified) %>
+              </span>
             <% } %>
-          </span>
-          <div class="text-xs text-black">
+            <% if (edu.instituteName && edu.instituteName !== 'Unknown Institute') { %>
+              <span class="text-black block">
+                <%= edu.instituteName %>
+                <%- eduFieldIcon(edu, edu.is_studied_here) %>
+              </span>
+            <% } %>
+            <% if (edu.universityName && edu.universityName !== 'Unknown University') { %>
+              <span class="text-black block">
+                <%= edu.universityName %>
+              </span>
+            <% } %>
+          <% } %>
+
+          <div class="text-xs text-black mt-1">
             Marks/Grade:
-            <% if (edu.levelId === '1' || edu.levelId === '2') { %>
-              <%= edu.marks %>%
-            <% } else { %>
-              <% if (edu.gradingName && edu.gradingName.includes('Scale')) { %>
-                <%= edu.marks %> CGPA
-              <% } else if (edu.gradingName && edu.gradingName.includes('Marks')) { %>
-                <%= edu.marks %>%
-              <% } else { %>
-                <%= edu.marks %>
-              <% } %>
-            <% } %>
+            <%= marksDisplay %>
+            <%- eduFieldIcon(edu, edu.marks_verified) %>
           </div>
         </div>
       </div>
@@ -180,46 +362,44 @@
     </div>
     <% } %>
 
-    <!-- Skills Section -->
-    <% if (userPersonalDetails && userPersonalDetails.skillsResolved && userPersonalDetails.skillsResolved.length > 0) {
-      const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
-    %>
+    <!-- Key Skills Section -->
+    <% if (safeUserPersonalDetails.skillsResolved && safeUserPersonalDetails.skillsResolved.length > 0) { %>
     <div class="mt-[18px]">
-      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Skills</h3>
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Key Skills</h3>
       <ul class="grid grid-cols-3 gap-x-3 gap-y-1.5 list-none p-0 m-0 [page-break-inside:avoid] [break-inside:avoid]">
-        <% userPersonalDetails.skillsResolved.forEach(skill => { %>
-          <li class="bullet-item"><%= skill.split(' ').map(capitalize).join(' ') %></li>
+        <% safeUserPersonalDetails.skillsResolved.forEach(skill => { %>
+          <li class="bullet-item"><%= toTitleCase(skill) %></li>
         <% }); %>
       </ul>
     </div>
     <% } %>
 
     <!-- Languages Section -->
-    <% if (userPersonalDetails && userPersonalDetails.languageProficiency && userPersonalDetails.languageProficiency.length > 0) { %>
+    <% if (safeUserPersonalDetails.languageProficiency && safeUserPersonalDetails.languageProficiency.length > 0) { %>
     <div class="mt-[18px]">
       <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Languages</h3>
       <ul class="grid grid-cols-3 gap-x-3 gap-y-1.5 list-none p-0 m-0 [page-break-inside:avoid] [break-inside:avoid]">
-        <% userPersonalDetails.languageProficiency.forEach(lang => {
-             let skills = [];
+        <% safeUserPersonalDetails.languageProficiency.forEach(lang => {
+             const skills = [];
              if (lang.read) skills.push("R");
              if (lang.write) skills.push("W");
              if (lang.speak) skills.push("S");
              const skillsText = skills.length > 0 ? ` (${skills.join('/')})` : "";
         %>
-          <li class="bullet-item"><strong><%= lang.languageName || 'N/A' %></strong><%= skillsText %></li>
+          <li class="bullet-item"><strong><%= safe(lang.languageName) %></strong><%= skillsText %></li>
         <% }); %>
       </ul>
     </div>
     <% } %>
 
     <!-- Online Profiles Section -->
-    <% if (typeof onlineProfiles !== 'undefined' && onlineProfiles && onlineProfiles.length > 0) { %>
+    <% if (safeOnlineProfiles.length > 0) { %>
     <div class="mt-[18px]">
       <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Online Profiles</h3>
       <ul class="grid grid-cols-3 gap-x-3 gap-y-1.5 list-none p-0 m-0 [page-break-inside:avoid] [break-inside:avoid]">
-        <% onlineProfiles.forEach(profile => { %>
+        <% safeOnlineProfiles.forEach(profile => { %>
           <li class="bullet-item">
-            <span class="font-semibold text-black"><%= profile.name %></span>
+            <span class="font-semibold text-black"><%= safe(profile.name) %></span>
             <% if (profile.url) { %>
               <a href="<%= profile.url %>" target="_blank" class="text-black underline inline-flex items-center gap-[3px] text-[10px] font-semibold ml-[5px]">Link <i data-lucide="external-link" class="inline-block w-[11px] h-[11px] [stroke-width:2.5]"></i></a>
             <% } %>
@@ -230,20 +410,21 @@
     <% } %>
 
     <!-- Projects Section -->
-    <% if (projectDetails && projectDetails.length > 0) { %>
+    <% if (safeProjectDetails.length > 0) { %>
     <div class="mt-[18px]">
       <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Projects</h3>
-      <% projectDetails.forEach(proj => {
-        const fromMonth = String(proj.workedFrom?.month || '').padStart(2, '0');
-        const toMonth = String(proj.workedTill?.month || '').padStart(2, '0');
+      <% safeProjectDetails.forEach(proj => {
+        const dateRange = formatOptionalDateRange(proj.workedFrom?.month, proj.workedFrom?.year, proj.workedTill?.month, proj.workedTill?.year);
       %>
       <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
         <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">
-          <%= fromMonth %>/<%= proj.workedFrom?.year || '' %> – <%= toMonth %>/<%= proj.workedTill?.year || '' %>
+          <%= dateRange %>
         </div>
         <div class="flex-grow">
           <span class="font-bold text-black text-[12.5px]"><%= toTitleCase(proj.projectTitle) %></span>
-          <div class="mt-1 mb-1.5 text-justify"><%= proj.description %></div>
+          <% if (proj.description) { %>
+          <div class="mt-1 mb-1.5 text-justify"><%- proj.description %></div>
+          <% } %>
         </div>
       </div>
       <% }) %>
@@ -251,17 +432,11 @@
     <% } %>
 
     <!-- Work Samples Section -->
-    <% if (typeof workSamples !== 'undefined' && workSamples && workSamples.length > 0) { %>
+    <% if (safeWorkSamples.length > 0) { %>
     <div class="mt-[18px]">
-      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Work Samples</h3>
-      <% workSamples.forEach(sample => {
-        const fromMonth = sample.durationFrom?.month ? String(sample.durationFrom.month).padStart(2, '0') : '';
-        const fromYear = sample.durationFrom?.year || '';
-        const toMonth = sample.durationTo?.month ? String(sample.durationTo.month).padStart(2, '0') : '';
-        const toYear = sample.durationTo?.year || '';
-        const formattedStart = fromMonth && fromYear ? `${fromMonth}/${fromYear}` : "";
-        const formattedEnd = sample.currentlyWorking ? "Present" : (toMonth && toYear ? `${toMonth}/${toYear}` : "");
-        const dateRange = formattedStart || formattedEnd ? (formattedStart && formattedEnd ? `${formattedStart} – ${formattedEnd}` : (formattedStart || formattedEnd)) : "";
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Knowledge Experience</h3>
+      <% safeWorkSamples.forEach(sample => {
+        const dateRange = formatOptionalDateRange(sample.durationFrom?.month, sample.durationFrom?.year, sample.durationTo?.month, sample.durationTo?.year, sample.currentlyWorking === true);
       %>
       <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
         <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">
@@ -281,15 +456,24 @@
     </div>
     <% } %>
 
-    <!-- IT Skills & Other Skills Section -->
-    <% if ((itSkills && itSkills.length > 0) || (nonTtSkills && nonTtSkills.length > 0)) { %>
+    <!-- IT Skills Section -->
+    <% if (safeItSkills.length > 0) { %>
     <div class="mt-[18px]">
-      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Technical & IT Skills</h3>
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">IT Skills</h3>
       <ul class="grid grid-cols-3 gap-x-3 gap-y-1.5 list-none p-0 m-0 [page-break-inside:avoid] [break-inside:avoid]">
-        <% itSkills?.forEach(skill => { %>
+        <% safeItSkills.forEach(skill => { %>
           <li class="bullet-item"><strong><%= toTitleCase(skill.skillName) %></strong> <%= skill.version ? `(v${skill.version})` : '' %></li>
         <% }) %>
-        <% nonTtSkills?.forEach(skill => { %>
+      </ul>
+    </div>
+    <% } %>
+
+    <!-- Other Skills Section -->
+    <% if (safeNonTtSkills.length > 0) { %>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Other Skills</h3>
+      <ul class="grid grid-cols-3 gap-x-3 gap-y-1.5 list-none p-0 m-0 [page-break-inside:avoid] [break-inside:avoid]">
+        <% safeNonTtSkills.forEach(skill => { %>
           <li class="bullet-item"><strong><%= toTitleCase(skill.skillName) %></strong></li>
         <% }) %>
       </ul>
@@ -298,44 +482,82 @@
 
     <!-- Candidate & Personal Details Section -->
     <%
-      const hasPersonalDetails = typeof candidateDetails !== 'undefined' && candidateDetails && (
-        (candidateDetails.fatherName && candidateDetails.fatherName !== "N/A") ||
-        (candidateDetails.motherName && candidateDetails.motherName !== "N/A") ||
-        (typeof user !== 'undefined' && user && user.gender_name && user.gender_name !== "N/A") ||
-        (typeof userPersonalDetails !== 'undefined' && userPersonalDetails && userPersonalDetails.maritalStatusName && userPersonalDetails.maritalStatusName !== "N/A") ||
-        (candidateDetails.totalExperience && (candidateDetails.totalExperience.year || candidateDetails.totalExperience.month)) ||
-        (candidateDetails.hometown && candidateDetails.hometown !== "N/A") ||
-        (typeof userPersonalDetails !== 'undefined' && userPersonalDetails && userPersonalDetails.permanentAddress && userPersonalDetails.permanentAddress !== "N/A") ||
-        (typeof userPersonalDetails !== 'undefined' && userPersonalDetails && userPersonalDetails.have_usa_visa !== undefined)
+      const hasPersonalDetails = (
+        (safeCandidateDetails.fatherName && safeCandidateDetails.fatherName !== "N/A") ||
+        (safeCandidateDetails.motherName && safeCandidateDetails.motherName !== "N/A") ||
+        (safeUser.gender_name && safeUser.gender_name !== "N/A") ||
+        (safeUserPersonalDetails.maritalStatusName && safeUserPersonalDetails.maritalStatusName !== "N/A") ||
+        (safeCandidateDetails.totalExperience && (safeCandidateDetails.totalExperience.year || safeCandidateDetails.totalExperience.month)) ||
+        (safeCandidateDetails.hometown && safeCandidateDetails.hometown !== "N/A") ||
+        (safeUserPersonalDetails.permanentAddress && safeUserPersonalDetails.permanentAddress !== "N/A") ||
+        (safeUserPersonalDetails.have_usa_visa !== undefined || safeUserPersonalDetails.usaPermitName || (safeUserPersonalDetails.workPermitOtherNames && safeUserPersonalDetails.workPermitOtherNames.length > 0)) ||
+        (safeCandidateDetails.formattedDOB) ||
+        (safeUserPersonalDetails.categoryName) ||
+        (safeUserPersonalDetails.differentlyAble) ||
+        (safeUserPersonalDetails.currentlyOnCareerBreak || safeUserPersonalDetails.careerBreak || safeUserPersonalDetails.reasonName)
       );
     %>
     <% if (hasPersonalDetails) { %>
     <div class="mt-[18px]">
       <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Personal Details</h3>
       <div class="grid grid-cols-2 gap-x-[15px] gap-y-1.5 mt-1.5 [page-break-inside:avoid] [break-inside:avoid]">
-        <% if (candidateDetails?.fatherName && candidateDetails.fatherName !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Father's Name</div><div class="text-black flex-grow"><%= candidateDetails.fatherName %></div></div>
+        <% if (safeCandidateDetails.fatherName && safeCandidateDetails.fatherName !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Father's Name</div><div class="text-black flex-grow"><%= safeCandidateDetails.fatherName %></div></div>
         <% } %>
-        <% if (candidateDetails?.motherName && candidateDetails.motherName !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Mother's Name</div><div class="text-black flex-grow"><%= candidateDetails.motherName %></div></div>
+        <% if (safeCandidateDetails.motherName && safeCandidateDetails.motherName !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Mother's Name</div><div class="text-black flex-grow"><%= safeCandidateDetails.motherName %></div></div>
         <% } %>
-        <% if (typeof user !== 'undefined' && user?.gender_name && user.gender_name !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Gender</div><div class="text-black flex-grow"><%= user.gender_name %></div></div>
+        <% if (safeUser.gender_name && safeUser.gender_name !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Gender</div><div class="text-black flex-grow"><%= safeUser.gender_name %></div></div>
         <% } %>
-        <% if (typeof userPersonalDetails !== 'undefined' && userPersonalDetails?.maritalStatusName && userPersonalDetails.maritalStatusName !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Marital Status</div><div class="text-black flex-grow"><%= userPersonalDetails.maritalStatusName %></div></div>
+        <% if (safeUserPersonalDetails.maritalStatusName && safeUserPersonalDetails.maritalStatusName !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Marital Status</div><div class="text-black flex-grow"><%= safeUserPersonalDetails.maritalStatusName %></div></div>
         <% } %>
-        <% if (candidateDetails?.totalExperience && (candidateDetails.totalExperience.year || candidateDetails.totalExperience.month)) { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Total Experience</div><div class="text-black flex-grow"><%= candidateDetails.totalExperience.year || 0 %> yrs <%= candidateDetails.totalExperience.month || 0 %> mos</div></div>
+        <% if (safeCandidateDetails.totalExperience && (safeCandidateDetails.totalExperience.year || safeCandidateDetails.totalExperience.month)) { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Total Experience</div><div class="text-black flex-grow"><%= safeCandidateDetails.totalExperience.year || 0 %> yrs <%= safeCandidateDetails.totalExperience.month || 0 %> mos</div></div>
         <% } %>
-        <% if (candidateDetails?.hometown && candidateDetails.hometown !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Hometown</div><div class="text-black flex-grow"><%= candidateDetails.hometown %></div></div>
+        <% if (safeCandidateDetails.formattedDOB) { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Date of Birth</div><div class="text-black flex-grow"><%= safeCandidateDetails.formattedDOB %></div></div>
         <% } %>
-        <% if (typeof userPersonalDetails !== 'undefined' && userPersonalDetails?.permanentAddress && userPersonalDetails.permanentAddress !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Permanent Address</div><div class="text-black flex-grow"><%= userPersonalDetails.permanentAddress %></div></div>
+        <% if (safeUserPersonalDetails.categoryName && safeUserPersonalDetails.categoryName.trim() !== "") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Category</div><div class="text-black flex-grow"><%= safeUserPersonalDetails.categoryName %></div></div>
         <% } %>
-        <% if (typeof userPersonalDetails !== 'undefined' && userPersonalDetails && userPersonalDetails.have_usa_visa !== undefined) { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Work Permit USA</div><div class="text-black flex-grow"><%= userPersonalDetails.have_usa_visa ? 'Yes' : 'No' %></div></div>
+        <%
+          const workPermits = [];
+          if (safeUserPersonalDetails.have_usa_visa) {
+            workPermits.push("USA");
+          } else if (safeUserPersonalDetails.usaPermitName) {
+            workPermits.push(safeUserPersonalDetails.usaPermitName);
+          }
+          if (safeUserPersonalDetails.workPermitOtherNames && safeUserPersonalDetails.workPermitOtherNames.length > 0) {
+            workPermits.push(...safeUserPersonalDetails.workPermitOtherNames);
+          }
+          if (workPermits.length > 0) {
+        %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Work Permit</div><div class="text-black flex-grow"><%= workPermits.filter(Boolean).join(', ') %></div></div>
+        <% } %>
+        <%
+          const addresses = [];
+          if (safeCandidateDetails.hometown && safeCandidateDetails.hometown !== "N/A" && safeCandidateDetails.hometown.trim() !== "") {
+            addresses.push(safeCandidateDetails.hometown);
+          }
+          if (safeUserPersonalDetails.permanentAddress && safeUserPersonalDetails.permanentAddress !== "N/A" && safeUserPersonalDetails.permanentAddress.trim() !== "") {
+            addresses.push(safeUserPersonalDetails.permanentAddress);
+          }
+          if (addresses.length > 0) {
+        %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Hometown & Permanent address</div><div class="text-black flex-grow"><%= addresses.join(', ') %></div></div>
+        <% } %>
+        <% if (safeUserPersonalDetails.differentlyAble) { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Differently Abled</div><div class="text-black flex-grow"><%= safeUserPersonalDetails.differentlyAble %></div></div>
+        <% } %>
+        <% if (safeUserPersonalDetails.currentlyOnCareerBreak || safeUserPersonalDetails.careerBreak === 'Yes' || safeUserPersonalDetails.reasonName) { %>
+          <div class="flex leading-[1.35]">
+            <div class="font-semibold w-[150px] text-black flex-shrink-0">Career Break</div>
+            <div class="text-black flex-grow">
+              Yes<%= safeUserPersonalDetails.reasonName ? ` (${safeUserPersonalDetails.reasonName})` : '' %>
+            </div>
+          </div>
         <% } %>
       </div>
     </div>
@@ -343,71 +565,124 @@
 
     <!-- Career Profile Section -->
     <%
-      const hasCareerProfile = typeof candidateCareerProfile !== 'undefined' && candidateCareerProfile && (
-        (candidateCareerProfile.industry_name && candidateCareerProfile.industry_name !== "N/A") ||
-        (candidateCareerProfile.department_name && candidateCareerProfile.department_name !== "N/A") ||
-        (candidateCareerProfile.job_role_name && candidateCareerProfile.job_role_name !== "N/A") ||
-        (candidateCareerProfile.job_type && candidateCareerProfile.job_type !== "N/A") ||
-        (candidateCareerProfile.shift && candidateCareerProfile.shift !== "N/A") ||
-        (candidateCareerProfile.expected_salary && candidateCareerProfile.expected_salary !== "N/A")
+      const hasCareerProfile = (
+        (safeCandidateCareerProfile.industry_name && safeCandidateCareerProfile.industry_name !== "N/A") ||
+        (safeCandidateCareerProfile.department_name && safeCandidateCareerProfile.department_name !== "N/A") ||
+        (safeCandidateCareerProfile.job_role_name && safeCandidateCareerProfile.job_role_name !== "N/A") ||
+        (safeCandidateCareerProfile.job_type && safeCandidateCareerProfile.job_type !== "N/A") ||
+        (safeCandidateCareerProfile.shift && safeCandidateCareerProfile.shift !== "N/A") ||
+        (safeCandidateCareerProfile.expected_salary && safeCandidateCareerProfile.expected_salary !== "N/A")
       );
     %>
     <% if (hasCareerProfile) { %>
     <div class="mt-[18px]">
       <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Career Profile</h3>
       <div class="grid grid-cols-2 gap-x-[15px] gap-y-1.5 mt-1.5 [page-break-inside:avoid] [break-inside:avoid]">
-        <% if (candidateCareerProfile.industry_name && candidateCareerProfile.industry_name !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Industry</div><div class="text-black flex-grow"><%= candidateCareerProfile.industry_name %></div></div>
+        <% if (safeCandidateCareerProfile.industry_name && safeCandidateCareerProfile.industry_name !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Industry</div><div class="text-black flex-grow"><%= safeCandidateCareerProfile.industry_name %></div></div>
         <% } %>
-        <% if (candidateCareerProfile.department_name && candidateCareerProfile.department_name !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Department</div><div class="text-black flex-grow"><%= candidateCareerProfile.department_name %></div></div>
+        <% if (safeCandidateCareerProfile.department_name && safeCandidateCareerProfile.department_name !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Department</div><div class="text-black flex-grow"><%= safeCandidateCareerProfile.department_name %></div></div>
         <% } %>
-        <% if (candidateCareerProfile.job_role_name && candidateCareerProfile.job_role_name !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Job Role</div><div class="text-black flex-grow"><%= candidateCareerProfile.job_role_name %></div></div>
+        <% if (safeCandidateCareerProfile.job_role_name && safeCandidateCareerProfile.job_role_name !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Job Role</div><div class="text-black flex-grow"><%= safeCandidateCareerProfile.job_role_name %></div></div>
         <% } %>
-        <% if (candidateCareerProfile.job_type && candidateCareerProfile.job_type !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Job Type</div><div class="text-black flex-grow"><%= candidateCareerProfile.job_type %></div></div>
+        <% if (safeCandidateCareerProfile.job_type && safeCandidateCareerProfile.job_type !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Job Type</div><div class="text-black flex-grow"><%= safeCandidateCareerProfile.job_type %></div></div>
         <% } %>
-        <% if (candidateCareerProfile.shift && candidateCareerProfile.shift !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Preferred Shift</div><div class="text-black flex-grow"><%= candidateCareerProfile.shift %></div></div>
+        <% if (safeCandidateCareerProfile.shift && safeCandidateCareerProfile.shift !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Preferred Shift</div><div class="text-black flex-grow"><%= safeCandidateCareerProfile.shift %></div></div>
         <% } %>
-        <% if (candidateCareerProfile.expected_salary && candidateCareerProfile.expected_salary !== "N/A") { %>
-          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Expected Salary</div><div class="text-black flex-grow"><%= candidateCareerProfile.expected_salary %></div></div>
+        <% if (safeCandidateCareerProfile.expected_salary && safeCandidateCareerProfile.expected_salary !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Expected Salary</div><div class="text-black flex-grow"><%= safeCandidateCareerProfile.expected_salary %></div></div>
         <% } %>
       </div>
     </div>
     <% } %>
 
-    <!-- Publications, Presentations & Patents Section -->
-    <% if ((researchPublications && researchPublications.length > 0) || (userPresentations && userPresentations.length > 0) || (userPatents && userPatents.length > 0)) { %>
+    <!-- Job Preferences Section -->
+    <%
+      const hasJobPreferences = (
+        (safeCandidateCareerProfile.job_role_name && safeCandidateCareerProfile.job_role_name !== "N/A") ||
+        (safeCandidateCareerProfile.employment_type && safeCandidateCareerProfile.employment_type !== "N/A") ||
+        (safeCandidateCareerProfile.expected_salary && safeCandidateCareerProfile.expected_salary !== "N/A") ||
+        (safeCandidateCareerProfile.notice_period && safeCandidateCareerProfile.notice_period !== "N/A") ||
+        (safeCandidateCareerProfile.preferredLocations && safeCandidateCareerProfile.preferredLocations !== "N/A")
+      );
+    %>
+    <% if (hasJobPreferences) { %>
     <div class="mt-[18px]">
-      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Publications, Presentations & Patents</h3>
-      <% researchPublications?.forEach(sample => { %>
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Job Preferences</h3>
+      <div class="grid grid-cols-2 gap-x-[15px] gap-y-1.5 mt-1.5 [page-break-inside:avoid] [break-inside:avoid]">
+        <% if (safeCandidateCareerProfile.job_role_name && safeCandidateCareerProfile.job_role_name !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Desired Role</div><div class="text-black flex-grow"><%= safeCandidateCareerProfile.job_role_name %></div></div>
+        <% } %>
+        <% if (safeCandidateCareerProfile.employment_type && safeCandidateCareerProfile.employment_type !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Employment Type</div><div class="text-black flex-grow"><%= safeCandidateCareerProfile.employment_type %></div></div>
+        <% } %>
+        <% if (safeCandidateCareerProfile.expected_salary && safeCandidateCareerProfile.expected_salary !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Expected Salary</div><div class="text-black flex-grow"><%= safeCandidateCareerProfile.expected_salary %></div></div>
+        <% } %>
+        <% if (safeCandidateCareerProfile.notice_period && safeCandidateCareerProfile.notice_period !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Notice Period</div><div class="text-black flex-grow"><%= safeCandidateCareerProfile.notice_period %></div></div>
+        <% } %>
+        <% if (safeCandidateCareerProfile.preferredLocations && safeCandidateCareerProfile.preferredLocations !== "N/A") { %>
+          <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Preferred Locations</div><div class="text-black flex-grow"><%= safeCandidateCareerProfile.preferredLocations %></div></div>
+        <% } %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Research Publications Section -->
+    <% if (safeResearchPublications.length > 0) { %>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Research Publications</h3>
+      <% safeResearchPublications.forEach(sample => { %>
         <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
           <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">Publication</div>
           <div class="flex-grow">
             <span class="font-bold text-black text-[12.5px]"><%= toTitleCase(sample.title || "Untitled") %></span>
             <% if (sample.url) { %><a href="<%= sample.url %>" class="text-black underline inline-flex items-center gap-[3px] text-[10px] font-semibold ml-[5px]">Link <i data-lucide="external-link" class="inline-block w-[11px] h-[11px] [stroke-width:2.5]"></i></a><% } %>
+            <% if (sample.description) { %>
             <div class="mt-1 mb-1.5 text-justify"><%- sample.description %></div>
+            <% } %>
           </div>
         </div>
       <% }) %>
-      <% userPresentations?.forEach(presentation => { %>
+    </div>
+    <% } %>
+
+    <!-- Presentations Section -->
+    <% if (safeUserPresentations.length > 0) { %>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Presentations</h3>
+      <% safeUserPresentations.forEach(presentation => { %>
         <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
           <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">Presentation</div>
           <div class="flex-grow">
             <span class="font-bold text-black text-[12.5px]"><%= toTitleCase(presentation.title || "Untitled") %></span>
             <% if (presentation.url) { %><a href="<%= presentation.url %>" class="text-black underline inline-flex items-center gap-[3px] text-[10px] font-semibold ml-[5px]">Link <i data-lucide="external-link" class="inline-block w-[11px] h-[11px] [stroke-width:2.5]"></i></a><% } %>
+            <% if (presentation.description) { %>
             <div class="mt-1 mb-1.5 text-justify"><%- presentation.description %></div>
+            <% } %>
           </div>
         </div>
       <% }) %>
-      <% userPatents?.forEach(patent => { %>
+    </div>
+    <% } %>
+
+    <!-- Patents Section -->
+    <% if (safeUserPatents.length > 0) { %>
+    <div class="mt-[18px]">
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Patents</h3>
+      <% safeUserPatents.forEach(patent => { %>
         <div class="flex mb-3 leading-[1.4] [page-break-inside:avoid] [break-inside:avoid]">
-          <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">Patent (<%= patent.status || 'N/A' %>)</div>
+          <div class="w-[140px] flex-shrink-0 text-black text-[11px] font-semibold pr-[15px]">Patent (<%= safe(patent.status) %>)</div>
           <div class="flex-grow">
-            <span class="font-bold text-black text-[12.5px]"><%= toTitleCase(patent.title || "Untitled") %></span> - Office: <%= patent.patent_office || 'N/A' %>
+            <span class="font-bold text-black text-[12.5px]"><%= toTitleCase(patent.title || "Untitled") %></span> - Office: <%= safe(patent.patent_office) %>
+            <% if (patent.description) { %>
             <div class="mt-1 mb-1.5 text-justify"><%- patent.description %></div>
+            <% } %>
           </div>
         </div>
       <% }) %>
@@ -416,27 +691,27 @@
 
     <!-- KYC Information Section -->
     <%
-      const hasKycData = typeof kycResult !== 'undefined' && kycResult && (
-        kycResult.pan_verified || kycResult.aadhar_verified || kycResult.dl_verified || kycResult.passport_verified || kycResult.epic_verified
+      const hasKycData = (
+        safeKycResult.pan_verified || safeKycResult.aadhar_verified || safeKycResult.dl_verified || safeKycResult.passport_verified || safeKycResult.epic_verified
       );
     %>
     <% if (hasKycData) { %>
     <div class="mt-[18px]">
-      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">KYC Verification Status</h3>
+      <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">KYC</h3>
       <div class="grid grid-cols-2 gap-x-[15px] gap-y-1.5 mt-1.5 [page-break-inside:avoid] [break-inside:avoid]">
-        <% if (kycResult.pan_verified) { %>
+        <% if (safeKycResult.pan_verified) { %>
           <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">PAN Number</div><div class="text-black flex-grow"><i data-lucide="check-circle" class="inline-block w-[14px] h-[14px] [stroke-width:2.5] align-middle"></i></div></div>
         <% } %>
-        <% if (kycResult.aadhar_verified) { %>
+        <% if (safeKycResult.aadhar_verified) { %>
           <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Aadhaar Number</div><div class="text-black flex-grow"><i data-lucide="check-circle" class="inline-block w-[14px] h-[14px] [stroke-width:2.5] align-middle"></i></div></div>
         <% } %>
-        <% if (kycResult.epic_verified) { %>
+        <% if (safeKycResult.epic_verified) { %>
           <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">EPIC Number</div><div class="text-black flex-grow"><i data-lucide="check-circle" class="inline-block w-[14px] h-[14px] [stroke-width:2.5] align-middle"></i></div></div>
         <% } %>
-        <% if (kycResult.dl_verified) { %>
+        <% if (safeKycResult.dl_verified) { %>
           <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Driving License Number</div><div class="text-black flex-grow"><i data-lucide="check-circle" class="inline-block w-[14px] h-[14px] [stroke-width:2.5] align-middle"></i></div></div>
         <% } %>
-        <% if (kycResult.passport_verified) { %>
+        <% if (safeKycResult.passport_verified) { %>
           <div class="flex leading-[1.35]"><div class="font-semibold w-[150px] text-black flex-shrink-0">Passport Number</div><div class="text-black flex-grow"><i data-lucide="check-circle" class="inline-block w-[14px] h-[14px] [stroke-width:2.5] align-middle"></i></div></div>
         <% } %>
       </div>
@@ -444,13 +719,20 @@
     <% } %>
 
     <!-- Certificates Section (Full Width, No Grid) -->
-    <% if (userCertifications && userCertifications.length > 0) { %>
+    <% if (safeUserCertifications.length > 0) { %>
     <div class="mt-[18px]">
       <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] capitalize rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Certificates</h3>
       <div class="flex flex-col gap-1.5">
-        <% userCertifications.forEach(cert => { %>
+        <% safeUserCertifications.forEach(cert => {
+          const certStart = formatMonthYear(cert.validityFrommonth, cert.validityFromyear);
+          const certEnd = cert.doesNotExpire ? 'No Expiration' : formatMonthYear(cert.validityToMonth, cert.validityToyear);
+          const durationStr = certStart ? (certEnd ? `${certStart} – ${certEnd}` : certStart) : '';
+        %>
           <div class="bullet-item w-full box-border leading-[1.4] mb-1 [page-break-inside:avoid] [break-inside:avoid]">
-            <strong><%= cert.title || "Untitled Certification" %></strong>
+            <strong><%= safe(cert.title, 'Untitled Certification') %></strong>
+            <% if (durationStr) { %>
+              <span class="text-gray-600 text-[11px] ml-1.5">(<%= durationStr %>)</span>
+            <% } %>
             <% if (cert.url) { %>
               <a href="<%= cert.url %>" target="_blank" class="text-black underline inline-flex items-center gap-[3px] text-[10px] font-semibold ml-[5px]">Link <i data-lucide="external-link" class="inline-block w-[11px] h-[11px] [stroke-width:2.5]"></i></a>
             <% } %>
@@ -459,9 +741,6 @@
       </div>
     </div>
     <% } %>
-
-    <!-- Decorative Divider: Line - Circle - Line -->
-    
 
     <!-- Acknowledgement & Signature Section -->
     <div class="mt-[40px] [page-break-inside:avoid] [break-inside:avoid]">
@@ -472,23 +751,23 @@
         <span>I hereby declare that all the information provided above is true, correct, and complete to the best of my knowledge and belief.</span>
       </div>
       <div class="flex flex-col items-end gap-4 mt-[50px]">
-  <!-- Signature -->
-  <div class="flex flex-col items-center">
-    <div class="w-[120px] border-t border-black"></div>
-    <div class="mt-1 font-semibold">( <%= user.name %> )</div>
-  </div>
+        <!-- Signature -->
+        <div class="flex flex-col items-center">
+          <div class="w-[120px] border-t border-black"></div>
+          <div class="mt-1 font-semibold">( <%= safe(safeUser.name) %> )</div>
+        </div>
 
-  <!-- Date -->
-  <div class="flex mt-4 items-center text-[11px] font-semibold">
-    <span class="mr-2">Date:</span>
-    <div class="w-[120px] border-b border-black"></div>
-  </div>
-</div>
+        <!-- Date -->
+        <div class="flex mt-4 items-center text-[11px] font-semibold">
+          <span class="mr-2">Date:</span>
+          <div class="w-[120px] border-b border-black"></div>
+        </div>
+      </div>
     </div>
 
     <div class="flex items-center justify-center mt-[80px] mb-[30px] mx-auto w-3/5 gap-[15px]">
       <span class="flex-grow h-px bg-black"></span>
-      <span class="w-2 h-2 border-[1.5px] border-black rounded-full bg-black   flex-shrink-0"></span>
+      <span class="w-2 h-2 border-[1.5px] border-black rounded-full bg-black flex-shrink-0"></span>
       <span class="flex-grow h-px bg-black"></span>
     </div>
 

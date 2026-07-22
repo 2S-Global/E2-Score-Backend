@@ -918,7 +918,7 @@ export const getVerifiedUser = async (req, res) => {
       companyName: company_id,
       isDel: false,
     };
-
+    console.log("USER TYPWE ====>", user_type)
     // ✅ Apply logic based on query
     if (user_type === "requested") {
       filter.workedInCompany = { $exists: false };
@@ -1028,7 +1028,7 @@ export const getVerifiedUser = async (req, res) => {
       } else if (emp.workedInCompany === false) {
         status = "Rejected";
       }
-      
+
       const candidate = candidateDetails.find(
         (c) => c.userId && c.userId.equals(emp.user)
       );

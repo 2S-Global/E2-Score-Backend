@@ -14,6 +14,7 @@ export const studentDetails = async (user, stuId, level) => {
     });
 
 
+    
     let selfRegisteredStudents = [];
     let formattedSelfRegisteredStudents = [];
 

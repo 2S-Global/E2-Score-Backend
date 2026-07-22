@@ -139,7 +139,7 @@ export const getRandomCompany = async (req, res) => {
           companyname: 1,
         }
       )
-      .limit(10)
+      .limit(100)
       .lean();
 
 

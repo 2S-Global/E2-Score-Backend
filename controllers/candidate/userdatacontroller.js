@@ -398,7 +398,7 @@ export const getUserEducationBySql = async (req, res) => {
     const user = req.userId;
 
     // 1. Get education records
-    const educationRecords = await UserEducation.find({
+    const educationRecords = await usereducation.find({
       userId: user,
       isDel: false,
     })
