@@ -8,6 +8,9 @@ const CompanyListSchema = new mongoose.Schema(
     companyname: {
       type: String,
     },
+    slug: {
+      type: String,
+    },
     companyemail: {
       type: String,
     },
@@ -44,23 +47,16 @@ const CompanyListSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
-
 
 CompanyListSchema.index({
   isActive: 1,
   isDel: 1,
-  companyname: 1
-})
-
-
-
+  companyname: 1,
+  slug: 1,
+});
 
 const companylist = mongoose.model("companylists", CompanyListSchema);
-
-
-
-
 
 export default companylist;

@@ -20,7 +20,7 @@ export const getConunty = async (req, res) => {
   try {
     const conunty = await ListConunty.find(
       { is_del: 0, is_active: 1 },
-      { name: 1 }
+      { name: 1 },
     );
     res.status(200).json({
       success: true,
@@ -50,7 +50,7 @@ export const getStateByConunty = async (req, res) => {
 
     const state = await ListState.find(
       { is_del: 0, is_active: 1, countryId: conunty.id },
-      { name: 1 }
+      { name: 1 },
     );
 
     if (!state) {
@@ -85,7 +85,7 @@ export const getCityByState = async (req, res) => {
 
     const city = await ListCity.find(
       { is_del: 0, is_active: 1, stateId: state.id },
-      { name: 1 }
+      { name: 1 },
     );
 
     if (!city) {
@@ -347,13 +347,13 @@ export const getUserAssociatedWithCompany = async (req, res) => {
         name: 1,
         email: 1,
         profilePicture: 1,
-      } // only select required fields
+      }, // only select required fields
     ).lean();
 
     // 4. Fetch candidate details (currentLocation, countryId, hometown)
     const candidateDetails = await CandidateDetails.find(
       { userId: { $in: userIds } },
-      { currentLocation: 1, country_id: 1, hometown: 1, userId: 1 }
+      { currentLocation: 1, country_id: 1, hometown: 1, userId: 1 },
     ).lean();
 
     // 4. Collect unique countryIds
@@ -403,7 +403,7 @@ export const getUserAssociatedWithCompany = async (req, res) => {
     const result = employments.map((emp) => {
       const user = users.find((u) => u._id && u._id.equals(emp.user));
       const candidate = candidateDetails.find(
-        (c) => c.userId && c.userId.equals(emp.user)
+        (c) => c.userId && c.userId.equals(emp.user),
       );
 
       //const countryId = candidate?.country_id?.toString() || null;
@@ -460,18 +460,18 @@ export const getMultipleEmployeeDetails = async (req, res) => {
       await Promise.all([
         User.findOne(
           { _id: userId },
-          { name: 1, email: 1, gender: 1, phone_number: 1 }
+          { name: 1, email: 1, gender: 1, phone_number: 1 },
         ).lean(),
 
         CandidateDetails.findOne(
           { userId },
-          { dob: 1, fatherName: 1, _id: 0 }
+          { dob: 1, fatherName: 1, _id: 0 },
         ).lean(),
 
         personalDetails
           .findOne(
             { user: userId },
-            { permanentAddress: 1, pan_number: 1, _id: 0 }
+            { permanentAddress: 1, pan_number: 1, _id: 0 },
           )
           .lean(),
 
@@ -494,7 +494,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
             hasDues: 1,
             remarks: 1,
             _id: 0,
-          }
+          },
         ).lean(),
       ]);
 
@@ -525,7 +525,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
         employments.joiningMonth = month;
         employments.joiningDate = `${new Date(year, month - 1).toLocaleString(
           "en-US",
-          { month: "long" }
+          { month: "long" },
         )}, ${year}`;
       } else {
         employments.joiningDate = "";
@@ -537,7 +537,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
         employments.leavingMonth = month;
         employments.leavingDate = `${new Date(year, month - 1).toLocaleString(
           "en-US",
-          { month: "long" }
+          { month: "long" },
         )}, ${year}`;
       } else {
         employments.leavingDate = "Present";
@@ -642,7 +642,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
     const updatedEmployment = await Employment.findOneAndUpdate(
       { _id: employmentId, user: _id, companyName: companyId, isDel: false },
       { $set: updatedFields },
-      { new: true }
+      { new: true },
     ).lean();
 
     if (!updatedEmployment) {
@@ -666,15 +666,20 @@ export const addEmployeeVerificationDetails = async (req, res) => {
       // Build status message for verified fields
       let verificationStatus = `
       <ul>
-        <li>Worked in Company: <strong>${workedInCompanyBool ? "✅ Yes" : "❌ No"
+        <li>Worked in Company: <strong>${
+          workedInCompanyBool ? "✅ Yes" : "❌ No"
         }</strong></li>
-        <li>Overall Employment Verified: <strong>${VerifiedBool ? "✅ Yes" : "❌ No"
+        <li>Overall Employment Verified: <strong>${
+          VerifiedBool ? "✅ Yes" : "❌ No"
         }</strong></li>
-        <li>Designation Verified: <strong>${designationVerifiedBool ? "✅ Yes" : "❌ No"
+        <li>Designation Verified: <strong>${
+          designationVerifiedBool ? "✅ Yes" : "❌ No"
         }</strong></li>
-        <li>Duration Verified: <strong>${durationVerifiedBool ? "✅ Yes" : "❌ No"
+        <li>Duration Verified: <strong>${
+          durationVerifiedBool ? "✅ Yes" : "❌ No"
         }</strong></li>
-        <li>Employment Type Verified: <strong>${employmentTypeVerifiedBool ? "✅ Yes" : "❌ No"
+        <li>Employment Type Verified: <strong>${
+          employmentTypeVerifiedBool ? "✅ Yes" : "❌ No"
         }</strong></li>
       </ul>
     `;
@@ -762,13 +767,13 @@ export const getVerifiedUser123 = async (req, res) => {
         name: 1,
         email: 1,
         profilePicture: 1,
-      } // only select required fields
+      }, // only select required fields
     ).lean();
 
     // 4. Fetch candidate details (currentLocation, countryId, hometown)
     const candidateDetails = await CandidateDetails.find(
       { userId: { $in: userIds } },
-      { currentLocation: 1, country_id: 1, hometown: 1, userId: 1 }
+      { currentLocation: 1, country_id: 1, hometown: 1, userId: 1 },
     ).lean();
 
     // 4. Collect unique countryIds
@@ -818,7 +823,7 @@ export const getVerifiedUser123 = async (req, res) => {
     const result = employments.map((emp) => {
       const user = users.find((u) => u._id && u._id.equals(emp.user));
       const candidate = candidateDetails.find(
-        (c) => c.userId && c.userId.equals(emp.user)
+        (c) => c.userId && c.userId.equals(emp.user),
       );
 
       //const countryId = candidate?.country_id?.toString() || null;
@@ -881,7 +886,7 @@ export const getCompanyLogoByJobId = async (req, res) => {
 
     // 2️⃣ Fetch company details using userId
     const company = await CompanyDetails.findOne({ userId }).select(
-      "logo name"
+      "logo name",
     );
 
     if (!company) {
@@ -964,13 +969,13 @@ export const getVerifiedUser = async (req, res) => {
         name: 1,
         email: 1,
         profilePicture: 1,
-      } // only select required fields
+      }, // only select required fields
     ).lean();
 
     // 4. Fetch candidate details (currentLocation, countryId, hometown)
     const candidateDetails = await CandidateDetails.find(
       { userId: { $in: userIds } },
-      { currentLocation: 1, country_id: 1, hometown: 1, userId: 1 }
+      { currentLocation: 1, country_id: 1, hometown: 1, userId: 1 },
     ).lean();
 
     // 4. Collect unique countryIds
@@ -1030,7 +1035,7 @@ export const getVerifiedUser = async (req, res) => {
       }
 
       const candidate = candidateDetails.find(
-        (c) => c.userId && c.userId.equals(emp.user)
+        (c) => c.userId && c.userId.equals(emp.user),
       );
 
       //const countryId = candidate?.country_id?.toString() || null;
@@ -1069,12 +1074,7 @@ export const addCompanyBranch = async (req, res) => {
     const userId = req.userId;
 
     // Validate required fields
-    if (
-      !userId ||
-      !branchName ||
-      !branchType ||
-      !number_of_employees
-    ) {
+    if (!userId || !branchName || !branchType || !number_of_employees) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -1147,7 +1147,6 @@ export const listCompanyBranch = async (req, res) => {
       message: "Company branch list fetched successfully",
       data: branchList,
     });
-
   } catch (err) {
     return res.status(500).json({
       success: false,
@@ -1160,11 +1159,7 @@ export const editCompanyBranch = async (req, res) => {
   try {
     const { branchId } = req.query;
 
-    const {
-      branchName,
-      branchType,
-      number_of_employees,
-    } = req.body;
+    const { branchName, branchType, number_of_employees } = req.body;
 
     const userId = req.userId;
 
@@ -1200,11 +1195,9 @@ export const editCompanyBranch = async (req, res) => {
     }
 
     // Update branch
-    existingBranch.branchName =
-      branchName || existingBranch.branchName;
+    existingBranch.branchName = branchName || existingBranch.branchName;
 
-    existingBranch.branchType =
-      branchType || existingBranch.branchType;
+    existingBranch.branchType = branchType || existingBranch.branchType;
 
     existingBranch.number_of_employees =
       number_of_employees || existingBranch.number_of_employees;
@@ -1216,7 +1209,6 @@ export const editCompanyBranch = async (req, res) => {
       message: "Branch updated successfully",
       data: existingBranch,
     });
-
   } catch (err) {
     return res.status(500).json({
       success: false,
@@ -1254,7 +1246,6 @@ export const deleteCompanyBranch = async (req, res) => {
       success: true,
       message: "Branch deleted successfully",
     });
-
   } catch (err) {
     return res.status(500).json({
       success: false,
