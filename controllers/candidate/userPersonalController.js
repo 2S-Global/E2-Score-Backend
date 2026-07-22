@@ -47,7 +47,7 @@ export const submitPersonalDetails = async (req, res) => {
   try {
     const data = req.body;
     const userId = req.userId;
-    console.log("data is there === > ", data)
+    console.log("data is there === > ", data);
     let changeListHTML = "";
 
     const user = await User.findById(userId);
@@ -288,13 +288,16 @@ export const submitPersonalDetails = async (req, res) => {
     if (!userDetails) {
       return res.status(404).json({ message: "User details not found" });
     }
-    console.log("data.languageProficiency==>", personalPayload.languageProficiency)
+    console.log(
+      "data.languageProficiency==>",
+      personalPayload.languageProficiency,
+    );
 
     const languages = personalPayload.languageProficiency.map((lp) =>
-      lp.language ? lp.language.trim().toLowerCase() : ""
+      lp.language ? lp.language.trim().toLowerCase() : "",
     );
     const alreadyExists = languages.some(
-      (lang, index) => lang && languages.indexOf(lang) !== index
+      (lang, index) => lang && languages.indexOf(lang) !== index,
     );
 
     if (alreadyExists) {

@@ -355,6 +355,7 @@ export const addBanner = async (req, res) => {
     const newTestimonial = new homeBannerDetails({
       banner_title,
       banner_image: updatedImage,
+      description,
     });
 
     const savedTestimonial = await newTestimonial.save();
@@ -455,6 +456,10 @@ export const updateBanner = async (req, res) => {
 
     if (banner_title) {
       updateData.banner_title = banner_title;
+    }
+
+    if (description) {
+      updateData.description = description;
     }
 
     if (updatedImage) {
