@@ -4,6 +4,8 @@ import list_project_tag from "../../models/monogo_query/project_tagModel.js";
 import mongoose from "mongoose";
 import User from "../../models/userModel.js";
 import nodemailer from "nodemailer";
+import CandidateDetails from "../../models/CandidateDetailsModel.js";
+import { apiResponse } from "../../utility/apiResponse.js";
 /**
  * @description Get all project tag from the database
  * @route GET /api/candidate/project/get_project_tag
@@ -69,6 +71,39 @@ export const addProjectDetails = async (req, res) => {
     if (!title) {
       return res.status(400).json({ message: "title is required" });
     }
+
+    const candidateDetails = await CandidateDetails.findOne({ userId }).select("dob");
+    if (!candidateDetails || !candidateDetails.dob) {
+      return apiResponse(res, 400, false, "Please update your profile with Date of Birth first.", null)
+    }
+
+
+    const dob = candidateDetails.dob;
+    const birthDate = new Date(dob);
+    const birthYear = birthDate.getFullYear();
+    const birthMonth = birthDate.getMonth() + 1;
+
+
+
+    
+    if (workfromyear) {
+      const fromYear = parseInt(workfromyear);
+      const fromMonth = workfrommonth ? parseInt(workfrommonth) : 1;
+
+      if (fromYear < birthYear || (fromYear === birthYear && fromMonth < birthMonth)) {
+        return apiResponse(res, 400, false, "Project start date cannot be before your Date of Birth.", null)
+      }
+    }
+
+    if (worktoyear) {
+      const toYear = parseInt(worktoyear);
+      const toMonth = worktomonth ? parseInt(worktomonth) : 12;
+
+      if (toYear < birthYear || (toYear === birthYear && toMonth < birthMonth)) {
+        return apiResponse(res, 400, false, "Project end date cannot be before your Date of Birth.", null)
+      }
+    }
+
 
     const projectDetails = new ProjectDetails({
       userId,
@@ -206,6 +241,38 @@ export const editProjectDetails = async (req, res) => {
 
     if (!title) {
       return res.status(400).json({ message: "title is required" });
+    }
+
+    const candidateDetails = await CandidateDetails.findOne({ userId }).select("dob");
+    if (!candidateDetails || !candidateDetails.dob) {
+      return res.status(400).json({ message: "Please update your profile with Date of Birth first." });
+    }
+
+    const dob = candidateDetails.dob;
+    const birthDate = new Date(dob);
+    const birthYear = birthDate.getFullYear();
+    const birthMonth = birthDate.getMonth() + 1;
+
+    if (workfromyear) {
+      const fromYear = parseInt(workfromyear);
+      const fromMonth = workfrommonth ? parseInt(workfrommonth) : 1;
+
+      if (fromYear < birthYear || (fromYear === birthYear && fromMonth < birthMonth)) {
+        return res.status(400).json({
+          message: "Project start date cannot be before your Date of Birth.",
+        });
+      }
+    }
+
+    if (worktoyear) {
+      const toYear = parseInt(worktoyear);
+      const toMonth = worktomonth ? parseInt(worktomonth) : 12;
+
+      if (toYear < birthYear || (toYear === birthYear && toMonth < birthMonth)) {
+        return res.status(400).json({
+          message: "Project end date cannot be before your Date of Birth.",
+        });
+      }
     }
 
     // Find the existing document

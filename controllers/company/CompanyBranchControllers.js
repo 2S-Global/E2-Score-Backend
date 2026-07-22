@@ -923,7 +923,7 @@ export const getVerifiedUser = async (req, res) => {
       companyName: company_id,
       isDel: false,
     };
-
+    console.log("USER TYPWE ====>", user_type)
     // ✅ Apply logic based on query
     if (user_type === "requested") {
       filter.workedInCompany = { $exists: false };

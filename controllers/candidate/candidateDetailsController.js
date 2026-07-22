@@ -467,6 +467,17 @@ export const getCandidateDetails = async (req, res) => {
         : Promise.resolve(null),
     ]);
 
+    // Fetch Notice Period Names
+    const noticePeriodIds = [
+      ...new Set((employmentsRaw || []).map((emp) => emp.NoticePeriod?.toString()).filter(Boolean)),
+    ];
+    const noticePeriods = noticePeriodIds.length > 0
+      ? await list_notice.find({ id: { $in: noticePeriodIds.map(Number) } }).select("id name").lean()
+      : [];
+    const noticePeriodMap = Object.fromEntries(
+      noticePeriods.map((n) => [n.id.toString(), n.name])
+    );
+
     // Create Maps for lookup
     const universityMap = createMap(universities);
     const instituteMap = createMap(institutes);
@@ -504,6 +515,14 @@ export const getCandidateDetails = async (req, res) => {
           type: isSchool ? "school" : "higher",
           levelName: levelMap[edu.level] || "Unknown Level",
           marks: edu.marks || "Not Provided",
+          is_verified: edu.is_verified,
+          level_verified: edu.level_verified,
+          courseName_verified: edu.courseName_verified,
+          courseType_verified: edu.courseType_verified,
+          duration_verified: edu.duration_verified,
+          gradingSystem_verified: edu.gradingSystem_verified,
+          marks_verified: edu.marks_verified,
+          is_studied_here: edu.is_studied_here,
 
           ...(isSchool
             ? {
@@ -665,6 +684,7 @@ export const getCandidateDetails = async (req, res) => {
         const companyName =
           companyMap[emp.companyName?.toString()] || "Unknown Company";
 
+        const resolvedNoticePeriod = noticePeriodMap[emp.NoticePeriod?.toString()] || emp.NoticePeriod || "";
         return {
           _id: emp._id || "",
           jobTitle: emp.jobTitle || "Not Provided",
@@ -675,6 +695,9 @@ export const getCandidateDetails = async (req, res) => {
           duration,
           isVerified: emp.isVerified || false,
           meta: companyName?.charAt(0).toUpperCase() || "",
+          NoticePeriod: resolvedNoticePeriod,
+          notice_period_name: resolvedNoticePeriod,
+          workedInCompany: emp.workedInCompany,
         };
       })
       .sort((a, b) => {
@@ -785,6 +808,9 @@ export const getCandidateDetails = async (req, res) => {
         .join(", "),
     };
 
+    const currentJobForNotice = (employmentsRaw || []).find((emp) => emp.currentEmployment === true) || {};
+    const noticePeriodVal = noticePeriodMap[currentJobForNotice.NoticePeriod?.toString()] || currentJobForNotice.NoticePeriod || "";
+
     const candidateCareerProfile = {
       industry_name: currentIndustry?.job_industry || "",
       department_name: currentDepartment?.job_department || "",
@@ -800,6 +826,7 @@ export const getCandidateDetails = async (req, res) => {
         }).format(userPref.expectedSalary.salary)
         : "",
       preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
+      notice_period: noticePeriodVal,
     };
 
     // Return Final Data

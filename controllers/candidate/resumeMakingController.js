@@ -4,6 +4,7 @@ import Employment from "../../models/Employment.js";
 import personalDetails from "../../models/personalDetails.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import companylist from "../../models/CompanyListModel.js";
+import list_notice from "../../models/monogo_query/noticeModel.js";
 import OnlineProfile from "../../models/OnlineProfile.js";
 import list_university_univercities from "../../models/monogo_query/universityUniversityModel.js";
 import list_university_colleges from "../../models/monogo_query/universityCollegesModel.js";
@@ -512,6 +513,17 @@ export const getResume = async (req, res) => {
 
     // console.log("Here is my all Location Names: ", locationNames);
 
+    // Fetch Notice Period Names
+    const noticePeriodIds = [
+      ...new Set((employmentsRaw || []).map((emp) => emp.NoticePeriod?.toString()).filter(Boolean)),
+    ];
+    const noticePeriods = noticePeriodIds.length > 0
+      ? await list_notice.find({ id: { $in: noticePeriodIds.map(Number) } }).select("id name").lean()
+      : [];
+    const noticePeriodMap = Object.fromEntries(
+      noticePeriods.map((n) => [n.id.toString(), n.name])
+    );
+
     const universityMap = createMap(universities);
     const instituteMap = createMap(institutes);
     const courseMap = createMap(courses);
@@ -568,6 +580,9 @@ export const getResume = async (req, res) => {
             board: boardMap[edu.board] || "Unknown Board",
             year_of_passing: edu.year_of_passing,
             marks: edu.marks || "Not Provided",
+            is_verified: edu.is_verified,
+            level_verified: edu.level_verified,
+            marks_verified: edu.marks_verified,
           };
         } else {
           return {
@@ -585,6 +600,14 @@ export const getResume = async (req, res) => {
             marks: edu.marks || "Not Provided",
             gradingId: edu.gradingSystem || "Not Provided",
             gradingName: gradingSystemMap[edu.gradingSystem] || "Not Provided",
+            is_verified: edu.is_verified,
+            level_verified: edu.level_verified,
+            courseName_verified: edu.courseName_verified,
+            courseType_verified: edu.courseType_verified,
+            duration_verified: edu.duration_verified,
+            gradingSystem_verified: edu.gradingSystem_verified,
+            marks_verified: edu.marks_verified,
+            is_studied_here: edu.is_studied_here,
           };
         }
       })
@@ -633,11 +656,13 @@ export const getResume = async (req, res) => {
         const leavingYear = emp.leavingDate?.year;
         const companyName =
           companyMap[emp.companyName?.toString()] || "Unknown Company";
+        const resolvedNoticePeriod = noticePeriodMap[emp.NoticePeriod?.toString()] || emp.NoticePeriod || "";
         return {
           ...emp,
           companyName: companyName,
           joiningYear: joiningYear || "",
           leavingYear: leavingYear || "",
+          NoticePeriod: resolvedNoticePeriod,
         };
       })
       .sort((a, b) => {
@@ -794,6 +819,9 @@ export const getResume = async (req, res) => {
 
     // console.log("Here is my all KYC Results: ", kycResult);
 
+    const currentJobForNotice = (employmentsRaw || []).find((emp) => emp.currentEmployment === true) || {};
+    const noticePeriodVal = noticePeriodMap[currentJobForNotice.NoticePeriod?.toString()] || currentJobForNotice.NoticePeriod || "";
+
     const candidateCareerProfile = {
       industry_name: currentIndustry?.job_industry || "",
       department_name: currentDepartment?.job_department || "",
@@ -809,6 +837,7 @@ export const getResume = async (req, res) => {
         }).format(userPref.expectedSalary.salary)
         : "",
       preferredLocations: (locations || []).map((c) => c.city_name).join(", "),
+      notice_period: noticePeriodVal,
     };
 
     // console.log("Here is my Candidate Career Profiles: ", userPersonalDetails.languageProficiency);
