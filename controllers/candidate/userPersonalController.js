@@ -289,9 +289,6 @@ export const submitPersonalDetails = async (req, res) => {
     }
     // const userDetails = await personalDetails.findOne({ user: userId });
 
-    if (!userDetails) {
-      return res.status(404).json({ message: "User details not found" });
-    }
     console.log(
       "data.languageProficiency==>",
       personalPayload.languageProficiency,
