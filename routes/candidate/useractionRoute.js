@@ -36,7 +36,7 @@ userRouter.post(
 );
 //remove profile picture 
 
-userRouter.post(
+userRouter.delete(
   "/remove-profile-picture",
   userAuth,
   removeProfilePicture
