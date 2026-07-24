@@ -1122,39 +1122,204 @@ async function getOrInsertId(
  */
 export const submitUserEducation = async (req, res) => {
   try {
-    console.log("Chandra Sarkar successfully running ! ");
     const data = req.body;
     const user = req.userId;
-    const levelId = data.level;
+    const levelId = String(data.level || "");
+    const currentYear = new Date().getFullYear();
+
+    // 1. Verify User existence
+    const userdtl = await User.findById(user);
+    if (!userdtl) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // -------------------------------------------------------------
+    // 2. INPUT & TIMELINE VALIDATIONS
+    // -------------------------------------------------------------
+
+    // --- A. 10th & 12th Grade Validations (Levels 1 & 2) ---
+    if (levelId === "1" || levelId === "2") {
+      // Board and passing year are required
+      if (!data.board || !data.year_of_passing) {
+        return res.status(400).json({
+          message: "Board and Year of Passing are required.",
+        });
+      }
+
+      // For 12th (level 2), english and math marks are also required
+      if (levelId === "2") {
+        if (
+          data.eng_marks === undefined ||
+          data.eng_marks === null ||
+          data.eng_marks === "" ||
+          data.math_marks === undefined ||
+          data.math_marks === null ||
+          data.math_marks === ""
+        ) {
+          return res.status(400).json({
+            message: "English marks and Math marks are required for 12th grade.",
+          });
+        }
+
+        const engNum = Number(data.eng_marks);
+        const mathNum = Number(data.math_marks);
+
+        if (isNaN(engNum) || engNum < 0 || engNum > 100) {
+          return res.status(400).json({
+            message: "English marks must be a number between 0 and 100.",
+          });
+        }
+        if (isNaN(mathNum) || mathNum < 0 || mathNum > 100) {
+          return res.status(400).json({
+            message: "Math marks must be a number between 0 and 100.",
+          });
+        }
+      }
+
+      const passingYear = Number(data.year_of_passing);
+      if (isNaN(passingYear) || passingYear < 1950 || passingYear > currentYear) {
+        return res.status(400).json({
+          message: `Passing year must be a valid year between 1950 and ${currentYear}.`,
+        });
+      }
+
+      // Gap Validation: Submitting 12th Grade
+      if (levelId === "2") {
+        const tenthRecord = await UserEducation.findOne({
+          userId: user,
+          level: "1",
+          isDel: false,
+        });
+
+        if (tenthRecord?.year_of_passing) {
+          const tenthYear = Number(tenthRecord.year_of_passing);
+          if (passingYear < tenthYear) {
+            return res.status(400).json({
+              message: `12th passing year (${passingYear}) cannot be earlier than 10th passing year (${tenthYear}).`,
+            });
+          }
+          if (passingYear - tenthYear < 2) {
+            return res.status(400).json({
+              message: `12th passing year (${passingYear}) must be at least 2 years after 10th passing year (${tenthYear}).`,
+            });
+          }
+        }
+      }
+      // Gap Validation: Submitting 10th Grade
+      else if (levelId === "1") {
+        const twelfthRecord = await UserEducation.findOne({
+          userId: user,
+          level: "2",
+          isDel: false,
+        });
+
+        if (twelfthRecord?.year_of_passing) {
+          const twelfthYear = Number(twelfthRecord.year_of_passing);
+          if (passingYear > twelfthYear) {
+            return res.status(400).json({
+              message: `10th passing year (${passingYear}) cannot be after 12th passing year (${twelfthYear}).`,
+            });
+          }
+          if (twelfthYear - passingYear < 2) {
+            return res.status(400).json({
+              message: `10th passing year (${passingYear}) must be at least 2 years prior to 12th passing year (${twelfthYear}).`,
+            });
+          }
+        }
+      }
+    }
+    // --- B. Higher Education Validations (Diploma, UG, PG, PhD) ---
+    else {
+      if (
+        !data.university ||
+        !data.institute_name ||
+        !data.course_name ||
+        !data.start_year ||
+        !data.end_year
+      ) {
+        return res.status(400).json({
+          message:
+            "University, Institute Name, Course Name, Start Year, and End Year are required.",
+        });
+      }
+
+      const startYear = Number(data.start_year);
+      const endYear = Number(data.end_year);
+
+      if (isNaN(startYear) || isNaN(endYear)) {
+        return res
+          .status(400)
+          .json({ message: "Start and End years must be valid numbers." });
+      }
+
+      if (startYear < 1950 || startYear > currentYear + 6) {
+        return res.status(400).json({ message: "Invalid start year." });
+      }
+
+      if (endYear < startYear) {
+        return res.status(400).json({
+          message: "End year cannot be earlier than start year.",
+        });
+      }
+
+      // Check college start year against 12th passing year if available
+      const twelfthRecord = await UserEducation.findOne({
+        userId: user,
+        level: "2",
+        isDel: false,
+      });
+
+      if (twelfthRecord?.year_of_passing) {
+        const twelfthYear = Number(twelfthRecord.year_of_passing);
+        if (startYear < twelfthYear) {
+          return res.status(400).json({
+            message: `College start year (${startYear}) cannot be earlier than 12th passing year (${twelfthYear}).`,
+          });
+        }
+      }
+    }
+
+    // --- C. Marks Percentage Range Validation ---
+    if (data.marks !== undefined && data.marks !== null && data.marks !== "") {
+      const marksNum = Number(data.marks);
+      if (isNaN(marksNum) || marksNum < 0 || marksNum > 100) {
+        return res
+          .status(400)
+          .json({ message: "Marks percentage must be a number between 0 and 100." });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 3. FILE UPLOADS & PRIMARY FLAG HANDLING
+    // -------------------------------------------------------------
     const transcript = req.files?.transcript?.[0];
     const certificate = req.files?.certificate?.[0];
+
     let transcriptUrl = null;
     let certificateUrl = null;
 
-    const userdtl = await User.findById(user);
-
-    console.log("All Data is present here - ", data);
-    console.log("institute name - ", data.institute_name);
-
-    // Upload transcript file if available
     if (transcript) {
       transcriptUrl = await uploadFileToExternalServer(transcript);
     }
-    // Upload certificate file if available
     if (certificate) {
       certificateUrl = await uploadFileToExternalServer(certificate);
     }
-    // Convert is_primary to boolean
+
+    // Standardize boolean type conversion for primary flag
     const isPrimary = data.is_primary === "true" || data.is_primary === true;
 
-    // Reset other primary flags if this one is primary
     if (isPrimary) {
       await UserEducation.updateMany(
         { userId: user, isPrimary: true, isDel: false },
         { $set: { isPrimary: false } }
       );
     }
+
+    // -------------------------------------------------------------
+    // 4. DATABASE WRITE OPERATONS
+    // -------------------------------------------------------------
     let savedRecord;
+
     if (levelId === "1" || levelId === "2") {
       const boardId = await getOrInsertId(
         list_education_boards,
@@ -1175,22 +1340,24 @@ export const submitUserEducation = async (req, res) => {
         state: data.state,
         board: boardId || null,
         school_name: schoolId || null,
-        year_of_passing: data.year_of_passing,
+        year_of_passing: Number(data.year_of_passing),
         medium_of_education: data.medium,
         marks: data.marks,
         eng_marks: data.eng_marks,
         math_marks: data.math_marks,
         transcript_data: transcriptUrl || null,
         certificate_data: certificateUrl || null,
-        isPrimary: data.is_primary || false,
+        isPrimary: isPrimary, // Fixed bug: uses parsed boolean variable
         isDel: false,
       };
-      // Update if already exists
+
+      // Upsert logic for 10th / 12th
       const existing = await UserEducation.findOne({
         userId: user,
         level: levelId,
         isDel: false,
       });
+
       if (existing) {
         savedRecord = await UserEducation.findByIdAndUpdate(
           existing._id,
@@ -1224,207 +1391,351 @@ export const submitUserEducation = async (req, res) => {
         marks: data.marks,
         transcript_data: transcriptUrl || null,
         certificate_data: certificateUrl || null,
-        isPrimary: data.is_primary || false,
+        isPrimary: isPrimary, // Fixed bug: uses parsed boolean variable
         isDel: false,
       };
-      // Always create new record
+
       const newRecord = new UserEducation(educationData);
       savedRecord = await newRecord.save();
     }
 
-    const htmlEmail = `
-  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addacademics.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-      <h2 style="color:#fff; margin:0; font-size:20px;"> Academic Update Notification</h2>
-    </div>
-
-    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-      <p>Dear <strong>${userdtl.name}</strong>,</p>
-          
-      <p>New Academic details have been <strong>added</strong> to your profile.</p>
-          
-      <p>If you did not make this change, please contact support immediately.</p>
-
-      <p>You can access your dashboard using the link below:</p>
-
-      <p>
-        <a href="${process.env.ORIGIN}" 
-          style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-          Visit Dashboard
-        </a>
-      </p>
-
-      <p>If the button does not work, use this link:</p>
-      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-
-      <br />
-
-      <p>Sincerely,<br />
-      <strong>Admin Team</strong><br />
-      Global Employability Information Services India Limited</p>
-    </div>
-  </div>
-  `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    console.log("This is the Actual Mail: ", userdtl.email);
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Academic Details Added Notification",
-      html: htmlEmail,
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    // New code added here
-
-    const escapedInstituteName = data.institute_name.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
-    const company = await CompanyDetails.findOne({
-      name: { $regex: new RegExp(`^${escapedInstituteName}$`, "i") },
-      isDel: false,
-    });
-
-    console.log("Company Details:", company);
-
-    if (company?.email) {
-      const companyHtml = `
-    <div style="font-family: Arial, sans-serif;">
-      <h2>Institute Reference Notification</h2>
-
-      <p>Hello,</p>
-
-      <p>
-        Candidate <strong>${userdtl.name}</strong> has added
-        <strong>${data.institute_name}</strong> as their institute name
-        in their education details.
-      </p>
-
-      <p>Please review this information.</p>
-
-      <br/>
-
-      <p>
-        Regards,<br/>
-        Geisil Team
-      </p>
-    </div>
-  `;
-
-      await transporter.sendMail({
-        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-        to: company.email,
-        subject: "Candidate Added Your Institute Name",
-        html: companyHtml,
+    // -------------------------------------------------------------
+    // 5. EMAIL NOTIFICATIONS (SAFE & NON-BLOCKING)
+    // -------------------------------------------------------------
+    try {
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
       });
+
+      // A. Send confirmation email to User
+      if (userdtl?.email) {
+        const htmlEmail = `
+        <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+          <div>
+            <img src="${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addacademics.png"
+                 alt="GEISIL Banner" 
+                 style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+          </div>
+          <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+            <h2 style="color:#fff; margin:0; font-size:20px;">Academic Update Notification</h2>
+          </div>
+
+          <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+            <p>Dear <strong>${userdtl.name}</strong>,</p>
+            <p>New Academic details have been <strong>added</strong> to your profile.</p>
+            <p>If you did not make this change, please contact support immediately.</p>
+            <p>You can access your dashboard using the link below:</p>
+            <p>
+              <a href="${process.env.ORIGIN}" 
+                 style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+                Visit Dashboard
+              </a>
+            </p>
+            <p>If the button does not work, use this link:</p>
+            <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+            <br />
+            <p>Sincerely,<br />
+            <strong>Admin Team</strong><br />
+            Global Employability Information Services India Limited</p>
+          </div>
+        </div>
+        `;
+
+        await transporter.sendMail({
+          from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+          to: userdtl.email,
+          subject: "Academic Details Added Notification",
+          html: htmlEmail,
+        });
+      }
+
+      // B. Send notification to Company/Institute if applicable (safely checked)
+      if (data.institute_name && typeof data.institute_name === "string") {
+        const escapedInstituteName = data.institute_name
+          .trim()
+          .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+
+        const company = await CompanyDetails.findOne({
+          name: { $regex: new RegExp(`^${escapedInstituteName}$`, "i") },
+          isDel: false,
+        });
+
+        if (company?.email) {
+          const companyHtml = `
+          <div style="font-family: Arial, sans-serif;">
+            <h2>Institute Reference Notification</h2>
+            <p>Hello,</p>
+            <p>
+              Candidate <strong>${userdtl.name}</strong> has added
+              <strong>${data.institute_name}</strong> as their institute name
+              in their education details.
+            </p>
+            <p>Please review this information.</p>
+            <br/>
+            <p>Regards,<br/>Geisil Team</p>
+          </div>
+          `;
+
+          await transporter.sendMail({
+            from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+            to: company.email,
+            subject: "Candidate Added Your Institute Name",
+            html: companyHtml,
+          });
+        }
+      }
+    } catch (emailError) {
+      console.error("Email notification failed (record was saved successfully):", emailError);
     }
 
-    res.status(201).json({
+    return res.status(201).json({
       message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
         } successfully`,
       data: savedRecord,
     });
   } catch (error) {
-    res.status(500).json({
+    console.error("Error in submitUserEducation:", error);
+    return res.status(500).json({
       message: "Error saving User Education",
       error: error.message,
     });
   }
 };
 
-/**
- * @description Update an existing education record
- * @route PUT /api/userdata/usereducation
- * @access protected
- * @param {string} req.body._id - Education record id
- * @param {string} req.body.level - Education level (1/2/3)
- * @param {string} req.body.state - State of education
- * @param {string} [req.body.board] - Board of education (optional)
- * @param {string} req.body.year_of_passing - Year of passing
- * @param {string} req.body.medium - Medium of education
- * @param {string} req.body.marks - Marks obtained
- * @param {string} [req.body.university] - University name (for non-primary education)
- * @param {string} [req.body.instituteName] - Institute name (for non-primary education)
- * @param {string} [req.body.course_name] - Course name (for non-primary education)
- * @param {string} [req.body.course_type] - Course type (for non-primary education)
- * @param {number} [req.body.start_year] - Start year (for non-primary education)
- * @param {number} [req.body.end_year] - End year (for non-primary education)
- * @param {string} [req.body.grading_system] - Grading system (for non-primary education)
- * @param {boolean} [req.body.isPrimary] - Indicates if the education is primary
- * @param {Express.Multer.File} [req.files.transcript] - Transcript file (optional)
- * @param {Express.Multer.File} [req.files.certificate] - Certificate file (optional)
- * @returns {object} 201 - Education saved/updated successfully
- * @returns {object} 500 - Error saving User Education
- */
+
 export const updateUserEducation = async (req, res) => {
   try {
     const data = req.body;
     const user = req.userId;
-    const levelId = data.level;
-    const transcript = req.files?.transcript?.[0];
-    const certificate = req.files?.certificate?.[0];
+    const levelId = String(data.level || "");
     const edit_id = req.body._id;
+    const currentYear = new Date().getFullYear();
+
+    // 1. Check if edit_id is provided
     if (!edit_id) {
       return res.status(400).json({ message: "Education id is required." });
     }
 
+    // 2. Verify user exists
     const userdtl = await User.findById(user);
+    if (!userdtl) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // 3. Verify target record exists and belongs to user
     const existingRecord = await UserEducation.findOne({
       _id: edit_id,
       userId: user,
+      isDel: false,
     });
+
     if (!existingRecord) {
       return res
         .status(404)
         .json({ message: "Education record not found or not authorized." });
     }
-    // Upload only if file is present, otherwise keep existing values
+
+    // -------------------------------------------------------------
+    // 4. ALL DOMAIN & TIMELINE VALIDATIONS
+    // -------------------------------------------------------------
+
+    // --- A. 10th & 12th Grade Validations (Levels 1 & 2) ---
+    if (levelId === "1" || levelId === "2") {
+      // Required fields check
+      if (!data.board || !data.year_of_passing) {
+        return res.status(400).json({
+          message: "Board and Year of Passing are required.",
+        });
+      }
+
+      // For 12th (level 2), english and math marks are also required
+      if (levelId === "2") {
+        if (
+          data.eng_marks === undefined ||
+          data.eng_marks === null ||
+          data.eng_marks === "" ||
+          data.math_marks === undefined ||
+          data.math_marks === null ||
+          data.math_marks === ""
+        ) {
+          return res.status(400).json({
+            message: "English marks and Math marks are required for 12th grade.",
+          });
+        }
+
+        const engNum = Number(data.eng_marks);
+        const mathNum = Number(data.math_marks);
+
+        if (isNaN(engNum) || engNum < 0 || engNum > 100) {
+          return res.status(400).json({
+            message: "English marks must be a number between 0 and 100.",
+          });
+        }
+        if (isNaN(mathNum) || mathNum < 0 || mathNum > 100) {
+          return res.status(400).json({
+            message: "Math marks must be a number between 0 and 100.",
+          });
+        }
+      }
+
+      const passingYear = Number(data.year_of_passing);
+      if (isNaN(passingYear) || passingYear < 1950 || passingYear > currentYear) {
+        return res.status(400).json({
+          message: `Passing year must be between 1950 and ${currentYear}.`,
+        });
+      }
+
+      // Gap Validation: Updating 12th Grade
+      if (levelId === "2") {
+        const tenthRecord = await UserEducation.findOne({
+          userId: user,
+          level: "1",
+          isDel: false,
+          _id: { $ne: edit_id }, // Exclude current record being edited
+        });
+
+        if (tenthRecord?.year_of_passing) {
+          const tenthYear = Number(tenthRecord.year_of_passing);
+          if (passingYear < tenthYear) {
+            return res.status(400).json({
+              message: `12th passing year (${passingYear}) cannot be earlier than 10th passing year (${tenthYear}).`,
+            });
+          }
+          if (passingYear - tenthYear < 2) {
+            return res.status(400).json({
+              message: `12th passing year (${passingYear}) must be at least 2 years after 10th passing year (${tenthYear}).`,
+            });
+          }
+        }
+      }
+      // Gap Validation: Updating 10th Grade
+      else if (levelId === "1") {
+        const twelfthRecord = await UserEducation.findOne({
+          userId: user,
+          level: "2",
+          isDel: false,
+          _id: { $ne: edit_id }, // Exclude current record being edited
+        });
+
+        if (twelfthRecord?.year_of_passing) {
+          const twelfthYear = Number(twelfthRecord.year_of_passing);
+          if (passingYear > twelfthYear) {
+            return res.status(400).json({
+              message: `10th passing year (${passingYear}) cannot be after 12th passing year (${twelfthYear}).`,
+            });
+          }
+          if (twelfthYear - passingYear < 2) {
+            return res.status(400).json({
+              message: `10th passing year (${passingYear}) must be at least 2 years prior to 12th passing year (${twelfthYear}).`,
+            });
+          }
+        }
+      }
+    }
+    // --- B. Higher Education Validations (Diploma, UG, PG, PhD) ---
+    else {
+      // Required fields check
+      if (
+        !data.university ||
+        !data.institute_name ||
+        !data.course_name ||
+        !data.start_year ||
+        !data.end_year
+      ) {
+        return res.status(400).json({
+          message:
+            "University, Institute, Course, Start Year, and End Year are required.",
+        });
+      }
+
+      const startYear = Number(data.start_year);
+      const endYear = Number(data.end_year);
+
+      if (isNaN(startYear) || isNaN(endYear)) {
+        return res
+          .status(400)
+          .json({ message: "Start and End years must be valid numbers." });
+      }
+
+      if (startYear < 1950 || startYear > currentYear + 6) {
+        return res.status(400).json({ message: "Invalid start year." });
+      }
+
+      if (endYear < startYear) {
+        return res.status(400).json({
+          message: "End year cannot be earlier than start year.",
+        });
+      }
+
+      // College Start Year vs 12th Passing Year Validation
+      const twelfthRecord = await UserEducation.findOne({
+        userId: user,
+        level: "2",
+        isDel: false,
+        _id: { $ne: edit_id },
+      });
+
+      if (twelfthRecord?.year_of_passing) {
+        const twelfthYear = Number(twelfthRecord.year_of_passing);
+        if (startYear < twelfthYear) {
+          return res.status(400).json({
+            message: `College start year (${startYear}) cannot be earlier than 12th passing year (${twelfthYear}).`,
+          });
+        }
+      }
+    }
+
+    // --- C. Marks Percentage Validation ---
+    if (data.marks !== undefined && data.marks !== null && data.marks !== "") {
+      const marksNum = Number(data.marks);
+      if (isNaN(marksNum) || marksNum < 0 || marksNum > 100) {
+        return res
+          .status(400)
+          .json({ message: "Marks percentage must be between 0 and 100." });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 5. FILE UPLOADS & DATA PREPARATION
+    // -------------------------------------------------------------
+    const transcript = req.files?.transcript?.[0];
+    const certificate = req.files?.certificate?.[0];
+
     const transcriptUrl = transcript
       ? await uploadFileToExternalServer(transcript)
       : existingRecord.transcript_data;
+
     const certificateUrl = certificate
       ? await uploadFileToExternalServer(certificate)
       : existingRecord.certificate_data;
 
-    // Convert is_primary to boolean
+    // Standardize boolean type conversion for primary flag
     const isPrimary = data.is_primary === "true" || data.is_primary === true;
 
-    // Reset other primary flags if this one is primary
     if (isPrimary) {
       await UserEducation.updateMany(
         { userId: user, isPrimary: true, isDel: false },
         { $set: { isPrimary: false } }
       );
     }
-    let savedRecord;
-    if (levelId == "1" || levelId == "2") {
-      // const boardId = await getOrInsertId(
-      //   "education_boards",
-      //   "board_name",
-      //   data.board
-      // );
 
+    // -------------------------------------------------------------
+    // 6. DATABASE UPDATE LOGIC
+    // -------------------------------------------------------------
+    let savedRecord;
+
+    if (levelId === "1" || levelId === "2") {
       const boardId = await getOrInsertId(
         list_education_boards,
         "board_name",
         data.board
       );
-      // const schoolId = await getOrInsertId(list_school_list, "school_name", data.school_name);
       const schoolId = await getOrInsertId(
         list_school_list,
         "school_name",
@@ -1439,14 +1750,14 @@ export const updateUserEducation = async (req, res) => {
         state: data.state,
         board: boardId || null,
         school_name: schoolId || null,
-        year_of_passing: data.year_of_passing,
+        year_of_passing: Number(data.year_of_passing),
         medium_of_education: data.medium,
         marks: data.marks,
         eng_marks: data.eng_marks,
         math_marks: data.math_marks,
         transcript_data: transcriptUrl,
         certificate_data: certificateUrl,
-        isPrimary: data.is_primary || false,
+        isPrimary: isPrimary, // Fixed bug: uses parsed boolean variable
         isDel: false,
       };
 
@@ -1456,41 +1767,6 @@ export const updateUserEducation = async (req, res) => {
         { new: true }
       );
     } else {
-      /*
-      const universityId = await getOrInsertId(
-        "university_univercity",
-        "name",
-        data.university
-      );
-      const instituteId = await getOrInsertId(
-        "university_college",
-        "name",
-        data.institute_name
-      );
-      const courseId = await getOrInsertId(
-        "university_course",
-        "name",
-        data.course_name
-      );  */
-
-      /*
-      const universityId = await getOrInsertId(
-        "list_university_univercities",
-        "name",
-        data.university
-      );
-
-      const instituteId = await getOrInsertId(
-        "list_university_colleges",
-        "name",
-        data.institute_name
-      );
-      const courseId = await getOrInsertId(
-        "list_university_course",
-        "name",
-        data.course_name
-      );  */
-
       const [universityId, instituteId, courseId] = await Promise.all([
         getOrInsertId(list_university_univercities, "name", data.university),
         getOrInsertId(list_university_colleges, "name", data.institute_name),
@@ -1513,9 +1789,10 @@ export const updateUserEducation = async (req, res) => {
         marks: data.marks,
         transcript_data: transcriptUrl || null,
         certificate_data: certificateUrl || null,
-        isPrimary: data.is_primary || false,
+        isPrimary: isPrimary, // Fixed bug: uses parsed boolean variable
         isDel: false,
       };
+
       savedRecord = await UserEducation.findByIdAndUpdate(
         edit_id,
         educationData,
@@ -1523,86 +1800,77 @@ export const updateUserEducation = async (req, res) => {
       );
     }
 
-    const htmlEmail = `
-  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editacademic.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-      <h2 style="color:#fff; margin:0; font-size:20px;"> Academic Update Notification</h2>
-    </div>
+    // -------------------------------------------------------------
+    // 7. EMAIL NOTIFICATION (SAFE & NON-BLOCKING)
+    // -------------------------------------------------------------
+    try {
+      if (userdtl?.email) {
+        const htmlEmail = `
+        <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+          <div>
+            <img src="${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editacademic.png"
+                 alt="GEISIL Banner" 
+                 style="width:100%; border-radius:8px 8px 0 0; display:block;" />
+          </div>
+          <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
+            <h2 style="color:#fff; margin:0; font-size:20px;">Academic Update Notification</h2>
+          </div>
 
-    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-      <p>Dear <strong>${userdtl.name}</strong>,</p>
-          
-      <p>Your Academic details have been <strong>updated</strong> on your profile.</p>
-          
-      <p>If you did not make this change, please contact support immediately.</p>
+          <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
+            <p>Dear <strong>${userdtl.name}</strong>,</p>
+            <p>Your Academic details have been <strong>updated</strong> on your profile.</p>
+            <p>If you did not make this change, please contact support immediately.</p>
+            <p>You can access your dashboard using the link below:</p>
+            <p>
+              <a href="${process.env.ORIGIN}" 
+                 style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
+                Visit Dashboard
+              </a>
+            </p>
+            <p>If the button does not work, use this link:</p>
+            <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+            <br />
+            <p>Sincerely,<br />
+            <strong>Admin Team</strong><br />
+            Global Employability Information Services India Limited</p>
+          </div>
+        </div>
+        `;
 
-      <p>You can access your dashboard using the link below:</p>
+        const transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST,
+          port: process.env.EMAIL_PORT,
+          secure: true,
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
 
-      <p>
-        <a href="${process.env.ORIGIN}" 
-          style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-          Visit Dashboard
-        </a>
-      </p>
+        await transporter.sendMail({
+          from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
+          to: userdtl.email,
+          subject: "Academic Details Update Notification",
+          html: htmlEmail,
+        });
+      }
+    } catch (emailError) {
+      console.error("Email update notification failed (record updated successfully):", emailError);
+    }
 
-      <p>If the button does not work, use this link:</p>
-      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-
-      <br />
-
-      <p>Sincerely,<br />
-      <strong>Admin Team</strong><br />
-      Global Employability Information Services India Limited</p>
-    </div>
-  </div>
-  `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Academic Details Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
-
-    res.status(201).json({
-      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-        } successfully`,
+    return res.status(200).json({
+      message: "Education updated successfully",
       data: savedRecord,
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Error saving User Education",
+    console.error("Error in updateUserEducation:", error);
+    return res.status(500).json({
+      message: "Error updating User Education",
       error: error.message,
     });
   }
 };
 
-/**
- * @description Soft delete an education record by user ID and education record ID
- * @route DELETE /api/useraction/delete-user-education
- * @access protected
- * @param {string} _id - Education record ID (required)
- * @returns {object} 200 - Education record deleted successfully
- * @returns {object} 400 - Missing _id in query parameters
- * @returns {object} 404 - Education record not found or already deleted
- * @returns {object} 500 - Server error
- */
 
 export const deleteUserEducation = async (req, res) => {
   try {
