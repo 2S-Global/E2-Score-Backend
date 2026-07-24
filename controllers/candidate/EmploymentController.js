@@ -8,6 +8,12 @@ import nodemailer from "nodemailer";
 import { apiResponse } from "../../utility/apiResponse.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 
+const isFullTime = (type) => {
+  if (!type || typeof type !== "string") return false;
+  const normalized = type.toLowerCase().trim();
+  return normalized === "full-time" || normalized === "full time" || normalized === "fulltime" || normalized === "full";
+};
+
 /**
  * @description Search for matching Company based on the query parameter company_name
  * @route GET /api/candidate/employment/matching_company?company_name=:company_name
@@ -384,9 +390,10 @@ export const addEmploymentDetails = async (req, res) => {
     }
 
 
+    const currentlyWorkingBool = currentlyWorking === true || currentlyWorking === "true";
 
     //check cureent employee or not
-    if (currentlyWorking) {
+    if (currentlyWorkingBool) {
       const currentEmployment = await Employment.find({
         user: userId,
         currentEmployment: true,
@@ -417,6 +424,39 @@ export const addEmploymentDetails = async (req, res) => {
         null,
         null
       );
+    }
+
+    // Check timeline overlap
+    const existingEmployments = await Employment.find({
+      user: userId,
+      isDel: false,
+    });
+
+    const isNewFullTime = isFullTime(employmenttype);
+
+    for (const emp of existingEmployments) {
+      const isExistingFullTime = isFullTime(emp.employmentType);
+
+      if (isNewFullTime || isExistingFullTime) {
+        // Compute timelines in months
+        const s1 = (Number(joining_year) || 0) * 12 + (Number(joining_month) || 0);
+        const e1 = currentlyWorkingBool ? Infinity : ((Number(leaving_year) || 0) * 12 + (Number(leaving_month) || 0));
+
+        const s2 = (emp.joiningDate?.year || 0) * 12 + (emp.joiningDate?.month || 0);
+        const e2 = emp.currentEmployment ? Infinity : ((emp.leavingDate?.year || 0) * 12 + (emp.leavingDate?.month || 0));
+
+        // Overlap condition
+        if (s1 <= e2 && s2 <= e1) {
+          return apiResponse(
+            res,
+            400,
+            false,
+            "Full-time employment cannot overlap with any other employment in the same timeline.",
+            null,
+            null
+          );
+        }
+      }
     }
 
     const companySlug = slugify(company_name.trim(), {
@@ -452,7 +492,7 @@ export const addEmploymentDetails = async (req, res) => {
 
     const employment = new Employment({
       user: userId,
-      currentEmployment: currentlyWorking ?? "",
+      currentEmployment: currentlyWorkingBool,
       employmentType: employmenttype ?? "",
       totalExperience: {
         year: experience_yr ?? "",
@@ -926,7 +966,9 @@ export const editEmploymentDetails = async (req, res) => {
       return res.status(404).json({ message: "Employment record not found" });
     }
 
-    if (currentlyWorking) {
+    const currentlyWorkingBool = currentlyWorking === true || currentlyWorking === "true";
+
+    if (currentlyWorkingBool) {
       const currentEmployment = await Employment.find({
         user: userId,
         currentEmployment: true,
@@ -956,6 +998,40 @@ export const editEmploymentDetails = async (req, res) => {
         null,
         null
       );
+    }
+
+    // Check timeline overlap
+    const existingEmployments = await Employment.find({
+      user: userId,
+      isDel: false,
+      _id: { $ne: _id },
+    });
+
+    const isNewFullTime = isFullTime(employmenttype);
+
+    for (const emp of existingEmployments) {
+      const isExistingFullTime = isFullTime(emp.employmentType);
+
+      if (isNewFullTime || isExistingFullTime) {
+        // Compute timelines in months
+        const s1 = (Number(joining_year) || 0) * 12 + (Number(joining_month) || 0);
+        const e1 = currentlyWorkingBool ? Infinity : ((Number(leaving_year) || 0) * 12 + (Number(leaving_month) || 0));
+
+        const s2 = (emp.joiningDate?.year || 0) * 12 + (emp.joiningDate?.month || 0);
+        const e2 = emp.currentEmployment ? Infinity : ((emp.leavingDate?.year || 0) * 12 + (emp.leavingDate?.month || 0));
+
+        // Overlap condition
+        if (s1 <= e2 && s2 <= e1) {
+          return apiResponse(
+            res,
+            400,
+            false,
+            "Full-time employment cannot overlap with any other employment in the same timeline.",
+            null,
+            null
+          );
+        }
+      }
     }
 
 
@@ -1011,7 +1087,7 @@ export const editEmploymentDetails = async (req, res) => {
 
     // Prepare updated fields
     const updatedFields = {
-      currentEmployment: currentlyWorking,
+      currentEmployment: currentlyWorkingBool,
       employmentType: employmenttype,
       totalExperience: {
         year: experience_yr,
