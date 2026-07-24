@@ -10,34 +10,34 @@ import CandidateKYC from "../../models/CandidateKYCModel.js";
 import list_education_level from "../../models/monogo_query/educationLevelModel.js";
 import list_course_type from "../../models/monogo_query/courseTypeModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
-import { InstitueStudent, InstitueStudentSemester,StudentPlacement } from "../../models/InstitueStudentModel.js";
+import { InstitueStudent, InstitueStudentSemester, StudentPlacement } from "../../models/InstitueStudentModel.js";
 import student_course_details from "../../models/studentCourseModel.js";
 import companyRequirement from "../../models/companyRequirementModel.js";
 import nodemailer from "nodemailer";
 import mongoose from "mongoose";
 import { Types } from 'mongoose';
 import { GetProgress } from "../../utility/helper/getprogress.js";
-import {studentDetails} from "../../utility/student.js"
+import { studentDetails } from "../../utility/student.js"
 import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
-export const sendMailSudent=async(data)=>{
-      const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+export const sendMailSudent = async (data) => {
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
 
-    let dateTime= `
+  let dateTime = `
         <ul>
-          <li><strong>Date:</strong> ${data?.date &&  new Date(data?.date).toISOString().split("T")[0]}</li>
+          <li><strong>Date:</strong> ${data?.date && new Date(data?.date).toISOString().split("T")[0]}</li>
           <li><strong>Time:</strong> ${data?.time}</li>
         </ul>
       `;
 
-    const emailcontent = `<p>Dear <strong>${data?.studentName}</strong>,</p>
+  const emailcontent = `<p>Dear <strong>${data?.studentName}</strong>,</p>
         <p>We are pleased to invite you to an interview for the position of ${data?.role} at ${data?.recruiterName}.</p>
         <p>Interview Details:</p>
         ${dateTime}
@@ -45,22 +45,22 @@ export const sendMailSudent=async(data)=>{
         <br/>
         <p>Regards,<br/>E2Score Verification Team</p>`;
 
-    const mailOptions = {
-      from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-      to: data?.studentEmail,
-      subject: `Interview Invitation for ${data?.role} Position`,
-      html: emailcontent,
-    };
-    await transporter.sendMail(mailOptions);
+  const mailOptions = {
+    from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
+    to: data?.studentEmail,
+    subject: `Interview Invitation for ${data?.role} Position`,
+    html: emailcontent,
+  };
+  await transporter.sendMail(mailOptions);
 }
 
 
-export const sendMailRecruiter=async(data,students)=>{
+export const sendMailRecruiter = async (data, students) => {
 
-let stu=""
+  let stu = ""
 
-if(students?.length>0){
-  stu=`
+  if (students?.length > 0) {
+    stu = `
   <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-family:Arial,sans-serif;border:1px solid #dbe2ea;border-radius:8px;overflow:hidden;">
       <thead>
         <tr style="background:#0f4c81;">
@@ -74,8 +74,8 @@ if(students?.length>0){
       </thead>
       <tbody>
       `
-      for (const item of students) {
-        stu+=`<tr style="background:#ffffff;">
+    for (const item of students) {
+      stu += `<tr style="background:#ffffff;">
         <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.studentName}</td>
         <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.studentEmail}</td>
         <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.studentPhone}</td>
@@ -83,43 +83,43 @@ if(students?.length>0){
         <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.twelveTh}%</td>
         <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.course}</td>
       </tr>`
-      }
-       stu+=`</tbody></table>`
-}
-     
-   
+    }
+    stu += `</tbody></table>`
+  }
 
-      const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
 
-    const emailcontent = `<p>Dear <strong>Recruiter</strong>,</p>
-        <p>Please find the details of  ${data?.total} candidates scheduled for interviews on  ${data?.date &&  new Date(data?.date).toISOString().split("T")[0]} for the position of ${data?.role}.</p>
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const emailcontent = `<p>Dear <strong>Recruiter</strong>,</p>
+        <p>Please find the details of  ${data?.total} candidates scheduled for interviews on  ${data?.date && new Date(data?.date).toISOString().split("T")[0]} for the position of ${data?.role}.</p>
         <div>${stu}</div>
         <p>Kindly review the candidate list and confirm the interview schedule. Please let me know if any additional information or documentation is required.</p>
         <p>Thank you for your assistance.</p>
         <br/>
         <p>Regards,<br/>E2Score Verification Team</p>`;
 
-    const mailOptions = {
-      from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-      to: data?.recruiterEmail,
-      subject: `Position Interview Schedule Submission – ${data?.total} Candidates for ${data?.role}`,
-      html: emailcontent,
-    };
-    await transporter.sendMail(mailOptions);
+  const mailOptions = {
+    from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
+    to: data?.recruiterEmail,
+    subject: `Position Interview Schedule Submission – ${data?.total} Candidates for ${data?.role}`,
+    html: emailcontent,
+  };
+  await transporter.sendMail(mailOptions);
 }
 
 export const GetunverifiedStudents = async (req, res) => {
   try {
     const userId = req.userId;
-
+    
     // ✅ Step 1: Verify institute linked to user
     const instituteDetails = await CompanyDetails.findOne({
       userId,
@@ -132,9 +132,10 @@ export const GetunverifiedStudents = async (req, res) => {
         .json({ success: false, message: "Institute not found." });
     }
 
-    // ✅ Step 2: Fetch all matching institutes
+    // ✅ Step 2: Fetch all matching institutes (case-insensitive & trimmed name)
+    const escapedInstituteName = instituteDetails.name.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     const listOfInstitutes = await list_university_colleges.find({
-      name: instituteDetails.name,
+      name: { $regex: new RegExp(`^${escapedInstituteName}$`, "i") },
       is_del: 0,
     });
 
@@ -144,8 +145,14 @@ export const GetunverifiedStudents = async (req, res) => {
         .json({ success: false, message: "No institutes found." });
     }
 
-    // ✅ Step 3: Extract institute IDs
-    const instituteIds = listOfInstitutes.map((inst) => inst.id.toString());
+    // ✅ Step 3: Extract institute IDs (numeric and string values)
+    const instituteIds = [];
+    listOfInstitutes.forEach((inst) => {
+      if (inst.id !== undefined && inst.id !== null) {
+        instituteIds.push(inst.id.toString());
+        instituteIds.push(Number(inst.id));
+      }
+    });
 
     // ✅ Step 4: Query all unverified students
     const studentList = await usereducation
@@ -168,14 +175,16 @@ export const GetunverifiedStudents = async (req, res) => {
     }
 
     // ✅ Step 5: Map course IDs → names efficiently
-    const courseIds = [...new Set(studentList.map((s) => s.courseName))];
+    const courseIds = [
+      ...new Set(studentList.map((s) => Number(s.courseName)).filter(Boolean)),
+    ];
     const courses = await list_university_course.find({
       id: { $in: courseIds },
       is_del: 0,
     });
 
     const courseMap = courses.reduce((acc, course) => {
-      acc[course.id] = course.name;
+      acc[course.id.toString()] = course.name;
       return acc;
     }, {});
 
@@ -183,10 +192,10 @@ export const GetunverifiedStudents = async (req, res) => {
     const finalList = studentList.map((student, index) => ({
       employmentId: studentList[index]._id,
       userId: student.userId?._id || null,
-      name: student.userId?.name || "Unknown",
-      email: student.userId?.email || "N/A",
-      details: `${courseMap[student.courseName] || student.courseName || "Unknown Course"
-        } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"}`,
+      name: student.userId?.name || "",
+      email: student.userId?.email || "",
+      details: `${courseMap[student.courseName] || student.courseName || ""
+        } || ${student.duration?.from || ""}-${student.duration?.to || ""}`,
       photo: student.userId?.profilePicture || null,
     }));
 
@@ -285,7 +294,7 @@ export const GetallStudents = async (req, res) => {
       `✅ Returning ${finalList.length} formatted unverified students`
     ); */
 
-   
+
     return res.status(200).json({
       success: true,
       total: finalList.length,
@@ -317,9 +326,10 @@ export const GetverifiedStudents = async (req, res) => {
         .json({ success: false, message: "Institute not found." });
     }
 
-    // ✅ Step 2: Fetch all matching institutes
+    // ✅ Step 2: Fetch all matching institutes (case-insensitive & trimmed name)
+    const escapedInstituteName = instituteDetails.name.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     const listOfInstitutes = await list_university_colleges.find({
-      name: instituteDetails.name,
+      name: { $regex: new RegExp(`^${escapedInstituteName}$`, "i") },
       is_del: 0,
     });
 
@@ -329,8 +339,14 @@ export const GetverifiedStudents = async (req, res) => {
         .json({ success: false, message: "No institutes found." });
     }
 
-    // ✅ Step 3: Extract institute IDs
-    const instituteIds = listOfInstitutes.map((inst) => inst.id.toString());
+    // ✅ Step 3: Extract institute IDs (numeric and string values)
+    const instituteIds = [];
+    listOfInstitutes.forEach((inst) => {
+      if (inst.id !== undefined && inst.id !== null) {
+        instituteIds.push(inst.id.toString());
+        instituteIds.push(Number(inst.id));
+      }
+    });
 
     // ✅ Step 4: Query all unverified students
     const studentList = await usereducation
@@ -353,14 +369,16 @@ export const GetverifiedStudents = async (req, res) => {
     }
 
     // ✅ Step 5: Map course IDs → names efficiently
-    const courseIds = [...new Set(studentList.map((s) => s.courseName))];
+    const courseIds = [
+      ...new Set(studentList.map((s) => Number(s.courseName)).filter(Boolean)),
+    ];
     const courses = await list_university_course.find({
       id: { $in: courseIds },
       is_del: 0,
     });
 
     const courseMap = courses.reduce((acc, course) => {
-      acc[course.id] = course.name;
+      acc[course.id.toString()] = course.name;
       return acc;
     }, {});
 
@@ -527,7 +545,7 @@ export const UpdatestudentStatus = async (req, res) => {
     const instituteId = req.userId;
     console.log(instituteId);
 
-    
+
 
 
     // ✅ Step 1: Verify institute linked to user
@@ -570,32 +588,32 @@ export const UpdatestudentStatus = async (req, res) => {
       },
       { new: true }
     );
-  
-  if(updatedUserEducation && is_studied_here){
-          let student= await studentDetails(instituteId,updatedUserEducation?.userId,updatedUserEducation?.level)
-          const currentYear = new Date().getFullYear();
-          if(student?.length){
-              const stu= {
-                            name:student?.[0]?.name,
-                            gender:student?.[0]?.gender,
-                            program:student?.[0]?.program,
-                            admissionYear:updatedUserEducation?.duration?.from,
-                            email:student?.[0]?.email,
-                            phoneNumber:student?.[0]?.phone_number,
-                            isSelfRegistered:'yes',
-                            userCreatedId:student?.[0]?._id,
-                            instituteId:new mongoose.Types.ObjectId(instituteId),
-                            endYear:updatedUserEducation?.duration?.to,
-                            presentYear: currentYear
-                          }
-                let abc=await InstitueStudent.create(stu);
-                  console.log('is_studied_here',student,abc)
-                      
-            }
 
-          
-             
-          }
+    if (updatedUserEducation && is_studied_here) {
+      let student = await studentDetails(instituteId, updatedUserEducation?.userId, updatedUserEducation?.level)
+      const currentYear = new Date().getFullYear();
+      if (student?.length) {
+        const stu = {
+          name: student?.[0]?.name,
+          gender: student?.[0]?.gender,
+          program: student?.[0]?.program,
+          admissionYear: updatedUserEducation?.duration?.from,
+          email: student?.[0]?.email,
+          phoneNumber: student?.[0]?.phone_number,
+          isSelfRegistered: 'yes',
+          userCreatedId: student?.[0]?._id,
+          instituteId: new mongoose.Types.ObjectId(instituteId),
+          endYear: updatedUserEducation?.duration?.to,
+          presentYear: currentYear
+        }
+        let abc = await InstitueStudent.create(stu);
+        console.log('is_studied_here', student, abc)
+
+      }
+
+
+
+    }
     // Handle not found
     if (!updatedUserEducation) {
       return res.status(404).json({
@@ -690,6 +708,7 @@ export const GetStudentsByVerification = async (req, res) => {
       userId,
       isDel: false,
     });
+    console.log("Mohan das working ====>", userId, instituteDetails)
 
     if (!instituteDetails) {
       return res
@@ -697,9 +716,10 @@ export const GetStudentsByVerification = async (req, res) => {
         .json({ success: false, message: "Institute not found." });
     }
 
-    // ✅ Step 3: Get institute IDs
+    // ✅ Step 3: Get institute IDs (case-insensitive & trimmed name)
+    const escapedInstituteName = instituteDetails.name.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     const listOfInstitutes = await list_university_colleges.find({
-      name: instituteDetails.name,
+      name: { $regex: new RegExp(`^${escapedInstituteName}$`, "i") },
       is_del: 0,
     });
 
@@ -709,9 +729,15 @@ export const GetStudentsByVerification = async (req, res) => {
         .json({ success: false, message: "No institutes found." });
     }
 
-    const instituteIds = listOfInstitutes.map((inst) =>
-      inst.id.toString()
-    );
+    const instituteIds = [];
+    listOfInstitutes.forEach((inst) => {
+      if (inst.id !== undefined && inst.id !== null) {
+        instituteIds.push(inst.id.toString());
+        instituteIds.push(Number(inst.id));
+      }
+    });
+
+    console.log("Mohan das ==> ", instituteIds)
 
     // ✅ Step 3: Dynamic filter (MAIN LOGIC)
     let verificationFilter = {};
@@ -746,7 +772,9 @@ export const GetStudentsByVerification = async (req, res) => {
     }
 
     // ✅ Step 6: Course mapping
-    const courseIds = [...new Set(studentList.map((s) => s.courseName))];
+    const courseIds = [
+      ...new Set(studentList.map((s) => Number(s.courseName)).filter(Boolean)),
+    ];
 
     const courses = await list_university_course.find({
       id: { $in: courseIds },
@@ -754,7 +782,7 @@ export const GetStudentsByVerification = async (req, res) => {
     });
 
     const courseMap = courses.reduce((acc, course) => {
-      acc[course.id] = course.name;
+      acc[course.id.toString()] = course.name;
       return acc;
     }, {});
 
@@ -891,29 +919,29 @@ export const instituteStudent = async (req, res) => {
   try {
     const user = req?.user
     console.log("user in instituteStudent controller", user);
-     let currentYear=new Date().getFullYear()
-     console.log("currentYear",currentYear)
+    let currentYear = new Date().getFullYear()
+    console.log("currentYear", currentYear)
     // const progress = await GetProgress(user.user_id);
     // 2️⃣ Get Institue Student
     const institueStudent = await InstitueStudent.aggregate([
       {
-       $match: {
-    instituteId: new Types.ObjectId(user?.userId),
-    status: true,
-    is_del: false,
-    $or: [
-      {
-        isSelfRegistered: { $exists: false }
-      },
-      {
-        isSelfRegistered: "no"
-      },
-      {
-        isSelfRegistered: "yes",
-        endYear: { $gte: String(currentYear) }
-      }
-    ]
-  }
+        $match: {
+          instituteId: new Types.ObjectId(user?.userId),
+          status: true,
+          is_del: false,
+          $or: [
+            {
+              isSelfRegistered: { $exists: false }
+            },
+            {
+              isSelfRegistered: "no"
+            },
+            {
+              isSelfRegistered: "yes",
+              endYear: { $gte: String(currentYear) }
+            }
+          ]
+        }
       },
       // ✅ ADD THIS
       {
@@ -1027,342 +1055,7 @@ export const instituteStudent = async (req, res) => {
     // Here I have started my new code for independent candidates from user   --  started
 
     // ✅ Step 2: Verify institute
-  /*   const instituteDetails = await CompanyDetails.findOne({
-      userId: user.userId,
-      isDel: false,
-    });
-
-    if (!instituteDetails) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Institute not found." });
-    }
-
-    let selfRegisteredStudents = [];
-    let formattedSelfRegisteredStudents = [];
-
-    if (instituteDetails) {
-      const listOfInstitutes = await list_university_colleges.find({
-        name: instituteDetails.name,
-        is_del: 0,
-      });
-
-      const instituteIds = listOfInstitutes.map((inst) =>
-        inst.id.toString()
-      );
-
-      const currentYear = new Date().getFullYear();
-
-      selfRegisteredStudents = await usereducation
-        .find({
-          isDel: false,
-          instituteName: { $in: instituteIds },
-          "duration.to": {
-            $exists: true,
-            $gte: currentYear
-          },
-          is_verified:true
-        })
-        .populate("userId", "name email profilePicture gender")
-        .lean();
-
-      console.log("All Students List is here: ", selfRegisteredStudents);
-
-
-      const genderIds = [
-        ...new Set(
-          selfRegisteredStudents
-            .map(s => s.userId?.gender)
-            .filter(Boolean)
-        )
-      ];
-
-      const genders = await list_gender.find({
-        _id: { $in: genderIds }
-      }).lean();
-
-      const genderMap = genders.reduce((acc, gender) => {
-        acc[gender._id.toString()] = gender.name;
-        return acc;
-      }, {});
-
-
-      // ✅ Step 6: Course mapping
-      const courseIds = [...new Set(selfRegisteredStudents.map((s) => s.courseName))];
-       console.log('courseIds 1 ',courseIds)
-      const coursesOld = await list_university_course.find({
-        id: { $in: courseIds },
-        is_del: 0,
-      });
-      
-const mongoCourseIds=coursesOld.map((item)=>item?._id.toString())
-
-
-
-
-
-      const courses = await student_course_details.find({
-        userId:user.userId,
-        course_mongo_id: { $in: mongoCourseIds },
-        is_del: 0,
-      });
-
-      // const courseMap = courses.reduce((acc, course) => {
-      //   acc[course.id] = course.name;
-      //   return acc;
-      // }, {});
-
-      const courseMap = courses.reduce((acc, course) => {
-        acc[course.course_sql_id] = {
-          _id: course._id,
-          type: course.type,
-          name: course.name,
-          course_durartion: course.course_durartion||'',
-          courseStructure: course.courseStructure||'',
-          marksType: course.marksType||'',
-          total_number_of_semesters: course.total_number_of_semesters||'',
-        };
-        return acc;
-      }, {});
-
-      console.log("Here is my Course Map: ", courseMap);
-
-
-      formattedSelfRegisteredStudents = selfRegisteredStudents.map(
-        (student) => ({
-          userId: student.userId?._id || null,
-          employmentId: student._id,
-          name: student.userId?.name,
-          email: student.userId?.email,
-          profilePicture: student.userId?.profilePicture,
-          isSelfRegistered: true,
-          program:courseMap[student.courseName]?._id||null,
-          gender: genderMap[student.userId?.gender]?.toLowerCase()?.charAt(0) || null,
-            "tenTh":student.level==1?student.marks:"",
-            "twelveTh": student.level==2?student.marks:"",
-          programDetails: courseMap[student.courseName] || null,
-        })
-      );
-
-      console.log("formattedSelfRegisteredStudents all value: ", formattedSelfRegisteredStudents);
-
-
-    }
-
-
-    // Here I have started my new code for independent candidates from user   --  ended
-
-    const studentsWithProgress = await Promise.all(
-      institueStudent.map(async (student) => {
-        const progress = student.userCreatedId
-          ? await GetProgress(student.userCreatedId)
-          : 0;
-
-        return {
-          ...student,
-          progress
-        };
-      })
-    );
-
-    const selfRegisteredWithProgress = await Promise.all(
-      formattedSelfRegisteredStudents.map(async (student) => ({
-        ...student,
-        progress: student._id
-          ? await GetProgress(student._id)
-          : 0,
-      }))
-    );
-
-    const finalStudents = [
-      ...studentsWithProgress,
-      ...selfRegisteredWithProgress,
-    ]; */
-
-    //console.log("selfRegisteredWithProgress is result: ", selfRegisteredWithProgress);
-
-
-
-
-
-    // return res.status(200).json({
-    //   success: true,
-    //   count: institueStudent.length,
-    //   data: institueStudent,
-    // });
-
-
-    // return res.status(200).json({
-    //   success: true,
-    //   count: studentsWithProgress.length,
-    //   data: studentsWithProgress,
-    // });
-
-    return res.status(200).json({
-      success: true,
-      count: institueStudent.length,
-      data: institueStudent,
-    });
-
-  } catch (error) {
-    console.error("Error fetching student:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
-
-export const getCompanyRequirementSudents= async (req, res) => {
-   try {
-      const user = req?.user
-      const { program,tenth,twelvth } = req.query;
-      let programs=program.split(",")
-    
-
-      const programIds = programs.map(id => new Types.ObjectId(id));
-
-
-  
-      // const progress = await GetProgress(user.user_id);
-      // 2️⃣ Get Institue Student
-      const institueStudent = await InstitueStudent.aggregate([
-        {
-          $match: {
-            instituteId: new Types.ObjectId(user?.userId),
-             program: { $in: programIds },
-             tenTh: { $gte: Number(tenth) },
-             twelveTh: { $gte: Number(twelvth) },
-             status: true,
-             is_del: false,
-          },
-        },
-        
-        {
-          $lookup: {
-            from: "instituestudentsemesters",
-            let: { insId: "$_id" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [
-                      { $eq: ["$InstitueStudentId", "$$insId"] },   // join condition
-                      { $eq: ["$is_del", false] }       // ✅ child condition
-                    ]
-                  }
-                }
-              }
-            ],
-            as: "semesters",
-          },
-        },
-        {
-          $lookup: {
-            from: "student_course_details",
-            let: { pro: "$program" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [
-                      { $eq: ["$_id", "$$pro"] },   // join condition
-                      { $eq: ["$is_del", 0] }     // ✅ child condition
-                    ]
-                  }
-                }
-              },
-              {
-                $project: {
-                  name: 1,
-                  total_number_of_semesters: 1,
-                  type: 1,
-                  course_durartion: 1,
-                  courseStructure: 1,
-                  marksType: 1
-                }
-              }
-            ],
-            as: "programDetails",
-          },
-        },
-  
-        { $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true } },
-      {
-    $match: {
-      $expr: {
-        $in: [
-          {
-            $subtract: [
-              { $toInt: "$programDetails.total_number_of_semesters" },
-              "$promotedSemester"
-            ]
-          },
-          [1, 2]
-        ]
-      }
-    }
-  },
-  
-        /*   {
-            $addFields: {
-              debugProgramId: "$program",
-              debugMatchedCourseId: "$programDetails._id",
-              debugMarksType: "$programDetails.marksType"
-            }
-          }, */
-  
-        {
-          $addFields: {
-            semesters: {
-              $map: {
-                input: "$semesters",
-                as: "sem",
-                in: {
-                  $mergeObjects: [
-                    "$$sem",
-                    {
-                      marksType: "$programDetails.marksType",
-                      courseStructure: "$programDetails.courseStructure",
-                      originalMarks: "$$sem.marks",   // ✅ keep original
-                      convertedMarks: {
-                        $let: {
-                          vars: {
-                            type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
-                          },
-                          in: {
-                            $cond: [
-                              { $eq: ["$$type", "cgpa"] },
-                              { $multiply: ["$$sem.marks", 10] },
-  
-                              {
-                                $cond: [
-                                  { $eq: ["$$type", "dgpa"] },
-                                  { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
-  
-                                  "$$sem.marks"
-                                ]
-                              }
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-  
-  
-      ]);
-
-  
-      // Here I have started my new code for independent candidates from user   --  started
-  
-      // ✅ Step 2: Verify institute
-     /*  const instituteDetails = await CompanyDetails.findOne({
+    /*   const instituteDetails = await CompanyDetails.findOne({
         userId: user.userId,
         isDel: false,
       });
@@ -1430,14 +1123,17 @@ export const getCompanyRequirementSudents= async (req, res) => {
           is_del: 0,
         });
         
-      const mongoCourseIds=coursesOld.map((item)=>item?._id.toString())
+  const mongoCourseIds=coursesOld.map((item)=>item?._id.toString())
+  
+  
+  
+  
+  
         const courses = await student_course_details.find({
           userId:user.userId,
           course_mongo_id: { $in: mongoCourseIds },
           is_del: 0,
         });
-
-      
   
         // const courseMap = courses.reduce((acc, course) => {
         //   acc[course.id] = course.name;
@@ -1462,16 +1158,16 @@ export const getCompanyRequirementSudents= async (req, res) => {
   
         formattedSelfRegisteredStudents = selfRegisteredStudents.map(
           (student) => ({
-            _id: student.userId?._id || null,
+            userId: student.userId?._id || null,
             employmentId: student._id,
             name: student.userId?.name,
             email: student.userId?.email,
-            "tenTh":student.level==1?student.marks:"",
-            "twelveTh": student.level==2?student.marks:"",
             profilePicture: student.userId?.profilePicture,
             isSelfRegistered: true,
             program:courseMap[student.courseName]?._id||null,
             gender: genderMap[student.userId?.gender]?.toLowerCase()?.charAt(0) || null,
+              "tenTh":student.level==1?student.marks:"",
+              "twelveTh": student.level==2?student.marks:"",
             programDetails: courseMap[student.courseName] || null,
           })
         );
@@ -1480,110 +1176,442 @@ export const getCompanyRequirementSudents= async (req, res) => {
   
   
       }
-   */
+  
   
       // Here I have started my new code for independent candidates from user   --  ended
   
- /*       const studentsWithProgress = await Promise.all(
-      institueStudent.map(async (student) => {
-        const progress = student.userCreatedId
-          ? await GetProgress(student.userCreatedId)
-          : 0;
-
-        return {
+      const studentsWithProgress = await Promise.all(
+        institueStudent.map(async (student) => {
+          const progress = student.userCreatedId
+            ? await GetProgress(student.userCreatedId)
+            : 0;
+  
+          return {
+            ...student,
+            progress
+          };
+        })
+      );
+  
+      const selfRegisteredWithProgress = await Promise.all(
+        formattedSelfRegisteredStudents.map(async (student) => ({
           ...student,
-          progress
-        };
-      })
-    ); */
-
-/*     const selfRegisteredWithProgress = await Promise.all(
-      formattedSelfRegisteredStudents.map(async (student) => ({
-        ...student,
-        progress: student._id
-          ? await GetProgress(student._id)
-          : 0,
-      }))
-    ); */
-
- /*    const finalStudents = [
-      ...institueStudent,
-      ...formattedSelfRegisteredStudents,
-    ]; */
+          progress: student._id
+            ? await GetProgress(student._id)
+            : 0,
+        }))
+      );
   
-      return res.status(200).json({
-        success: true,
-        count: institueStudent.length,
-        data: institueStudent,
-      });
-  
-    } catch (error) {
-      console.error("Error fetching student:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Internal server error",
-      });
-    }
+      const finalStudents = [
+        ...studentsWithProgress,
+        ...selfRegisteredWithProgress,
+      ]; */
+
+    //console.log("selfRegisteredWithProgress is result: ", selfRegisteredWithProgress);
+
+
+
+
+
+    // return res.status(200).json({
+    //   success: true,
+    //   count: institueStudent.length,
+    //   data: institueStudent,
+    // });
+
+
+    // return res.status(200).json({
+    //   success: true,
+    //   count: studentsWithProgress.length,
+    //   data: studentsWithProgress,
+    // });
+
+    return res.status(200).json({
+      success: true,
+      count: institueStudent.length,
+      data: institueStudent,
+    });
+
+  } catch (error) {
+    console.error("Error fetching student:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getCompanyRequirementSudents = async (req, res) => {
+  try {
+    const user = req?.user
+    const { program, tenth, twelvth } = req.query;
+    let programs = program.split(",")
+
+
+    const programIds = programs.map(id => new Types.ObjectId(id));
+
+
+
+    // const progress = await GetProgress(user.user_id);
+    // 2️⃣ Get Institue Student
+    const institueStudent = await InstitueStudent.aggregate([
+      {
+        $match: {
+          instituteId: new Types.ObjectId(user?.userId),
+          program: { $in: programIds },
+          tenTh: { $gte: Number(tenth) },
+          twelveTh: { $gte: Number(twelvth) },
+          status: true,
+          is_del: false,
+        },
+      },
+
+      {
+        $lookup: {
+          from: "instituestudentsemesters",
+          let: { insId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$InstitueStudentId", "$$insId"] },   // join condition
+                    { $eq: ["$is_del", false] }       // ✅ child condition
+                  ]
+                }
+              }
+            }
+          ],
+          as: "semesters",
+        },
+      },
+      {
+        $lookup: {
+          from: "student_course_details",
+          let: { pro: "$program" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$_id", "$$pro"] },   // join condition
+                    { $eq: ["$is_del", 0] }     // ✅ child condition
+                  ]
+                }
+              }
+            },
+            {
+              $project: {
+                name: 1,
+                total_number_of_semesters: 1,
+                type: 1,
+                course_durartion: 1,
+                courseStructure: 1,
+                marksType: 1
+              }
+            }
+          ],
+          as: "programDetails",
+        },
+      },
+
+      { $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          $expr: {
+            $in: [
+              {
+                $subtract: [
+                  { $toInt: "$programDetails.total_number_of_semesters" },
+                  "$promotedSemester"
+                ]
+              },
+              [1, 2]
+            ]
+          }
+        }
+      },
+
+      /*   {
+          $addFields: {
+            debugProgramId: "$program",
+            debugMatchedCourseId: "$programDetails._id",
+            debugMarksType: "$programDetails.marksType"
+          }
+        }, */
+
+      {
+        $addFields: {
+          semesters: {
+            $map: {
+              input: "$semesters",
+              as: "sem",
+              in: {
+                $mergeObjects: [
+                  "$$sem",
+                  {
+                    marksType: "$programDetails.marksType",
+                    courseStructure: "$programDetails.courseStructure",
+                    originalMarks: "$$sem.marks",   // ✅ keep original
+                    convertedMarks: {
+                      $let: {
+                        vars: {
+                          type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
+                        },
+                        in: {
+                          $cond: [
+                            { $eq: ["$$type", "cgpa"] },
+                            { $multiply: ["$$sem.marks", 10] },
+
+                            {
+                              $cond: [
+                                { $eq: ["$$type", "dgpa"] },
+                                { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
+
+                                "$$sem.marks"
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+
+
+    ]);
+
+
+    // Here I have started my new code for independent candidates from user   --  started
+
+    // ✅ Step 2: Verify institute
+    /*  const instituteDetails = await CompanyDetails.findOne({
+       userId: user.userId,
+       isDel: false,
+     });
+ 
+     if (!instituteDetails) {
+       return res
+         .status(404)
+         .json({ success: false, message: "Institute not found." });
+     }
+ 
+     let selfRegisteredStudents = [];
+     let formattedSelfRegisteredStudents = [];
+ 
+     if (instituteDetails) {
+       const listOfInstitutes = await list_university_colleges.find({
+         name: instituteDetails.name,
+         is_del: 0,
+       });
+ 
+       const instituteIds = listOfInstitutes.map((inst) =>
+         inst.id.toString()
+       );
+ 
+       const currentYear = new Date().getFullYear();
+ 
+       selfRegisteredStudents = await usereducation
+         .find({
+           isDel: false,
+           instituteName: { $in: instituteIds },
+           "duration.to": {
+             $exists: true,
+             $gte: currentYear
+           },
+           is_verified:true
+         })
+         .populate("userId", "name email profilePicture gender")
+         .lean();
+ 
+       console.log("All Students List is here: ", selfRegisteredStudents);
+ 
+ 
+       const genderIds = [
+         ...new Set(
+           selfRegisteredStudents
+             .map(s => s.userId?.gender)
+             .filter(Boolean)
+         )
+       ];
+ 
+       const genders = await list_gender.find({
+         _id: { $in: genderIds }
+       }).lean();
+ 
+       const genderMap = genders.reduce((acc, gender) => {
+         acc[gender._id.toString()] = gender.name;
+         return acc;
+       }, {});
+ 
+ 
+       // ✅ Step 6: Course mapping
+       const courseIds = [...new Set(selfRegisteredStudents.map((s) => s.courseName))];
+        console.log('courseIds 1 ',courseIds)
+       const coursesOld = await list_university_course.find({
+         id: { $in: courseIds },
+         is_del: 0,
+       });
+       
+     const mongoCourseIds=coursesOld.map((item)=>item?._id.toString())
+       const courses = await student_course_details.find({
+         userId:user.userId,
+         course_mongo_id: { $in: mongoCourseIds },
+         is_del: 0,
+       });
+
+     
+ 
+       // const courseMap = courses.reduce((acc, course) => {
+       //   acc[course.id] = course.name;
+       //   return acc;
+       // }, {});
+ 
+       const courseMap = courses.reduce((acc, course) => {
+         acc[course.course_sql_id] = {
+           _id: course._id,
+           type: course.type,
+           name: course.name,
+           course_durartion: course.course_durartion||'',
+           courseStructure: course.courseStructure||'',
+           marksType: course.marksType||'',
+           total_number_of_semesters: course.total_number_of_semesters||'',
+         };
+         return acc;
+       }, {});
+ 
+       console.log("Here is my Course Map: ", courseMap);
+ 
+ 
+       formattedSelfRegisteredStudents = selfRegisteredStudents.map(
+         (student) => ({
+           _id: student.userId?._id || null,
+           employmentId: student._id,
+           name: student.userId?.name,
+           email: student.userId?.email,
+           "tenTh":student.level==1?student.marks:"",
+           "twelveTh": student.level==2?student.marks:"",
+           profilePicture: student.userId?.profilePicture,
+           isSelfRegistered: true,
+           program:courseMap[student.courseName]?._id||null,
+           gender: genderMap[student.userId?.gender]?.toLowerCase()?.charAt(0) || null,
+           programDetails: courseMap[student.courseName] || null,
+         })
+       );
+ 
+       console.log("formattedSelfRegisteredStudents all value: ", formattedSelfRegisteredStudents);
+ 
+ 
+     }
+  */
+
+    // Here I have started my new code for independent candidates from user   --  ended
+
+    /*       const studentsWithProgress = await Promise.all(
+         institueStudent.map(async (student) => {
+           const progress = student.userCreatedId
+             ? await GetProgress(student.userCreatedId)
+             : 0;
+   
+           return {
+             ...student,
+             progress
+           };
+         })
+       ); */
+
+    /*     const selfRegisteredWithProgress = await Promise.all(
+          formattedSelfRegisteredStudents.map(async (student) => ({
+            ...student,
+            progress: student._id
+              ? await GetProgress(student._id)
+              : 0,
+          }))
+        ); */
+
+    /*    const finalStudents = [
+         ...institueStudent,
+         ...formattedSelfRegisteredStudents,
+       ]; */
+
+    return res.status(200).json({
+      success: true,
+      count: institueStudent.length,
+      data: institueStudent,
+    });
+
+  } catch (error) {
+    console.error("Error fetching student:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
 };
 
 
-export const StudentInterview= async (req, res) => {
-   try {
-      const user = req?.user
-      const { students, recruiter } = req.body;
-      console.log('students',students)
-      if(students?.length===0){
-        return res.status(500).json({
+export const StudentInterview = async (req, res) => {
+  try {
+    const user = req?.user
+    const { students, recruiter } = req.body;
+    console.log('students', students)
+    if (students?.length === 0) {
+      return res.status(500).json({
         success: false,
         message: "Please select a student",
       });
-      }
-      console.log('Interview Details:',students, recruiter)
-      let allStudent=students?.map((item)=>(
-        {
-          companyRequirementId:recruiter?._id,
-          instituteId:user?.userId,
-          sudentId:item?.userCreatedId,
-          studentName:item?.name,
-          studentEmail:item?.email,
-          tenTh:item?.tenTh,
-          twelveTh:item?.twelveTh,
-          course:item?.programDetails?.name,
-          studentPhone:item?.phoneNumber,
-          recruiterId:recruiter?.companyName?._id,
-          recruiterName:recruiter?.companyName?.companyName,
-          recruiterEmail:recruiter?.companyName?.email,
-          role:recruiter?.role,
-          date:recruiter?.date,
-          time:recruiter?.time,
-          institueStudentId:item?._id,
-        }
-      ))
-      const result = await StudentPlacement.insertMany(allStudent);
-
-      if(allStudent?.length>0){
-            allStudent?.map(async(item)=>{
-             return await sendMailSudent(item);
-            })
-            let rec=allStudent[0]
-                rec["total"]=allStudent?.length||0
-            await sendMailRecruiter(rec,allStudent);
-      }
-
-
-
-      return res.status(200).json({
-        success: true,
-        count:result?.length,
-        data: allStudent,
-      });
-  
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: "Internal server error",
-      });
     }
+    console.log('Interview Details:', students, recruiter)
+    let allStudent = students?.map((item) => (
+      {
+        companyRequirementId: recruiter?._id,
+        instituteId: user?.userId,
+        sudentId: item?.userCreatedId,
+        studentName: item?.name,
+        studentEmail: item?.email,
+        tenTh: item?.tenTh,
+        twelveTh: item?.twelveTh,
+        course: item?.programDetails?.name,
+        studentPhone: item?.phoneNumber,
+        recruiterId: recruiter?.companyName?._id,
+        recruiterName: recruiter?.companyName?.companyName,
+        recruiterEmail: recruiter?.companyName?.email,
+        role: recruiter?.role,
+        date: recruiter?.date,
+        time: recruiter?.time,
+        institueStudentId: item?._id,
+      }
+    ))
+    const result = await StudentPlacement.insertMany(allStudent);
+
+    if (allStudent?.length > 0) {
+      allStudent?.map(async (item) => {
+        return await sendMailSudent(item);
+      })
+      let rec = allStudent[0]
+      rec["total"] = allStudent?.length || 0
+      await sendMailRecruiter(rec, allStudent);
+    }
+
+
+
+    return res.status(200).json({
+      success: true,
+      count: result?.length,
+      data: allStudent,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
 };
 
 
@@ -2576,7 +2604,7 @@ export const getTotalRecruit = async (req, res) => {
     // Count students for this institute
     const totalStudents = await CompanyByInstitute.countDocuments({
       userId: instituteId,
-      status:"Active"
+      status: "Active"
     });
 
     return res.status(200).json({

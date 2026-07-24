@@ -1057,8 +1057,9 @@ async function getOrInsertId(
     return null;
   }
 
+  const escapedValue = trimmedValue.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
   const filter = {
-    [fieldName]: trimmedValue,
+    [fieldName]: { $regex: new RegExp(`^${escapedValue}$`, "i") },
     is_del: 0,
   };
 
@@ -1293,8 +1294,10 @@ export const submitUserEducation = async (req, res) => {
 
     // New code added here
 
+    const escapedInstituteName = data.institute_name.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     const company = await CompanyDetails.findOne({
-      name: data.institute_name.trim(),
+      name: { $regex: new RegExp(`^${escapedInstituteName}$`, "i") },
+      isDel: false,
     });
 
     console.log("Company Details:", company);
