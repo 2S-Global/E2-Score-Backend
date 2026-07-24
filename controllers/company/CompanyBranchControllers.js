@@ -917,13 +917,13 @@ export const getVerifiedUser = async (req, res) => {
   try {
     const company_id = req.companyId;
     const { user_type } = req.query;
-
+    console.log("company_id", req.user);
     // ✅ Base filter
     const filter = {
       companyName: company_id,
       isDel: false,
     };
-    console.log("USER TYPWE ====>", user_type)
+    console.log("USER TYPWE ====>", user_type);
     // ✅ Apply logic based on query
     if (user_type === "requested") {
       filter.workedInCompany = { $exists: false };

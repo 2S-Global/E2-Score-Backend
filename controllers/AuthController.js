@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import Employment from "../models/Employment.js";
 import mongoose from "mongoose";
 import nodemailer from "nodemailer";
+import slugify from "slugify";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import dotenv from "dotenv";
 import CompanyDetails from "../models/company_Models/companydetails.js";
@@ -68,7 +69,7 @@ export const registerUser = async (req, res) => {
 
     // Check if same name, father_name and dob already exist
 
-    //mohan : wrong cause fathername isnt in the same table 
+    //mohan : wrong cause fathername isnt in the same table
     const duplicateUser = await User.findOne({
       name: name.trim(),
       father_name: father_name.trim(),
@@ -107,7 +108,7 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
       role,
       phone_number: dbPhoneNumber,
-      profilePicture: null
+      profilePicture: null,
     });
     await newUser.save();
     await CandidateDetails.create({
@@ -238,8 +239,6 @@ export const registerInstituteft = async (req, res) => {
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
     });
-
-
 
     // Email Verification mail starts from here
 
@@ -383,12 +382,32 @@ export const registerCompany = async (req, res) => {
       await companyData.save();
     }
 
+    const slugName = slugify(name, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+    const companyName = await companylist.findOne({
+      slug: slugName,
+    });
+    if (!companyName) {
+      const companyData = new companylist({
+        companyname: name,
+        companyemail: email,
+        companyphone: phone_number,
+        slug: slugName,
+      });
+      await companyData.save();
+    }
+
     // Hash the password before saving
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-
+    const companyNameDetails = await companylist.findOne({
+      slug: slugName,
+    });
     // Create a new user with hashed password
-    const newUser = new User({
+    let newData = {
       name,
       email,
       phone_number,
@@ -397,7 +416,12 @@ export const registerCompany = async (req, res) => {
 
       /* cin_number: cin,
       company_id: cin_id, */
-    });
+    };
+    if (companyNameDetails) {
+      newData = { ...newData, company_id: companyNameDetails?._id };
+    }
+    const newUser = new User(newData);
+
     await newUser.save();
 
     const companydetails = new CompanyDetails({
@@ -555,12 +579,15 @@ export const registerCompany = async (req, res) => {
          alt="profile" 
          style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
     <div>
-      <h3 style="margin:0; font-size:16px; color:#0073b1;">${emp.name || "N/A"
-            }</h3>
-      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${emp.jobTitle || "Unknown"
-            }</p>
-      <p style="margin:2px 0; font-size:13px; color:#555;">${emp.email || ""
-            }</p>
+      <h3 style="margin:0; font-size:16px; color:#0073b1;">${
+        emp.name || "N/A"
+      }</h3>
+      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${
+        emp.jobTitle || "Unknown"
+      }</p>
+      <p style="margin:2px 0; font-size:13px; color:#555;">${
+        emp.email || ""
+      }</p>
     </div>
   </div>
 `,
@@ -1161,8 +1188,7 @@ export const getMyProfile = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const user = await User.findById(userId).select("-password").lean()
-
+    const user = await User.findById(userId).select("-password").lean();
 
     if (!user) {
       return res.status(404).json({
@@ -1170,8 +1196,6 @@ export const getMyProfile = async (req, res) => {
         message: "User not found",
       });
     }
-
-
 
     //get profile picture from employer and institute cause except user no-one has profile picture in the user
     if (user.role === 2 || user.role === 3) {
@@ -1182,8 +1206,7 @@ export const getMyProfile = async (req, res) => {
       user.profilePicture = companyDetails?.logo || null;
     }
 
-
-    console.log("Final user=======>", user)
+    console.log("Final user=======>", user);
 
     res.status(200).json({
       success: true,
