@@ -88,7 +88,7 @@ import homeRouter from "./routes/allHomePageRoutes.js";
 import contactRoutes from "./routes/admin/contactinfoRoutes.js";
 
 import campusRoutes from "./routes/institute/instituteCampusRoute.js";
-import DemoRouter from "./routes/Demo/DemoRoute.js";
+// import DemoRouter from "./routes/Demo/DemoRoute.js";
 import visibilityRouter from "./routes/candidate/visibility/visibilityRouter.js";
 
 // Temporary route configuration
@@ -103,7 +103,8 @@ app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
 });
 
-app.use("/api/demo" ,DemoRouter )
+// app.use("/api/demo", DemoRouter)
+
 
 
 
