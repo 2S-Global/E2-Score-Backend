@@ -9,6 +9,21 @@ const personalSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    visibility: {
+      openToWork: {
+        type: Boolean,
+        default: true,
+      },
+      showProfileInSearch: {
+        type: Boolean,
+        default: true
+      },
+      hideFromCureentEmployers: {
+        type: Boolean,
+        default: false
+      }
+
+    },
 
     gender: {
       type: String,

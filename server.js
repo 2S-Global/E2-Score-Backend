@@ -89,6 +89,7 @@ import contactRoutes from "./routes/admin/contactinfoRoutes.js";
 
 import campusRoutes from "./routes/institute/instituteCampusRoute.js";
 import DemoRouter from "./routes/Demo/DemoRoute.js";
+import visibilityRouter from "./routes/candidate/visibility/visibilityRouter.js";
 
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
@@ -130,6 +131,10 @@ app.use("/api/userdata", userdataRouter);
 app.use("/api/candidate/personal", userPersonalRouter);
 app.use("/api/candidate/accomplishments", userAccomplishmentRouter);
 app.use("/api/candidate/itskill", itskillRouter);
+app.use("/api/candidate/visibility", visibilityRouter);
+
+
+
 app.use("/api/candidate/project", projectDetailsRouter);
 app.use("/api/candidate/resumefile", resumeFileRouter);
 app.use("/api/candidate/employment", employmentRouter);
