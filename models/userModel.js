@@ -108,7 +108,7 @@ const userSchema = new mongoose.Schema(
 
 
 userSchema.pre("save", function () {
-  if (!this.name) return
+  if (!this.isModified("name")) return
 
   this.name = this.name
     .trim()

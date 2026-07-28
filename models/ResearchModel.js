@@ -22,7 +22,7 @@ const ResearchSchema = new mongoose.Schema(
         type: Number,
       },
     },
- 
+
     description: {
       type: String,
     },
@@ -36,6 +36,20 @@ const ResearchSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+
+
+ResearchSchema.pre('save', function () {
+  if (!this.isModified("title")) return;
+  this.title = this.title
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+
+})
 
 const UserResearch = mongoose.model("UserResearch", ResearchSchema);
 
