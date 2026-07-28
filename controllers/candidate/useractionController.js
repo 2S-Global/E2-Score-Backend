@@ -505,6 +505,17 @@ export const updateUserDetails = async (req, res) => {
 
     /*  } */
 
+
+    //tittle case for name
+    if (newUserData.name) {
+      newUserData.name = newUserData.name
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+    }
+
     // Update user
     await User.findByIdAndUpdate(user_id, {
       ...newUserData,
