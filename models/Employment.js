@@ -9,7 +9,7 @@ const employmentSchema = new mongoose.Schema(
     },
     currentEmployment: {
       type: Boolean,
-      default:false
+      default: false
     },
 
     employmentType: {
@@ -108,6 +108,29 @@ const employmentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+
+employmentSchema.pre('save', function () {
+  if (!this.isModified("jobTitle")) return;
+
+  this.jobTitle = this.jobTitle.trim().toLowerCase()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+})
+
+employmentSchema.pre("findOneAndUpdate", function () {
+  const update = this.getUpdate();
+
+  if (update?.$set?.jobTitle) {
+    update.$set.jobTitle = update.$set.jobTitle
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+});
 
 const Employment = mongoose.model("Employment", employmentSchema);
 export default Employment;
