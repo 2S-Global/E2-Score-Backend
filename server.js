@@ -16,7 +16,7 @@ db();
 const app = express();
 // Middleware
 app.use(
-  cors({ origin: ["https://geisil.com", "https://services.geisil.com", "http://localhost:3000", "http://127.0.0.1:3000",], credentials: true, }),
+  cors({ origin: ["https://geisil.com", 'http://localhost:4173', "https://services.geisil.com", "http://localhost:3000", "http://127.0.0.1:3000",], credentials: true, }),
 );
 
 app.use(cookieParser());
