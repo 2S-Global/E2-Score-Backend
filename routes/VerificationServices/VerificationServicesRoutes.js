@@ -10,9 +10,9 @@ const VerificationServicesRouter = Router()
 
 
 
-VerificationServicesRouter.post("/", VerificationServices)
-VerificationServicesRouter.patch("/update-service/:_id", UpdateVerificationServices)
-VerificationServicesRouter.delete("/delete-service/:_id",DeleteVerificationServices )
+VerificationServicesRouter.post("/", userAuth, Adminmid, VerificationServices)
+VerificationServicesRouter.patch("/update-service/:_id", userAuth, Adminmid, UpdateVerificationServices)
+VerificationServicesRouter.delete("/delete-service/:_id", userAuth, Adminmid, DeleteVerificationServices)
 VerificationServicesRouter.get("/get-all-services", getAllVerificationServices)
 
 
