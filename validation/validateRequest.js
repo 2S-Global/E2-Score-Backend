@@ -4,10 +4,10 @@ const validateRequest = (schema) => {
     return (req, res, next) => {
         try {
             const result = schema.parse(req.body);
-            console.log("thats the result")
+            // console.log("thats the result")
             // Replace body with validated/transformed data
             req.body = result;
-
+            
             next();
         } catch (error) {
             if (error instanceof ZodError) {

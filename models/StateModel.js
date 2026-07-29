@@ -4,7 +4,6 @@ const stateSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-
     },
     isDel: {
       type: Boolean,

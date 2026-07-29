@@ -90,6 +90,8 @@ import contactRoutes from "./routes/admin/contactinfoRoutes.js";
 import campusRoutes from "./routes/institute/instituteCampusRoute.js";
 // import DemoRouter from "./routes/Demo/DemoRoute.js";
 import visibilityRouter from "./routes/candidate/visibility/visibilityRouter.js";
+import VerificationServicesRouter from "./routes/VerificationServices/VerificationServicesRoutes.js";
+import WhyGeisilRouter from "./routes/VerificationServices/WhyGeiSilRoutes.js";
 
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
@@ -175,6 +177,12 @@ app.use("/api/candidatebookmark", candidateBookmarkRouter);
 app.use("/api/instituteprofile", InstituteProfileRouter);
 app.use("/api/institutestudent", InstituteStudentRouter);
 app.use("/api/institute-course", InstituteCourseRoute);
+
+
+
+
+app.use('/api/verification-services' , VerificationServicesRouter)
+app.use('/api/why-geisil' ,WhyGeisilRouter)
 
 // API for Home Pages
 app.use("/api/home", homeRouter);
