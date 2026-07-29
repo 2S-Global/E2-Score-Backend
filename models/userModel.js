@@ -107,6 +107,33 @@ const userSchema = new mongoose.Schema(
 );
 
 
+userSchema.pre("save", function () {
+  if (!this.isModified("name")) return
+
+  this.name = this.name
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+
+});
+
+// CompanyListSchema.pre("save", function () {
+//   if (!this.isModified("companyname")) {
+//     return;
+//   }
+
+//   this.slug = slugify(this.companyname.trim(), {
+//     lower: true,
+//     strict: true,
+//     trim: true,
+//   });
+// });
+
+
+
 
 
 const User = mongoose.model("User", userSchema);

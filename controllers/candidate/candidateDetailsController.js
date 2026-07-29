@@ -1144,6 +1144,7 @@ export const getAllCandidates = async (req, res) => {
           from: "list_job_roles",
           localField: "jobRoleObjId",
           foreignField: "_id",
+
           as: "jobRoleData"
         }
       },
@@ -1245,6 +1246,14 @@ export const getAllCandidates = async (req, res) => {
         $unwind: {
           path: "$bookmark",
           preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $match: {
+          $or: [
+            { "personalDetails.visibility.showProfileInSearch": true },
+            { "personalDetails.visibility.showProfileInSearch": { $exists: false } }
+          ]
         }
       },
       {

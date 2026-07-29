@@ -11,6 +11,7 @@ import dotenv from "dotenv";
 import CompanyDetails from "../models/company_Models/companydetails.js";
 import UserVerification from "../models/userVerificationModel.js";
 import CandidateDetails from "../models/CandidateDetailsModel.js";
+import personalDetails from "../models/personalDetails.js";
 dotenv.config();
 
 /**
@@ -115,6 +116,13 @@ export const registerUser = async (req, res) => {
       userId: newUser._id,
       fatherName: father_name,
       dob,
+    });
+    await personalDetails.create({
+      user: newUser._id,
+      visibility: {
+        openToWork: true,
+        showProfileInSearch: true,
+      },
     });
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
@@ -579,15 +587,12 @@ export const registerCompany = async (req, res) => {
          alt="profile" 
          style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
     <div>
-      <h3 style="margin:0; font-size:16px; color:#0073b1;">${
-        emp.name || "N/A"
-      }</h3>
-      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${
-        emp.jobTitle || "Unknown"
-      }</p>
-      <p style="margin:2px 0; font-size:13px; color:#555;">${
-        emp.email || ""
-      }</p>
+      <h3 style="margin:0; font-size:16px; color:#0073b1;">${emp.name || "N/A"
+            }</h3>
+      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${emp.jobTitle || "Unknown"
+            }</p>
+      <p style="margin:2px 0; font-size:13px; color:#555;">${emp.email || ""
+            }</p>
     </div>
   </div>
 `,

@@ -16,7 +16,7 @@ db();
 const app = express();
 // Middleware
 app.use(
-  cors({ origin: ["https://geisil.com", "https://services.geisil.com", "http://localhost:3000", "http://127.0.0.1:3000",], credentials: true, }),
+  cors({ origin: ["https://geisil.com", 'http://localhost:4173', "https://services.geisil.com", "http://localhost:3000", "http://127.0.0.1:3000",], credentials: true, }),
 );
 
 app.use(cookieParser());
@@ -88,7 +88,8 @@ import homeRouter from "./routes/allHomePageRoutes.js";
 import contactRoutes from "./routes/admin/contactinfoRoutes.js";
 
 import campusRoutes from "./routes/institute/instituteCampusRoute.js";
-import DemoRouter from "./routes/Demo/DemoRoute.js";
+// import DemoRouter from "./routes/Demo/DemoRoute.js";
+import visibilityRouter from "./routes/candidate/visibility/visibilityRouter.js";
 
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
@@ -102,7 +103,8 @@ app.get("/", (req, res) => {
   res.send("Welcome to the back end of the E2 Score ");
 });
 
-app.use("/api/demo" ,DemoRouter )
+// app.use("/api/demo", DemoRouter)
+
 
 
 
@@ -130,6 +132,10 @@ app.use("/api/userdata", userdataRouter);
 app.use("/api/candidate/personal", userPersonalRouter);
 app.use("/api/candidate/accomplishments", userAccomplishmentRouter);
 app.use("/api/candidate/itskill", itskillRouter);
+app.use("/api/candidate/visibility", visibilityRouter);
+
+
+
 app.use("/api/candidate/project", projectDetailsRouter);
 app.use("/api/candidate/resumefile", resumeFileRouter);
 app.use("/api/candidate/employment", employmentRouter);
