@@ -38,7 +38,8 @@ import {
   addCompanyBranch,
   listCompanyBranch,
   editCompanyBranch,
-  deleteCompanyBranch
+  deleteCompanyBranch,
+  getVerifiedUserPendingCount,
 } from "../../controllers/company/CompanyBranchControllers.js";
 
 // Middleware
@@ -68,7 +69,7 @@ CompanyProfileRouter.post(
   ]),
   userAuth,
   Companymid,
-  AddorUpdateCompany
+  AddorUpdateCompany,
 );
 
 // Get Company Details
@@ -76,7 +77,7 @@ CompanyProfileRouter.get(
   "/get_company_details",
   userAuth,
   Companymid,
-  GetCompanyDetails
+  GetCompanyDetails,
 );
 
 // Delete Cover Photo
@@ -84,7 +85,7 @@ CompanyProfileRouter.delete(
   "/delete_cover_photo",
   userAuth,
   Companymid,
-  Deletecoverphoto
+  Deletecoverphoto,
 );
 
 // ================= ACCOUNT ROUTES =================
@@ -94,7 +95,7 @@ CompanyProfileRouter.get(
   "/get_account_details",
   userAuth,
   Companymid,
-  GetAccountDetails
+  GetAccountDetails,
 );
 
 // Update Account Details
@@ -103,7 +104,7 @@ CompanyProfileRouter.put(
   upload.none(),
   userAuth,
   Companymid,
-  updateAccountDetails
+  updateAccountDetails,
 );
 
 // ================= CONTACT PERSON ROUTES =================
@@ -114,7 +115,7 @@ CompanyProfileRouter.post(
   upload.none(),
   userAuth,
   Companymid,
-  AddorUpdateContactPerson
+  AddorUpdateContactPerson,
 );
 
 // Get Contact Person
@@ -122,7 +123,7 @@ CompanyProfileRouter.get(
   "/get_contact_person",
   userAuth,
   Companymid,
-  GetContactPerson
+  GetContactPerson,
 );
 
 // ================= SOCIAL ROUTES =================
@@ -133,7 +134,7 @@ CompanyProfileRouter.post(
   upload.none(),
   userAuth,
   Companymid,
-  addOrUpdateSocial
+  addOrUpdateSocial,
 );
 
 // Get Social
@@ -156,7 +157,7 @@ CompanyProfileRouter.post(
   upload.none(),
   userAuth,
   Companymid,
-  addBranch
+  addBranch,
 );
 
 //EDIT BRANCH
@@ -165,7 +166,7 @@ CompanyProfileRouter.post(
   upload.none(),
   userAuth,
   Companymid,
-  editBranch
+  editBranch,
 );
 
 //DELETE BRANCH
@@ -174,7 +175,7 @@ CompanyProfileRouter.delete(
   upload.none(),
   userAuth,
   Companymid,
-  deleteBranch
+  deleteBranch,
 );
 
 //GET BRANCHES
@@ -185,7 +186,7 @@ CompanyProfileRouter.get(
   "/get_user_associated_with_company",
   userAuth,
   Companymid,
-  getUserAssociatedWithCompany
+  getUserAssociatedWithCompany,
 );
 
 // Get Employee Details who are associated with company
@@ -193,7 +194,7 @@ CompanyProfileRouter.get(
   "/get_employee_details",
   userAuth,
   Companymid,
-  getMultipleEmployeeDetails
+  getMultipleEmployeeDetails,
 );
 
 // Add Employee Verification Details By Company
@@ -202,7 +203,7 @@ CompanyProfileRouter.post(
   upload.none(),
   userAuth,
   Companymid,
-  addEmployeeVerificationDetails
+  addEmployeeVerificationDetails,
 );
 
 // Get User Profile who is verified with company
@@ -210,27 +211,30 @@ CompanyProfileRouter.get(
   "/get_verified_user",
   userAuth,
   Companymid,
-  getVerifiedUser
+  getVerifiedUser,
 );
 
 CompanyProfileRouter.get(
-  "/get-company-logo-by-job",
-  getCompanyLogoByJobId
+  "/get_verified_user_pending_count",
+  userAuth,
+  Companymid,
+  getVerifiedUserPendingCount,
 );
+CompanyProfileRouter.get("/get-company-logo-by-job", getCompanyLogoByJobId);
 
 CompanyProfileRouter.post(
   "/add_company_branch",
   upload.none(),
   userAuth,
   Companymid,
-  addCompanyBranch
+  addCompanyBranch,
 );
 
 CompanyProfileRouter.get(
   "/get_company_branch_details",
   userAuth,
   Companymid,
-  listCompanyBranch
+  listCompanyBranch,
 );
 
 CompanyProfileRouter.put(
@@ -238,7 +242,7 @@ CompanyProfileRouter.put(
   upload.none(),
   userAuth,
   Companymid,
-  editCompanyBranch
+  editCompanyBranch,
 );
 
 CompanyProfileRouter.delete(
@@ -246,7 +250,7 @@ CompanyProfileRouter.delete(
   upload.none(),
   userAuth,
   Companymid,
-  deleteCompanyBranch
+  deleteCompanyBranch,
 );
 
 export default CompanyProfileRouter;

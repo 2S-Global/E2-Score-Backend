@@ -1066,6 +1066,39 @@ export const getVerifiedUser = async (req, res) => {
   }
 };
 
+export const getVerifiedUserPendingCount = async (req, res) => {
+  try {
+    const company_id = req.companyId;
+    console.log("company_id", req.user);
+    // ✅ Base filter
+    const filter = {
+      companyName: company_id,
+      isDel: false,
+    };
+
+    // ✅ Apply logic based on query
+
+    filter.workedInCompany = { $exists: false };
+
+    if (!company_id) {
+      return res.status(400).json({
+        success: false,
+        message: "company_id is required in query parameter",
+      });
+    }
+    // 1. Fetch employments
+    const employments = await Employment.find(filter).sort({ _id: -1 }).lean();
+
+    res.status(200).json({
+      success: true,
+      data: employments?.length || 0,
+      message: "fetched successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // Company Branch Details API
 export const addCompanyBranch = async (req, res) => {
   try {
