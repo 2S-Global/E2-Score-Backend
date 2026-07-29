@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { titleCasePlugin } from "../plugins/titleCasePlugin.js";
+// import { slugPlugin } from "../plugins/slugPlugin.js";
 
 
 export const WhyGeisil = new mongoose.Schema({
@@ -22,20 +24,28 @@ export const WhyGeisil = new mongoose.Schema({
     }
 })
 
-WhyGeisil.pre('save', function () {
 
-    if (!this.isModified('title')) return
 
-    this.title = this.title
-        .trim()
-        .toLowerCase()
-        .split(/\s+/)
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
+WhyGeisil.plugin(titleCasePlugin, ['title'])
+// WhyGeisil.plugin(slugPlugin, ['title'])
 
 
 
-})
+
+// WhyGeisil.pre('save', function () {
+
+//     if (!this.isModified('title')) return
+
+//     this.title = this.title
+//         .trim()
+//         .toLowerCase()
+//         .split(/\s+/)
+//         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+//         .join(" ");
+
+
+
+// })
 
 const WhyGeisilModel = mongoose.model('WhyGeisil', WhyGeisil);
 
