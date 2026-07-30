@@ -7,6 +7,7 @@ import User from "../../models/userModel.js";
 import nodemailer from "nodemailer";
 import { apiResponse } from "../../utility/apiResponse.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
+import { logger } from "../../middleware/logger/logger.js";
 
 const isFullTime = (type) => {
   if (!type || typeof type !== "string") return false;
@@ -666,6 +667,9 @@ export const getEmploymentDetailsBySql = async (req, res) => {
       return res.status(400).json({ message: "User ID is required." });
     }
 
+
+
+
     // Fetch employment data
     const employmentData = await Employment.find({
       user: userId,
@@ -783,7 +787,7 @@ export const getEmploymentDetails = async (req, res) => {
   try {
 
     const userId = req.userId;
-
+    logger.info("User ID is required.");
     if (!userId) {
       return res.status(400).json({ message: "User ID is required." });
     }

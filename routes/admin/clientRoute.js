@@ -3,7 +3,7 @@ import multer from "multer";
 import dotenv from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
 
-import { addClient,getAllClients,deleteClient,updateClient } from "../../controllers/admin/ClientController.js";
+import { addClient, getAllClients, deleteClient, updateClient } from "../../controllers/admin/ClientController.js";
 //Middleware
 import userAuth from "../../middleware/authMiddleware.js";
 import adminMiddleware from '../../middleware/adminMiddleware.js';
@@ -21,9 +21,9 @@ const clientRoute = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-clientRoute.get("/all-client",getAllClients);
-clientRoute.post("/add-client", upload.single("image"),userAuth,adminMiddleware, addClient);
-clientRoute.post("/update-Client", upload.single("image"),userAuth,adminMiddleware, updateClient);
-clientRoute.post("/delete-Client",userAuth,adminMiddleware,deleteClient);
+clientRoute.get("/all-client", getAllClients);
+clientRoute.post("/add-client", upload.single("image"), userAuth, adminMiddleware, addClient);
+clientRoute.post("/update-Client", upload.single("image"), userAuth, adminMiddleware, updateClient);
+clientRoute.post("/delete-Client", userAuth, adminMiddleware, deleteClient);
 
 export default clientRoute;

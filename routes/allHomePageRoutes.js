@@ -13,6 +13,11 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+
+
+
+
 import userAuth from "../middleware/authMiddleware.js";
 import adminMiddleware from "../middleware/adminMiddleware.js";
 
@@ -35,9 +40,9 @@ HomePageRouter.get("/getBannerDetails", getAllFields);
 
 HomePageRouter.get("/all-banner", getAllBannners);
 
-HomePageRouter.post("/add-banner", upload.single("image"),userAuth,adminMiddleware, addBanner);
+HomePageRouter.post("/add-banner", upload.single("image"), userAuth, adminMiddleware, addBanner);
 
-HomePageRouter.post("/update-banner", upload.single("image"),userAuth,adminMiddleware, updateBanner);
+HomePageRouter.post("/update-banner", upload.single("image"), userAuth, adminMiddleware, updateBanner);
 
 HomePageRouter.post("/delete-banner", upload.none(), userAuth, adminMiddleware, deleteBanner);
 

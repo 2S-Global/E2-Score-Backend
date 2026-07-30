@@ -11,8 +11,11 @@ export const VerificationServices = new mongoose.Schema({
     icon: {
         type: String,
         required: true
-    }
-    ,
+    },
+    iconColor: {
+        type: String,
+        default: "#000000"
+    },
     backgroundColor: {
         type: String,
 

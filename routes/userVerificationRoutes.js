@@ -20,6 +20,10 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+
+
+
+
 // Initialize router
 const userRouter = express.Router();
 

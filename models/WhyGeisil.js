@@ -12,6 +12,10 @@ export const WhyGeisil = new mongoose.Schema({
         type: String,
         required: true
     },
+    iconColor: {
+        type: String,
+        default: "#ffffff"
+    },
     icon: {
         type: String,
         required: true

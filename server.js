@@ -19,6 +19,7 @@ app.use(
   cors({ origin: ["https://geisil.com", 'http://localhost:4173', "https://services.geisil.com", "http://localhost:3000", "http://127.0.0.1:3000",], credentials: true, }),
 );
 
+// app.use(pinoHttp());
 app.use(cookieParser());
 // app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
@@ -109,7 +110,6 @@ app.get("/", (req, res) => {
 
 
 
-
 app.use("/api/auth", AuthRouter);
 app.use("/api/skills", userSkillsRoutes);
 app.use("/api/projects", userProjectsRoutes);
@@ -181,8 +181,8 @@ app.use("/api/institute-course", InstituteCourseRoute);
 
 
 
-app.use('/api/verification-services' , VerificationServicesRouter)
-app.use('/api/why-geisil' ,WhyGeisilRouter)
+app.use('/api/verification-services', VerificationServicesRouter)
+app.use('/api/why-geisil', WhyGeisilRouter)
 
 // API for Home Pages
 app.use("/api/home", homeRouter);

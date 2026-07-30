@@ -4,14 +4,33 @@ import { apiResponse } from "../../utility/apiResponse.js"
 
 export const VerificationServices = async (req, res) => {
     // const userId = req.user.userId
-    const { title, icon, backgroundColor, description } = req.body
+    const { title, icon, backgroundColor, description , iconColor } = req.body
     try {
+        const existing = await VerificationServicesModel.findOne({ title });
+        if (existing) {
+            existing.isdel = false;
+            existing.icon = icon;
+            existing.backgroundColor = backgroundColor;
+            existing.description = description;
+            existing.iconColor = iconColor;
+
+            await existing.save();
+
+            return apiResponse(
+                res,
+                200,
+                true,
+                "Verification service restored successfully.",
+                existing
+            );
+        }
 
         const response = await VerificationServicesModel.create({
             title,
             icon,
             backgroundColor,
-            description
+            description,
+            iconColor
         })
 
 
@@ -34,14 +53,15 @@ export const VerificationServices = async (req, res) => {
 export const UpdateVerificationServices = async (req, res) => {
 
     const { _id } = req.params
-    const { title, icon, backgroundColor, description } = req.body
+    const { title, icon, backgroundColor, description  , iconColor } = req.body
     try {
         const response = await VerificationServicesModel.findByIdAndUpdate(_id, {
             $set: {
                 title,
                 icon,
                 backgroundColor,
-                description
+                description,
+                iconColor
             }
         }, {
             new: true

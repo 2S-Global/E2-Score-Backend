@@ -2,14 +2,15 @@ import WhyGeisil from "../../models/WhyGeisil.js";
 import { apiResponse } from "../../utility/apiResponse.js"
 
 export const CreateWhyGeisil = async (req, res) => {
-    const { title, icon, backgroundColor, description } = req.body
+    const { title, icon, backgroundColor, description, iconColor } = req.body
     // console.log("is this dowkring  ===>", title, icon, backgroundColor, description)
     try {
         const response = await WhyGeisil.create({
             title,
             icon,
             backgroundColor,
-            description
+            description,
+            iconColor
         })
         if (!response) {
             return apiResponse(res, 400, false, "Failed to add why geisil")
@@ -48,12 +49,13 @@ export const GetWhyGeisil = async (req, res) => {
 
 export const UpdateWhyGeisil = async (req, res) => {
     try {
-        const { title, icon, backgroundColor, description } = req.body
+        const { title, icon, backgroundColor, description, iconColor } = req.body
         const response = await WhyGeisil.findByIdAndUpdate(req.params.id, {
             title,
             icon,
             backgroundColor,
-            description
+            description,
+            iconColor
         }, { new: true })
         if (!response) {
             return apiResponse(res, 400, false, "Failed to update why geisil")
