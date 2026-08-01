@@ -35,6 +35,8 @@ const generateResumePDF = async (data) => {
     headless: chromium.headless,
     defaultViewport: chromium.defaultViewport,
   });
+
+
   const page = await browser.newPage();
   await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 

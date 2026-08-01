@@ -75,3 +75,5 @@ const generateResumePDF = async (data) => {
 };
 
 export default generateResumePDF;
+
+

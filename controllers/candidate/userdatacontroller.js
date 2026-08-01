@@ -28,7 +28,7 @@ import kycCalculation from "../Helpers/kycCalculation.js";
 
 
 import axios from "axios";
-import nodemailer from "nodemailer";
+
 /**
  * @function getUser
  *  @route GET /api/userdata/userdata

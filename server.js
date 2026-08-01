@@ -7,6 +7,9 @@ import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import morgan from 'morgan'
 import db from "./config/db.js";
+import './config/redis.js'
+import "./workers/emailWorkers.js";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +21,8 @@ const app = express();
 app.use(
   cors({ origin: ["https://geisil.com", 'http://localhost:4173', "https://services.geisil.com", "http://localhost:3000", "http://127.0.0.1:3000",], credentials: true, }),
 );
+
+
 
 // app.use(pinoHttp());
 app.use(cookieParser());

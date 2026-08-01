@@ -50,11 +50,12 @@ const CompanyListSchema = new mongoose.Schema(
   },
 );
 
+
 CompanyListSchema.index({
   isActive: 1,
   isDel: 1,
-  companyname: 1,
   slug: 1,
+  companyname: 1,
 });
 
 

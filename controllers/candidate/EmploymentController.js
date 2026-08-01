@@ -4,7 +4,8 @@ import companylist from "../../models/CompanyListModel.js";
 import list_notice from "../../models/monogo_query/noticeModel.js";
 import slugify from "slugify";
 import User from "../../models/userModel.js";
-import nodemailer from "nodemailer";
+import { emailQueue } from "../../queues/emailQueue.js";
+
 import { apiResponse } from "../../utility/apiResponse.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import { logger } from "../../middleware/logger/logger.js";
@@ -86,11 +87,11 @@ export const getMatchingCompany = async (req, res) => {
       .find({
         isDel: false,
         isActive: true,
-        slug: { $regex: `^${querySlug}`, $options: "i" }, // prefix match on slug
+        slug: { $regex: `^${querySlug}` }
       })
       .sort({ companyname: 1 })
       .limit(20)
-      .select("companyname");
+      .select("companyname").lean()
 
     const companyNames = companies.map((c) => c.companyname);
 
@@ -203,12 +204,7 @@ export const getRandomCompanysql = async (req, res) => {
   }
 };
 
-/**
- * @description Get All company details from the database
- * @route GET /api/candidate/employment/all_company_details
- * @success {object} 200 - Company details
- * @error {object} 500 - Database query failed
- */
+
 export const getAllCompany = async (req, res) => {
   const { company_name } = req.query;
 
@@ -520,15 +516,6 @@ export const addEmploymentDetails = async (req, res) => {
       company_id: companyId,
       is_del: false,
     }).select("email name");
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
 
     if (existingCompanyUser) {
       const newEmployeeUser = await User.findOne({
@@ -540,97 +527,28 @@ export const addEmploymentDetails = async (req, res) => {
       if (!newEmployeeUser) {
         console.log("New employee user not found, skipping email...");
       } else {
-        // Build LinkedIn-style employee card using this user’s data
-        const employeeCardHtml = `
-      <div style="display:flex; align-items:center; border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:12px; background:#fff; font-family:Arial, sans-serif;">
-        <img src="${newEmployeeUser.profilePicture || "https://via.placeholder.com/50"
-          }" 
-             alt="profile" 
-             style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
-        <div>
-          <h3 style="margin:0; font-size:16px; color:#0073b1;">${newEmployeeUser.name || "N/A"
-          }</h3>
-          <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${job_title || "Unknown"
-          }</p>
-          <p style="margin:2px 0; font-size:13px; color:#555;">${newEmployeeUser.email || ""
-          }</p>
-        </div>
-      </div>
-    `;
 
-        // Wrap inside main email template
-        const htmlTemplate = `
-      <div style="max-width:600px; margin:auto; font-family:Arial, sans-serif; background:#f4f6f9; padding:20px;">
-        <h2 style="color:#333; text-align:center;">New Employee Associated with Your Company</h2>
-        <p style="color:#555; text-align:center;">A new employee has added your company in their employment details:</p>
-        ${employeeCardHtml}
-        <p style="margin-top:20px; font-size:12px; color:#999; text-align:center;">
-          If you think some information is incorrect, please contact support.
-        </p>
-      </div>
-    `;
-
-        // Send email
-
-        const mailOptions = {
-          from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
+        await emailQueue.add('add_employee_details', {
           to: existingCompanyUser.email,
-          subject: "New Employment Added to Your Company",
-          html: htmlTemplate,
-        };
+          newEmployeeUser,
+          job_title,
+        })
 
-        await transporter.sendMail(mailOptions);
+
       }
-      // Email is end from here
+
     }
 
     const userdtl = await User.findById(userId);
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addemplyment.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Employment Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>New Employment details have been <strong>added</strong> to your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-    Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
+    if (userdtl) {
+      await emailQueue.add('employment_added', {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    }
 
-    const mailOptions2 = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Employment Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions2);
     res.status(201).json({
       success: true,
       message: "Employment Details added successfully!",
@@ -1119,63 +1037,15 @@ export const editEmploymentDetails = async (req, res) => {
       },
       { new: true },
     );
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
     const userdtl = await User.findById(userId);
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editemplyment.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Employment Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>One of your Employment details have been <strong>updated</strong> on your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-    Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const mailOptions2 = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Employment Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions2);
+    if (userdtl) {
+      await emailQueue.add('employment_updated', {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -1224,62 +1094,15 @@ export const deleteEmploymentDetails = async (req, res) => {
     employmentDetails.isDel = true;
     await employmentDetails.save();
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
     const userdtl = await User.findById(userId);
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deleteemplyment.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Employment Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>One of your Employment details have been <strong>deleted</strong> from your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-    Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const mailOptions2 = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Employment Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions2);
+    if (userdtl) {
+      await emailQueue.add('employment_deleted', {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    }
 
     res.status(200).json({
       success: true,

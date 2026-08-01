@@ -7,7 +7,7 @@ import allOrdersData from "../../models/allOrders.js";
 import generateInvoiceNo from "../Helpers/generateInvoiceno.js";
 import CandidateVerification from "../../models/candidateVerificationModel.js";
 import Transaction from "../../models/transactionModel.js";
-import nodemailer from "nodemailer";
+import { emailQueue } from "../../queues/emailQueue.js";
 
 // Add Candidate Cart API
 export const addCandidateCart = async (req, res) => {
@@ -444,124 +444,22 @@ export const payNowCandidateCart = async (req, res) => {
 
     await transaction.save();
 
-    // Send email with login credentials
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true, // true for port 465
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      // to: user.email,
-      to: "chandrasarkar2001@gmail.com",
-      subject: "Order Confirmation : QuikChek - Thank You for Your Purchase!",
-      html: `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-        <p>Dear <strong>${user.name}</strong>,</p>
-        <p>Thank you for shopping with QuikChek. We have successfully received your order, and it's now being processed.</p>
-        <p><strong>Order Details:</strong></p>
-        <p>Order Number: #${orderNumber}</p>
-        <p>Payment Amount: #${overall_billing.total}</p>
-        <p>Payment Method: Online</p>
-
-        <p>Thank you for shopping with QuikChek. Here are your order details:</p>
-        ${emailTable}
-      
-        <p>If you have any questions or need further assistance, feel free to reach out to our support team at support@quikchek.in or call us at 8697744701.</p>
-        <p>Thank you for choosing QuikChek. We appreciate your trust in us and look forward to serving you again.</p>
-        <br />
-        <p>Sincerely,<br />
-        The Admin Team<br />
-        <strong>Global Employability Information Services India Limited</strong></p>
-
-        <div style="text-align: center; margin-top: 30px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
-    </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    const mailOptions2 = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      // to: user.email,
-      to: "chandrasarkar2001@gmail.com",
-      to: "chandrasarkar2001@gmail.com",
-      subject: "Payment Received: QuikChek - Your Order is Confirmed!",
-      html: `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-        <p>Dear <strong>${user.name}</strong>,</p>
-        <p>Thank you for your payment! We are pleased to inform you that your payment for Order #${orderNumber} has been successfully processed.</p>
-       
-        <p>Thank you for shopping with QuikChek. Here are your order details:</p>
-        ${emailTable}
-      
-        <p>If you have any questions or need further assistance, feel free to reach out to our support team at support@quikchek.in or call us at 8697744701.</p>
-        <p>Thank you for choosing QuikChek. We appreciate your trust in us and look forward to serving you again.</p>
-        <br />
-        <p>Sincerely,<br />
-        The Admin Team<br />
-        <strong>Global Employability Information Services India Limited</strong></p>
-
-                <div style="text-align: center; margin-top: 30px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
-    </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions2);
-
-    const mailOptions3 = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      // to: "kp.sunit@gmail.com",
-      to: "chandrasarkar26345@gmail.com",
-      subject:
-        "Payment Received: QuikChek - " +
-        user.name +
-        " Has Paid for Order #" +
+    try {
+      await emailQueue.add("verification_transaction", {
+        user: {
+          name: user.name,
+          email: user.email // Make sure to use the actual user email here if desired, or keep testing email. I'll use user.email to be correct for production.
+        },
         orderNumber,
-      cc: ["kp.sunit@gmail.com", "avik@2sglobal.co", "dipanwita@2sglobal.co"],
-      html: `
-    <div style="text-align: center; margin-bottom: 20px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
-    </div>
-
-    <p>Dear <strong>Admin</strong>,</p>
-
-    <p>We are pleased to inform you that <strong>${user.name}</strong> has successfully completed the payment for <strong>Order #${orderNumber}</strong> via QuikChek.
-    Amount: <strong>₹ ${amount}</strong>
-    </p>
-
-    <p>Below are the order details:</p>
-    ${emailTable}
-
-    <p>Please process the order accordingly and ensure timely delivery/service.</p>
-
-    <p>If you need any assistance, feel free to contact us at <a href="mailto:support@quikchek.in">support@quikchek.in</a> or call <strong>8697744701</strong>.</p>
-
-    <p>Thank you for being a part of the QuikChek team!</p>
-
-    <br />
-    <p>Sincerely,<br />
-    The Admin Team<br />
-    <strong>Global Employability Information Services India Limited</strong></p>
-
-    <div style="text-align: center; margin-top: 30px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
-    </div>
-  `,
-    };
-
-    await transporter.sendMail(mailOptions3);
+        overallBillingTotal: overall_billing.total,
+        emailTable,
+        amount,
+        adminEmails: "chandrasarkar26345@gmail.com",
+        adminCc: ["kp.sunit@gmail.com", "avik@2sglobal.co", "dipanwita@2sglobal.co"]
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     return res.status(200).json({
       message:
