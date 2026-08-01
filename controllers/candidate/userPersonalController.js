@@ -1,8 +1,7 @@
 import User from "../../models/userModel.js";
 import personalDetails from "../../models/personalDetails.js";
 import candidateDetails from "../../models/CandidateDetailsModel.js";
-
-import nodemailer from "nodemailer";
+import { emailQueue } from "../../queues/emailQueue.js";
 import { apiResponse } from "../../utility/apiResponse.js";
 export const test = async (req, res) => {
   try {
@@ -13,37 +12,8 @@ export const test = async (req, res) => {
   }
 };
 
-/**
- * @description Save the candidate's personal details
- * @route POST /api/candidate/personal/submit_personal_details
- * @security BearerAuth
- * @param {object} req.body - Personal details to save
- * @param {string} req.body.gender - User's gender
- * @param {date} req.body.dob - Date of birth
- * @param {string} req.body.hometown - Hometown
- * @param {string} req.body.category - Category
- * @param {boolean|string} req.body.career_break - Whether the user is currently on career break
- * @param {boolean|string} req.body.currently_on_career_break - Whether the user is currently on career break
- * @param {string|number} req.body.career_break_start_month - Month of the career break start date
- * @param {string|number} req.body.career_break_start_year - Year of the career break start date
- * @param {string|number} req.body.career_break_end_month - Month of the career break end date
- * @param {string|number} req.body.career_break_end_year - Year of the career break end date
- * @param {string} req.body.career_break_reason - Reason for the career break
- * @param {boolean|string} req.body.differently_abled - Whether the user is differently abled
- * @param {string} req.body.disability_type - Type of disability
- * @param {string} req.body.disability_description - Description of the disability
- * @param {string} req.body.workplace_assistance - Type of workplace assistance required
- * @param {string} req.body.usa_visa_type - Type of USA work permit
- * @param {string} req.body.work_permit_other_countries - Other countries with work permit
- * @param {string} req.body.permanent_address - Permanent address
- * @param {string} req.body.pincode - Pincode
- * @param {object[]} req.body.languages - Languages spoken with proficiency level
- * @param {string} req.body.marital_status - Marital status
- * @param {string} req.body.more_info - Additional information
- * @returns {object} 200 - Personal details saved successfully
- * @returns {object} 400 - Validation error
- * @returns {object} 500 - Error saving personal details
- */
+
+ 
 export const submitPersonalDetails = async (req, res) => {
   try {
     const data = req.body;
@@ -314,68 +284,14 @@ export const submitPersonalDetails = async (req, res) => {
       { upsert: true, new: true },
     );
 
-    const htmlEmail = `
-  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-      <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changepersonaldtls.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-    <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-      <h2 style="color:#fff; margin:0; font-size:20px;">Personal Details Update Notification</h2>
-    </div>
-
-    <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-      <p>Dear <strong>${user.name}</strong>,</p>
-          
-      <p>The following information in your <strong>Personal Details</strong> was updated:</p>
-          
-      <ul>
-        ${changeListHTML}
-      </ul>
-
-      <p>If you did not make this change, please contact support immediately.</p>
-
-      <p>You can access your dashboard using the link below:</p>
-
-      <p>
-        <a href="${process.env.ORIGIN}" 
-          style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-          Visit Dashboard
-        </a>
-      </p>
-
-      <p>If the button does not work, use this link:</p>
-      <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-
-      <br />
-
-      <p>Sincerely,<br />
-      <strong>Admin Team</strong><br />
-      Global Employability Information Services India Limited</p>
-    </div>
-  </div>
-  `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "Profile Update Notification",
-      html: htmlEmail,
-    };
-
     if (changeListHTML !== "") {
-      await transporter.sendMail(mailOptions);
+      await emailQueue.add("personal_details_updated", {
+        to: user.email,
+        changeListHTML,
+        user: {
+          name: user.name,
+        },
+      });
     }
 
     res.status(200).json({
@@ -388,16 +304,7 @@ export const submitPersonalDetails = async (req, res) => {
   }
 };
 
-/**
- * @description Retrieve the personal details of the authenticated user.
- * @route GET /api/candidate/personal/get_personal_details
- * @access protected
- * @param {Object} req - Express request object containing userId.
- * @param {Object} res - Express response object.
- * @returns {Object} 200 - Returns user's personal details.
- * @returns {Object} 404 - Personal details not found for this user.
- * @returns {Object} 500 - Server error while fetching personal details.
- */
+
 export const getPersonalDetails = async (req, res) => {
   try {
     const userId = req.userId;

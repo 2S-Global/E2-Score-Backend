@@ -7,9 +7,11 @@ import UserCertification from "../../models/CertificationModel.js";
 import db_sql from "../../config/sqldb.js";
 import User from "../../models/userModel.js";
 import list_social_profile from "../../models/monogo_query/socialProfileModel.js";
-import nodemailer from "nodemailer";
+
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import { apiResponse } from "../../utility/apiResponse.js";
+import { emailQueue } from "../../queues/emailQueue.js";
+
 
 const sortWorkSamples = (samples) => {
   return (samples || []).sort((a, b) => {
@@ -36,18 +38,6 @@ const sortWorkSamples = (samples) => {
   });
 };
 
-/**
- * @description Add a new online profile for the authenticated user
- * @route POST /api/candidate/accomplishments/add_online_profile
- * @security BearerAuth
- * @param {object} req.body - Online profile details to add
- * @param {string} req.body.socialProfile.required - Social profile name
- * @param {string} req.body.url.required - URL of the social profile
- * @param {string} [req.body.description] - Optional description of the social profile
- * @returns {object} 201 - Online profile added successfully
- * @returns {object} 400 - Required fields missing
- * @returns {object} 500 - Error adding online profile
- */
 export const addOnlineProfile = async (req, res) => {
   try {
     const { socialProfile, url, description } = req.body;
@@ -69,63 +59,16 @@ export const addOnlineProfile = async (req, res) => {
     await newProfile.save();
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addonlineprofile.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Online Profile Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>New Online Profile details have been <strong>added</strong> to your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-          Global Employability Information Services India Limited
-          </p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Online Profile Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("online_profile_added", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(201).json({
       success: true,
@@ -317,62 +260,16 @@ export const editOnlineProfile = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-          <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editonlineprofile.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Online Profile Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-          <p>Your online profile details have been <strong>updated</strong> on your profile.</p>
-              
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-    Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Online Profile Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("online_profile_updated", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -429,62 +326,16 @@ export const deleteOnlineProfile = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deleteonlineprofile.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Online Profile Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-         <p>One of your online profile details have been <strong>Deleted</strong> from your profile.</p>
-          
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Online Profile Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("online_profile_deleted", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -565,62 +416,16 @@ export const addWorkSample = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addworkprofile.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Work Profile Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>New Work Profile details have been <strong>added</strong> to your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Work Profile Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("work_sample_added", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
     res.status(200).json({
       message: "Work sample saved successfully",
       data: newWorkSample,
@@ -807,63 +612,16 @@ export const editWorkSample = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editworkprofile.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Work Profile Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-          <p>Your work profile details have been <strong>updated</strong> on your profile.</p>
-              
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Work Profile Update Notification",
-      html: htmlEmail,
-    };
-
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("work_sample_updated", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -921,62 +679,16 @@ export const deleteWorkSample = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deleteworkprofile.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Work Profile Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-         <p>One of your work profile details have been <strong>Deleted</strong> from your profile.</p>
-          
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Work Profile Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("work_sample_deleted", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -992,18 +704,7 @@ export const deleteWorkSample = async (req, res) => {
 
 // -----------------------------Research Publications----------------------------------------
 
-/**
- * @description Add a new research publication for the authenticated user.
- * @route POST /api/candidate/accomplishments/add_research_publication
- * @param {object} req.body - Research publication details to add
- * @param {string} req.body.title - Title of the research publication
- * @param {string} req.body.url - URL of the research publication
- * @param {number} req.body.publishYear - Year of publication
- * @param {number} req.body.publishMonth - Month of publication
- * @param {string} [req.body.description] - Optional description of the research publication
- * @returns {object} 200 - Research publication saved successfully
- * @returns {object} 500 - Error saving research publication
- */
+
 export const addResearchPublication = async (req, res) => {
   try {
     const { title, url, publishYear, publishMonth, description } = req.body;
@@ -1060,68 +761,21 @@ export const addResearchPublication = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addonlinepublication.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> White Paper / Research Publication / Journal Entry Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>New White Paper / Research Publication / Journal Entry details have been <strong>added</strong> to your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Profile Update Notification",
-      html: htmlEmail,
-    };
-    const info = await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("research_publication_added", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       message: "Research Publication saved successfully",
       data: newResearchModel,
       success: true,
-      info: info,
     });
   } catch (error) {
     console.error("Error saving Research Publication:", error.message);
@@ -1278,62 +932,16 @@ export const updateResearchPublication = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editonlinepublication.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;">White Paper / Research Publication / Journal Entry Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-          <p>Your White Paper / Research Publication / Journal Entry details have been <strong>updated</strong> on your profile.</p>
-              
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Profile Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("research_publication_updated", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -1390,62 +998,16 @@ export const deleteResearchPublication = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deleteonlinepublication.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> White Paper / Research Publication / Journal Entry Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-         <p>One of your White Paper / Research Publication / Journal Entry details have been <strong>Deleted</strong> from your profile.</p>
-          
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Profile Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("research_publication_deleted", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -1490,62 +1052,17 @@ export const addpresentaion = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addpresentation.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Presentation Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>New Presentation details have been <strong>added</strong> to your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Presentation Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("presentation_added", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(201).json({
       success: true,
@@ -1604,62 +1121,16 @@ export const updatepresentaion = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editpresentation.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Presentation Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-          <p>Your presentation details have been <strong>updated</strong> on your profile.</p>
-              
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Presentation Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("presentation_updated", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -1714,62 +1185,16 @@ export const deletepresentaion = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deletepresentation.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Presentation Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-         <p>One of your presentation details have been <strong>Deleted</strong> from your profile.</p>
-          
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Presentation Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("presentation_deleted", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -1863,62 +1288,16 @@ export const addpatent = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addpetent.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Patent Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>New Patent details have been <strong>added</strong> to your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Patent Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("patent_added", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -1973,63 +1352,16 @@ export const deletepatent = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deletepetent.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Patent Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-         <p>One of your patent details have been <strong>Deleted</strong> from your profile.</p>
-          
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Patent Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("patent_deleted", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -2111,64 +1443,16 @@ export const updatepatent = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editpetent.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Patent Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-          <p>Your patent details have been <strong>updated</strong> on your profile.</p>
-              
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Patent Update Notification",
-      html: htmlEmail,
-    };
-
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("patent_updated", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -2257,62 +1541,16 @@ export const addcertificate = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-       <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addcertification.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>  
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Certification Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>New Certification details have been <strong>added</strong> to your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Certification Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("certificate_added", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -2420,62 +1658,16 @@ export const updatecertificate = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editcertification.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;">Certification Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-          <p>Your Certification details have been <strong>updated</strong> on your profile.</p>
-              
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Certification Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("certificate_updated", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,
@@ -2526,62 +1718,16 @@ export const deleteCertificate = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deletecertification.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Certification Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-         <p>One of your Certification details have been <strong>Deleted</strong> from your profile.</p>
-          
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br/>
-          Global Employability Information Services India Limited</p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Certification Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+      await emailQueue.add("certificate_deleted", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
 
     res.status(200).json({
       success: true,

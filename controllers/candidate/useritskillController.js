@@ -3,7 +3,7 @@ import getTechSkills from "../../models/monogo_query/techSkillModel.js";
 import Otherskill from "../../models/OtherSkillModel.js";
 import list_non_tech_skill from "../../models/monogo_query/nonTechSkillModel.js";
 import User from "../../models/userModel.js";
-import nodemailer from "nodemailer";
+import { emailQueue } from "../../queues/emailQueue.js";
 import mongoose from "mongoose";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 export const getOrInsertId = async (value) => {
@@ -246,73 +246,14 @@ export const additskill = async (req, res) => {
     await itskill.save();
 
     try {
-      const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-          <img src="${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/additskill.png"
-               alt="GEISIL Banner"
-               style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-        </div>
-
-        <div style="background:#0052cc; padding:15px 20px;">
-          <h2 style="color:#fff; margin:0;">
-            Itskill List Update Notification
-          </h2>
-        </div>
-
-        <div style="padding:20px; background:#fff;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-
-          <p>
-            New Itskill details have been <strong>added</strong> to your profile.
-          </p>
-
-          <p>
-            If you did not make this change, please contact support immediately.
-          </p>
-
-          <p>
-            <a href="${process.env.ORIGIN}"
-               style="background:#0052cc;color:#fff;padding:10px 16px;text-decoration:none;border-radius:5px;">
-               Visit Dashboard
-            </a>
-          </p>
-
-          <p>
-            <a href="${process.env.ORIGIN}">
-              ${process.env.ORIGIN}
-            </a>
-          </p>
-
-          <br />
-
-          <p>
-            Sincerely,<br />
-            <strong>Admin Team</strong><br />
-            Global Employability Information Services India Limited
-          </p>
-        </div>
-      </div>
-      `;
-
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
+      await emailQueue.add('itskill_added', {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
         },
       });
-
-      await transporter.sendMail({
-        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-        to: userdtl.email,
-        subject: "Itskill List Update Notification",
-        html: htmlEmail,
-      });
     } catch (emailError) {
-      console.error("Email sending failed:", emailError);
+      console.error("Queueing email failed:", emailError);
     }
 
     return res.status(201).json({
@@ -330,20 +271,7 @@ export const additskill = async (req, res) => {
   }
 };
 
-/**
- * @description Edit an existing itskill entry for the authenticated user
- * @route PUT /api/candidate/itskill/edititskill
- * @param {string} _id.required - The MongoDB ID of the itskill document
- * @param {string} skillSearch.required - The search string for the skill
- * @param {string} version - The software version of the skill
- * @param {string} lastUsed - The last used date of the skill
- * @param {string} experienceyear - The year of experience in the skill
- * @param {string} experiencemonth - The month of experience in the skill
- * @security BearerAuth
- * @returns {object} 200 - itskill updated successfully
- * @returns {object} 400 - User ID, Skill Search, or itskill ID is required
- * @returns {object} 500 - Error updating itskill
- */
+
 export const edititskill = async (req, res) => {
   try {
     const userId = req.userId;
@@ -508,73 +436,14 @@ export const edititskill = async (req, res) => {
     // ---------------- Email ----------------
 
     try {
-      const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-          <img src="${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editskill.png"
-               alt="GEISIL Banner"
-               style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-        </div>
-
-        <div style="background:#0052cc;padding:15px 20px;">
-          <h2 style="color:#fff;margin:0;">
-            Itskill List Update Notification
-          </h2>
-        </div>
-
-        <div style="padding:20px;background:#fff;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-
-          <p>
-            One of your IT Skills has been <strong>updated</strong>.
-          </p>
-
-          <p>
-            If you did not make this change, please contact support immediately.
-          </p>
-
-          <p>
-            <a href="${process.env.ORIGIN}"
-               style="background:#0052cc;color:#fff;padding:10px 16px;text-decoration:none;border-radius:5px;">
-              Visit Dashboard
-            </a>
-          </p>
-
-          <p>
-            <a href="${process.env.ORIGIN}">
-              ${process.env.ORIGIN}
-            </a>
-          </p>
-
-          <br>
-
-          <p>
-            Sincerely,<br>
-            <strong>Admin Team</strong><br>
-            Global Employability Information Services India Limited
-          </p>
-        </div>
-      </div>
-      `;
-
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
+      await emailQueue.add('itskill_updated', {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
         },
       });
-
-      await transporter.sendMail({
-        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-        to: userdtl.email,
-        subject: "Itskill List Update Notification",
-        html: htmlEmail,
-      });
     } catch (emailError) {
-      console.error("Email sending failed:", emailError);
+      console.error("Queueing email failed:", emailError);
     }
 
     return res.status(200).json({
@@ -593,13 +462,7 @@ export const edititskill = async (req, res) => {
   }
 };
 
-/**
- * @description Retrieve IT skills for the authenticated user.
- * @route GET /api/candidate/itskill/getitskill
- * @access protected
- * @returns {object} 200 - An array of IT skills with details
- * @returns {object} 500 - Error fetching IT skills
- */
+
 export const getitskill = async (req, res) => {
   try {
     const userId = req.userId;
@@ -627,16 +490,7 @@ export const getitskill = async (req, res) => {
   }
 };
 
-/**
- * @description Soft delete an IT skill by marking it as deleted for the authenticated user
- * @route DELETE /api/candidate/itskill/deleteitskill
- * @access protected
- * @param {Object} req - Express request object containing userId and itskill ID in the body
- * @param {Object} res - Express response object
- * @returns {Object} 200 - IT skill deleted successfully
- * @returns {Object} 400 - Missing user ID or itskill ID
- * @returns {Object} 500 - Error deleting itskill
- */
+
 export const deleteitskill = async (req, res) => {
   try {
     const userId = req.userId;
@@ -658,63 +512,14 @@ export const deleteitskill = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deleteitskill.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Itskill List Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>One of your Itskill details have been <strong>deleted</strong> from your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-          Global Employability Information Services India Limited
-          </p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Itskill List Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    if (userdtl) {
+      await emailQueue.add('itskill_deleted', {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    }
 
     res
       .status(200)
@@ -727,19 +532,7 @@ export const deleteitskill = async (req, res) => {
   }
 };
 
-/**
- * @description Add a new Other Skill entry for the authenticated user
- * @route POST /api/candidate/otherskill/addotherskill
- * @param {string} skillSearch.required - The search string for the skill
- * @param {string} version - The software version of the skill
- * @param {string} lastUsed - The last used date of the skill
- * @param {string} experienceyear - The year of experience in the skill
- * @param {string} experiencemonth - The month of experience in the skill
- * @security BearerAuth
- * @returns {object} 201 - Otherskill added successfully
- * @returns {object} 400 - User ID or Skill Search is required
- * @returns {object} 500 - Error adding otherskill
- */
+
 export const addOtherSkill = async (req, res) => {
   try {
     const userId = req.userId;
@@ -872,24 +665,14 @@ export const addOtherSkill = async (req, res) => {
     // ---------------- Email ----------------
 
     try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
+      await emailQueue.add('otherskill_added', {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
         },
       });
-
-      await transporter.sendMail({
-        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-        to: userdtl.email,
-        subject: "Otherskill List Update Notification",
-        html: htmlEmail, // Your existing HTML
-      });
     } catch (emailError) {
-      console.error("Email sending failed:", emailError);
+      console.error("Queueing email failed:", emailError);
     }
 
     return res.status(201).json({
@@ -907,20 +690,7 @@ export const addOtherSkill = async (req, res) => {
   }
 };
 
-/**
- * @description Edit an existing otherskill entry for the authenticated user
- * @route PUT /api/candidate/itskill/editotherskill
- * @param {string} _id.required - The MongoDB ID of the otherskill document
- * @param {string} skillSearch.required - The search string for the skill
- * @param {string} version - The software version of the skill
- * @param {string} lastUsed - The last used date of the skill
- * @param {string} experienceyear - The year of experience in the skill
- * @param {string} experiencemonth - The month of experience in the skill
- * @security BearerAuth
- * @returns {object} 200 - otherskill updated successfully
- * @returns {object} 400 - User ID, Skill Search, or otherskill ID is required
- * @returns {object} 500 - Error updating otherskill
- */
+
 export const editotherskill = async (req, res) => {
   try {
     const userId = req.userId;
@@ -1078,72 +848,14 @@ export const editotherskill = async (req, res) => {
     // ---------------- Email ----------------
 
     try {
-      const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-        <div>
-          <img src="${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/editotherskill.png"
-               alt="GEISIL Banner"
-               style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-        </div>
-
-        <div style="background:#0052cc;padding:15px 20px;">
-          <h2 style="color:#fff;margin:0;">
-            Other Skill Update Notification
-          </h2>
-        </div>
-
-        <div style="padding:20px;background:#fff;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-
-          <p>
-            One of your Other Skills has been <strong>updated</strong>.
-          </p>
-
-          <p>
-            If you did not make this change, please contact support immediately.
-          </p>
-
-          <p>
-            <a href="${process.env.ORIGIN}"
-               style="background:#0052cc;color:#fff;padding:10px 16px;text-decoration:none;border-radius:5px;">
-              Visit Dashboard
-            </a>
-          </p>
-
-          <p>
-            <a href="${process.env.ORIGIN}">
-              ${process.env.ORIGIN}
-            </a>
-          </p>
-
-          <br>
-
-          <p>
-            Sincerely,<br>
-            <strong>Admin Team</strong><br>
-            Global Employability Information Services India Limited
-          </p>
-        </div>
-      </div>`;
-
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
+      await emailQueue.add('otherskill_updated', {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
         },
       });
-
-      await transporter.sendMail({
-        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-        to: userdtl.email,
-        subject: "Other Skill Update Notification",
-        html: htmlEmail,
-      });
     } catch (emailError) {
-      console.error("Email sending failed:", emailError);
+      console.error("Queueing email failed:", emailError);
     }
 
     return res.status(200).json({
@@ -1230,63 +942,14 @@ export const deleteotherskill = async (req, res) => {
     );
     const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-         <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/deleteotherskill.png"
-         alt="GEISIL Banner" 
-         style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-  </div>
-        <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
-          <h2 style="color:#fff; margin:0; font-size:20px;"> Otherskill List Update Notification</h2>
-        </div>
-    
-        <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
-              
-           <p>One of your otherskill details have been <strong>deleted</strong> from your profile.</p>
-                
-          <p>If you did not make this change, please contact support immediately.</p>
-    
-          <p>You can access your dashboard using the link below:</p>
-    
-          <p>
-            <a href="${process.env.ORIGIN}" 
-              style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Visit Dashboard
-            </a>
-          </p>
-    
-          <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-    
-          <br />
-    
-          <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
-          Global Employability Information Services India Limited
-          </p>
-        </div>
-      </div>
-      `;
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Otherskill List Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
+    if (userdtl) {
+      await emailQueue.add('otherskill_deleted', {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    }
 
     res
       .status(200)

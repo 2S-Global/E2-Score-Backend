@@ -1018,7 +1018,7 @@ export const verifyEmail = async (req, res) => {
 // Accept or Reject Interview Invitation
 export const acceptRejectInterviewInvitation = async (req, res) => {
   const { token } = req.params;
-  console.log("This is Token", token);
+  // console.log("This is Token", token);
 
   const generateHTML = (title, heading, message, color) => `
     <!DOCTYPE html>
