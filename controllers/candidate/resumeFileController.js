@@ -348,3 +348,50 @@ export const deleteResume = async (req, res) => {
       .json({ message: "Error deleting resume", error: error.message });
   }
 };
+
+export const deleteCoverLetter = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+
+    const deletedData = await CoverLetterModel.findOneAndUpdate(
+      { user: userId, isDel: false },
+      { isDel: true },
+      { new: true },
+    );
+    console.log("wwwwwwwww", deletedData);
+
+    if (!deletedData) {
+      return res
+        .status(404)
+        .json({ message: "No active cover letter found to delete." });
+    }
+
+    const userdtl = await User.findById(userId);
+
+    try {
+      await emailQueue.add("cover_letter_deleted", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
+    }
+    //soft delete
+    return res.status(200).json({
+      success: true,
+      message: "Cover letter deleted successfully.",
+      data: deletedData,
+    });
+  } catch (error) {
+    console.error("Error deleting resume:", error);
+    res
+      .status(500)
+      .json({ message: "Error deleting resume", error: error.message });
+  }
+};
