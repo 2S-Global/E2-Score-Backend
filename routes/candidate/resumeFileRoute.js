@@ -7,6 +7,7 @@ import {
   deleteResume,
   uploadCoverLetter,
   getCoverLetterDetails,
+  deleteCoverLetter,
 } from "../../controllers/candidate/resumeFileController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -39,6 +40,12 @@ resumeFileRouter.delete(
   userAuth,
   upload.none(),
   deleteResume,
+);
+resumeFileRouter.delete(
+  "/cover-letter",
+  userAuth,
+  upload.none(),
+  deleteCoverLetter,
 );
 
 export default resumeFileRouter;
