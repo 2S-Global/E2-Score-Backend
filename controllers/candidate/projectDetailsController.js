@@ -6,7 +6,7 @@ import User from "../../models/userModel.js";
 
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import { apiResponse } from "../../utility/apiResponse.js";
-import { sendMail } from "../../services/email/emailService.js";
+// import { sendMail } from "../../services/email/emailService.js";
 import { projectDeletedTemplate } from "../../services/email/templates/projectDeletedTemplate.js";
 import { logger } from "../../middleware/logger/logger.js";
 import { emailQueue } from "../../queues/emailQueue.js";

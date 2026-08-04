@@ -21,7 +21,7 @@ import JobPostingTemp from "../../models/company_Models/JobPostingTempModel.js";
 import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
-import nodemailer from "nodemailer";
+import { emailQueue } from "../../queues/emailQueue.js";
 import SavedJob from "../../models/SavedJob.js";
 //import CompanyDetails from "../../models/company_Models/companydetails.js";
 
@@ -807,17 +807,6 @@ export const sendJobApplicationsEmail123 = async ({
 
   console.log("I am inside mail sending functions: ");
 
-  // Send email with login credentials
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
   const applicantsHtml = applications
     .map((app, index) => {
       return `
@@ -831,164 +820,15 @@ export const sendJobApplicationsEmail123 = async ({
     })
     .join("");
 
-  const mailOptions = {
-    from: process.env.MAIL_USER,
-    to: employerEmail,
-    subject: `Applications Received for ${job.jobTitle}`,
-    html: `
-      <h2>Job Applications Summary</h2>
-      <p><strong>Job Title:</strong> ${job.jobTitle}</p>
-      <p><strong>Total Applications:</strong> ${applications.length}</p>
-
-      <table border="1" cellpadding="8" cellspacing="0">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Candidate Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${applicantsHtml}
-        </tbody>
-      </table>
-
-      <br/>
-      <p>Please log in to your dashboard to view full application details.</p>
-    `,
-  };
-
-  await transporter.sendMail(mailOptions);
-};
-
-export const sendJobApplicationsEmail = async ({
-  employerEmail,
-  job
-}) => {
-
-  console.log("Inside mail sending function");
-
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
+  // Send email via queue
+  await emailQueue.add("company_job_applications_summary", {
+    employerEmail,
+    jobTitle: job.jobTitle,
+    totalApplications: applications.length,
+    applicantsHtml,
   });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: employerEmail,
-    subject: `New Application Update – ${job.jobTitle}`,
-    html: `
-      <h2>Application Update Notification</h2>
-
-      <p>
-        You have received a new update regarding applications for the job:
-      </p>
-
-      <p><strong>Job Title:</strong> ${job.jobTitle}</p>
-
-      <h3>Candidate Details</h3>
-      <table cellpadding="6" cellspacing="0" border="0">
-        <tr>
-          <td><strong>Name</strong></td>
-          <td>${job.candidateName}</td>
-        </tr>
-        <tr>
-          <td><strong>Email</strong></td>
-          <td>${job.candidateEmail}</td>
-        </tr>
-        <tr>
-          <td><strong>Phone</strong></td>
-          <td>${job.candidatePhone || "N/A"}</td>
-        </tr>
-      </table>
-
-
-      <br/>
-
-      <p>
-        Please log in to your employer dashboard to review the application details.
-      </p>
-
-      <br/>
-      <p>— Team GEISIL</p>
-    `,
-  };
-
-  await transporter.sendMail(mailOptions);
 };
 
-
-export const sendCandidateApplicationEmail = async ({
-  candidateEmail,
-  job
-}) => {
-
-  console.log("Sending confirmation email to candidate");
-
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: candidateEmail,
-    subject: `Application Submitted Successfully – ${job.jobTitle}`,
-    html: `
-      <h2>Application Confirmation</h2>
-
-      <p>Hi <strong>${job.candidateName}</strong>,</p>
-
-      <p>
-        Thank you for applying for the position of 
-        <strong>${job.jobTitle}</strong>.
-      </p>
-
-      <p>
-        We have successfully received your application. Our team will review your profile,
-        and if shortlisted, the employer will contact you for the next steps.
-      </p>
-
-      <h3>Your Submitted Details</h3>
-      <table cellpadding="6" cellspacing="0" border="0">
-        <tr>
-          <td><strong>Name</strong></td>
-          <td>${job.candidateName}</td>
-        </tr>
-        <tr>
-          <td><strong>Email</strong></td>
-          <td>${job.candidateEmail}</td>
-        </tr>
-        <tr>
-          <td><strong>Phone</strong></td>
-          <td>${job.candidatePhone || "N/A"}</td>
-        </tr>
-      </table>
-
-      <br/>
-
-      <p>
-        You can log in to your account anytime to track your application status.
-      </p>
-
-      <br/>
-      <p>Best regards,<br/>Team GEISIL</p>
-    `,
-  };
-
-  await transporter.sendMail(mailOptions);
-};
 
 // Confirm Job Posting Details API
 export const ConfirmJobPostingDetails = async (req, res) => {
@@ -1786,7 +1626,7 @@ export const applyJobPosting = async (req, res) => {
     // Employer email
     if (applications?.getApplicationUpdateEmail) {
       emailPromises.push(
-        sendJobApplicationsEmail({
+        emailQueue.add("job_application_update_employer", {
           employerEmail: applications.getApplicationUpdateEmail,
           job: applications,
         })
@@ -1796,7 +1636,7 @@ export const applyJobPosting = async (req, res) => {
     // Candidate email
     if (candidateInfo?.email) {
       emailPromises.push(
-        sendCandidateApplicationEmail({
+        emailQueue.add("job_application_candidate", {
           candidateEmail: applications.candidateEmail,
           job: applications,
         })
@@ -2393,7 +2233,6 @@ export const getInvitationSentCandidatesByJob_ORIGINAL = async (req, res) => {
         },
       },
       { $unwind: { path: "$career", preserveNullAndEmptyArrays: true } },
-
       // 🔴 FIX: Convert JobRole string → ObjectId
       {
         $addFields: {
@@ -2411,6 +2250,7 @@ export const getInvitationSentCandidatesByJob_ORIGINAL = async (req, res) => {
           },
         },
       },
+
 
       // 6️⃣ Join Job Role master
       // {
@@ -2868,41 +2708,13 @@ export const acceptJobApplicationStatus = async (req, res) => {
 
     console.log("Here is my Sender User mail:", user.email);
 
-    // Send email with login credentials
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"HR Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "You have been shortlisted 🎉",
-      html: `
-          <p>Dear ${user.name || "Candidate"},</p>
-
-          <p>
-            We are pleased to inform you that you have been
-            <strong>shortlisted</strong> for the next stage of our recruitment process
-            for the position of <strong>${designation}</strong> at
-            <strong>${companyName}</strong>.
-          </p>
-
-          <p>Our team will reach out to you shortly with further details.</p>
-
-          <br />
-          <p>Best regards,</p>
-          <p><strong>HR Team</strong></p>
-          `,
-    };
-
+    // Add email task to queue
     if (user?.email) {
-      await transporter.sendMail(mailOptions);
+      await emailQueue.add("application_shortlisted", {
+        user: user,
+        designation: designation,
+        companyName: companyName,
+      });
     }
 
     return res.status(200).json({
@@ -3010,118 +2822,19 @@ export const acceptShortlistedCandidates = async (req, res) => {
 
     console.log("Here is my Sender User mail:", user.email);
 
-    // Send email with login credentials
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"HR Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: `Interview Invitation – ${designation} at ${companyName}`,
-      html: `
-        <div style="text-align: center; margin-bottom: 20px;">
-          <img src="https://api.geisil.com/upload/invited_interview.jpg" alt="Banner" style="width: 100%; height: auto;" />
-        </div>
-
-        <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-              style="font-family:Arial,Helvetica,sans-serif;background-color:#f4f4f4;padding:20px;">
-          <tr>
-            <td align="center">
-              <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-                    style="max-width:600px;background:#ffffff;padding:24px;border-radius:6px;color:#333;">
-
-                <tr>
-                  <td>
-                    <p>Dear ${user.name || "Candidate"},</p>
-
-                    <p>
-                      Thank you for your interest in the
-                      <strong>${designation}</strong> position at
-                      <strong>${companyName}</strong>.
-                      After reviewing your application and profile, we are pleased to invite you
-                      for an interview at our Kolkata office.
-                    </p>
-
-                    <p>
-                      This interview will be an opportunity for us to discuss your technical
-                      expertise in greater detail and for you to learn more about our team
-                      and the exciting projects we are currently driving.
-                    </p>
-
-                    <h3 style="margin-top:20px;">Interview Details</h3>
-
-                    <p>
-                      <strong>Date:</strong> ${new Date(interviewDate).toDateString()}<br />
-                      <strong>Time:</strong> ${formattedInterviewTime}<br />
-                      <strong>Location:</strong> ${interviewLocation}
-                    </p>
-
-                    <h3 style="margin-top:20px;">Action Required</h3>
-
-                    <p>
-                      To finalise the schedule, please confirm your availability by selecting
-                      one of the options below.
-                    </p>
-                  </td>
-                </tr>
-
-                <!-- BUTTONS -->
-                <tr>
-                  <td align="center" style="padding:20px 0;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-
-                      <tr>
-                        <td align="center" style="padding-bottom:10px;">
-                          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&jobId=${jobId}"
-                            style="display:block;width:100%;max-width:320px;
-                                    background:#28a745;color:#ffffff;
-                                    padding:14px 0;text-decoration:none;
-                                    border-radius:4px;font-weight:bold;text-align:center;">
-                            Confirmation
-                          </a>
-                        </td>
-                      </tr>
-
-                    </table>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <p>
-                      Please remember to carry a physical copy of your updated resume
-                      and a valid photo ID.
-                    </p>
-
-                    <p>
-                      We look forward to meeting you and exploring the possibility of
-                      you joining our technical team.
-                    </p>
-
-                    <p style="margin-top:24px;">
-                      Thanks &amp; Regards,<br />
-                      <strong>Hiring Team</strong><br />
-                      ${companyName}
-                    </p>
-                  </td>
-                </tr>
-
-              </table>
-            </td>
-          </tr>
-        </table>
-      `
-    };
-
     if (user?.email) {
-      await transporter.sendMail(mailOptions);
+      // Send email via queue
+      await emailQueue.add("company_interview_invitation", {
+        email: user.email,
+        userName: user.name,
+        designation,
+        companyName,
+        interviewDateString: new Date(interviewDate).toDateString(),
+        formattedInterviewTime,
+        interviewLocation,
+        applicationId,
+        jobId,
+      });
     }
 
     return res.status(200).json({
@@ -3214,148 +2927,17 @@ export const rescheduleInterview = async (req, res) => {
     }
 
 
-    // 7️⃣ Email setup
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions123 = {
-      from: `"HR Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: `Interview Rescheduled – ${formDesignation} at ${companyName}`,
-      html: `
-        <div style="text-align: center; margin-bottom: 20px;">
-          <img src="https://api.geisil.com/upload/rescheduling_interview.jpg" alt="Banner" style="width: 100%; height: auto;" />
-        </div>
-        <p>Dear ${user.name || "Candidate"},</p>
-
-        <p>
-          We would like to inform you that your interview for the position of
-          <strong>${designation}</strong> at <strong>${companyName}</strong>
-          has been <strong>rescheduled</strong>.
-        </p>
-
-        <p>
-          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=accept"
-            style="display:inline-block;padding:12px 20px;margin-right:10px;
-                    background-color:#28a745;color:#ffffff;text-decoration:none;
-                    border-radius:4px;font-weight:bold;">
-            Accept Rescheduled Interview
-          </a>
-
-          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reject"
-            style="display:inline-block;padding:12px 20px;
-                    background-color:#dc3545;color:#ffffff;text-decoration:none;
-                    border-radius:4px;font-weight:bold;">
-            Reject Interview
-          </a>
-
-          <a href="${process.env.frontend_url}/interview-response?id=${applicationId}&type=reschedule"
-            style="display:inline-block;padding:12px 20px;
-                    background-color:#28a745;color:#ffffff;text-decoration:none;
-                    border-radius:4px;font-weight:bold;">
-            Reschedule Interview
-          </a>
-
-        </p>
-
-        <p>
-          <strong>Updated Interview Details:</strong><br />
-          <strong>Position:</strong> ${designation}<br />
-          <strong>Date:</strong> ${new Date(interviewDate).toDateString()}<br />
-          <strong>Time:</strong> ${interviewTime}
-        </p>
-
-        <p>
-          Kindly confirm your availability by selecting one of the options above.
-        </p>
-
-        <p>We look forward to your response.</p>
-
-        <br />
-        <p>Best regards,</p>
-        <p><strong>HR Team</strong></p>
-      `,
-    };
-
-    const mailOptions = {
-      from: `"HR Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: `Interview Rescheduled – ${designation} at ${companyName}`,
-      html: `
-        <div style="text-align: center; margin-bottom: 20px;">
-          <img src="https://api.geisil.com/upload/rescheduling_interview.jpg" alt="Banner" style="width: 100%; height: auto;" />
-        </div>
-
-        <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-              style="font-family:Arial,Helvetica,sans-serif;background-color:#f4f4f4;padding:20px;">
-          <tr>
-            <td align="center">
-              <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-                    style="max-width:600px;background:#ffffff;padding:24px;border-radius:6px;color:#333;">
-
-                <tr>
-                  <td>
-                    <p>Dear ${user.name || "Candidate"},</p>
-
-                    <p>
-                      We would like to inform you that your interview for the position of
-                      <strong>${designation}</strong> at <strong>${companyName}</strong>
-                      has been <strong>rescheduled</strong>.
-                    </p>
-
-                    <p>
-                      This interview will be an opportunity for us to discuss your technical
-                      expertise in greater detail and for you to learn more about our team
-                      and the exciting projects we are currently driving.
-                    </p>
-
-                    <h3 style="margin-top:20px;">Interview Details</h3>
-
-                    <p>
-                      <strong>Date:</strong> ${new Date(interviewDate).toDateString()}<br />
-                      <strong>Time:</strong> ${formattedInterviewTime}<br />
-                      <strong>Location:</strong> ${interviewLocation}<br />
-                    </p>
-
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <p>
-                      Please remember to carry a physical copy of your updated resume
-                      and a valid photo ID.
-                    </p>
-
-                    <p>
-                      We look forward to meeting you and exploring the possibility of
-                      you joining our technical team.
-                    </p>
-
-                    <p style="margin-top:24px;">
-                      Thanks &amp; Regards,<br />
-                      <strong>Hiring Team</strong><br />
-                      ${companyName}
-                    </p>
-                  </td>
-                </tr>
-
-              </table>
-            </td>
-          </tr>
-        </table>
-      `
-    };
-
     if (user?.email) {
-      await transporter.sendMail(mailOptions);
+      // Send email via queue
+      await emailQueue.add("company_interview_rescheduled", {
+        email: user.email,
+        userName: user.name,
+        designation,
+        companyName,
+        interviewDateString: new Date(interviewDate).toDateString(),
+        formattedInterviewTime,
+        interviewLocation,
+      });
     }
 
     return res.status(200).json({
@@ -3439,119 +3021,31 @@ export const sentOfferToCandidates = async (req, res) => {
     const designation =
       job?.jobTitle || "the applied position";
 
-    console.log("Here is my Sender User mail:", user.email);
-
-    // Send email with login credentials
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"HR Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      // to: "avik@2sglobal.co",
-      subject: `Offer Letter – ${offer_letter_designation}`,
-      html: `
-        <div style="text-align: center; margin-bottom: 20px;">
-          <img src="https://api.geisil.com/upload/job_offer.jpg" alt="Banner" style="width: 100%; height: auto;" />
-        </div>
- 
-        <p>Dear ${user.name || "Candidate"},</p>
-
-        <p>
-          We are pleased to extend an offer of employment to you for the position of
-          <strong>${offer_letter_designation}</strong> at <strong>${companyName}</strong>.
-        </p>
-
-        <p>
-          <strong>Offer Details:</strong><br />
-          <strong>Designation:</strong> ${offer_letter_designation}<br />
-          <strong>Proposed Joining Date:</strong> ${new Date(
-        offer_letter_joining_date
-      ).toDateString()}<br />
-          <strong>Salary:</strong> ₹${offer_letter_salary}
-        </p>
-
-        ${offer_letter_message
-          ? `<p>${offer_letter_message}</p>`
-          : ""
-        }
-
-        <br />
-        <p>Best regards,</p>
-        <p><strong>HR Team</strong></p>
-        <p>${companyName}</p>
-      `
-
-    };
-
-    const employerMailOptions = {
-      from: `"HR System" <${process.env.EMAIL_USER}>`,
-      to: companyUser.email,
-      subject: `Offer Sent to Candidate – ${offer_letter_designation}`,
-      html: `
-    <h2>Offer Letter Sent Notification</h2>
-
-    <p>
-      An offer letter has been successfully sent to a candidate for the position:
-    </p>
-
-    <p><strong>Job Title:</strong> ${designation}</p>
-
-    <h3>Candidate Details</h3>
-    <table cellpadding="6" cellspacing="0" border="0">
-      <tr>
-        <td><strong>Name</strong></td>
-        <td>${user.name || "N/A"}</td>
-      </tr>
-      <tr>
-        <td><strong>Email</strong></td>
-        <td>${user.email}</td>
-      </tr>
-    </table>
-
-    <br/>
-
-    <h3>Offer Details</h3>
-    <p>
-      <strong>Designation:</strong> ${offer_letter_designation}<br/>
-      <strong>Joining Date:</strong> ${new Date(
-        offer_letter_joining_date
-      ).toDateString()}<br/>
-      <strong>Salary:</strong> ₹${offer_letter_salary}
-    </p>
-
-    <br/>
-    <p>— System Notification</p>
-  `,
-    };
-
-    // if (user?.email) {
-    //   await transporter.sendMail(mailOptions);
-    // }
-
-    const emailPromises = [];
-
-    // Candidate email
     if (user?.email) {
-      emailPromises.push(transporter.sendMail(mailOptions));
+      // Send email via queue
+      await emailQueue.add("company_offer_letter", {
+        email: user.email,
+        userName: user.name,
+        offer_letter_designation,
+        companyName,
+        offer_letter_joining_date_string: new Date(offer_letter_joining_date).toDateString(),
+        offer_letter_salary,
+        offer_letter_message,
+      });
     }
 
-    // Employer email
     if (companyUser?.email) {
-      emailPromises.push(transporter.sendMail(employerMailOptions));
+      // Send email via queue
+      await emailQueue.add("company_offer_sent_notification", {
+        email: companyUser.email,
+        designation,
+        userName: user.name,
+        userEmail: user.email,
+        offer_letter_designation,
+        offer_letter_joining_date_string: new Date(offer_letter_joining_date).toDateString(),
+        offer_letter_salary,
+      });
     }
-
-    // Send in parallel
-    await Promise.all(emailPromises);
-
-
 
     return res.status(200).json({
       success: true,
@@ -3792,74 +3286,15 @@ export const acceptInterviewInvitation = async (req, res) => {
     // ➤ Fetch candidate (optional but recommended)
     const candidate = await User.findById(application.userId);
 
-    // Send email with login credentials
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-    let mailOptions;
-    if (accept === true) {
-      mailOptions = {
-        // from: `"HR Team" <${process.env.EMAIL_USER}>`,
-        from: `"GEISIL Notifications" <${process.env.EMAIL_USER}>`,
-        to: employer.email,
-        // to: "chandrasarkar2sglobal@gmail.com",
-        subject: `Interview Invitation Accepted – ${job.jobTitle}`,
-        html: `
-            <p>Hello ${employer.name || "Employer"},</p>
-
-            <p>
-              The candidate <strong>${candidate?.name || "Candidate"}</strong>
-              has accepted the interview invitation for the position
-              <strong>${job.jobTitle}</strong>.
-            </p>
-
-            <p>
-              Please log in to your dashboard to schedule the interview
-              and proceed further.
-            </p>
-
-            <p>
-              Regards,<br />
-              <strong>GEISIL</strong>
-            </p>
-          `,
-      };
-    } else {
-      mailOptions = {
-        from: `"GEISIL Notifications" <${process.env.EMAIL_USER}>`,
-        to: employer.email,
-        // to: "chandrasarkar2sglobal@gmail.com",
-        subject: `Interview Invitation Rejected – ${job.jobTitle}`,
-        html: `
-          <p>Hello ${employer.name || "Employer"},</p>
-
-          <p>
-            The candidate <strong>${candidate?.name || "Candidate"}</strong>
-            has <strong>declined</strong> the interview invitation for the position
-            <strong>${job.jobTitle}</strong>.
-          </p>
-
-          <p>
-            You may review other applicants or invite another suitable
-            candidate for the interview.
-          </p>
-
-          <p>
-            Regards,<br />
-            <strong>GEISIL</strong>
-          </p>
-        `,
-      };
-    }
-
     if (employer?.email) {
-      await transporter.sendMail(mailOptions);
+      // Send email via queue
+      await emailQueue.add("company_interview_response", {
+        email: employer.email,
+        accept,
+        employerName: employer.name,
+        candidateName: candidate?.name,
+        jobTitle: job.jobTitle,
+      });
     }
 
 
@@ -3954,73 +3389,15 @@ export const acceptRejectOfferLetter = async (req, res) => {
     // ➤ Fetch candidate (optional but recommended)
     const candidate = await User.findById(application.userId);
 
-    // Send email with login credentials
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-    let mailOptions;
-    if (accept === true) {
-      mailOptions = {
-        // from: `"HR Team" <${process.env.EMAIL_USER}>`,
-        from: `"GEISIL Notifications" <${process.env.EMAIL_USER}>`,
-        to: employer.email,
-        // to: "chandrasarkar2sglobal@gmail.com",
-        subject: `Offer Letter Accepted – ${job.jobTitle}`,
-        html: `
-            <p>Hello ${employer.name || "Employer"},</p>
-
-            <p>
-              The candidate <strong>${candidate?.name || "Candidate"}</strong>
-              has accepted the offer letter for the position
-              <strong>${job.jobTitle}</strong>.
-            </p>
-
-            <p>
-              Kindly log in to your dashboard to proceed with the onboarding and joining formalities.
-            </p>
-
-            <p>
-              Regards,<br />
-              <strong>GEISIL</strong>
-            </p>
-          `,
-      };
-    } else {
-      mailOptions = {
-        from: `"GEISIL Notifications" <${process.env.EMAIL_USER}>`,
-        to: employer.email,
-        // to: "chandrasarkar2sglobal@gmail.com",
-        subject: `Offer Letter Rejected – ${job.jobTitle}`,
-        html: `
-          <p>Hello ${employer.name || "Employer"},</p>
-
-          <p>
-            The candidate <strong>${candidate?.name || "Candidate"}</strong>
-            has <strong>declined</strong> the offer letter for the position
-            <strong>${job.jobTitle}</strong>.
-          </p>
-
-          <p>
-            You may review other applicants or invite another suitable
-            candidate for the interview.
-          </p>
-
-          <p>
-            Regards,<br />
-            <strong>GEISIL</strong>
-          </p>
-        `,
-      };
-    }
-
     if (employer?.email) {
-      await transporter.sendMail(mailOptions);
+      // Send email via queue
+      await emailQueue.add("company_offer_letter_response", {
+        email: employer.email,
+        accept,
+        employerName: employer.name,
+        candidateName: candidate?.name,
+        jobTitle: job.jobTitle,
+      });
     }
 
 
@@ -4148,50 +3525,16 @@ export const requestRescheduleByCandidate = async (req, res) => {
 
     // 5️⃣ Send mail to employer
     if (employer?.email) {
-
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
+      // Send email via queue
+      await emailQueue.add("company_interview_reschedule_request", {
+        email: employer.email,
+        employerName: employer.name,
+        candidateName: candidate.name,
+        jobTitle: job.jobTitle,
+        requestDateString: new Date(requestDate).toDateString(),
+        requestStartTime,
+        requestEndTime,
       });
-
-      const mailOptions = {
-        from: `"GEISIL Notifications" <${process.env.EMAIL_USER}>`,
-        // to: employer.email,
-        to: employer.email, // use real employer email
-        subject: `Reschedule Request – ${job.jobTitle}`,
-        html: `
-          <p>Hello ${employer.name || "Employer"},</p>
-
-          <p>
-            The candidate <strong>${candidate.name}</strong> has requested
-            to <strong>reschedule</strong> the interview for the position
-            <strong>${job.jobTitle}</strong>.
-          </p>
-
-          <p><strong>Requested Schedule:</strong></p>
-          <ul>
-            <li><strong>Date:</strong> ${new Date(requestDate).toDateString()}</li>
-            <li><strong>Time Window:</strong> ${requestStartTime} – ${requestEndTime}</li>
-          </ul>
-
-          <p>
-            Please log in to your dashboard to review and take action
-            on this reschedule request.
-          </p>
-
-          <p>
-            Regards,<br />
-            <strong>GEISIL</strong>
-          </p>
-        `,
-      };
-
-      await transporter.sendMail(mailOptions);
     }
 
 

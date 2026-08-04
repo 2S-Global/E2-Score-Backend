@@ -21,8 +21,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // Async error wrapper
-const asyncHandler = (fn) => (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next);
+const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 CompanyKycRoute.post(
   "/kyc",

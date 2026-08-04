@@ -24,7 +24,6 @@ export const emailWorker = new Worker("email", processEmailJob, {
 
 
 
-
 //CHECKERS
 emailWorker.on("completed", (job) => {
     console.log(`[EmailWorker] Job ${job.id} (${job.name}) completed successfully`);

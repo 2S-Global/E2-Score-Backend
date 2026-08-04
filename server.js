@@ -98,7 +98,7 @@ import campusRoutes from "./routes/institute/instituteCampusRoute.js";
 import visibilityRouter from "./routes/candidate/visibility/visibilityRouter.js";
 import VerificationServicesRouter from "./routes/VerificationServices/VerificationServicesRoutes.js";
 import WhyGeisilRouter from "./routes/VerificationServices/WhyGeiSilRoutes.js";
-
+import serverAdapter from "./bullboard/bullBoard.js"
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
 // This file is reserved for internal use and should remain untouched.
@@ -112,7 +112,10 @@ app.get("/", (req, res) => {
 });
 
 // app.use("/api/demo", DemoRouter)
-
+app.use(
+  "/admin/queues",
+  serverAdapter.getRouter()
+);
 
 
 app.use("/api/auth", AuthRouter);

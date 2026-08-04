@@ -3,8 +3,7 @@ import User from "../../models/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
-
-import nodemailer from "nodemailer";
+import { emailQueue } from "../../queues/emailQueue.js";
 
 export const changePassword = async (req, res) => {
   try {
@@ -141,76 +140,7 @@ export const registerCompanyUser = async (req, res) => {
     }); */
 
     // Send email with login credentials
-    const transporter = nodemailer.createTransport({
-      host: "smtp.hostinger.com", // fixed typo
-      port: 465,
-      secure: true, // true for port 465
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject:
-        "Access Credentials for E2Score - Fast & Accurate KYC Verification Platform",
-      html: `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-        <p>Dear <strong>${name}</strong>,</p>
-        <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>
-          We are pleased to provide you with access to our newly launched platform,
-          <a href="https://www.e2score.in" target="_blank">https://www.e2score.in</a>,
-          designed for fast and accurate verification of KYC documents. This platform will
-          streamline your verification processes, enhance efficiency, and ensure compliance.
-        </p>
-      
-        <p>Your corporate account has been successfully created with the following credentials:</p>
-        <ul>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Password:</strong> ${password}</li>
-        </ul>
-      
-        <p>
-          Please log in to the platform at 
-          <a href="https://www.e2score.in" target="_blank">https://www.e2score.in</a> 
-          using the provided credentials. We strongly recommend that you change your password
-          upon your first login for security reasons.
-        </p>
-      
-        <p><strong>Key Features and Benefits of E2Score:</strong></p>
-        <ul>
-          <li>Rapid Verification: Significantly reduced turnaround times for KYC document verification.</li>
-          <li>Enhanced Accuracy: Advanced technology minimizes errors and ensures reliable results.</li>
-          <li>Secure Platform: Built with robust security measures to protect sensitive data.</li>
-          <li>Comprehensive Coverage: Supports a wide range of KYC documents.</li>
-          <li>User-Friendly Interface: Intuitive design for a smooth verification experience.</li>
-          <li>Audit Trail: Complete record of all verification activity.</li>
-        </ul>
-      
-        <p>We are confident that E2Score will significantly improve your KYC verification workflow.</p>
-      
-        <p>For any assistance with the platform, including login issues or technical support, please contact our support team at: </p>
-        <ul>
-          <li><strong>Email:</strong> <a href="mailto:info@geisil.com">info@geisil.com</a></li>
-          <li><strong>Phone:</strong> 9831823898</li>
-        </ul>
-      
-        <p>Thank you for choosing <strong>E2Score India Limited</strong>.</p>
-        <p>We look forward to supporting your KYC verification needs.</p>
-      
-        <br />
-        <p>Sincerely,<br />
-        The Admin Team<br />
-        <strong>E2Score India Limited</strong></p>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
+    await emailQueue.add("company_registration", { name, email, password });
 
     res.status(201).json({
       success: true,
@@ -276,81 +206,11 @@ export const RegisterFrontEnd = async (req, res) => {
       expiresIn: "30d",
     }); */
 
-    // Send email with login credentials
-    const transporter = nodemailer.createTransport({
-      host: "smtp.hostinger.com", // fixed typo
-      port: 465,
-      secure: true, // true for port 465
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+    await emailQueue.add("company_registration", {
+      name,
+      email,
+      password,
     });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject:
-        "Access Credentials for QuikChek - Fast & Accurate KYC Verification Platform",
-      html: `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-        <p>Dear <strong>${name}</strong>,</p>
-        <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>
-          We are pleased to provide you with access to our newly launched platform,
-          <a href="https://www.quikchek.in" target="_blank">https://www.quikchek.in</a>,
-          designed for fast and accurate verification of KYC documents. This platform will
-          streamline your verification processes, enhance efficiency, and ensure compliance.
-        </p>
-      
-        <p>Your corporate account has been successfully created with the following credentials:</p>
-        <ul>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Password:</strong> ${password}</li>
-        </ul>
-      
-        <p>
-          Please log in to the platform at 
-          <a href="https://www.quikchek.in" target="_blank">https://www.quikchek.in</a> 
-          using the provided credentials. We strongly recommend that you change your password
-          upon your first login for security reasons.
-        </p>
-      
-        <p><strong>Key Features and Benefits of QuikChek:</strong></p>
-        <ul>
-          <li>Rapid Verification: Significantly reduced turnaround times for KYC document verification.</li>
-          <li>Enhanced Accuracy: Advanced technology minimizes errors and ensures reliable results.</li>
-          <li>Secure Platform: Built with robust security measures to protect sensitive data.</li>
-          <li>Comprehensive Coverage: Supports a wide range of KYC documents.</li>
-          <li>User-Friendly Interface: Intuitive design for a smooth verification experience.</li>
-          <li>Audit Trail: Complete record of all verification activity.</li>
-        </ul>
-      
-        <p>
-          We are confident that QuikChek will significantly improve your KYC verification workflow.
-        </p>
-      
-        <p>
-          For any assistance with the platform, including login issues or technical support, please contact our support team at:
-        </p>
-        <ul>
-          <li><strong>Email:</strong> <a href="mailto:info@geisil.com">info@geisil.com</a></li>
-          <li><strong>Phone:</strong> 9831823898</li>
-        </ul>
-      
-        <p>Thank you for choosing <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>We look forward to supporting your KYC verification needs.</p>
-      
-        <br />
-        <p>Sincerely,<br />
-        The Admin Team<br />
-        <strong>Global Employability Information Services India Limited</strong></p>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -447,41 +307,8 @@ export const editUser = async (req, res) => {
     }
 
     if (oldemail != email) {
-      const transporter = nodemailer.createTransport({
-        host: "smtp.hostinger.com", // fixed typo
-        port: 465,
-        secure: true, // true for port 465
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      const mailOptions = {
-        from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject:
-          "Your Email Address Has Been Updated QuikChek - Fast & Accurate KYC Verification Platform",
-        html: `
-        <div style="text-align: center; margin-bottom: 20px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745316541/QuikChek%20images/nbnkdrtxbawjjh2zgs1y.jpg" alt="Banner" style="width: 100%; height: auto;" />
-    </div>
-          <p>Dear <strong>${name}</strong>,</p>
-          <p>We wanted to let you know that the email address associated with your account was recently changed.</p>
-
-            <p><strong>New Email Address::</strong> ${email}</p>
-        
-          <p>If you made this change, no further action is needed.</p>
-        
-          <p>If you didn’t make this change or believe it was done in error, please contact our support team immediately so we can help secure your account.</p>
-          <br />
-          <p>Sincerely,<br />
-          The Admin Team<br />
-          <strong>E2Score India Limited</strong></p>
-        `,
-      };
-
-      //   await transporter.sendMail(mailOptions);
+      // Send admin email updated via queue (currently commented out functionality)
+      // await emailQueue.add("admin_email_updated", { name, email });
     }
 
     res.status(200).json({
@@ -535,81 +362,12 @@ export const sendAccessEmail = async (req, res) => {
     // Update user's password in DB
     await User.findByIdAndUpdate(user._id, { password: hashedPassword });
 
-    // Send email with new password
-    const transporter = nodemailer.createTransport({
-      host: "smtp.hostinger.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+    // Send email with new password via queue
+    await emailQueue.add("admin_e2score_credentials", {
+      name: user.name,
+      email,
+      password: newPassword,
     });
-
-    const mailOptions = {
-      from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject:
-        "Access Credentials for E2Score - Fast & Accurate KYC Verification Platform",
-      html: `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745316541/QuikChek%20images/nbnkdrtxbawjjh2zgs1y.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-        <p>Dear <strong>${user.name}</strong>,</p>
-        <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>
-          We are pleased to provide you with access to our newly launched platform,
-          <a href="https://www.quikchek.in" target="_blank">https://www.quikchek.in</a>,
-          designed for fast and accurate verification of KYC documents. This platform will
-          streamline your verification processes, enhance efficiency, and ensure compliance.
-        </p>
-      
-        <p>Your corporate account has been successfully created with the following credentials:</p>
-        <ul>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Password:</strong> ${newPassword}</li>
-        </ul>
-      
-        <p>
-          Please log in to the platform at 
-          <a href="https://www.e2score.in" target="_blank">https://www.e2score.in</a> 
-          using the provided credentials. We strongly recommend that you change your password
-          upon your first login for security reasons.
-        </p>
-      
-        <p><strong>Key Features and Benefits of E2Score:</strong></p>
-        <ul>
-          <li>Rapid Verification: Significantly reduced turnaround times for KYC document verification.</li>
-          <li>Enhanced Accuracy: Advanced technology minimizes errors and ensures reliable results.</li>
-          <li>Secure Platform: Built with robust security measures to protect sensitive data.</li>
-          <li>Comprehensive Coverage: Supports a wide range of KYC documents.</li>
-          <li>User-Friendly Interface: Intuitive design for a smooth verification experience.</li>
-          <li>Audit Trail: Complete record of all verification activity.</li>
-        </ul>
-      
-        <p>
-          We are confident that E2Score will significantly improve your KYC verification workflow.
-        </p>
-      
-        <p>
-          For any assistance with the platform, including login issues or technical support, please contact our support team at:
-        </p>
-        <ul>
-          <li><strong>Email:</strong> <a href="mailto:info@e2score.com">info@e2score.com</a></li>
-          <li><strong>Phone:</strong> 9831823898</li>
-        </ul>
-      
-        <p>Thank you for choosing <strong>E2Score India Limited</strong>.</p>
-        <p>We look forward to supporting your KYC verification needs.</p>
-      
-        <br />
-        <p>Sincerely,<br />
-        The Admin Team<br />
-        <strong>E2Score India Limited</strong></p>
-      `,
-    };
-
-    //  await transporter.sendMail(mailOptions);
 
     res
       .status(200)
@@ -653,39 +411,12 @@ export const forgotPassword = async (req, res) => {
     // Update user's password in DB
     await User.findByIdAndUpdate(user._id, { password: hashedPassword });
 
-    // Send email with new password
-    const transporter = nodemailer.createTransport({
-      host: "smtp.hostinger.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Password Reset Successful - Action Required",
-      html: `<div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/z17uasoek8vat5czluvg.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-              <h3>Dear ${user.name},</h3>
-              <p>Your password has been successfully reset as per your request. Please find your new login credentials below:</p>
-              <p><strong>New Password:</strong> ${newPassword}</p>
-              <p>For your security, we strongly recommend that you log in immediately and change this password to something more personal and secure.</p>
-              <p>
-              If you did not request this password reset or have any concerns, please contact our support team right away.
-              
-              
-              </p>
-              <br/>
-              <p>Stay secure,<br/>E2Score Team</p>
-          `,
-    };
-
-    //  await transporter.sendMail(mailOptions);
+    // Send email with new password via queue (currently commented out functionality)
+    // await emailQueue.add("forgot_password_company", {
+    //   name: user.name,
+    //   email,
+    //   newPassword,
+    // });
 
     res.status(200).json({ message: "New password sent to your email" });
   } catch (error) {
@@ -1031,9 +762,8 @@ export const toggleCompanyStatus = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `${entityName} has been ${
-        status ? "activated" : "deactivated"
-      } successfully`,
+      message: `${entityName} has been ${status ? "activated" : "deactivated"
+        } successfully`,
       data: updatedCompany,
     });
   } catch (error) {
@@ -1096,28 +826,28 @@ export const toggleCompanyStatus = async (req, res) => {
 export const getSwitchedRoleDetails = async (req, res) => {
   try {
     const userId = req.userId;
- 
+
     const user = await User.findById(userId).lean();
- 
+
     if (!user || user.is_del) {
       return res.status(404).json({
         message: "User not found.",
         success: false,
       });
     }
- 
+
     if (!user.check_role) {
       return res.status(200).json({
         message: "Switched role not assigned to this user.",
-        check_role:false,
+        check_role: false,
         success: false,
       });
     }
- 
- 
+
+
     // Fetch user info with switchedRole
-   
- 
+
+
     return res.status(200).json({
       message: "Switched role user fetched successfully.",
       success: true,

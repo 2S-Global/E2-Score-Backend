@@ -5,8 +5,6 @@ import bcrypt from "bcrypt";
 
 import jwt from "jsonwebtoken";
 
-import nodemailer from "nodemailer";
-
 import XLSX from "xlsx"; // ✅ default import so readFile works
 
 import { sendUserCredentialsEmail } from "../../utility/Admin/Registrationemail.js";

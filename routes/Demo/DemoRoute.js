@@ -11,6 +11,7 @@ const DemoRouter = Router()
 
 DemoRouter.post("/generate-pdf", userAuth, validateRequest(ResumeSchema), GeneratePdf)
 DemoRouter.get("/get-all-company-data", GetAllcompanydata)
+DemoRouter.get('/search' , SearchFromCompany)
 
 
 

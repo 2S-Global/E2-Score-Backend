@@ -62,7 +62,6 @@ export const GetAllcompanydata = async (req, res) => {
                     _id: userId,
                     is_del: false,
                     is_Active: true
-
                 }
             },
             {

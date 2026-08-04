@@ -13,45 +13,22 @@ import list_grading_system from "../../models/monogo_query/gradingSystemModel.js
 import { InstitueStudent, InstitueStudentSemester, StudentPlacement } from "../../models/InstitueStudentModel.js";
 import student_course_details from "../../models/studentCourseModel.js";
 import companyRequirement from "../../models/companyRequirementModel.js";
-import nodemailer from "nodemailer";
+import { emailQueue } from "../../queues/emailQueue.js";
 import mongoose from "mongoose";
 import { Types } from 'mongoose';
 import { GetProgress } from "../../utility/helper/getprogress.js";
 import { studentDetails } from "../../utility/student.js"
 import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
 export const sendMailSudent = async (data) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
+  // Send email via queue
+  await emailQueue.add("institute_interview_invitation", {
+    studentName: data?.studentName,
+    studentEmail: data?.studentEmail,
+    role: data?.role,
+    recruiterName: data?.recruiterName,
+    date: data?.date && new Date(data?.date).toISOString().split("T")[0],
+    time: data?.time,
   });
-
-  let dateTime = `
-        <ul>
-          <li><strong>Date:</strong> ${data?.date && new Date(data?.date).toISOString().split("T")[0]}</li>
-          <li><strong>Time:</strong> ${data?.time}</li>
-        </ul>
-      `;
-
-  const emailcontent = `<p>Dear <strong>${data?.studentName}</strong>,</p>
-        <p>We are pleased to invite you to an interview for the position of ${data?.role} at ${data?.recruiterName}.</p>
-        <p>Interview Details:</p>
-        ${dateTime}
-        <p>If you have any questions, feel free to contact us.</p>
-        <br/>
-        <p>Regards,<br/>E2Score Verification Team</p>`;
-
-  const mailOptions = {
-    from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-    to: data?.studentEmail,
-    subject: `Interview Invitation for ${data?.role} Position`,
-    html: emailcontent,
-  };
-  await transporter.sendMail(mailOptions);
 }
 
 
@@ -89,31 +66,14 @@ export const sendMailRecruiter = async (data, students) => {
 
 
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
+  // Send email via queue
+  await emailQueue.add("institute_recruiter_interview_schedule", {
+    recruiterEmail: data?.recruiterEmail,
+    total: data?.total,
+    date: data?.date && new Date(data?.date).toISOString().split("T")[0],
+    role: data?.role,
+    studentsTableHtml: stu,
   });
-
-  const emailcontent = `<p>Dear <strong>Recruiter</strong>,</p>
-        <p>Please find the details of  ${data?.total} candidates scheduled for interviews on  ${data?.date && new Date(data?.date).toISOString().split("T")[0]} for the position of ${data?.role}.</p>
-        <div>${stu}</div>
-        <p>Kindly review the candidate list and confirm the interview schedule. Please let me know if any additional information or documentation is required.</p>
-        <p>Thank you for your assistance.</p>
-        <br/>
-        <p>Regards,<br/>E2Score Verification Team</p>`;
-
-  const mailOptions = {
-    from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-    to: data?.recruiterEmail,
-    subject: `Position Interview Schedule Submission – ${data?.total} Candidates for ${data?.role}`,
-    html: emailcontent,
-  };
-  await transporter.sendMail(mailOptions);
 }
 
 export const GetunverifiedStudents = async (req, res) => {
@@ -631,56 +591,20 @@ export const UpdatestudentStatus = async (req, res) => {
         message: "User not found",
       });
     }
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+
+    // Send email via queue
+    await emailQueue.add("institute_academic_verification_status", {
+      email: user.email,
+      userName: user.name,
+      instituteName: instituteDetails.name,
+      levelVerified: updatedUserEducation.level_verified,
+      courseTypeVerified: updatedUserEducation.courseType_verified,
+      courseNameVerified: updatedUserEducation.courseName_verified,
+      durationVerified: updatedUserEducation.duration_verified,
+      gradingSystemVerified: updatedUserEducation.gradingSystem_verified,
+      marksVerified: updatedUserEducation.marks_verified,
+      remarks: updatedUserEducation.remarks,
     });
-
-    let verificationStatus = `
-        <ul>
-          <li><strong>Level:</strong> ${updatedUserEducation.level_verified ? "Verified" : "Not Verified"
-      }</li>
-          <li><strong>Course Type:</strong> ${updatedUserEducation.courseType_verified
-        ? "Verified"
-        : "Not Verified"
-      }</li>
-          <li><strong>Course Name:</strong> ${updatedUserEducation.courseName_verified
-        ? "Verified"
-        : "Not Verified"
-      }</li>
-          <li><strong>Duration:</strong> ${updatedUserEducation.duration_verified ? "Verified" : "Not Verified"
-      }</li>
-          <li><strong>Grading System:</strong> ${updatedUserEducation.gradingSystem_verified
-        ? "Verified"
-        : "Not Verified"
-      }</li>
-          <li><strong>Marks:</strong> ${updatedUserEducation.marks_verified ? "Verified" : "Not Verified"
-      }</li>
-          <li><strong>Remarks:</strong> ${updatedUserEducation.remarks}</li>
-        </ul>
-      `;
-
-    const emailcontent = `<p>Dear <strong>${user.name}</strong>,</p>
-        <p>Your academic verification details have been updated by <strong>${instituteDetails.name}</strong>.</p>
-        <p>Here is the status of your verification:</p>
-        ${verificationStatus}
-        <p>If you believe there is an error, please contact our support team.</p>
-        <br/>
-        <p>Regards,<br/>E2Score Verification Team</p>`;
-
-    const mailOptions = {
-      from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "Academic Verification Status Updated",
-      html: emailcontent,
-    };
-
-    await transporter.sendMail(mailOptions);
 
     return res.status(200).json({
       success: true,

@@ -7,7 +7,7 @@ import { instituteStudentAvgMarks } from "../../controllers/institute/instituteS
 import User from "../../models/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
+import { emailQueue } from "../../queues/emailQueue.js";
 import mongoose from "mongoose";
 import { GetProgress } from "../../utility/helper/getprogress.js";
 
@@ -243,78 +243,13 @@ export const insStudentImport = async (req, res) => {
           expiresIn: "30d",
         });
 
-        // Send email with login credentials
-        const transporter = nodemailer.createTransport({
-          host: process.env.EMAIL_HOST,
-          port: process.env.EMAIL_PORT,
-          secure: true,
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
+        // Send email with login credentials via queue
+        await emailQueue.add("institute_student_import_credentials", {
+          name,
+          email,
+          password: newPassword,
+          token
         });
-
-        const mailOptions = {
-          from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-          to: email,
-          subject: "Access Credentials for Geisil",
-          html: `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1765884063/addacademics_asbt5b.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-        <p>Dear <strong>${name}</strong>,</p>
-        <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>
-          We are pleased to provide you with access to our newly launched platform,
-          <a href="https://e2-score-updated.vercel.app" target="_blank">https://e2-score-updated.vercel.app</a>,
-          <strong>Geisil</strong> is a comprehensive job and career platform designed for both candidates and companies. Candidates can register, update their professional profiles, and apply to job opportunities. Employers can sign in, post jobs, and verify candidates who have listed their company in their employment details. Institutes also have the ability to verify candidates in a similar way.
-        </p>
-     
-        <p>Your corporate account has been successfully created with the following credentials:</p>
-        <ul>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Password:</strong> ${newPassword}</li>
-        </ul>
-     
-       <p>Click the link  to verify your email: <a href="${process.env.BACKEND_URL}/api/auth/verify-email/${token}">Verify Email</a></p>
-     
-        <p><strong>Key Features and Benefits of Geisil:</strong></p>
-        <ul>
-          <li>Job Search & Applications: Candidates can explore and apply to a wide range of job opportunities.</li>
-          <li>Profile Management: Build and update a complete professional profile including education, skills, and work experience.</li>
-          <li>Job Posting: Employers and institutes can post jobs and connect with qualified candidates.</li>
-          <li>Candidate Verification: Companies and institutes can verify candidates who list them in their employment or education history.</li>
-          <li>Seamless Communication: Easy interaction between candidates and employers for smoother recruitment.</li>
-          <li>Secure Platform: Data protection and privacy ensured for both candidates and employers.</li>
-        </ul>
-     
-        <p>
-          We are confident that E2 Score will significantly improve your recruitment and job search experience by making the process faster, easier, and more reliable for both candidates and employers.
-        </p>
-     
-        <p>
-          For any assistance with the platform, including login issues or technical support, please contact our support team at:
-        </p>
-        <ul>
-          <li><strong>Email:</strong> <a href="mailto:info@geisil.com">info@geisil.com</a></li>
-          <li><strong>Phone:</strong> 9831823898</li>
-        </ul>
-     
-        <p>Thank you for choosing <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>We look forward to supporting your Job Searching and Job Posting needs.</p>
-     
-        <br />
-        <p>Sincerely,<br />
-        The Admin Team<br />
-        <strong>Global Employability Information Services India Limited</strong></p>
- 
-         <div style="text-align: center; margin-top: 30px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png%22 alt="Footer" style="width:97px; height: 116px;" />
-    </div>
-      `,
-        };
-
-        await transporter.sendMail(mailOptions);
 
         // User Account Creation Ends here
 
@@ -633,78 +568,13 @@ export const addInstituteStudentManually = async (req, res) => {
         expiresIn: "30d",
       });
 
-      // Send email with login credentials
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
+      // Send email with login credentials via queue
+      await emailQueue.add("institute_student_import_credentials", {
+        name,
+        email,
+        password: newPassword,
+        token
       });
-
-      const mailOptions = {
-        from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Access Credentials for Geisil",
-        html: `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1765884063/addacademics_asbt5b.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-        <p>Dear <strong>${name}</strong>,</p>
-        <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>
-          We are pleased to provide you with access to our newly launched platform,
-          <a href="https://e2-score-updated.vercel.app" target="_blank">https://e2-score-updated.vercel.app</a>,
-          <strong>Geisil</strong> is a comprehensive job and career platform designed for both candidates and companies. Candidates can register, update their professional profiles, and apply to job opportunities. Employers can sign in, post jobs, and verify candidates who have listed their company in their employment details. Institutes also have the ability to verify candidates in a similar way.
-        </p>
-     
-        <p>Your corporate account has been successfully created with the following credentials:</p>
-        <ul>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Password:</strong> ${newPassword}</li>
-        </ul>
-     
-       <p>Click the link  to verify your email: <a href="${process.env.BACKEND_URL}/api/auth/verify-email/${token}">Verify Email</a></p>
-     
-        <p><strong>Key Features and Benefits of Geisil:</strong></p>
-        <ul>
-          <li>Job Search & Applications: Candidates can explore and apply to a wide range of job opportunities.</li>
-          <li>Profile Management: Build and update a complete professional profile including education, skills, and work experience.</li>
-          <li>Job Posting: Employers and institutes can post jobs and connect with qualified candidates.</li>
-          <li>Candidate Verification: Companies and institutes can verify candidates who list them in their employment or education history.</li>
-          <li>Seamless Communication: Easy interaction between candidates and employers for smoother recruitment.</li>
-          <li>Secure Platform: Data protection and privacy ensured for both candidates and employers.</li>
-        </ul>
-     
-        <p>
-          We are confident that E2 Score will significantly improve your recruitment and job search experience by making the process faster, easier, and more reliable for both candidates and employers.
-        </p>
-     
-        <p>
-          For any assistance with the platform, including login issues or technical support, please contact our support team at:
-        </p>
-        <ul>
-          <li><strong>Email:</strong> <a href="mailto:info@geisil.com">info@geisil.com</a></li>
-          <li><strong>Phone:</strong> 9831823898</li>
-        </ul>
-     
-        <p>Thank you for choosing <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>We look forward to supporting your Job Searching and Job Posting needs.</p>
-     
-        <br />
-        <p>Sincerely,<br />
-        The Admin Team<br />
-        <strong>Global Employability Information Services India Limited</strong></p>
- 
-         <div style="text-align: center; margin-top: 30px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png%22 alt="Footer" style="width:97px; height: 116px;" />
-    </div>
-      `,
-      };
-
-      await transporter.sendMail(mailOptions);
 
       // User Account Creation Ends here
 
@@ -893,103 +763,12 @@ export const sendProgressScoreMail = async (req, res) => {
     // Get progress score
     const progress = await GetProgress(studentId);
 
-    // Send email with login credentials
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+    // Send mail via queue
+    await emailQueue.add("institute_student_profile_completion", {
+      name: user.name,
+      email: user.email,
+      progress,
     });
-
-    // Email Template
-    // const emailHtml = `
-    //   <div style="font-family: Arial, sans-serif;">
-    //     <h2>Hello ${user.first_name || "Candidate"},</h2>
-
-    //     <p>Your current profile completion score is:</p>
-
-    //     <h1 style="color:#007bff;">
-    //       ${progress}%
-    //     </h1>
-
-    //     <p>
-    //       To improve your profile completion score and increase your chances of
-    //       getting noticed by recruiters, please update your profile by:
-    //     </p>
-
-    //     <ul>
-    //       <li>Adding educational details</li>
-    //       <li>Uploading your resume</li>
-    //       <li>Adding skills and certifications</li>
-    //       <li>Completing personal information</li>
-    //       <li>Adding project and work experience details</li>
-    //     </ul>
-
-    //     <p>
-    //       A complete profile improves visibility and job opportunities.
-    //     </p>
-
-    //     <br/>
-
-    //     <p>
-    //       Best Regards,<br/>
-    //       Placement Team
-    //     </p>
-    //   </div>
-    // `;
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: `Profile Completion Reminder - Current Score: ${progress}%`,
-      html: `
-      <div style="font-family: Arial, sans-serif;">
-        <h2>Hello ${user.name || "Candidate"},</h2>
-
-        <p>Your current profile completion score is:</p>
-
-        <h1 style="color:#007bff;">
-          ${progress}%
-        </h1>
-
-        <p>
-          To improve your profile completion score and increase your chances of
-          getting noticed by recruiters, please update your profile by:
-        </p>
-
-        <ul>
-          <li>Adding educational details</li>
-          <li>Uploading your resume</li>
-          <li>Adding skills and certifications</li>
-          <li>Completing personal information</li>
-          <li>Adding project and work experience details</li>
-        </ul>
-
-        <p>
-          A complete profile improves visibility and job opportunities.
-        </p>
-
-        <br/>
-
-        <p>
-          Best Regards,<br/>
-          Placement Team
-        </p>
-      </div>
-    `,
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    // Send mail
-    // await sendMail({
-    //   to: user.email,
-    //   subject: "Improve Your Profile Completion Score",
-    //   html: emailHtml,
-    // });
 
     return res.status(200).json({
       success: true,

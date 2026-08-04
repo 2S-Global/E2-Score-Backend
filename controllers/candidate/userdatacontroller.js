@@ -253,7 +253,7 @@ export const getResumeHeadline = async (req, res) => {
     }
 
     const user = await personalDetails.findOne({ user: user_id });
-
+    
     if (!user) {
       return res.status(404).json({ message: "No headline found" });
     }
@@ -307,7 +307,7 @@ export const getUserDetails = async (req, res) => {
     const userId = req.userId;
 
     const userData = await User.findById(userId, "name gender");
-
+    
     const personalData = await candidateDetails.findOne(
       { userId: userId },
       "dob country_id currentLocation hometown fatherName motherName currentSalary totalExperience"
@@ -493,6 +493,11 @@ export const getUserEducation = async (req, res) => {
     if (!educationRecords?.length) {
       return res.status(404).json({ message: "No education data found." });
     }
+
+
+
+
+
 
     // Get all unique values used in the records
     const getUniqueValues = (key) => [
@@ -1206,18 +1211,15 @@ export const getScore = async (req, res) => {
         kycCalculation(userId),
         calculateEducationGapPenalty(userId), // ✅ IMPORTANT
       ]);
+    console.log('4 data is working or not===>', gapResult)
 
     /* -----------------------------------
+    
        BASE SCORE (SUM)
     ----------------------------------- */
-    const baseScore =
-      (educationResult?.totalScore || 0) +
-      (studyResult?.score || 0) +
-      (kycResult?.totalScore || 0);
+    const baseScore = (educationResult?.totalScore || 0) + (studyResult?.score || 0) + (kycResult?.totalScore || 0);
 
-    /* -----------------------------------
-       GAP PENALTY
-    ----------------------------------- */
+
     const gapPenalty = gapResult?.gapPenalty || 0;
 
     /* -----------------------------------

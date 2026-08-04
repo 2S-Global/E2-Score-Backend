@@ -144,12 +144,13 @@ export const uploadCoverLetter = async (req, res) => {
         .json({ message: "Cover letter not found for this user." });
     }
 
-    /*  const userdtl = await User.findById(userId);
+    /*  
+    const userdtl = await User.findById(userId);
 
-    const htmlEmail = `
+    const htmlEmail = \`
       <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
          <div>
-    <img src= "${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addresume.png"
+    <img src= "\${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/addresume.png"
          alt="GEISIL Banner" 
          style="width:100%; border-radius:8px 8px 0 0; display:block;" />
   </div>
@@ -158,7 +159,7 @@ export const uploadCoverLetter = async (req, res) => {
         </div>
     
         <div style="padding:20px; background:#ffffff; border-radius:0 0 8px 8px;">
-          <p>Dear <strong>${userdtl.name}</strong>,</p>
+          <p>Dear <strong>\${userdtl.name}</strong>,</p>
               
            <p>Your resume has been <strong>uploaded</strong> successfully on your profile.</p>
                 
@@ -167,14 +168,14 @@ export const uploadCoverLetter = async (req, res) => {
           <p>You can access your dashboard using the link below:</p>
     
           <p>
-            <a href="${process.env.ORIGIN}" 
+            <a href="\${process.env.ORIGIN}" 
               style="background:#0052cc; color:#fff; padding:10px 16px; text-decoration:none; border-radius:5px; display:inline-block;">
               Visit Dashboard
             </a>
           </p>
     
           <p>If the button does not work, use this link:</p>
-          <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
+          <p><a href="\${process.env.ORIGIN}" style="color:#0052cc;">\${process.env.ORIGIN}</a></p>
     
           <br />
     
@@ -184,27 +185,13 @@ export const uploadCoverLetter = async (req, res) => {
           </p>
         </div>
       </div>
-      `;
+      \`;
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+    await emailQueue.add("resume_update_notification", {
+      email: userdtl.email,
+      name: userdtl.name
     });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: userdtl.email,
-      subject: "Resume Update Notification",
-      html: htmlEmail,
-    };
-    await transporter.sendMail(mailOptions);
-
-     */
+    */
     return res.status(200).json({
       success: true,
       message: "PDF uploaded and cover letter updated successfully",
@@ -277,6 +264,21 @@ export const getCoverLetterDetails = async (req, res) => {
       return res
         .status(404)
         .json({ message: "No Cover letter found for this user." });
+    }
+
+
+    //send background Email
+    const userdtl = await User.findById(userId);
+    console.log("wokring hard ==>", userdtl);
+    try {
+      await emailQueue.add("cover_letter_uploaded", {
+        to: userdtl.email,
+        userdtl: {
+          name: userdtl.name,
+        },
+      });
+    } catch (emailError) {
+      console.error("Queueing email failed:", emailError);
     }
 
     return res.status(200).json({

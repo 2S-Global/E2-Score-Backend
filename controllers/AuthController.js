@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Employment from "../models/Employment.js";
 import mongoose from "mongoose";
-import nodemailer from "nodemailer";
+import { emailQueue } from "../queues/emailQueue.js";
 import slugify from "slugify";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import dotenv from "dotenv";
@@ -128,78 +128,13 @@ export const registerUser = async (req, res) => {
       expiresIn: "30d",
     });
 
-    // Send email with login credentials
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+    // Send email with login credentials via queue
+    await emailQueue.add("candidate_registration", {
+      name,
+      email,
+      password,
+      token,
     });
-
-    const mailOptions = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Access Credentials for Geisil",
-      html: `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1765884063/addacademics_asbt5b.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-        <p>Dear <strong>${name}</strong>,</p>
-        <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>
-          We are pleased to provide you with access to our newly launched platform,
-          <a href="https://e2-score-updated.vercel.app" target="_blank">https://e2-score-updated.vercel.app</a>,
-          <strong>Geisil</strong> is a comprehensive job and career platform designed for both candidates and companies. Candidates can register, update their professional profiles, and apply to job opportunities. Employers can sign in, post jobs, and verify candidates who have listed their company in their employment details. Institutes also have the ability to verify candidates in a similar way.
-        </p>
-      
-        <p>Your corporate account has been successfully created with the following credentials:</p>
-        <ul>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Password:</strong> ${password}</li>
-        </ul>
-      
-       <p>Click the link  to verify your email: <a href="${process.env.BACKEND_URL}/api/auth/verify-email/${token}">Verify Email</a></p>
-      
-        <p><strong>Key Features and Benefits of Geisil:</strong></p>
-        <ul>
-          <li>Job Search & Applications: Candidates can explore and apply to a wide range of job opportunities.</li>
-          <li>Profile Management: Build and update a complete professional profile including education, skills, and work experience.</li>
-          <li>Job Posting: Employers and institutes can post jobs and connect with qualified candidates.</li>
-          <li>Candidate Verification: Companies and institutes can verify candidates who list them in their employment or education history.</li>
-          <li>Seamless Communication: Easy interaction between candidates and employers for smoother recruitment.</li>
-          <li>Secure Platform: Data protection and privacy ensured for both candidates and employers.</li>
-        </ul>
-      
-        <p>
-          We are confident that E2 Score will significantly improve your recruitment and job search experience by making the process faster, easier, and more reliable for both candidates and employers.
-        </p>
-      
-        <p>
-          For any assistance with the platform, including login issues or technical support, please contact our support team at:
-        </p>
-        <ul>
-          <li><strong>Email:</strong> <a href="mailto:info@geisil.com">info@geisil.com</a></li>
-          <li><strong>Phone:</strong> 9831823898</li>
-        </ul>
-      
-        <p>Thank you for choosing <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>We look forward to supporting your Job Searching and Job Posting needs.</p>
-      
-        <br />
-        <p>Sincerely,<br />
-        The Admin Team<br />
-        <strong>Global Employability Information Services India Limited</strong></p>
-
-         <div style="text-align: center; margin-top: 30px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
-    </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -213,6 +148,8 @@ export const registerUser = async (req, res) => {
       .json({ message: "Error creating user", error: error.message });
   }
 };
+
+
 // Register a new Institute
 export const registerInstituteft = async (req, res) => {
   try {
@@ -250,77 +187,13 @@ export const registerInstituteft = async (req, res) => {
 
     // Email Verification mail starts from here
 
-    const transporterEmailVerification = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+    // Send institute registration email via queue
+    await emailQueue.add("institute_registration", {
+      name,
+      email,
+      password,
+      token,
     });
-
-    const mailOptionsEmailVerification = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Access Credentials for Geisil",
-      html: `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-        <p>Dear <strong>${name}</strong>,</p>
-        <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>
-          We are pleased to provide you with access to our newly launched platform,
-          <a href="https://e2-score-updated.vercel.app" target="_blank">https://e2-score-updated.vercel.app</a>,
-          <strong>Geisil</strong> is a comprehensive job and career platform designed for both candidates and companies. Candidates can register, update their professional profiles, and apply to job opportunities. Employers can sign in, post jobs, and verify candidates who have listed their company in their employment details. Institutes also have the ability to verify candidates in a similar way.
-        </p>
-      
-        <p>Your corporate account has been successfully created with the following credentials:</p>
-        <ul>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Password:</strong> ${password}</li>
-        </ul>
-      
-       <p>Click the link  to verify your email: <a href="${process.env.CLIENT_BASE_URL}/api/auth/verify-email/${token}">Verify Email</a></p>
-      
-        <p><strong>Key Features and Benefits of Geisil:</strong></p>
-        <ul>
-          <li>Job Search & Applications: Candidates can explore and apply to a wide range of job opportunities.</li>
-          <li>Profile Management: Build and update a complete professional profile including education, skills, and work experience.</li>
-          <li>Job Posting: Employers and institutes can post jobs and connect with qualified candidates.</li>
-          <li>Candidate Verification: Companies and institutes can verify candidates who list them in their employment or education history.</li>
-          <li>Seamless Communication: Easy interaction between candidates and employers for smoother recruitment.</li>
-          <li>Secure Platform: Data protection and privacy ensured for both candidates and employers.</li>
-        </ul>
-      
-        <p>
-          We are confident that E2 Score will significantly improve your recruitment and job search experience by making the process faster, easier, and more reliable for both candidates and employers.
-        </p>
-      
-        <p>
-          For any assistance with the platform, including login issues or technical support, please contact our support team at:
-        </p>
-        <ul>
-          <li><strong>Email:</strong> <a href="mailto:info@geisil.com">info@geisil.com</a></li>
-          <li><strong>Phone:</strong> 9831823898</li>
-        </ul>
-      
-        <p>Thank you for choosing <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>We look forward to supporting your Job Searching and Job Posting needs.</p>
-      
-        <br />
-        <p>Sincerely,<br />
-        The Admin Team<br />
-        <strong>Global Employability Information Services India Limited</strong></p>
-
-         <div style="text-align: center; margin-top: 30px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
-    </div>
-      `,
-    };
-
-    await transporterEmailVerification.sendMail(mailOptionsEmailVerification);
 
     res.status(201).json({
       success: true,
@@ -453,77 +326,13 @@ export const registerCompany = async (req, res) => {
 
     // Email Verification mail starts from here
 
-    const transporterEmailVerification = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+    // Send company registration email via queue
+    await emailQueue.add("institute_registration", {
+      name,
+      email,
+      password,
+      token,
     });
-
-    const mailOptionsEmailVerification = {
-      from: `"Geisil Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Access Credentials for Geisil",
-      html: `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-        <p>Dear <strong>${name}</strong>,</p>
-        <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>
-          We are pleased to provide you with access to our newly launched platform,
-          <a href="https://e2-score-updated.vercel.app" target="_blank">https://e2-score-updated.vercel.app</a>,
-          <strong>Geisil</strong> is a comprehensive job and career platform designed for both candidates and companies. Candidates can register, update their professional profiles, and apply to job opportunities. Employers can sign in, post jobs, and verify candidates who have listed their company in their employment details. Institutes also have the ability to verify candidates in a similar way.
-        </p>
-      
-        <p>Your corporate account has been successfully created with the following credentials:</p>
-        <ul>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Password:</strong> ${password}</li>
-        </ul>
-      
-       <p>Click the link  to verify your email: <a href="${process.env.CLIENT_BASE_URL}/api/auth/verify-email/${token}">Verify Email</a></p>
-      
-        <p><strong>Key Features and Benefits of Geisil:</strong></p>
-        <ul>
-          <li>Job Search & Applications: Candidates can explore and apply to a wide range of job opportunities.</li>
-          <li>Profile Management: Build and update a complete professional profile including education, skills, and work experience.</li>
-          <li>Job Posting: Employers and institutes can post jobs and connect with qualified candidates.</li>
-          <li>Candidate Verification: Companies and institutes can verify candidates who list them in their employment or education history.</li>
-          <li>Seamless Communication: Easy interaction between candidates and employers for smoother recruitment.</li>
-          <li>Secure Platform: Data protection and privacy ensured for both candidates and employers.</li>
-        </ul>
-      
-        <p>
-          We are confident that E2 Score will significantly improve your recruitment and job search experience by making the process faster, easier, and more reliable for both candidates and employers.
-        </p>
-      
-        <p>
-          For any assistance with the platform, including login issues or technical support, please contact our support team at:
-        </p>
-        <ul>
-          <li><strong>Email:</strong> <a href="mailto:info@geisil.com">info@geisil.com</a></li>
-          <li><strong>Phone:</strong> 9831823898</li>
-        </ul>
-      
-        <p>Thank you for choosing <strong>Global Employability Information Services India Limited</strong>.</p>
-        <p>We look forward to supporting your Job Searching and Job Posting needs.</p>
-      
-        <br />
-        <p>Sincerely,<br />
-        The Admin Team<br />
-        <strong>Global Employability Information Services India Limited</strong></p>
-
-         <div style="text-align: center; margin-top: 30px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
-    </div>
-      `,
-    };
-
-    await transporterEmailVerification.sendMail(mailOptionsEmailVerification);
 
     // Email Verification mail ends here
 
@@ -610,24 +419,11 @@ export const registerCompany = async (req, res) => {
   </div>
 `;
 
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
+      // Send company associated employees email via queue
+      await emailQueue.add("company_associated_employees", {
+        email,
+        employeeListHtml,
       });
-
-      const mailOptions = {
-        from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Employment Verification Status Updated",
-        html: htmlTemplate,
-      };
-
-      await transporter.sendMail(mailOptions);
     }
 
     // Email is end from here
@@ -843,41 +639,12 @@ export const forgotPassword = async (req, res) => {
     await User.findByIdAndUpdate(user._id, { password: hashedPassword });
 
     // Send email with new password
-    const transporter = nodemailer.createTransport({
-      host: "smtp.zoho.in",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+    // Send forgot password email via queue
+    await emailQueue.add("forgot_password_company", {
+      name: user.name,
+      email,
+      newPassword,
     });
-
-    console.log("EMAIL_USER:", process.env.EMAIL_USER);
-    console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Loaded" : "Missing");
-
-    const mailOptions = {
-      from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Password Reset Successful - Action Required",
-      html: `<div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/z17uasoek8vat5czluvg.jpg" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
-              <h3>Dear ${user.name},</h3>
-              <p>Your password has been successfully reset as per your request. Please find your new login credentials below:</p>
-              <p><strong>New Password:</strong> ${newPassword}</p>
-              <p>For your security, we strongly recommend that you log in immediately and change this password to something more personal and secure.</p>
-              <p>
-              If you did not request this password reset or have any concerns, please contact our support team right away.
-              
-              
-              </p>
-              <br/>
-              <p>Stay secure,<br/>E2Score Team</p>
-          `,
-    };
-
-    await transporter.sendMail(mailOptions);
 
     res.status(200).json({ message: "New password sent to your email" });
   } catch (error) {

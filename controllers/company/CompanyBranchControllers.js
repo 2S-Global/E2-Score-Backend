@@ -12,7 +12,7 @@ import list_gender from "../../models/monogo_query/genderModel.js";
 import JobPosting from "../../models/company_Models/JobPostingModel.js";
 import CompanyDetails from "../../models/company_Models/companydetails.js";
 import companyBranchDetailsModel from "../../models/companyBranchDetailsModel.js";
-import nodemailer from "nodemailer";
+import { emailQueue } from "../../queues/emailQueue.js";
 
 // Get Conunty
 
@@ -689,32 +689,18 @@ export const addEmployeeVerificationDetails = async (req, res) => {
         verificationStatus += `<p><strong>Remarks:</strong> ${remarks}</p>`;
       }
 
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
+      // Send email via queue
+      await emailQueue.add("company_employment_verification_status", {
+        email: associatedEmployee.email,
+        employeeName: associatedEmployee.name,
+        companyName: user.name,
+        workedInCompanyBool,
+        VerifiedBool,
+        designationVerifiedBool,
+        durationVerifiedBool,
+        employmentTypeVerifiedBool,
+        remarks,
       });
-
-      const mailOptions = {
-        from: `"E2Score Team" <${process.env.EMAIL_USER}>`,
-        to: associatedEmployee.email,
-        subject: "Employment Verification Status Updated",
-        html: `
-        <p>Dear <strong>${associatedEmployee.name}</strong>,</p>
-        <p>Your employment verification details have been updated by <strong>${user.name}</strong>.</p>
-        <p>Here is the status of your verification:</p>
-        ${verificationStatus}
-        <p>If you believe there is an error, please contact our support team.</p>
-        <br/>
-        <p>Regards,<br/>E2Score Verification Team</p>
-      `,
-      };
-
-      await transporter.sendMail(mailOptions);
     }
 
     // === END EMAIL SECTION ===
