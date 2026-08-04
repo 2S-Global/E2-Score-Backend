@@ -99,6 +99,8 @@ import visibilityRouter from "./routes/candidate/visibility/visibilityRouter.js"
 import VerificationServicesRouter from "./routes/VerificationServices/VerificationServicesRoutes.js";
 import WhyGeisilRouter from "./routes/VerificationServices/WhyGeiSilRoutes.js";
 import serverAdapter from "./bullboard/bullBoard.js"
+import MentalTestQuizRouter from "./routes/mentalQuiz/MentalQuizRoutes.js";
+import MentalFeedBackRouter from "./routes/mentalFeedBack/MentalFeedBackRoutes.js";
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
 // This file is reserved for internal use and should remain untouched.
@@ -191,6 +193,13 @@ app.use("/api/institute-course", InstituteCourseRoute);
 
 app.use('/api/verification-services', VerificationServicesRouter)
 app.use('/api/why-geisil', WhyGeisilRouter)
+
+
+
+
+
+app.use('/api/mental-test', MentalTestQuizRouter)
+app.use('/api/mental-feedback', MentalFeedBackRouter)
 
 // API for Home Pages
 app.use("/api/home", homeRouter);
