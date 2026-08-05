@@ -39,7 +39,7 @@ export const createMentalTestFeedBackController = async (req, res) => {
     // Validate every question
     const invalidQuestion = questions.some(
         (question) =>
-    typeof question !== "string" || !question.trim()
+            typeof question !== "string" || !question.trim()
     );
 
     if (invalidQuestion) {
@@ -59,7 +59,7 @@ export const createMentalTestFeedBackController = async (req, res) => {
             ...new Set(questions.map((question) => question.trim()))
         ];
 
-        // Check which questions already exist
+        // Check which questions already s
         const existingQuestions = await MentalTestFeedBackModel.find({
             header,
             question: { $in: cleanedQuestions }
@@ -242,3 +242,117 @@ export const getAllMentalTestHeader = async (req, res) => {
 
 
 }
+
+
+export const updateMentalTestFeedBackController = async (req, res) => {
+    const { id } = req.params;
+    const { header, question } = req.body;
+    console.log('working===>', id, header, question)
+    console.log("whats happending====>",)
+    // Validate feedback ID
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        return apiResponse(res, 400, false, "Valid Feedback ID is required", null, null
+        );
+    }
+
+    // Validate header
+    if (!header || !mongoose.Types.ObjectId.isValid(header)) {
+        return apiResponse(
+            res,
+            400,
+            false,
+            "Valid Header ID is required",
+            null,
+            null
+        );
+    }
+
+    // Validate question
+    if (
+        !question ||
+        typeof question !== "string" ||
+        !question.trim()
+    ) {
+        return apiResponse(
+            res,
+            400,
+            false,
+            "Question is required and must be a non-empty string",
+            null,
+            null
+        );
+    }
+
+    try {
+        const cleanedQuestion = question.trim();
+
+        // Check if feedback question exists
+        const existingFeedback = await MentalTestFeedBackModel.findById(id);
+
+        if (!existingFeedback) {
+            return apiResponse(
+                res,
+                404,
+                false,
+                "Feedback question not found",
+                null,
+                null
+            );
+        }
+
+        // Check whether another question with same text
+        // already exists under the same header
+        const duplicateQuestion =
+            await MentalTestFeedBackModel.findOne({
+                _id: { $ne: id },
+                header,
+                question: cleanedQuestion
+            });
+
+        if (duplicateQuestion) {
+            return apiResponse(
+                res,
+                400,
+                false,
+                "This feedback question already exists",
+                null,
+                null
+            );
+        }
+
+        // Update feedback question
+        const updatedFeedback =
+            await MentalTestFeedBackModel.findByIdAndUpdate(
+                id,
+                {
+                    header,
+                    question: cleanedQuestion
+                },
+                {
+                    new: true,
+                    runValidators: true
+                }
+            );
+
+        return apiResponse(
+            res,
+            200,
+            true,
+            "Feedback question updated successfully",
+            updatedFeedback,
+            null
+        );
+
+    } catch (error) {
+        console.log(error);
+
+        return apiResponse(
+            res,
+            500,
+            false,
+            "Internal Server Error",
+            null,
+            error
+        );
+    }
+};
