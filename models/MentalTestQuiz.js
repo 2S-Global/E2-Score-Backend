@@ -2,13 +2,16 @@ import mongoose from "mongoose";
 
 const MentalTestQuiz = mongoose.Schema({
     question: {
-        type: String
+        type: String,
+        trim: true
     },
     options: {
-        type: Array
+        type: Array,
+        trim: true
     },
     correctOption: {
-        type: String
+        type: String,
+        trim: true
     },
     is_Deleted: {
         type: Boolean,
