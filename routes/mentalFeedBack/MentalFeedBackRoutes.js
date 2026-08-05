@@ -7,10 +7,10 @@ import userAuth from "../../middleware/authMiddleware.js";
 const MentalFeedBackRouter = Router()
 
 
-MentalFeedBackRouter.post('/create-feedback-form', userAuth, Adminmid, createMentalTestFeedBackController)
+MentalFeedBackRouter.post('/create-feedback-form', createMentalTestFeedBackController)
 MentalFeedBackRouter.post('/submit-feedback', userAuth, submitMentalTestFeedBackController)
 MentalFeedBackRouter.get('/get-feedback-form', userAuth, getAllFeedBackForm)
-MentalFeedBackRouter.get('/get-all-test-header', userAuth, getAllMentalTestHeader)
+MentalFeedBackRouter.get('/get-all-test-header', getAllMentalTestHeader)
 
 
 export default MentalFeedBackRouter

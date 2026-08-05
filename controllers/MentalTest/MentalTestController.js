@@ -42,7 +42,7 @@ export const getAllMentalTestQuestionsController = async (req, res) => {
     try {
         const response = await MentalTestQuizModel.find({
             is_Deleted: false
-        }).select('question options _id').lean()
+        }).select('question options _id correctOption').lean()
         if (!response) {
             return apiResponse(res, 401, false, "Something went wrong", null, null)
         }
