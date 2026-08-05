@@ -3,6 +3,8 @@ import User from "../models/userModel.js";
 const Adminmid = async (req, res, next) => {
     try {
         // Ensure that the user is authenticated
+        console.log("req.user", req.user)
+        console.log("req.userId", req.userId)
         if (!req.user || !req.userId) {
             return res.status(401).json({ message: 'Unauthorized: Please log in to access this resource.' });
         }

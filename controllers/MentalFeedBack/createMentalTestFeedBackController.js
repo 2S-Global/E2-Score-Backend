@@ -1,6 +1,8 @@
+import mongoose from "mongoose";
 import AttemptedMentalTestFeedbackModel from "../../models/AttemptedMentalTestFeedbackModel.js";
 import MentalTestFeedBackModel from "../../models/MentalTestFeedBackModel.js";
 import { apiResponse } from "../../utility/apiResponse.js";
+import MentalTestHeaderModel from "../../models/MentalTestHeaderModel.js";
 
 
 
@@ -10,8 +12,8 @@ export const createMentalTestFeedBackController = async (req, res) => {
 
     const { header, question } = req.body;
 
-    if (!header || typeof header !== "string" || !header.trim()) {
-        return apiResponse(res, 400, false, "Header is required", null, null);
+    if (!header || !mongoose.Types.ObjectId.isValid(header)) {
+        return apiResponse(res, 400, false, "Valid Header ID is required", null, null);
     }
 
     if (!question || typeof question !== "string" || !question.trim()) {
@@ -50,7 +52,7 @@ export const createMentalTestFeedBackController = async (req, res) => {
 }
 
 export const submitMentalTestFeedBackController = async (req, res) => {
-    const userId = "6a5876900f6c2c9903ab73ec";
+    const userId = req.userId;
 
     try {
         const feedbacks = req.body;
@@ -150,7 +152,7 @@ export const getAllFeedBackForm = async (req, res) => {
 
 
     try {
-        const feedback = await MentalTestFeedBackModel.find().select("header question")
+        const feedback = await MentalTestFeedBackModel.find().populate("header", "header").select("header question")
         if (!feedback) {
             return apiResponse(res, 400, false, "Failed to get feedback", null, null)
         }
@@ -160,6 +162,21 @@ export const getAllFeedBackForm = async (req, res) => {
     }
 
 
+
+
+}
+
+export const getAllMentalTestHeader = async(req ,res)=>{
+    
+    try {
+        const mentalTestHeader = await MentalTestHeaderModel.find().select("header")
+        if(!mentalTestHeader){
+            return apiResponse(res , 400 , false , "Failed to get mental test header" , null , null)
+        }
+        return apiResponse(res , 200 , true , "Mental test header fetched successfully" , mentalTestHeader , null)
+    } catch (error) {
+        return apiResponse(res , 500 , false , "Internal Server Error" , null , error.message)
+    }
 
 
 }

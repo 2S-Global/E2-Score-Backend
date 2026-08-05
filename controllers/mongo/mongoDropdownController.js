@@ -179,6 +179,8 @@ export const All_country = async (req, res) => {
   }
 };
 
+
+
 export const All_state = async (req, res) => {
   try {
     const countryId = 102; // ✅ hard-coded
@@ -214,12 +216,9 @@ export const All_state = async (req, res) => {
 };
 
 
-/**
- * @description Get all genders from the database
- * @route GET /api/sql/dropdown/All_gender
- * @success {object} 200 - All genders
- * @error {object} 500 - Database query failed
- */
+
+
+
 export const All_gender = async (req, res) => {
   try {
     const gender = await list_gender.find(
@@ -242,12 +241,9 @@ export const All_gender = async (req, res) => {
   }
 };
 
-/**
- * @description Get 50 random skills from the database
- * @route GET /api/sql/dropdown/Random_Skill
- * @success {object} 200 - Random 50 Skills
- * @error {object} 500 - Database query failed
- */
+
+
+
 export const getSkill = async (req, res) => {
   try {
     const skillsResult = await list_key_skill.aggregate([
@@ -385,12 +381,18 @@ export const getEducationLevel = async (req, res) => {
   }
 };
 
+
+
 /**
  * @description Get all University State from the s
  * @route GET /api/sql/dropdown/all_university_state
  * @success {object} 200 - All University States
  * @error {object} 500 - Database query failed
  */
+
+
+
+
 export const getAllState = async (req, res) => {
   try {
     const stateList = await list_university_state

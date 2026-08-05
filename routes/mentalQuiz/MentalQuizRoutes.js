@@ -9,11 +9,11 @@ const MentalTestQuizRouter = Router()
 
 
 //ADmin Side mostly
-MentalTestQuizRouter.post("/create-question", Adminmid, createMentalTestController)
+MentalTestQuizRouter.post("/create-question", userAuth, Adminmid, createMentalTestController)
 MentalTestQuizRouter.get('/', userAuth, getAllMentalTestQuestionsController)
-MentalTestQuizRouter.patch('/:_id', Adminmid, updateMentalTestQuestion)
-MentalTestQuizRouter.delete("/:_id", Adminmid, deleteMentalTestQuestion)
-MentalTestQuizRouter.get('/all-candidate-score', Adminmid, getAllCandidateScore)
+MentalTestQuizRouter.patch('/:_id', userAuth, Adminmid, updateMentalTestQuestion)
+MentalTestQuizRouter.delete("/:_id", userAuth, Adminmid, deleteMentalTestQuestion)
+MentalTestQuizRouter.get('/all-candidate-score', userAuth, getAllCandidateScore)
 
 
 //user Side MOstly

@@ -1,27 +1,19 @@
 import mongoose from "mongoose";
-
+import "./MentalTestHeaderModel.js";
 
 const MentalTestFeedBackSchema = new mongoose.Schema({
     header: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "MentalTestHeader",
         required: true,
-        trim: true,
-        min: 1,
-
     },
     question: {
         type: String,
         required: true,
         trim: true,
-        min: 1,
-
+        min: 1
     },
-
-
-
-
 }, { timestamps: true })
-
 
 const MentalTestFeedBackModel = mongoose.model("MentalTestFeedBack", MentalTestFeedBackSchema);
 
