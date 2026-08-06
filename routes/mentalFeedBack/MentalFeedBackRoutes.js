@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createMentalTestFeedBackController, getAllFeedBackForm, getAllMentalTestHeader, submitMentalTestFeedBackController, updateMentalTestFeedBackController } from "../../controllers/MentalFeedBack/createMentalTestFeedBackController.js";
+import { createMentalTestFeedBackController, deleteMentalTestFeedBackController, getAllFeedBackForm, getAllMentalTestHeader, submitMentalTestFeedBackController, updateMentalTestFeedBackController } from "../../controllers/MentalFeedBack/createMentalTestFeedBackController.js";
 import Adminmid from "../../middleware/adminMiddleware.js";
 import userAuth from "../../middleware/authMiddleware.js";
 
@@ -12,6 +12,7 @@ MentalFeedBackRouter.post('/submit-feedback', userAuth, submitMentalTestFeedBack
 MentalFeedBackRouter.get('/get-feedback-form', userAuth, getAllFeedBackForm)
 MentalFeedBackRouter.get('/get-all-test-header', getAllMentalTestHeader)
 MentalFeedBackRouter.patch('/update-feedback-form/:id', updateMentalTestFeedBackController)
+MentalFeedBackRouter.delete('/delete/:id', deleteMentalTestFeedBackController)
 
 
 export default MentalFeedBackRouter
