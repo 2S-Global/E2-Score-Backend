@@ -39,7 +39,7 @@ export const createMentalTestFeedBackController = async (req, res) => {
     // Validate every question
     const invalidQuestion = questions.some(
         (question) =>
-    typeof question !== "string" || !question.trim()
+            typeof question !== "string" || !question.trim()
     );
 
     if (invalidQuestion) {
@@ -59,10 +59,11 @@ export const createMentalTestFeedBackController = async (req, res) => {
             ...new Set(questions.map((question) => question.trim()))
         ];
 
-        // Check which questions already exist
+        // Check which questions already exist and are not deleted
         const existingQuestions = await MentalTestFeedBackModel.find({
             header,
-            question: { $in: cleanedQuestions }
+            question: { $in: cleanedQuestions },
+            is_del: { $ne: true }
         }).select("question");
 
         const existingQuestionSet = new Set(
@@ -214,7 +215,9 @@ export const getAllFeedBackForm = async (req, res) => {
 
 
     try {
-        const feedback = await MentalTestFeedBackModel.find().populate("header", "header").select("header question")
+        const feedback = await MentalTestFeedBackModel.find({
+            is_del: false
+        }).populate("header", "header").select("header question").sort({ createdAt: -1 })
         if (!feedback) {
             return apiResponse(res, 400, false, "Failed to get feedback", null, null)
         }
@@ -239,6 +242,168 @@ export const getAllMentalTestHeader = async (req, res) => {
     } catch (error) {
         return apiResponse(res, 500, false, "Internal Server Error", null, error.message)
     }
+
+
+}
+
+
+export const updateMentalTestFeedBackController = async (req, res) => {
+    const { id } = req.params;
+    const { header, question } = req.body;
+
+
+    // Validate feedback ID
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        return apiResponse(
+            res,
+            400,
+            false,
+            "Valid Feedback ID is required",
+            null,
+            null
+        );
+    }
+
+    // Validate header if provided
+    if (header !== undefined && (!header || !mongoose.Types.ObjectId.isValid(header))) {
+        return apiResponse(
+            res,
+            400,
+            false,
+            "Valid Header ID is required",
+            null,
+            null
+        );
+    }
+
+    // Validate question if provided
+    if (
+        question !== undefined &&
+        (typeof question !== "string" || !question.trim())
+    ) {
+        return apiResponse(
+            res,
+            400,
+            false,
+            "Question is required and must be a non-empty string",
+            null,
+            null
+        );
+    }
+
+    try {
+        // Check if feedback question exists
+        const existingFeedback = await MentalTestFeedBackModel.findById(id);
+
+        if (!existingFeedback) {
+            return apiResponse(
+                res,
+                404,
+                false,
+                "Feedback question not found",
+                null,
+                null
+            );
+        }
+
+        const targetHeader = header !== undefined ? header : existingFeedback.header;
+        const targetQuestion = question !== undefined ? question.trim() : existingFeedback.question;
+
+        // Check whether another active question with same text
+        // already exists under the same header
+        const duplicateQuestion =
+            await MentalTestFeedBackModel.findOne({
+                _id: { $ne: id },
+                header: targetHeader,
+                question: targetQuestion,
+                is_del: { $ne: true }
+            });
+
+        if (duplicateQuestion) {
+            return apiResponse(
+                res,
+                400,
+                false,
+                "This feedback question already exists",
+                null,
+                null
+            );
+        }
+
+        // Update feedback question
+        const updatedFeedback =
+            await MentalTestFeedBackModel.findByIdAndUpdate(
+                id,
+                {
+                    header: targetHeader,
+                    question: targetQuestion
+                },
+                {
+                    new: true,
+                    runValidators: true
+                }
+            );
+
+        return apiResponse(
+            res,
+            200,
+            true,
+            "Feedback question updated successfully",
+            updatedFeedback,
+            null
+        );
+
+    } catch (error) {
+        console.log(error);
+
+        return apiResponse(
+            res,
+            500,
+            false,
+            "Internal Server Error",
+            null,
+            error
+        );
+    }
+};
+
+
+
+export const deleteMentalTestFeedBackController = async (req, res) => {
+
+    const { id } = req.params;
+
+
+    // Validate feedback ID
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        return apiResponse(
+            res,
+            400,
+            false,
+            "Valid Feedback ID is required",
+            null,
+            null
+        );
+    }
+
+    try {
+        const existing = await MentalTestFeedBackModel.findById(id);
+        if (!existing) {
+            return apiResponse(res, 404, false, "Feedback question not found", null, null);
+        }
+        if (existing.is_del) {
+            return apiResponse(res, 400, false, "Feedback question is already deleted", null, null);
+        }
+
+        existing.is_del = true;
+        const response = await existing.save();
+
+        return apiResponse(res, 200, true, "Feedback question deleted successfully", response, null)
+
+    } catch (error) {
+        return apiResponse(res, 500, false, "Internal Server Error", null, error.message)
+    }
+
 
 
 }
