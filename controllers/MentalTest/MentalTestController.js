@@ -78,7 +78,8 @@ export const getAllMentalTestQuestionsController = async (req, res) => {
       is_Deleted: false,
     })
       .select(selectFields)
-      .lean();
+      .lean()
+      .sort({ createdAt: -1 });
     if (!response) {
       return apiResponse(res, 401, false, "Something went wrong", null, null);
     }
