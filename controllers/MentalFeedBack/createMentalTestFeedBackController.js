@@ -407,3 +407,33 @@ export const deleteMentalTestFeedBackController = async (req, res) => {
 
 
 }
+
+
+
+
+export const getMentalTestFeedbackDetailsController = async (req, res) => {
+    const userId = req.userId
+
+
+    try {
+
+
+        const response = await AttemptedMentalTestFeedbackModel.findOne({
+            user: userId
+
+        }).populate("user", "name email phone").select('-updatedAt')
+        console.log('whats data coming==>', response)
+        if (!response) {
+            return apiResponse(res, 400, false, "No feedback found", null, null)
+        }
+        return apiResponse(res, 200, true, "Feedback fetched successfully", response, null)
+    } catch (error) {
+        return apiResponse(res, 500, false, "Internal Server Error", null, error.message)
+    }
+
+
+
+
+
+
+}
