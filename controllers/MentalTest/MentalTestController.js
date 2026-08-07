@@ -4,7 +4,7 @@ import MentalTestQuizModel from "../../models/MentalTestQuiz.js";
 import { apiResponse } from "../../utility/apiResponse.js";
 import { createQuestionSchema } from "../../validation/createQuestion.js";
 import { submitMentalTestValidation } from "../../validation/submitMentalTestValidation.js";
-
+import User from "../../models/userModel.js";
 export const createMentalTestController = async (req, res) => {
   try {
     // const userId = req.userId
@@ -64,10 +64,20 @@ export const createMentalTestController = async (req, res) => {
 
 export const getAllMentalTestQuestionsController = async (req, res) => {
   try {
+    const user = await User.findById(req.userId);
+    const selectFields = {
+      question: 1,
+      options: 1,
+      _id: 1,
+    };
+
+    if (user.role === 0) {
+      selectFields.correctOption = 1;
+    }
     const response = await MentalTestQuizModel.find({
       is_Deleted: false,
     })
-      .select("question options _id correctOption")
+      .select(selectFields)
       .lean();
     if (!response) {
       return apiResponse(res, 401, false, "Something went wrong", null, null);
@@ -320,7 +330,7 @@ export const getUserAttemptHistory = async (req, res) => {
       userId,
       is_Deleted: false,
     })
-      .select("totalQuestions correctAnswers wrongAnswers score")
+      .select("totalQuestions correctAnswers wrongAnswers score createdAt")
       .lean();
     if (!response) {
       return apiResponse(res, 401, false, "Something went wrong", null, null);
