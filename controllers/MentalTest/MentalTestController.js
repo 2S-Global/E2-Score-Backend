@@ -115,20 +115,7 @@ export const getAllMentalTestQuestionsController = async (req, res) => {
 export const updateMentalTestQuestion = async (req, res) => {
     try {
         const { _id } = req.params;
-        const isValid = createQuestionSchema.safeParse(req.body);
-
-        if (!isValid.success) {
-            return apiResponse(
-                res,
-                400,
-                false,
-                "Validation failed",
-                null,
-                isValid.error.issues[0].message
-            );
-        }
-
-        const { question, options } = isValid.data;
+        const { question, options } = req.body;
 
         const questionExist = await MentalTestQuizModel.findById(_id);
 
@@ -147,7 +134,7 @@ export const updateMentalTestQuestion = async (req, res) => {
             .findByIdAndUpdate(
                 _id,
                 {
-                    question: question.trim(),
+                    question,
                     options
                 },
                 {
@@ -234,33 +221,22 @@ export const deleteMentalTestQuestion = async (req, res) => {
 
 
 export const getAllCandidateScore = async (req, res) => {
-    try {
-        const attempts = await MentalTestAttemptModel.find({
-            is_Deleted: false
-        })
-            .populate("userId", "name profilePicture")
-            .populate("answers.questionId", "question")
-            .select("-is_Deleted -createdAt -updatedAt -__v")
-            .lean();
 
-        if (!attempts) {
-            return apiResponse(res, 404, false, "Attempt not found", null, null);
-        }
+    const attempt = await MentalTestAttemptModel.find({
+        is_Deleted: false
+    }).lean().populate("userId", 'name profilePicture').populate("answers.questionId", "question correctOption").select('-is_Deleted -createdAt -updatedAt -__v').lean()
 
-        const formattedData = attempts.map(formatCandidateScore);
-
-        return apiResponse(res, 200, true, "Attempt fetched successfully", formattedData, null);
-    } catch (error) {
-        return apiResponse(
-            res,
-            500,
-            false,
-            "Internal Server Error",
-            null,
-            error.message
-        );
+    const formattedData = attempt.map(formatCandidateScore);
+    if (!attempt) {
+        return apiResponse(res, 401, false, "Attempt not found", null, null)
     }
-};
+
+    return apiResponse(res, 200, true, "Attempt fetched successfully", formattedData, null)
+
+
+
+
+}
 
 
 
@@ -273,10 +249,11 @@ export const getAllCandidateScore = async (req, res) => {
 
 export const submitMentalTestController = async (req, res) => {
     try {
-        const userId = req.userId;
+        // const userId = req.userId;
+        const userId = '6a5876900f6c2c9903ab73ec';
 
         const isValid = submitMentalTestValidation.safeParse(req.body);
-        
+
         if (!isValid.success) {
             return apiResponse(
                 res,
