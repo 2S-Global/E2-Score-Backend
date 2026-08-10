@@ -1,6 +1,9 @@
 import User from "../models/userModel.js";
 import Fields from "../models/additionalFieldsModels.js";
 import Package from "../models/packageModel.js";
+
+
+
 export const getAllFields = async (req, res) => {
     try {
         const company_id = req.userId;
@@ -17,7 +20,7 @@ export const getAllFields = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Fields fetched successfully",
-           // company,
+            // company,
             data: fields,
         });
 
@@ -28,11 +31,13 @@ export const getAllFields = async (req, res) => {
 
 export const listFieldsByCompany = async (req, res) => {
     try {
+
         const company_id = req.userId;
 
-        const plan_id=req.body.plan_id;
+        const plan_id = req.body.plan_id;
 
         const company = await User.findById(company_id).select("gst_no");
+        
         if (!company) {
             return res.status(404).json({ success: false, message: "Company not found" });
         }
@@ -46,11 +51,11 @@ export const listFieldsByCompany = async (req, res) => {
         console.log(packagedetails.allowed_verifications);
 
         const allowedTypes = (packagedetails.allowed_verifications || []).map(v => v.trim().toUpperCase());
-        
+
         const allTypes = ["PAN", "AADHAAR", "DL", "EPIC", "PASSPORT", "UAN"];
         const allowedVerificationsObj = {};
         allTypes.forEach(type => {
-          allowedVerificationsObj[type] = allowedTypes.includes(type);
+            allowedVerificationsObj[type] = allowedTypes.includes(type);
         });
 
         // Overwrite original string field with the object
@@ -76,3 +81,5 @@ export const listFieldsByCompany = async (req, res) => {
         res.status(500).json({ success: false, message: "Error fetching fields", error: error.message });
     }
 };
+
+

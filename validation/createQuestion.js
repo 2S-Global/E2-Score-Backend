@@ -8,12 +8,14 @@ export const createQuestionSchema = z.object({
 
   options: z
     .array(
-      z.string().trim().min(1, "Option cannot be empty")
-    )
-    .min(2, "At least 2 options are required"),
+      z.object({
+        text: z
+          .string()
+          .trim()
+          .min(1, "Option cannot be empty"),
 
-  correctOption: z
-    .string()
-    .trim()
-    .min(1, "Correct option is required"),
+        trait: z.enum(["D", "I", "S", "C"])
+      })
+    )
+    .min(2, "At least 2 options are required")
 });

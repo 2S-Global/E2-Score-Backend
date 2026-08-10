@@ -4,110 +4,263 @@ import MentalTestQuizModel from "../../models/MentalTestQuiz.js"
 import { apiResponse } from "../../utility/apiResponse.js"
 import { createQuestionSchema } from "../../validation/createQuestion.js"
 import { submitMentalTestValidation } from "../../validation/submitMentalTestValidation.js"
+import {
+    processAnswersAndScore,
+    calculateDiscResult,
+    formatAttemptResponse
+} from "../../utility/helper/mentalTestHelper.js"
+
+
 
 export const createMentalTestController = async (req, res) => {
     try {
-        // const userId = req.userId
+        const isValid = createQuestionSchema.safeParse(req.body);
 
-        const isValid = createQuestionSchema.safeParse(req.body)
         if (!isValid.success) {
-            return apiResponse(res, 401, false, "Something went wrong", null, isValid.error.issues[0].message)
+            return apiResponse(
+                res,
+                400,
+                false,
+                "Validation failed",
+                null,
+                isValid.error.issues[0].message
+            );
         }
-        const { question, options, correctOption } = isValid.data
 
-        const questionExist = await MentalTestQuizModel.findOne({ question })
+        const { question, options } = isValid.data;
+
+        // Check whether question already exists
+        const questionExist = await MentalTestQuizModel.findOne({
+            question: question.trim(),
+            is_Deleted: false
+        });
+
         if (questionExist) {
-            return apiResponse(res, 400, false, "Question already exists", null, null)
+            return apiResponse(
+                res,
+                400,
+                false,
+                "Question already exists",
+                null,
+                null
+            );
         }
 
-
+        // Create DISC question
         const response = await MentalTestQuizModel.create({
-            question,
-            options,
-            correctOption
+            question: question.trim(),
+            options
+        });
 
-        })
-        if (!response) {
-            return apiResponse(res, 401, false, "Something went wrong", null, null)
-        }
-        return apiResponse(res, 200, true, "Question created successfully", response, null)
+        return apiResponse(
+            res,
+            201,
+            true,
+            "Question created successfully",
+            response,
+            null
+        );
+
     } catch (error) {
-        return apiResponse(res, 500, false, "Internal Server Error", null, error.message)
+        return apiResponse(
+            res,
+            500,
+            false,
+            "Internal Server Error",
+            null,
+            error.message
+        );
     }
 }
+
+
+
 
 
 
 export const getAllMentalTestQuestionsController = async (req, res) => {
     try {
-        const response = await MentalTestQuizModel.find({
-            is_Deleted: false
-        }).select('question options _id correctOption').lean()
-        if (!response) {
-            return apiResponse(res, 401, false, "Something went wrong", null, null)
-        }
-        return apiResponse(res, 200, true, "Questions fetched successfully", response, null)
+        const response = await MentalTestQuizModel
+            .find({
+                is_Deleted: false
+            })
+            .select("question options _id")
+            .lean();
+
+        return apiResponse(
+            res,
+            200,
+            true,
+            "Questions fetched successfully",
+            response,
+            null
+        );
+
     } catch (error) {
-        return apiResponse(res, 500, false, "Internal Server Error", null, error.message)
+        return apiResponse(
+            res,
+            500,
+            false,
+            "Internal Server Error",
+            null,
+            error.message
+        );
     }
-}
+};
+
+
+
 
 
 export const updateMentalTestQuestion = async (req, res) => {
     try {
-        const { _id } = req.params
-        const { question, options, correctOption } = req.body
+        const { _id } = req.params;
+        const isValid = createQuestionSchema.safeParse(req.body);
 
-        const questionExist = await MentalTestQuizModel.findById(_id)
-        if (!questionExist) {
-            return apiResponse(res, 404, false, "Question not found", null, null)
+        if (!isValid.success) {
+            return apiResponse(
+                res,
+                400,
+                false,
+                "Validation failed",
+                null,
+                isValid.error.issues[0].message
+            );
         }
 
-        const response = await MentalTestQuizModel.findByIdAndUpdate(_id, { question, options, correctOption }, { new: true }).select('question options _id').lean()
-        if (!response) {
-            return apiResponse(res, 401, false, "Something went wrong", null, null)
+        const { question, options } = isValid.data;
+
+        const questionExist = await MentalTestQuizModel.findById(_id);
+
+        if (!questionExist || questionExist.is_Deleted) {
+            return apiResponse(
+                res,
+                404,
+                false,
+                "Question not found",
+                null,
+                null
+            );
         }
-        return apiResponse(res, 200, true, "Question updated successfully", response, null)
+
+        const response = await MentalTestQuizModel
+            .findByIdAndUpdate(
+                _id,
+                {
+                    question: question.trim(),
+                    options
+                },
+                {
+                    new: true,
+                    runValidators: true
+                }
+            )
+            .select("question options _id")
+            .lean();
+
+        return apiResponse(
+            res,
+            200,
+            true,
+            "Question updated successfully",
+            response,
+            null
+        );
+
     } catch (error) {
-        return apiResponse(res, 500, false, "Internal Server Error", null, error.message)
+        return apiResponse(
+            res,
+            500,
+            false,
+            "Internal Server Error",
+            null,
+            error.message
+        );
     }
-}
+};
 
 
 export const deleteMentalTestQuestion = async (req, res) => {
     try {
-        const { _id } = req.params
+        const { _id } = req.params;
 
-        const response = await MentalTestQuizModel.findByIdAndUpdate(_id, { is_Deleted: true }, { new: true })
+        const response = await MentalTestQuizModel.findOneAndUpdate(
+            {
+                _id,
+                is_Deleted: false
+            },
+            {
+                is_Deleted: true
+            },
+            {
+                new: true
+            }
+        );
+
         if (!response) {
-            return apiResponse(res, 400, false, "Something went wrong", null, null)
+            return apiResponse(
+                res,
+                404,
+                false,
+                "Question not found",
+                null,
+                null
+            );
         }
-        return apiResponse(res, 200, true, "Question deleted successfully", null, null)
+
+        return apiResponse(
+            res,
+            200,
+            true,
+            "Question deleted successfully",
+            null,
+            null
+        );
 
     } catch (error) {
-        return apiResponse(res, 500, false, "Internal Server Error", null, error.message)
+        return apiResponse(
+            res,
+            500,
+            false,
+            "Internal Server Error",
+            null,
+            error.message
+        );
     }
-}
+};
+
+
 
 
 
 export const getAllCandidateScore = async (req, res) => {
+    try {
+        const attempts = await MentalTestAttemptModel.find({
+            is_Deleted: false
+        })
+            .populate("userId", "name profilePicture")
+            .populate("answers.questionId", "question")
+            .select("-is_Deleted -createdAt -updatedAt -__v")
+            .lean();
 
-    const attempt = await MentalTestAttemptModel.find({
-        is_Deleted: false
-    }).lean().populate("userId", 'name profilePicture').populate("answers.questionId", "question correctOption").select('-is_Deleted -createdAt -updatedAt -__v').lean()
+        if (!attempts) {
+            return apiResponse(res, 404, false, "Attempt not found", null, null);
+        }
 
-    const formattedData = attempt.map(formatCandidateScore);
-    if (!attempt) {
-        return apiResponse(res, 401, false, "Attempt not found", null, null)
+        const formattedData = attempts.map(formatCandidateScore);
+
+        return apiResponse(res, 200, true, "Attempt fetched successfully", formattedData, null);
+    } catch (error) {
+        return apiResponse(
+            res,
+            500,
+            false,
+            "Internal Server Error",
+            null,
+            error.message
+        );
     }
-
-    return apiResponse(res, 200, true, "Attempt fetched successfully", formattedData, null)
-
-
-
-
-}
+};
 
 
 
@@ -117,114 +270,151 @@ export const getAllCandidateScore = async (req, res) => {
 
 
 
+
 export const submitMentalTestController = async (req, res) => {
     try {
         const userId = req.userId;
-        const isValid = submitMentalTestValidation.safeParse(req.body)
-        console.log("zod validation Check", JSON.stringify(isValid, null, 2))
+
+        const isValid = submitMentalTestValidation.safeParse(req.body);
+        
         if (!isValid.success) {
-            return apiResponse(res, 401, false, "Invalid Data", null, isValid.error.issues[0].message)
+            return apiResponse(
+                res,
+                400,
+                false,
+                "Invalid Data",
+                null,
+                isValid.error.issues[0].message
+            );
         }
 
-        const { answers } = isValid.data
+        const { answers } = isValid.data;
 
+        // Check whether user has already attempted the test
         const userAlreadyAttempt = await MentalTestAttemptModel.findOne({
             userId,
             is_Deleted: false
-        })
+        });
 
         if (userAlreadyAttempt) {
-            return apiResponse(res, 400, false, "You have already attempted the test", null, null)
+            return apiResponse(
+                res,
+                400,
+                false,
+                "You have already attempted the test",
+                null,
+                null
+            );
         }
 
+        // Process answers and calculate raw scores
+        const processResult = await processAnswersAndScore(answers);
 
-        let score = 0
-        let correctAnswer = 0;
-        let wrongAnswer = 0;
-        let processedAnswers = []
-
-        for (let i = 0; i < answers.length; i++) {
-            const question = await MentalTestQuizModel.findOne({
-                _id: answers[i].questionId,
-                is_Deleted: false
-            }).lean()
-
-
-
-            if (!question) {
-                return apiResponse(res, 400, false, "Question not found", null, null)
-            }
-
-
-            const selectedOption = answers[i].selectedOption;
-
-            if (!question.options.includes(selectedOption)) {
-                return apiResponse(res, 400, false, `Invalid option for question.`, null, null);
-            }
-
-
-            const isCorrect = question.correctOption === answers[i].selectedOption
-
-            if (isCorrect) {
-                score++;
-                correctAnswer++
-            }
-            else {
-                wrongAnswer++
-            }
-
-
-            processedAnswers.push({
-                questionId: question._id,
-                selectedOption: selectedOption,
-                isCorrect: isCorrect
-            })
+        if (!processResult.success) {
+            return apiResponse(
+                res,
+                processResult.status,
+                false,
+                processResult.message,
+                null,
+                null
+            );
         }
 
+        const { scores, processedAnswers } = processResult.data;
+
+        // Calculate DISC analysis results
+        const analysis = calculateDiscResult(scores);
+
+        // Create attempt record
         const attempt = await MentalTestAttemptModel.create({
             userId,
             answers: processedAnswers,
+            scores,
+            scoresPercentage: analysis.scoresPercentage,
+            result: {
+                primaryStyle: analysis.primaryStyle,
+                primaryStyleName: analysis.primaryStyleName,
+                primaryCount: analysis.primaryCount,
+                secondaryStyle: analysis.secondaryStyle,
+                secondaryStyleName: analysis.secondaryStyleName,
+                secondaryCount: analysis.secondaryCount,
+                band: analysis.band,
+                gap: analysis.gap,
+                intensity: analysis.intensity,
+                descriptor: analysis.descriptor
+            },
             totalQuestions: processedAnswers.length,
-            correctAnswers: correctAnswer,
-            wrongAnswers: wrongAnswer,
-            score: score,
             status: "completed"
+        });
 
-        })
         if (!attempt) {
-            return apiResponse(res, 400, false, "Something went wrong", null, null)
+            return apiResponse(
+                res,
+                400,
+                false,
+                "Something went wrong",
+                null,
+                null
+            );
         }
 
         const result = {
             userId: attempt.userId,
             totalQuestions: attempt.totalQuestions,
-            correctAnswers: attempt.correctAnswers,
-            wrongAnswers: attempt.wrongAnswers,
-            score: attempt.score,
+            scores: attempt.scores,
+            scoresPercentage: attempt.scoresPercentage,
+            primaryStyle: attempt.result.primaryStyle,
+            primaryStyleName: attempt.result.primaryStyleName,
+            primaryCount: attempt.result.primaryCount,
+            secondaryStyle: attempt.result.secondaryStyle,
+            secondaryStyleName: attempt.result.secondaryStyleName,
+            secondaryCount: attempt.result.secondaryCount,
+            band: attempt.result.band,
+            gap: attempt.result.gap,
+            intensity: attempt.result.intensity,
+            descriptor: attempt.result.descriptor,
             status: attempt.status
         };
 
-        return apiResponse(res, 200, true, "Mental Test submitted successfully", result, null)
+        return apiResponse(
+            res,
+            200,
+            true,
+            "DISC Test submitted successfully",
+            result,
+            null
+        );
+
     } catch (error) {
-        return apiResponse(res, 500, false, "Internal Server Error", null, error.message)
+        return apiResponse(
+            res,
+            500,
+            false,
+            "Internal Server Error",
+            null,
+            error.message
+        );
     }
-}
-
-
+};
 
 export const getUserAttemptHistory = async (req, res) => {
     try {
         const userId = req.userId;
-        const response = await MentalTestAttemptModel.find({
+        const attempts = await MentalTestAttemptModel.find({
             userId,
             is_Deleted: false
-        }).select('totalQuestions correctAnswers wrongAnswers score').lean()
-        if (!response) {
-            return apiResponse(res, 401, false, "Something went wrong", null, null)
+        }).lean();
+
+        if (!attempts) {
+            return apiResponse(res, 400, false, "Failed to fetch attempt history", null, null);
         }
-        return apiResponse(res, 200, true, "Questions fetched successfully", response, null)
+
+        const response = attempts.map(formatAttemptResponse);
+
+        return apiResponse(res, 200, true, "Attempt history fetched successfully", response, null);
     } catch (error) {
-        return apiResponse(res, 500, false, "Internal Server Error", null, error.message)
+        return apiResponse(res, 500, false, "Internal Server Error", null, error.message);
     }
-}
+};
 

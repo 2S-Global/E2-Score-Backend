@@ -5,14 +5,21 @@ const MentalTestQuiz = mongoose.Schema({
         type: String,
         trim: true
     },
-    options: {
-        type: Array,
-        trim: true
-    },
-    correctOption: {
-        type: String,
-        trim: true
-    },
+    options: [
+        {
+            text: {
+                type: String,
+                required: true,
+                trim: true
+            },
+
+            trait: {
+                type: String,
+                enum: ["D", "I", "S", "C"],
+                required: true
+            }
+        }
+    ],
     is_Deleted: {
         type: Boolean,
         default: false
