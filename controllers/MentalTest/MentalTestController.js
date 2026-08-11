@@ -78,6 +78,7 @@ export const createMentalTestController = async (req, res) => {
 
 
 
+
 export const getAllMentalTestQuestionsController = async (req, res) => {
     try {
         const response = await MentalTestQuizModel
@@ -85,7 +86,7 @@ export const getAllMentalTestQuestionsController = async (req, res) => {
                 is_Deleted: false
             })
             .select("question options _id")
-            .lean();
+            .lean()
 
         return apiResponse(
             res,
@@ -249,8 +250,8 @@ export const getAllCandidateScore = async (req, res) => {
 
 export const submitMentalTestController = async (req, res) => {
     try {
-        // const userId = req.userId;
-        const userId = '6a5876900f6c2c9903ab73ec';
+        const userId = req.userId;
+        // const userId = '6a5876900f6c2c9903ab73ec';
 
         const isValid = submitMentalTestValidation.safeParse(req.body);
 
@@ -274,9 +275,7 @@ export const submitMentalTestController = async (req, res) => {
         });
 
         if (userAlreadyAttempt) {
-            return apiResponse(
-                res,
-                400,
+            return apiResponse(res, 400,
                 false,
                 "You have already attempted the test",
                 null,
@@ -285,8 +284,10 @@ export const submitMentalTestController = async (req, res) => {
         }
 
         // Process answers and calculate raw scores
-        const processResult = await processAnswersAndScore(answers);
+        console.log('beofore answer=====>', answers)
 
+        const processResult = await processAnswersAndScore(answers);
+        console.log('its perfectly working', processResult)
         if (!processResult.success) {
             return apiResponse(
                 res,

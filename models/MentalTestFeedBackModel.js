@@ -7,21 +7,31 @@ const MentalTestFeedBackSchema = new mongoose.Schema({
         ref: "MentalTestHeader",
         required: true,
     },
-    question: {
-        type: String,
-        required: true,
-        trim: true,
-        min: 1
-    },
+    questions: [
+        {
+            text: {
+                type: String,
+                required: true
+            },
+            is_reversed: {
+                type: Boolean,
+                default: false
+            }
+        }
+    ],
     is_del: {
         type: Boolean,
         default: false
     }
 }, { timestamps: true })
 
+
 MentalTestFeedBackSchema.index(
-    { header: 1, question: 1 },
-    { unique: true, partialFilterExpression: { is_del: false } }
+    { header: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { is_del: false }
+    }
 );
 
 const MentalTestFeedBackModel = mongoose.model("MentalTestFeedBack", MentalTestFeedBackSchema);

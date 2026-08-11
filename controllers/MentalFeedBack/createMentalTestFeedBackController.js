@@ -7,101 +7,108 @@ import MentalTestHeaderModel from "../../models/MentalTestHeaderModel.js";
 
 
 
+
+
 export const createMentalTestFeedBackController = async (req, res) => {
-    const { header, questions } = req.body;
-
-    // Validate header
-    if (!header || !mongoose.Types.ObjectId.isValid(header)) {
-        return apiResponse(
-            res,
-            400,
-            false,
-            "Valid Header ID is required",
-            null,
-            null
-        );
-    }
-
-    // Validate questions
-    if (!Array.isArray(questions) || questions.length === 0) {
-        return apiResponse(
-            res,
-            400,
-            false,
-            "Questions array is required",
-            null,
-            null
-        );
-    }
-
-
-
-    // Validate every question
-    const invalidQuestion = questions.some(
-        (question) =>
-            typeof question !== "string" || !question.trim()
-    );
-
-    if (invalidQuestion) {
-        return apiResponse(
-            res,
-            400,
-            false,
-            "All questions must be non-empty strings",
-            null,
-            null
-        );
-    }
-
     try {
-        // Remove extra spaces and duplicate questions
-        const cleanedQuestions = [
-            ...new Set(questions.map((question) => question.trim()))
-        ];
+        const { header, questions } = req.body;
 
-        // Check which questions already exist and are not deleted
-        const existingQuestions = await MentalTestFeedBackModel.find({
-            header,
-            question: { $in: cleanedQuestions },
-            is_del: { $ne: true }
-        }).select("question");
-
-        const existingQuestionSet = new Set(
-            existingQuestions.map((item) => item.question)
-        );
-
-        // Only insert new questions
-        const newQuestions = cleanedQuestions
-            .filter((question) => !existingQuestionSet.has(question))
-            .map((question) => ({
-                header,
-                question
-            }));
-
-        if (newQuestions.length === 0) {
+        // Validate header
+        if (!header || !mongoose.Types.ObjectId.isValid(header)) {
             return apiResponse(
                 res,
                 400,
                 false,
-                "All feedback questions already exist",
+                "Valid Header ID is required",
                 null,
                 null
             );
         }
 
-        const response = await MentalTestFeedBackModel.insertMany(newQuestions);
+        // Validate questions array
+        if (!Array.isArray(questions) || questions.length === 0) {
+            return apiResponse(
+                res,
+                400,
+                false,
+                "Questions array is required",
+                null,
+                null
+            );
+        }
+
+        // Validate each question
+        const invalidQuestion = questions.some(
+            (question) =>
+                !question ||
+                typeof question !== "object" ||
+                typeof question.text !== "string" ||
+                !question.text.trim() ||
+                typeof question.is_reversed !== "boolean"
+        );
+
+        if (invalidQuestion) {
+            return apiResponse(
+                res,
+                400,
+                false,
+                "Each question must contain valid text and is_reversed",
+                null,
+                null
+            );
+        }
+
+        // Check if feedback already exists for this header
+        const existingFeedback =
+            await MentalTestFeedBackModel.findOne({
+                header,
+                is_del: false
+            });
+
+        if (existingFeedback) {
+            return apiResponse(
+                res,
+                400,
+                false,
+                "Feedback questions already exist for this header",
+                null,
+                null
+            );
+        }
+
+        // Clean question text and remove duplicate questions
+        const uniqueQuestions = new Map();
+
+        questions.forEach((question) => {
+            const text = question.text.trim();
+
+            if (!uniqueQuestions.has(text)) {
+                uniqueQuestions.set(text, {
+                    text,
+                    is_reversed: question.is_reversed
+                });
+            }
+        });
+
+        const cleanedQuestions = Array.from(uniqueQuestions.values());
+
+        // Create one document for one header
+        const response = await MentalTestFeedBackModel.create({
+            header,
+            questions: cleanedQuestions
+        });
 
         return apiResponse(
             res,
-            200,
+            201,
             true,
-            `${response.length} feedback questions created successfully`,
+            "Feedback questions created successfully",
             response,
             null
         );
 
     } catch (error) {
-        console.log(error);
+        console.error("Create Mental Test Feedback Error:", error);
 
         return apiResponse(
             res,
@@ -113,6 +120,10 @@ export const createMentalTestFeedBackController = async (req, res) => {
         );
     }
 };
+
+
+
+
 
 export const submitMentalTestFeedBackController = async (req, res) => {
     const userId = req.userId;
@@ -217,7 +228,7 @@ export const getAllFeedBackForm = async (req, res) => {
     try {
         const feedback = await MentalTestFeedBackModel.find({
             is_del: false
-        }).populate("header", "header").select("header question").sort({ createdAt: -1 })
+        }).populate("header", "header").select("header questions").sort({ createdAt: -1 })
         if (!feedback) {
             return apiResponse(res, 400, false, "Failed to get feedback", null, null)
         }
@@ -230,6 +241,9 @@ export const getAllFeedBackForm = async (req, res) => {
 
 
 }
+
+
+
 
 export const getAllMentalTestHeader = async (req, res) => {
 
@@ -249,7 +263,7 @@ export const getAllMentalTestHeader = async (req, res) => {
 
 export const updateMentalTestFeedBackController = async (req, res) => {
     const { id } = req.params;
-    const { header, question } = req.body;
+    const { header, questions } = req.body;
 
 
     // Validate feedback ID
@@ -276,19 +290,85 @@ export const updateMentalTestFeedBackController = async (req, res) => {
         );
     }
 
-    // Validate question if provided
-    if (
-        question !== undefined &&
-        (typeof question !== "string" || !question.trim())
-    ) {
-        return apiResponse(
-            res,
-            400,
-            false,
-            "Question is required and must be a non-empty string",
-            null,
-            null
-        );
+    // Validate questions array if provided
+    if (questions !== undefined) {
+        if (!Array.isArray(questions) || questions.length === 0) {
+            return apiResponse(
+                res,
+                400,
+                false,
+                "Questions array must be a non-empty array",
+                null,
+                null
+            );
+        }
+
+        for (const question of questions) {
+            if (!question || typeof question !== "object") {
+                return apiResponse(
+                    res,
+                    400,
+                    false,
+                    "Each question item must be an object",
+                    null,
+                    null
+                );
+            }
+
+            if (question._id) {
+                if (!mongoose.Types.ObjectId.isValid(question._id)) {
+                    return apiResponse(
+                        res,
+                        400,
+                        false,
+                        "Invalid question _id format",
+                        null,
+                        null
+                    );
+                }
+                if (question.text !== undefined && (typeof question.text !== "string" || !question.text.trim())) {
+                    return apiResponse(
+                        res,
+                        400,
+                        false,
+                        "Question text must be a non-empty string",
+                        null,
+                        null
+                    );
+                }
+                if (question.is_reversed !== undefined && typeof question.is_reversed !== "boolean") {
+                    return apiResponse(
+                        res,
+                        400,
+                        false,
+                        "Question is_reversed must be a boolean",
+                        null,
+                        null
+                    );
+                }
+            } else {
+                if (typeof question.text !== "string" || !question.text.trim()) {
+                    return apiResponse(
+                        res,
+                        400,
+                        false,
+                        "New question must have a non-empty text string",
+                        null,
+                        null
+                    );
+                }
+                if (question.is_reversed !== undefined && typeof question.is_reversed !== "boolean") {
+                    return apiResponse(
+                        res,
+                        400,
+                        false,
+                        "Question is_reversed must be a boolean",
+                        null,
+                        null
+                    );
+                }
+            }
+        }
     }
 
     try {
@@ -307,42 +387,74 @@ export const updateMentalTestFeedBackController = async (req, res) => {
         }
 
         const targetHeader = header !== undefined ? header : existingFeedback.header;
-        const targetQuestion = question !== undefined ? question.trim() : existingFeedback.question;
 
-        // Check whether another active question with same text
-        // already exists under the same header
-        const duplicateQuestion =
-            await MentalTestFeedBackModel.findOne({
-                _id: { $ne: id },
+        // Check if header is being updated and if the new header already has feedback
+        if (header !== undefined && header.toString() !== existingFeedback.header.toString()) {
+            const duplicateFeedback = await MentalTestFeedBackModel.findOne({
                 header: targetHeader,
-                question: targetQuestion,
-                is_del: { $ne: true }
+                is_del: false,
+                _id: { $ne: id }
             });
 
-        if (duplicateQuestion) {
-            return apiResponse(
-                res,
-                400,
-                false,
-                "This feedback question already exists",
-                null,
-                null
-            );
+            if (duplicateFeedback) {
+                return apiResponse(
+                    res,
+                    400,
+                    false,
+                    "Feedback questions already exist for this header",
+                    null,
+                    null
+                );
+            }
         }
 
-        // Update feedback question
-        const updatedFeedback =
-            await MentalTestFeedBackModel.findByIdAndUpdate(
-                id,
-                {
-                    header: targetHeader,
-                    question: targetQuestion
-                },
-                {
-                    new: true,
-                    runValidators: true
+        if (header !== undefined) {
+            existingFeedback.header = targetHeader;
+        }
+
+        if (questions !== undefined) {
+            const currentQuestions = existingFeedback.questions.map(q => ({
+                _id: q._id,
+                text: q.text,
+                is_reversed: q.is_reversed
+            }));
+
+            for (const incomingQ of questions) {
+                if (incomingQ._id) {
+                    const existingIndex = currentQuestions.findIndex(
+                        q => q._id.toString() === incomingQ._id.toString()
+                    );
+
+                    if (existingIndex !== -1) {
+                        // Patch existing question fields
+                        if (incomingQ.text !== undefined && incomingQ.text.trim()) {
+                            currentQuestions[existingIndex].text = incomingQ.text.trim();
+                        }
+                        if (incomingQ.is_reversed !== undefined) {
+                            currentQuestions[existingIndex].is_reversed = incomingQ.is_reversed;
+                        }
+                    } else {
+                        // If _id provided but not found, append as a new question
+                        currentQuestions.push({
+                            _id: incomingQ._id,
+                            text: incomingQ.text ? incomingQ.text.trim() : "",
+                            is_reversed: incomingQ.is_reversed !== undefined ? incomingQ.is_reversed : false
+                        });
+                    }
+                } else {
+                    // New question without _id
+                    currentQuestions.push({
+                        _id: new mongoose.Types.ObjectId(),
+                        text: incomingQ.text.trim(),
+                        is_reversed: incomingQ.is_reversed !== undefined ? incomingQ.is_reversed : false
+                    });
                 }
-            );
+            }
+
+            existingFeedback.questions = currentQuestions;
+        }
+
+        const updatedFeedback = await existingFeedback.save();
 
         return apiResponse(
             res,
@@ -437,3 +549,6 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
 
 
 }
+
+
+
