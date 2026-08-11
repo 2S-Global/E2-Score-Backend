@@ -17,5 +17,5 @@ export const DESCRIPTORS = {
         I: "Energizing but may need a detail-partner to close things out.",
         S: "Highly conflict-averse; needs explicit invitation to disagree.",
         C: "Perfectionistic; may slow decisions waiting for more data."
-    }
+    },
 };

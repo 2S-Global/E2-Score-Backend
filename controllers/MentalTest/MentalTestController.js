@@ -76,8 +76,7 @@ export const getAllMentalTestQuestionsController = async (req, res) => {
       is_Deleted: false,
     })
       .select("question options _id")
-      .lean()
-      .sort({ createdAt: -1 });
+      .lean();
 
     return apiResponse(
       res,
@@ -215,6 +214,7 @@ export const getAllCandidateScore = async (req, res) => {
 export const submitMentalTestController = async (req, res) => {
   try {
     const userId = req.userId;
+    // const userId = '6a5876900f6c2c9903ab73ec';
 
     const isValid = submitMentalTestValidation.safeParse(req.body);
 
@@ -249,8 +249,10 @@ export const submitMentalTestController = async (req, res) => {
     }
 
     // Process answers and calculate raw scores
-    const processResult = await processAnswersAndScore(answers);
+    console.log("beofore answer=====>", answers);
 
+    const processResult = await processAnswersAndScore(answers);
+    console.log("its perfectly working", processResult);
     if (!processResult.success) {
       return apiResponse(
         res,

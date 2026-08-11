@@ -13,19 +13,19 @@ export const formatCandidateScore = (attempt) => {
     C: Math.round((scores.C / total) * 1000) / 10
   } : { D: 0, I: 0, S: 0, C: 0 });
 
-  const primaryCode = attempt.result?.primaryStyle || "D";
-  const primaryStyleName = attempt.result?.primaryStyleName || FULL_NAME[primaryCode] || "Dominance";
+  const primaryCode = attempt.result?.primaryStyle || "";
+  const primaryStyleName = attempt.result?.primaryStyleName || FULL_NAME[primaryCode] || "";
 
-  const secondaryCode = attempt.result?.secondaryStyle || "I";
-  const secondaryStyleName = attempt.result?.secondaryStyleName || FULL_NAME[secondaryCode] || "Influence";
+  const secondaryCode = attempt.result?.secondaryStyle || "";
+  const secondaryStyleName = attempt.result?.secondaryStyleName || FULL_NAME[secondaryCode] || "";
 
-  const intensity = attempt.result?.intensity || "Balanced";
+  const intensity = attempt.result?.intensity || "";
   const descriptor = attempt.result?.descriptor || (
     intensity === "Pronounced"
       ? DESCRIPTORS.pronounced[primaryCode]
       : DESCRIPTORS.normal[primaryCode]
   );
-
+  
   return {
     attemptId: attempt._id,
 
@@ -64,5 +64,6 @@ export const formatCandidateScore = (attempt) => {
     }),
   };
 };
+
 
 
