@@ -244,6 +244,7 @@ export const submitMentalTestFeedBackController = async (req, res) => {
                 headerScores[headerId].questionCount += 1;
             }
 
+
             dataToInsert.push({
                 user: userId,
                 questionId: feedback.questionId,
@@ -532,43 +533,91 @@ export const updateMentalTestFeedBackController = async (req, res) => {
 
 
 export const deleteMentalTestFeedBackController = async (req, res) => {
-
     const { id } = req.params;
 
-
-    // Validate feedback ID
+    // Validate ID
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
         return apiResponse(
             res,
             400,
             false,
-            "Valid Feedback ID is required",
+            "Valid ID is required",
             null,
             null
         );
     }
 
     try {
-        const existing = await MentalTestFeedBackModel.findById(id);
-        if (!existing) {
-            return apiResponse(res, 404, false, "Feedback question not found", null, null);
-        }
-        if (existing.is_del) {
-            return apiResponse(res, 400, false, "Feedback question is already deleted", null, null);
+        // 1. Check if ID matches a question ID within an active feedback document
+        let feedbackDoc = await MentalTestFeedBackModel.findOne({
+            "questions._id": id,
+            is_del: false
+        });
+
+        if (feedbackDoc) {
+            // Pull the question from the questions array
+            feedbackDoc.questions = feedbackDoc.questions.filter(
+                (q) => q._id.toString() !== id
+            );
+
+            // If it was the last question in the feedback document, soft-delete the document itself
+            if (feedbackDoc.questions.length === 0) {
+                feedbackDoc.is_del = true;
+            }
+
+            const response = await feedbackDoc.save();
+            return apiResponse(
+                res,
+                200,
+                true,
+                feedbackDoc.is_del
+                    ? "Question deleted and empty feedback form soft-deleted successfully"
+                    : "Question deleted successfully from feedback form",
+                response,
+                null
+            );
         }
 
-        existing.is_del = true;
-        const response = await existing.save();
+        // 2. If not found by question ID, check if the ID matches the parent feedback document itself
+        feedbackDoc = await MentalTestFeedBackModel.findOne({
+            _id: id,
+            is_del: false
+        });
 
-        return apiResponse(res, 200, true, "Feedback question deleted successfully", response, null)
+        if (feedbackDoc) {
+            feedbackDoc.is_del = true;
+            const response = await feedbackDoc.save();
+            return apiResponse(
+                res,
+                200,
+                true,
+                "Feedback form soft-deleted successfully",
+                response,
+                null
+            );
+        }
+
+        return apiResponse(
+            res,
+            404,
+            false,
+            "Feedback form or question not found",
+            null,
+            null
+        );
 
     } catch (error) {
-        return apiResponse(res, 500, false, "Internal Server Error", null, error.message)
+        console.error("Delete feedback/question error:", error);
+        return apiResponse(
+            res,
+            500,
+            false,
+            "Internal Server Error",
+            null,
+            error.message
+        );
     }
-
-
-
-}
+};
 
 
 
