@@ -18,7 +18,7 @@ const AdminVerifyRouter = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-AdminVerifyRouter.post('/getAllVerifiedCandidateAdmin', upload.none(), userAuth,Companymid, getAllVerifiedCandidateAdmin);
+AdminVerifyRouter.post('/getAllVerifiedCandidateAdmin', upload.none(), userAuth, Companymid, getAllVerifiedCandidateAdmin);
 
 AdminVerifyRouter.post('/getPaidUserVerificationCartByEmployer', upload.none(), userAuth, Companymid, getPaidUserVerificationCartByEmployer);
 
