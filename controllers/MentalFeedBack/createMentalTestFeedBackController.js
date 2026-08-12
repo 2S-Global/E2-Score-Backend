@@ -698,6 +698,7 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
           remarks,
           score,
           is_reversed,
+          createdAt: attempt.createdAt,
         });
       } else {
         formattedAttempts.push({
@@ -706,6 +707,7 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
           remarks: attempt.remarks,
           score: attempt.remarks,
           is_reversed: false,
+          createdAt: attempt.createdAt,
         });
       }
     }
@@ -719,6 +721,7 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
         user: attempts[0].user,
         attempts: formattedAttempts,
         headerScores: Object.values(headerScores),
+        createdAt: attempts[0].createdAt,
       },
       null,
     );
