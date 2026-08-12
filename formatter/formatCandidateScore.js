@@ -25,7 +25,7 @@ export const formatCandidateScore = (attempt) => {
       ? DESCRIPTORS.pronounced[primaryCode]
       : DESCRIPTORS.normal[primaryCode]
   );
-  
+
   return {
     attemptId: attempt._id,
 

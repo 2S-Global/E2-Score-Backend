@@ -220,12 +220,7 @@ export const submitMentalTestController = async (req, res) => {
 
     if (!isValid.success) {
       return apiResponse(
-        res,
-        400,
-        false,
-        "Invalid Data",
-        null,
-        isValid.error.issues[0].message,
+        res, 400, false, "Invalid Data", null, isValid.error.issues[0].message,
       );
     }
 

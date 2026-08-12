@@ -4,6 +4,7 @@ import MentalTestFeedBackModel from "../../models/MentalTestFeedBackModel.js";
 import { apiResponse } from "../../utility/apiResponse.js";
 import MentalTestHeaderModel from "../../models/MentalTestHeaderModel.js";
 import { submitMentalTestFeedbackValidation } from "../../validation/submitMentalTestFeedbackValidation.js";
+import { getTraitInfo } from "../../utility/helper/mentalTestFeedbackHelper.js";
 
 export const createMentalTestFeedBackController = async (req, res) => {
   try {
@@ -236,6 +237,21 @@ export const submitMentalTestFeedBackController = async (req, res) => {
 
     const savedResponses =
       await AttemptedMentalTestFeedbackModel.insertMany(dataToInsert);
+
+    // Calculate percentage, descriptor, workplaceCharacteristics, and idealFunctionalRoles for each header score
+    for (const headerId in headerScores) {
+      const headerObj = headerScores[headerId];
+      const maxPossibleScore = headerObj.questionCount * 5;
+      const percentage = maxPossibleScore > 0 ? Math.round((headerObj.totalScore / maxPossibleScore) * 100) : 0;
+      
+      const traitInfo = getTraitInfo(headerObj.headerName, percentage);
+      
+      headerObj.percentage = percentage;
+      headerObj.descriptor = traitInfo.level;
+      headerObj.workplaceCharacteristics = traitInfo.characteristics;
+      headerObj.idealFunctionalRoles = traitInfo.idealRoles;
+    }
+
     const calculatedScores = Object.values(headerScores);
 
     return apiResponse(
@@ -708,6 +724,20 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
           is_reversed: false,
         });
       }
+    }
+
+    // Calculate percentage, descriptor, workplaceCharacteristics, and idealFunctionalRoles for each header score
+    for (const headerId in headerScores) {
+      const headerObj = headerScores[headerId];
+      const maxPossibleScore = headerObj.questionCount * 5;
+      const percentage = maxPossibleScore > 0 ? Math.round((headerObj.totalScore / maxPossibleScore) * 100) : 0;
+      
+      const traitInfo = getTraitInfo(headerObj.headerName, percentage);
+      
+      headerObj.percentage = percentage;
+      headerObj.descriptor = traitInfo.level;
+      headerObj.workplaceCharacteristics = traitInfo.characteristics;
+      headerObj.idealFunctionalRoles = traitInfo.idealRoles;
     }
 
     return apiResponse(

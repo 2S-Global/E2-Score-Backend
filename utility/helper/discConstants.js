@@ -19,3 +19,10 @@ export const DESCRIPTORS = {
         C: "Perfectionistic; may slow decisions waiting for more data."
     },
 };
+
+export const DISC_PROFILE_NAMES = {
+    D: "The Proactive Achiever",
+    C: "The Cautious Professional",
+    I: "The Collaborative Specialist",
+    S: "The Reactive Supporter"
+};
