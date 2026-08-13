@@ -5,6 +5,7 @@ import { apiResponse } from "../../utility/apiResponse.js";
 import MentalTestHeaderModel from "../../models/MentalTestHeaderModel.js";
 import { submitMentalTestFeedbackValidation } from "../../validation/submitMentalTestFeedbackValidation.js";
 import { getTraitInfo } from "../../utility/helper/mentalTestFeedbackHelper.js";
+import { FULL_NAME, DESCRIPTORS } from "../../utility/helper/discConstants.js";
 
 export const createMentalTestFeedBackController = async (req, res) => {
   try {
@@ -243,9 +244,9 @@ export const submitMentalTestFeedBackController = async (req, res) => {
       const headerObj = headerScores[headerId];
       const maxPossibleScore = headerObj.questionCount * 5;
       const percentage = maxPossibleScore > 0 ? Math.round((headerObj.totalScore / maxPossibleScore) * 100) : 0;
-      
+
       const traitInfo = getTraitInfo(headerObj.headerName, percentage);
-      
+
       headerObj.percentage = percentage;
       headerObj.descriptor = traitInfo.level;
       headerObj.workplaceCharacteristics = traitInfo.characteristics;
@@ -470,6 +471,9 @@ export const updateMentalTestFeedBackController = async (req, res) => {
     const targetHeader =
       header !== undefined ? header : existingFeedback.header;
 
+    let targetFeedbackDoc = existingFeedback;
+    let oldFeedbackDoc = null;
+
     // Check if header is being updated and if the new header already has feedback
     if (
       header !== undefined &&
@@ -482,23 +486,17 @@ export const updateMentalTestFeedBackController = async (req, res) => {
       });
 
       if (duplicateFeedback) {
-        return apiResponse(
-          res,
-          400,
-          false,
-          "Feedback already exists for this header",
-          null,
-          null,
-        );
+        // If feedback already exists for this header, we will merge into it
+        targetFeedbackDoc = duplicateFeedback;
+        oldFeedbackDoc = existingFeedback;
+      } else {
+        // Otherwise, rename the header of the existing document
+        existingFeedback.header = targetHeader;
       }
     }
 
-    if (header !== undefined) {
-      existingFeedback.header = targetHeader;
-    }
-
     if (questions !== undefined) {
-      const currentQuestions = existingFeedback.questions.map((q) => ({
+      const currentQuestions = targetFeedbackDoc.questions.map((q) => ({
         _id: q._id,
         text: q.text,
         is_reversed: q.is_reversed,
@@ -511,7 +509,7 @@ export const updateMentalTestFeedBackController = async (req, res) => {
           );
 
           if (existingIndex !== -1) {
-            // Patch existing question fields
+            // Patch existing question fields in the target document
             if (incomingQ.text !== undefined && incomingQ.text.trim()) {
               currentQuestions[existingIndex].text = incomingQ.text.trim();
             }
@@ -520,7 +518,25 @@ export const updateMentalTestFeedBackController = async (req, res) => {
                 incomingQ.is_reversed;
             }
           } else {
-            // If _id provided but not found, append as a new question
+            // If the question exists in another feedback document, pull it first (shift logic)
+            const otherFeedback = await MentalTestFeedBackModel.findOne({
+              "questions._id": incomingQ._id,
+            });
+
+            if (otherFeedback) {
+              otherFeedback.questions = otherFeedback.questions.filter(
+                (q) => q._id.toString() !== incomingQ._id.toString(),
+              );
+
+              // If no questions remain in the old document, soft-delete it
+              if (otherFeedback.questions.length === 0) {
+                otherFeedback.is_del = true;
+              }
+
+              await otherFeedback.save();
+            }
+
+            // Append to this feedback document
             currentQuestions.push({
               _id: incomingQ._id,
               text: incomingQ.text ? incomingQ.text.trim() : "",
@@ -543,10 +559,22 @@ export const updateMentalTestFeedBackController = async (req, res) => {
         }
       }
 
-      existingFeedback.questions = currentQuestions;
+      targetFeedbackDoc.questions = currentQuestions;
+    } else if (oldFeedbackDoc) {
+      // If questions array is not provided but the header changed to an existing one,
+      // move all questions from the old document to the target document
+      const currentIds = new Set(targetFeedbackDoc.questions.map((q) => q._id.toString()));
+      for (const q of oldFeedbackDoc.questions) {
+        if (!currentIds.has(q._id.toString())) {
+          targetFeedbackDoc.questions.push(q);
+        }
+      }
+      oldFeedbackDoc.questions = [];
+      oldFeedbackDoc.is_del = true;
+      await oldFeedbackDoc.save();
     }
 
-    const updatedFeedback = await existingFeedback.save();
+    const updatedFeedback = await targetFeedbackDoc.save();
 
     return apiResponse(
       res,
@@ -642,72 +670,108 @@ export const deleteMentalTestFeedBackController = async (req, res) => {
   }
 };
 
-export const getMentalTestFeedbackDetailsController = async (req, res) => {
-  const userId = req.userId;
 
+
+
+// --- Configuration & Constants ---
+const LIKERT_MAX_SCORE = 5;
+const REVERSE_SCALE_BASE = LIKERT_MAX_SCORE + 1; // 6
+
+const DEFAULT_PRIMARY_STYLE = {
+  name: "Influence",
+  descriptor: "Energizing but may need a detail-partner to close things out.",
+};
+
+const TRAIT_KEYWORD_MAP = [
+  { keywords: ["openness"], code: "D" },
+  { keywords: ["conscientiousness"], code: "C" },
+  { keywords: ["extraversion"], code: "I" },
+  { keywords: ["agreeableness"], code: "S" },
+  { keywords: ["stability", "emotional", "well-being"], code: "S" },
+];
+
+/**
+ * Maps header name to DISC style code (D, I, S, C)
+ */
+const getStyleCodeFromHeaderName = (headerName = "") => {
+  const normalized = headerName.toLowerCase();
+  const match = TRAIT_KEYWORD_MAP.find(({ keywords }) =>
+    keywords.some((kw) => normalized.includes(kw))
+  );
+  return match ? match.code : "I";
+};
+
+// --- Controller Handler ---
+export const getMentalTestFeedbackDetailsController = async (req, res) => {
   try {
-    const attempts = await AttemptedMentalTestFeedbackModel.find({
-      user: userId,
-    }).populate("user", "name email phone");
+    // const userId = req.userId 
+    const userId = `6a66f386e6b505694b13c270`
+
+    if (!userId) {
+      return apiResponse(res, 400, false, "User ID is required", null, null);
+    }
+
+    // 1. Fetch user attempts (lean mode for faster plain-JS performance)
+    const attempts = await AttemptedMentalTestFeedbackModel.find({ user: userId })
+      .populate("user", "name email phone")
+      .lean();
 
     if (!attempts || attempts.length === 0) {
       return apiResponse(res, 400, false, "No feedback found", null, null);
     }
 
-    // Fetch active feedback templates to identify if questions are reversed and get their category/header
-    const feedbackTemplates = await MentalTestFeedBackModel.find({
-      is_del: false,
-    }).populate("header");
+    // 2. Fetch active feedback templates
+    const feedbackTemplates = await MentalTestFeedBackModel.find({ is_del: false })
+      .populate("header")
+      .lean();
 
-    // Initialize headerScores with ALL active headers to ensure they are always returned
-    const headerScores = {};
-    for (const template of feedbackTemplates) {
-      if (template.header) {
-        const headerId = template.header._id.toString();
-        const headerName = template.header.header;
-        if (!headerScores[headerId]) {
-          headerScores[headerId] = {
-            headerId,
-            headerName,
-            totalScore: 0,
-            questionCount: 0,
-          };
-        }
-      }
-    }
-
-    // Map questionId -> { headerId, headerName, text, is_reversed }
+    // 3. Build Question Map & Header Accumulator in a single pass
+    const headerScoresMap = new Map();
     const questionMap = new Map();
+
     for (const template of feedbackTemplates) {
-      if (template.header) {
-        const headerId = template.header._id.toString();
-        const headerName = template.header.header;
+      if (!template.header) continue;
+
+      const headerId = template.header._id.toString();
+      const headerName = template.header.header;
+
+      if (!headerScoresMap.has(headerId)) {
+        headerScoresMap.set(headerId, {
+          headerId,
+          headerName,
+          totalScore: 0,
+          questionCount: 0,
+        });
+      }
+
+      if (Array.isArray(template.questions)) {
         for (const question of template.questions) {
           questionMap.set(question._id.toString(), {
             headerId,
             headerName,
             text: question.text,
-            is_reversed: question.is_reversed,
+            is_reversed: Boolean(question.is_reversed),
           });
         }
       }
     }
 
-    const formattedAttempts = [];
+    // 4. Format Attempts & Calculate Individual Question Scores
+    const formattedAttempts = attempts.map((attempt) => {
+      const qDetails = questionMap.get(attempt.questionId?.toString());
+      const remarks = Number(attempt.remarks) || 0;
 
-    for (const attempt of attempts) {
-      const qDetails = questionMap.get(attempt.questionId.toString());
       if (qDetails) {
         const { headerId, text, is_reversed } = qDetails;
-        const remarks = attempt.remarks;
-        const score = is_reversed ? 6 - remarks : remarks;
+        const score = is_reversed ? REVERSE_SCALE_BASE - remarks : remarks;
 
-        if (headerScores[headerId]) {
-          headerScores[headerId].totalScore += score;
-          headerScores[headerId].questionCount += 1;
+        const headerObj = headerScoresMap.get(headerId);
+        if (headerObj) {
+          headerObj.totalScore += score;
+          headerObj.questionCount += 1;
         }
 
-        formattedAttempts.push({
+        return {
           _id: attempt._id,
           questionId: attempt.questionId,
           text,
@@ -715,33 +779,71 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
           score,
           is_reversed,
           createdAt: attempt.createdAt,
-        });
-      } else {
-        formattedAttempts.push({
-          _id: attempt._id,
-          questionId: attempt.questionId,
-          remarks: attempt.remarks,
-          score: attempt.remarks,
-          is_reversed: false,
-          createdAt: attempt.createdAt,
-        });
+        };
       }
+
+      return {
+        _id: attempt._id,
+        questionId: attempt.questionId,
+        remarks,
+        score: remarks,
+        is_reversed: false,
+        createdAt: attempt.createdAt,
+      };
+    });
+
+    // 5. Compute Header Percentages and Identify Top Trait
+    let highestHeader = null;
+
+    const headerScores = Array.from(headerScoresMap.values()).map((headerObj) => {
+      const maxPossibleScore = headerObj.questionCount * LIKERT_MAX_SCORE;
+      const percentage =
+        maxPossibleScore > 0
+          ? Math.round((headerObj.totalScore / maxPossibleScore) * 100)
+          : 0;
+
+      const traitInfo = typeof getTraitInfo === "function"
+        ? getTraitInfo(headerObj.headerName, percentage)
+        : { level: "", characteristics: "", idealRoles: "" };
+
+      const enrichedHeader = {
+        ...headerObj,
+        percentage,
+        descriptor: traitInfo.level,
+        workplaceCharacteristics: traitInfo.characteristics,
+        idealFunctionalRoles: traitInfo.idealRoles,
+      };
+
+      if (
+        !highestHeader ||
+        percentage > highestHeader.percentage ||
+        (percentage === highestHeader.percentage &&
+          headerObj.totalScore > highestHeader.totalScore)
+      ) {
+        highestHeader = enrichedHeader;
+      }
+
+      return enrichedHeader;
+    });
+
+    // 6. Determine Primary Personality Style
+    let primaryStyleName = DEFAULT_PRIMARY_STYLE.name;
+    let descriptor = DEFAULT_PRIMARY_STYLE.descriptor;
+
+    if (highestHeader) {
+      const styleCode = getStyleCodeFromHeaderName(highestHeader.headerName);
+      primaryStyleName =
+        typeof FULL_NAME !== "undefined" && FULL_NAME[styleCode]
+          ? FULL_NAME[styleCode]
+          : DEFAULT_PRIMARY_STYLE.name;
+
+      descriptor =
+        typeof DESCRIPTORS !== "undefined" && DESCRIPTORS?.pronounced?.[styleCode]
+          ? DESCRIPTORS.pronounced[styleCode]
+          : DEFAULT_PRIMARY_STYLE.descriptor;
     }
 
-    // Calculate percentage, descriptor, workplaceCharacteristics, and idealFunctionalRoles for each header score
-    for (const headerId in headerScores) {
-      const headerObj = headerScores[headerId];
-      const maxPossibleScore = headerObj.questionCount * 5;
-      const percentage = maxPossibleScore > 0 ? Math.round((headerObj.totalScore / maxPossibleScore) * 100) : 0;
-      
-      const traitInfo = getTraitInfo(headerObj.headerName, percentage);
-      
-      headerObj.percentage = percentage;
-      headerObj.descriptor = traitInfo.level;
-      headerObj.workplaceCharacteristics = traitInfo.characteristics;
-      headerObj.idealFunctionalRoles = traitInfo.idealRoles;
-    }
-
+    // 7. Send Standard Response
     return apiResponse(
       res,
       200,
@@ -750,20 +852,30 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
       {
         user: attempts[0].user,
         attempts: formattedAttempts,
-        headerScores: Object.values(headerScores),
+        headerScores,
         createdAt: attempts[0].createdAt,
+        highlighted: {
+          headerName: highestHeader ? highestHeader.headerName : "",
+          workplaceCharacteristics: highestHeader
+            ? highestHeader.workplaceCharacteristics
+            : "",
+        },
+        primaryStyleName,
+        descriptor,
       },
-      null,
+      null
     );
   } catch (error) {
-    console.error(error);
+    console.error("[getMentalTestFeedbackDetailsController] Exception:", error);
+
     return apiResponse(
       res,
       500,
       false,
       "Internal Server Error",
       null,
-      error.message,
+      error.message
     );
   }
 };
+
