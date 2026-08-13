@@ -9,6 +9,7 @@ import {
   calculateDiscResult,
   formatAttemptResponse,
 } from "../../utility/helper/mentalTestHelper.js";
+import AppError from "../../utility/AppError.js";
 
 export const createMentalTestController = async (req, res) => {
   try {
@@ -233,14 +234,7 @@ export const submitMentalTestController = async (req, res) => {
     });
 
     if (userAlreadyAttempt) {
-      return apiResponse(
-        res,
-        400,
-        false,
-        "You have already attempted the test",
-        null,
-        null,
-      );
+      throw new AppError('You have already attempted the test', 400)
     }
 
     // Process answers and calculate raw scores
@@ -293,8 +287,26 @@ export const submitMentalTestController = async (req, res) => {
     const result = {
       userId: attempt.userId,
       totalQuestions: attempt.totalQuestions,
-      scores: attempt.scores,
-      scoresPercentage: attempt.scoresPercentage,
+      scores: {
+        D: attempt.scores.D,
+        I: attempt.scores.I,
+        S: attempt.scores.S,
+        C: attempt.scores.C,
+        Dominance: attempt.scores.D,
+        Influence: attempt.scores.I,
+        Steadiness: attempt.scores.S,
+        Conscientiousness: attempt.scores.C,
+      },
+      scoresPercentage: {
+        D: attempt.scoresPercentage.D,
+        I: attempt.scoresPercentage.I,
+        S: attempt.scoresPercentage.S,
+        C: attempt.scoresPercentage.C,
+        Dominance: attempt.scoresPercentage.D,
+        Influence: attempt.scoresPercentage.I,
+        Steadiness: attempt.scoresPercentage.S,
+        Conscientiousness: attempt.scoresPercentage.C,
+      },
       primaryStyle: attempt.result.primaryStyle,
       primaryStyleName: attempt.result.primaryStyleName,
       primaryCount: attempt.result.primaryCount,
@@ -331,6 +343,7 @@ export const submitMentalTestController = async (req, res) => {
 export const getUserAttemptHistory = async (req, res) => {
   try {
     const userId = req.userId;
+    // const userId = `6a66f386e6b505694b13c270`
     const attempts = await MentalTestAttemptModel.find({
       userId,
       is_Deleted: false,

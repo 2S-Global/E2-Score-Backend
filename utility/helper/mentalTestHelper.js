@@ -218,10 +218,31 @@ export const formatAttemptResponse = (attempt) => {
         D: attempt.scores?.D ?? 0,
         I: attempt.scores?.I ?? 0,
         S: attempt.scores?.S ?? 0,
-        C: attempt.scores?.C ?? 0
+        C: attempt.scores?.C ?? 0,
+        Dominance: attempt.scores?.D ?? 0,
+        Influence: attempt.scores?.I ?? 0,
+        Steadiness: attempt.scores?.S ?? 0,
+        Conscientiousness: attempt.scores?.C ?? 0
     };
 
     const result = attempt.result || {};
+
+    const rawPercentages = result.scoresPercentage ??
+        calculatePercentages(
+            scores,
+            scores.D + scores.I + scores.S + scores.C
+        );
+
+    const scoresPercentage = {
+        D: rawPercentages.D ?? 0,
+        I: rawPercentages.I ?? 0,
+        S: rawPercentages.S ?? 0,
+        C: rawPercentages.C ?? 0,
+        Dominance: rawPercentages.D ?? 0,
+        Influence: rawPercentages.I ?? 0,
+        Steadiness: rawPercentages.S ?? 0,
+        Conscientiousness: rawPercentages.C ?? 0
+    };
 
     return {
         _id: attempt._id,
@@ -231,15 +252,7 @@ export const formatAttemptResponse = (attempt) => {
 
         scores,
 
-        scoresPercentage:
-            result.scoresPercentage ??
-            calculatePercentages(
-                scores,
-                Object.values(scores).reduce(
-                    (sum, score) => sum + score,
-                    0
-                )
-            ),
+        scoresPercentage,
 
         primaryStyle: result.primaryStyle,
         primaryStyleName: result.primaryStyleName,

@@ -101,6 +101,7 @@ import WhyGeisilRouter from "./routes/VerificationServices/WhyGeiSilRoutes.js";
 import serverAdapter from "./bullboard/bullBoard.js"
 import MentalTestQuizRouter from "./routes/mentalQuiz/MentalQuizRoutes.js";
 import MentalFeedBackRouter from "./routes/mentalFeedBack/MentalFeedBackRoutes.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
 // This file is reserved for internal use and should remain untouched.
@@ -207,6 +208,7 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/review", reviewRoutes);
 
 app.use("/api/campus", campusRoutes);
+app.use(errorHandler);
 const PORT = process.env.PORT || 3015;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
