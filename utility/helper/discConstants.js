@@ -26,3 +26,13 @@ export const DISC_PROFILE_NAMES = {
     I: "The Collaborative Specialist",
     S: "The Reactive Supporter"
 };
+
+export const DISC_PROFILE_ROLES = {
+    D: "Team leads, Project managers, Business development, Crisis management",
+    C: "Quality assurance, Compliance, Data analysis, Finance, Software engineering",
+    I: "HR, Customer success, Cross-functional project support, Team coordination",
+    S: "Operations support, Administrative functions, Standardized task execution"
+};
+
+
+

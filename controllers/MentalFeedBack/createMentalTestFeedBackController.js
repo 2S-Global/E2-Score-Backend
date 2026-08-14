@@ -704,8 +704,8 @@ const getStyleCodeFromHeaderName = (headerName = "") => {
 // --- Controller Handler ---
 export const getMentalTestFeedbackDetailsController = async (req, res) => {
   try {
-    // const userId = req.userId 
-    const userId = `6a66f386e6b505694b13c270`
+    const userId = req.userId
+    // const userId = `6a66f386e6b505694b13c270`
 
     if (!userId) {
       return apiResponse(res, 400, false, "User ID is required", null, null);
@@ -858,6 +858,9 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
           headerName: highestHeader ? highestHeader.headerName : "",
           workplaceCharacteristics: highestHeader
             ? highestHeader.workplaceCharacteristics
+            : "",
+          idealFunctionalRoles: highestHeader
+            ? highestHeader.idealFunctionalRoles
             : "",
         },
         primaryStyleName,

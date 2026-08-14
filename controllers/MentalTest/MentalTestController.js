@@ -10,6 +10,10 @@ import {
   formatAttemptResponse,
 } from "../../utility/helper/mentalTestHelper.js";
 import AppError from "../../utility/AppError.js";
+import {
+  DISC_PROFILE_NAMES,
+  DISC_PROFILE_ROLES,
+} from "../../utility/helper/discConstants.js";
 
 export const createMentalTestController = async (req, res) => {
   try {
@@ -318,6 +322,18 @@ export const submitMentalTestController = async (req, res) => {
       intensity: attempt.result.intensity,
       descriptor: attempt.result.descriptor,
       status: attempt.status,
+      discProfile: attempt.result.primaryStyle || null,
+      profileName: DISC_PROFILE_NAMES[attempt.result.primaryStyle] || null,
+      idealRoles: DISC_PROFILE_ROLES[attempt.result.primaryStyle] || null,
+      secondaryDiscProfile: attempt.result.secondaryStyle && (attempt.result.gap ?? 0) < 4
+        ? attempt.result.secondaryStyle
+        : null,
+      secondaryProfileName: attempt.result.secondaryStyle && (attempt.result.gap ?? 0) < 4
+        ? DISC_PROFILE_NAMES[attempt.result.secondaryStyle]
+        : null,
+      secondaryIdealRoles: attempt.result.secondaryStyle && (attempt.result.gap ?? 0) < 4
+        ? DISC_PROFILE_ROLES[attempt.result.secondaryStyle]
+        : null,
     };
 
     return apiResponse(

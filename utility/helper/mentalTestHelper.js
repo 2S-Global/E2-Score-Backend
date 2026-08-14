@@ -2,7 +2,8 @@ import MentalTestQuizModel from "../../models/MentalTestQuiz.js";
 import {
     FULL_NAME,
     DESCRIPTORS,
-    DISC_PROFILE_NAMES
+    DISC_PROFILE_NAMES,
+    DISC_PROFILE_ROLES
 } from "./discConstants.js";
 
 const DEFAULT_SCORES = {
@@ -172,10 +173,13 @@ export const calculateDiscResult = (scores) => {
 
         scoresPercentage,
 
-        primaryProfile: DISC_PROFILE_NAMES[primaryCode],
-        secondaryProfile: isHybrid
-            ? DISC_PROFILE_NAMES[secondaryCode]
-            : null,
+        discProfile: primaryCode,
+        profileName: DISC_PROFILE_NAMES[primaryCode],
+        idealRoles: DISC_PROFILE_ROLES[primaryCode],
+
+        secondaryDiscProfile: isHybrid ? secondaryCode : null,
+        secondaryProfileName: isHybrid ? DISC_PROFILE_NAMES[secondaryCode] : null,
+        secondaryIdealRoles: isHybrid ? DISC_PROFILE_ROLES[secondaryCode] : null,
 
         classification: isHybrid
             ? "Hybrid Profile"
@@ -267,8 +271,19 @@ export const formatAttemptResponse = (attempt) => {
         intensity: result.intensity,
         descriptor: result.descriptor,
 
-        primaryProfile: result.primaryProfile,
-        secondaryProfile: result.secondaryProfile,
+        discProfile: result.primaryStyle || null,
+        profileName: DISC_PROFILE_NAMES[result.primaryStyle] || null,
+        idealRoles: DISC_PROFILE_ROLES[result.primaryStyle] || null,
+
+        secondaryDiscProfile: result.secondaryStyle && (result.gap ?? 0) < 4
+            ? result.secondaryStyle
+            : null,
+        secondaryProfileName: result.secondaryStyle && (result.gap ?? 0) < 4
+            ? DISC_PROFILE_NAMES[result.secondaryStyle]
+            : null,
+        secondaryIdealRoles: result.secondaryStyle && (result.gap ?? 0) < 4
+            ? DISC_PROFILE_ROLES[result.secondaryStyle]
+            : null,
 
         classification: result.classification,
         dominanceMargin: result.dominanceMargin ?? 0,

@@ -1,4 +1,9 @@
-import { FULL_NAME, DESCRIPTORS } from "../utility/helper/discConstants.js";
+import {
+  FULL_NAME,
+  DESCRIPTORS,
+  DISC_PROFILE_NAMES,
+  DISC_PROFILE_ROLES,
+} from "../utility/helper/discConstants.js";
 
 export const formatCandidateScore = (attempt) => {
   if (!attempt) return null;
@@ -70,7 +75,19 @@ export const formatCandidateScore = (attempt) => {
       band: attempt.result?.band,
       gap: attempt.result?.gap,
       intensity: intensity,
-      descriptor: descriptor
+      descriptor: descriptor,
+      discProfile: primaryCode || null,
+      profileName: DISC_PROFILE_NAMES[primaryCode] || null,
+      idealRoles: DISC_PROFILE_ROLES[primaryCode] || null,
+      secondaryDiscProfile: secondaryCode && (attempt.result?.gap ?? 0) < 4
+        ? secondaryCode
+        : null,
+      secondaryProfileName: secondaryCode && (attempt.result?.gap ?? 0) < 4
+        ? DISC_PROFILE_NAMES[secondaryCode]
+        : null,
+      secondaryIdealRoles: secondaryCode && (attempt.result?.gap ?? 0) < 4
+        ? DISC_PROFILE_ROLES[secondaryCode]
+        : null,
     },
 
     answers: (attempt.answers || []).map((answer) => {
