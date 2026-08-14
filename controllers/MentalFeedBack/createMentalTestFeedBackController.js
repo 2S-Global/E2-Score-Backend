@@ -159,7 +159,7 @@ export const submitMentalTestFeedBackController = async (req, res) => {
         res,
         400,
         false,
-        "You have already submitted the feedback",
+        "You have already submitted the assessment",
         null,
         null,
       );

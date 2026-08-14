@@ -238,11 +238,17 @@ export const submitMentalTestController = async (req, res) => {
     });
 
     if (userAlreadyAttempt) {
-      throw new AppError('You have already attempted the test', 400)
+      return apiResponse(
+        res,
+        400,
+        false,
+        "You have already attempted the assessment",
+        null,
+        null,
+      );
     }
 
     // Process answers and calculate raw scores
-    console.log("beofore answer=====>", answers);
 
     const processResult = await processAnswersAndScore(answers);
     console.log("its perfectly working", processResult);
