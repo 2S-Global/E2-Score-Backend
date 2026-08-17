@@ -5,11 +5,10 @@ import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
-import morgan from 'morgan'
+import morgan from "morgan";
 import db from "./config/db.js";
-import './config/redis.js'
+import "./config/redis.js";
 import "./workers/emailWorkers.js";
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,10 +18,17 @@ db();
 const app = express();
 // Middleware
 app.use(
-  cors({ origin: ["https://geisil.com", 'http://localhost:4173', "https://services.geisil.com", "http://localhost:3000", "http://127.0.0.1:3000",], credentials: true, }),
+  cors({
+    origin: [
+      "https://geisil.com",
+      "http://localhost:4173",
+      "https://services.geisil.com",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+    ],
+    credentials: true,
+  }),
 );
-
-
 
 // app.use(pinoHttp());
 app.use(cookieParser());
@@ -34,7 +40,7 @@ app.use(express.json());
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 
 app.use("/upload", express.static(path.join(process.cwd(), "upload")));
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 // Import routes
 import contactRouter from "./routes/contactRoutes.js";
 import AuthRouter from "./routes/AuthRoutes.js";
@@ -68,6 +74,7 @@ import CandidateCartRouter from "./routes/candidate/cart/cartRoute.js";
 import CandidateKycRoute from "./routes/candidate/CandidateKycRoute.js";
 import CandidateJobListingRouter from "./routes/candidate/CandidateJobListingRoute.js";
 import CandidateDetailsRouter from "./routes/candidate/candidateDetailsRoute.js";
+import ScoreRouter from "./routes/candidate/scoreRoute.js";
 import candidateBookmarkRouter from "./routes/admin/candidateBookmarkRoute.js";
 
 //company Routes
@@ -80,7 +87,7 @@ import InstituteStudentRouter from "./routes/institute/instituteStudentRoute.js"
 import InstituteCourseRoute from "./routes/institute/instituteCourseRoute.js";
 // Payment Routes
 import paymentRoutes from "./routes/paymentRoutes.js";
-import reviewRoutes from "./routes/institute/instituteFeedbackRoute.js"
+import reviewRoutes from "./routes/institute/instituteFeedbackRoute.js";
 
 //admin Routes
 import userAdminRouter from "./routes/admin/userRoute.js";
@@ -98,7 +105,7 @@ import campusRoutes from "./routes/institute/instituteCampusRoute.js";
 import visibilityRouter from "./routes/candidate/visibility/visibilityRouter.js";
 import VerificationServicesRouter from "./routes/VerificationServices/VerificationServicesRoutes.js";
 import WhyGeisilRouter from "./routes/VerificationServices/WhyGeiSilRoutes.js";
-import serverAdapter from "./bullboard/bullBoard.js"
+import serverAdapter from "./bullboard/bullBoard.js";
 import MentalTestQuizRouter from "./routes/mentalQuiz/MentalQuizRoutes.js";
 import MentalFeedBackRouter from "./routes/mentalFeedBack/MentalFeedBackRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -115,11 +122,7 @@ app.get("/", (req, res) => {
 });
 
 // app.use("/api/demo", DemoRouter)
-app.use(
-  "/admin/queues",
-  serverAdapter.getRouter()
-);
-
+app.use("/admin/queues", serverAdapter.getRouter());
 
 app.use("/api/auth", AuthRouter);
 app.use("/api/skills", userSkillsRoutes);
@@ -147,8 +150,6 @@ app.use("/api/candidate/accomplishments", userAccomplishmentRouter);
 app.use("/api/candidate/itskill", itskillRouter);
 app.use("/api/candidate/visibility", visibilityRouter);
 
-
-
 app.use("/api/candidate/project", projectDetailsRouter);
 app.use("/api/candidate/resumefile", resumeFileRouter);
 app.use("/api/candidate/employment", employmentRouter);
@@ -158,6 +159,7 @@ app.use("/api/candidate/cart", CandidateCartRouter);
 app.use("/api/candidatekyc", CandidateKycRoute);
 app.use("/api/candidate/joblisting", CandidateJobListingRouter);
 app.use("/api/candidate/candidateDetails", CandidateDetailsRouter);
+app.use("/api/candidate/score", ScoreRouter);
 
 // Start server hello
 
@@ -189,18 +191,11 @@ app.use("/api/instituteprofile", InstituteProfileRouter);
 app.use("/api/institutestudent", InstituteStudentRouter);
 app.use("/api/institute-course", InstituteCourseRoute);
 
+app.use("/api/verification-services", VerificationServicesRouter);
+app.use("/api/why-geisil", WhyGeisilRouter);
 
-
-
-app.use('/api/verification-services', VerificationServicesRouter)
-app.use('/api/why-geisil', WhyGeisilRouter)
-
-
-
-
-
-app.use('/api/mental-test', MentalTestQuizRouter)
-app.use('/api/mental-feedback', MentalFeedBackRouter)
+app.use("/api/mental-test", MentalTestQuizRouter);
+app.use("/api/mental-feedback", MentalFeedBackRouter);
 
 // API for Home Pages
 app.use("/api/home", homeRouter);
