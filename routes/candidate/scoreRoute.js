@@ -1,7 +1,7 @@
 import express from "express";
 
 //import controllers
-import { CibilScore } from "../../controllers/candidate/ScoreController.js";
+import { CibilScore, ExperianScore } from "../../controllers/candidate/ScoreController.js";
 //import middleware
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -13,5 +13,6 @@ const ScoreRouter = express.Router();
 // Routes
 
 ScoreRouter.post("/cibil-score", CibilScore);
+ScoreRouter.post("/experian-score", ExperianScore);
 
 export default ScoreRouter;
