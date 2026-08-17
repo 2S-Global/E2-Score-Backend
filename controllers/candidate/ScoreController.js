@@ -63,7 +63,6 @@ export const CibilScore = async (req, res) => {
     // Success
     return res.status(200).json({
       success: true,
-      environment: ENVIRONMENT,
       data: responseData ?? responseText,
     });
   } catch (error) {
@@ -77,7 +76,7 @@ export const CibilScore = async (req, res) => {
     }
 
     // Never expose internal errors to clients
-    console.error("Credit API error:", error?.message);
+    console.error("Credit API error:", error);
 
     return res.status(502).json({
       success: false,
