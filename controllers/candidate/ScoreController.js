@@ -5,7 +5,7 @@ import { apiResponse } from "../../utility/apiResponse.js";
 
 
 export const CibilScore = async (req, res) => {
-  const API_URL = process.env.CIBIL_URL;
+  const API_URL = process.env.CIBIL_URL + "/srv2/credit-report/check-score";
   try {
     const request = req.body;
     // Basic request validation
