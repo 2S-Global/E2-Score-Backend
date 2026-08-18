@@ -4,9 +4,8 @@ import crypto from "crypto";
 //Creates a Razorpay order.
 
 export const createRazorpayOrder = async (amount, currency = "INR") => {
-  const amountInPaise = Math.round(parseFloat(amount) * 100);
   const options = {
-    amount: amountInPaise, // convert ₹ to paise
+    amount: amount, // convert ₹ to paise
     currency: currency,
     receipt: `receipt_${Date.now()}`,
   };

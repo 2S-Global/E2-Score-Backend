@@ -29,14 +29,19 @@ export const createPayment = async (req, res) => {
     if (amountInRupees === undefined) {
       return apiResponse(res, 400, false, "Invalid credit report type", null);
     }
-    console.log("reportType", reportType, amountInRupees);
+
     const amountInPaise = amountInRupees * 100;
 
     const order = await createRazorpayOrder(amountInPaise, "INR");
 
+    console.log("is it working ==>", order);
+
     return apiResponse(res, 200, true, "Order created successfully", {
       orderId: order.id,
-      amount: amountInRupees,
+
+      // Send paise to frontend because Razorpay checkout expects paise
+      amount: amountInPaise,
+
       currency: "INR",
     });
   } catch (error) {
