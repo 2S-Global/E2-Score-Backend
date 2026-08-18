@@ -106,10 +106,10 @@ export const verifyPaymentAndGetScore = async (req, res) => {
 
     if (reportType === "CIBIL") {
       // 2. Fetch CIBIL score
-      // const cibilData = await getCibilScore(req.body);
-      const cibilData = {
-        score: 90
-      }
+      const cibilData = await getCibilScore(req.body);
+      // const cibilData = {
+      //   score: 90
+      // }
 
       // 3. Save CIBIL result in DB
       await CibilModel.create({
@@ -169,6 +169,7 @@ export const CibilScore = async (req, res) => {
       data: cibilData.data,
     });
   } catch (error) {
+
     return res.status(500).json({
       success: false,
       error: error.message,
@@ -193,3 +194,27 @@ export const ExperianScore = async (req, res) => {
   }
 };
 
+
+export const getMyScores = async (req, res) => {
+  // const userId = req.userId
+  const userId = `6a5876900f6c2c9903ab73ec`
+  const { type } = req.params
+
+  try {
+
+    if (type.toUpperCase() == 'CIBIL') {
+      const myCibilScore = await CibilModel.findOne({ userId }).sort({ createdAt: -1 }).limit(1).select('score  paymentDate')
+      return apiResponse(res, 200, true, "Cibil score fetched successfully", myCibilScore);
+
+    }
+    else {
+      const myExperianScore = await ExperianModel.findOne({ userId }).sort({ createdAt: -1 }).limit(1).select('score  paymentDate');
+      return apiResponse(res, 200, true, "Experian score fetched successfully", myExperianScore);
+
+    }
+  } catch (error) {
+
+  }
+
+
+}

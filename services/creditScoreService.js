@@ -24,7 +24,8 @@ export const getCibilScore = async (userData) => {
     console.log('is it working===>1526', response)
 
   } catch (error) {
-
+    console.log("error.response.data==>", error?.response?.data)
+    console.log("error.response.status==>", error)
     console.log('is it working===>1528', error)
 
   }
