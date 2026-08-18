@@ -1,35 +1,154 @@
-import axios from "axios";
 import { apiResponse } from "../../utility/apiResponse.js";
+import CibilModel from "../../models/Score/CibilScoreMode.js";
+import ExperianModel from "../../models/Score/ExperianModel.js";
+import { createRazorpayOrder, verifyRazorpayPayment } from "../../services/paymentService.js";
+import { getCibilScore, getExperianScore } from "../../services/creditScoreService.js";
+
+//CREDIT_SCORE_PRICES
+//VERY IMPORTANT => if api changes then change here
+const CREDIT_SCORE_PRICES = {
+  CIBIL: 7,
+  EXPERIAN: 5,
+};
 
 
 
+
+//create payment
+export const createPayment = async (req, res) => {
+  try {
+    const { type = "CIBIL" } = req.body;
+
+    const reportType = String(type).toUpperCase();
+
+    const amountInRupees = CREDIT_SCORE_PRICES[reportType];
+
+    if (amountInRupees === undefined) {
+      return apiResponse(
+        res,
+        400,
+        false,
+        "Invalid credit report type",
+        null
+      );
+    }
+
+    const amountInPaise = amountInRupees * 100;
+
+    const order = await createRazorpayOrder(amountInPaise, "INR");
+
+    return apiResponse(res, 200, true, "Order created successfully", {
+      orderId: order.id,
+      amount: amountInRupees,
+      currency: "INR",
+    });
+  } catch (error) {
+    return apiResponse(
+      res,
+      500,
+      false,
+      "Order creation failed",
+      null
+    );
+  }
+};
+
+
+
+
+//Controller to verify Razorpay payment 
+//and fetch the requested credit score
+//(CIBIL/Experian) synchronously.
+
+export const verifyPaymentAndGetScore = async (req, res) => {
+
+  const userId = `6a5876900f6c2c9903ab73ec`
+  if (!userId) {
+    return apiResponse(res, 401, false, "Unauthorized: User ID not found in request context or body", null);
+  }
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      type = "CIBIL",
+    } = req.body;
+
+    // 1. Verify payment
+    const payment = verifyRazorpayPayment({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    });
+
+    if (!payment.success) {
+      return apiResponse(res, 400, false, "Payment verification failed", payment.message);
+    }
+
+
+
+    const reportType = String(type).toUpperCase();
+
+    if (reportType === "CIBIL") {
+      // 2. Fetch CIBIL score
+      const cibilData = await getCibilScore(req.body);
+
+      // 3. Save CIBIL result in DB
+      await CibilModel.create({
+        userId,
+        paymentId: payment.paymentId,
+        paymentDate: new Date(),
+        status: "SUCCESS",
+        Score: String(cibilData.score),
+      });
+
+      // 4. Return response
+      return apiResponse(res, 200, true, "Credit score fetched successfully", cibilData);
+    } else if (reportType === "EXPERIAN") {
+      // 2. Fetch Experian score
+      const experianData = await getExperianScore(req.body);
+
+      // 3. Save Experian result in DB
+      await ExperianModel.create({
+        userId,
+        paymentId: payment.paymentId,
+        paymentDate: new Date(),
+        Score: String(experianData.score),
+      });
+
+      // 4. Return response
+      return apiResponse(res, 200, true, "Credit score fetched successfully", experianData);
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid credit report type: ${type}. Must be CIBIL or EXPERIAN.`,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+
+//Controller to fetch CIBIL score directly without payment verification (legacy/compatibility).
 
 export const CibilScore = async (req, res) => {
-  const API_URL = process.env.CIBIL_URL + "/srv2/credit-report/check-score";
   try {
     const request = req.body;
-    // Basic request validation
     if (!request || typeof request !== "object" || Array.isArray(request)) {
       return res.status(400).json({
         success: false,
         error: "Invalid request body",
       });
     }
-    const sendRequest = {
-      ...request,
-      api_id: process.env.CIBIL_API_ID,
-      api_key: process.env.CIBIL_API_KEY,
-      token_id: process.env.CIBIL_TOKEN_ID,
-    };
-    const response = await axios.post(API_URL, sendRequest, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
+
+    const cibilData = await getCibilScore(request);
     return res.status(200).json({
       success: true,
-      data: response.data,
+      data: cibilData.data,
     });
   } catch (error) {
     return res.status(500).json({
@@ -39,34 +158,20 @@ export const CibilScore = async (req, res) => {
   }
 };
 
+
+//Controller to fetch Experian score directly without payment verification (legacy/compatibility).
+
 export const ExperianScore = async (req, res) => {
-
-  let API_URL = process.env.EXPERIAN_URL;
-
   try {
     const request = req.body;
-    // Basic request validation
     if (!request || typeof request !== "object" || Array.isArray(request)) {
-      return apiResponse(res, 400, false, "Invalid request body", null)
+      return apiResponse(res, 400, false, "Invalid request body", null);
     }
 
-    const sendRequest = {
-      ...request,
-      api_id: process.env.CIBIL_API_ID,
-      api_key: process.env.CIBIL_API_KEY,
-      token_id: process.env.CIBIL_TOKEN_ID
-    };
-
-    const response = await axios.post(API_URL, sendRequest, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-
-    return apiResponse(res, 200, true, "Experian score fetched successfully", response.data)
+    const experianData = await getExperianScore(request);
+    return apiResponse(res, 200, true, "Experian score fetched successfully", experianData.data);
   } catch (error) {
-    return apiResponse(res, 500, false, "Error in fetching Experian score", null)
+    return apiResponse(res, 500, false, error.message || "Error in fetching Experian score", null);
   }
 };
 
