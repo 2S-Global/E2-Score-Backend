@@ -213,7 +213,7 @@ export const getMyScores = async (req, res) => {
 
     }
   } catch (error) {
-
+    return apiResponse(res, 500, false, error.message || "Error in fetching score", null);
   }
 
 
