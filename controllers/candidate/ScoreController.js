@@ -94,6 +94,9 @@ export const verifyPaymentAndGetScore = async (req, res) => {
     if (reportType === "CIBIL") {
       // 2. Fetch CIBIL score
       const cibilData = await getCibilScore(req.body);
+      // const cibilData = {
+      //   score: 90
+      // }
 
       // 3. Save CIBIL result in DB
       await CibilModel.create({
@@ -164,14 +167,7 @@ export const CibilScore = async (req, res) => {
       data: cibilData.data,
     });
   } catch (error) {
-    console.error("Message:", error.message);
-    console.error("Code:", error.code);
-    console.error("Status:", error.response?.status);
-    console.error("Response:", error.response?.data);
-    console.error("Headers:", error.response?.headers);
-    console.error("Request URL:", API_URL);
-
-    return res.status(error.response?.status || 500).json({
+    return res.status(500).json({
       success: false,
       error: error.message,
       status: error.response?.status || null,
@@ -208,6 +204,48 @@ export const ExperianScore = async (req, res) => {
       500,
       false,
       error.message || "Error in fetching Experian score",
+      null,
+    );
+  }
+};
+
+export const getMyScores = async (req, res) => {
+  // const userId = req.userId
+  const userId = `6a5876900f6c2c9903ab73ec`;
+  const { type } = req.params;
+
+  try {
+    if (type.toUpperCase() == "CIBIL") {
+      const myCibilScore = await CibilModel.findOne({ userId })
+        .sort({ createdAt: -1 })
+        .limit(1)
+        .select("score  paymentDate");
+      return apiResponse(
+        res,
+        200,
+        true,
+        "Cibil score fetched successfully",
+        myCibilScore,
+      );
+    } else {
+      const myExperianScore = await ExperianModel.findOne({ userId })
+        .sort({ createdAt: -1 })
+        .limit(1)
+        .select("score  paymentDate");
+      return apiResponse(
+        res,
+        200,
+        true,
+        "Experian score fetched successfully",
+        myExperianScore,
+      );
+    }
+  } catch (error) {
+    return apiResponse(
+      res,
+      500,
+      false,
+      error.message || "Error in fetching score",
       null,
     );
   }

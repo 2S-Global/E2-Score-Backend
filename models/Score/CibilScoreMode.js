@@ -22,6 +22,8 @@ const cibilmodel = new mongoose.Schema({
         type: String,
         required: true
     }
+}, {
+    timestamps: true
 });
 
 const CibilModel = mongoose.model("CibilModel", cibilmodel);

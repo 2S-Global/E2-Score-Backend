@@ -5,7 +5,8 @@ import {
     createPayment,
     verifyPaymentAndGetScore,
     CibilScore,
-    ExperianScore
+    ExperianScore,
+    getMyScores
 } from "../../controllers/candidate/ScoreController.js";
 
 //import middleware
@@ -20,7 +21,7 @@ ScoreRouter.post("/payment/create", createPayment);
 
 
 ScoreRouter.post("/credit-report/verify", verifyPaymentAndGetScore);
-
+ScoreRouter.get('/my-score/:type', getMyScores)
 
 ScoreRouter.post("/cibil-score", CibilScore);
 ScoreRouter.post("/experian-score", ExperianScore);
