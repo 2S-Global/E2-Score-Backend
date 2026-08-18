@@ -33,10 +33,10 @@ export const createPayment = async (req, res) => {
       );
     }
 
-    const amountInPaise = amountInRupees * 100;
+    const amountInPaise = amountInRupees;
 
     const order = await createRazorpayOrder(amountInPaise, "INR");
-
+    console.log('is it working ==>', order)
     return apiResponse(res, 200, true, "Order created successfully", {
       orderId: order.id,
       amount: amountInRupees,
