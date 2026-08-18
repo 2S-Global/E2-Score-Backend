@@ -106,7 +106,10 @@ export const verifyPaymentAndGetScore = async (req, res) => {
 
     if (reportType === "CIBIL") {
       // 2. Fetch CIBIL score
-      const cibilData = await getCibilScore(req.body);
+      // const cibilData = await getCibilScore(req.body);
+      const cibilData = {
+        score: 90
+      }
 
       // 3. Save CIBIL result in DB
       await CibilModel.create({

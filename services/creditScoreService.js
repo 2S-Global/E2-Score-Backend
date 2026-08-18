@@ -10,13 +10,26 @@ export const getCibilScore = async (userData) => {
     api_key: process.env.CIBIL_API_KEY,
     token_id: process.env.CIBIL_TOKEN_ID,
   };
+  console.log('is it working===>1526', sendRequest)
 
-  const response = await axios.post(API_URL, sendRequest, {
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  });
+
+  try {
+    const response = await axios.post(API_URL, sendRequest, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+
+    console.log('is it working===>1526', response)
+
+  } catch (error) {
+
+    console.log('is it working===>1528', error)
+
+  }
+
+
 
   const rawData = response.data;
   let score = null;
@@ -38,7 +51,7 @@ export const getCibilScore = async (userData) => {
 //to get EXPERIAN SCORE
 export const getExperianScore = async (userData) => {
   const API_URL = process.env.EXPERIAN_URL;
-  
+
   const sendRequest = {
     ...userData,
     api_id: process.env.CIBIL_API_ID,
