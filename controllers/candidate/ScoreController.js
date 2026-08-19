@@ -218,7 +218,7 @@ export const getMyScores = async (req, res) => {
       const myCibilScore = await CibilModel.findOne({ userId })
         .sort({ createdAt: -1 })
         .limit(1)
-        .select("score  paymentDate");
+        .select("Score  paymentDate");
       return apiResponse(
         res,
         200,
