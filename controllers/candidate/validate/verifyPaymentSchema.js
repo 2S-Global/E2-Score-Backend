@@ -26,5 +26,5 @@ export const verifyPaymentSchema = z.object({
         .enum(["CIBIL", "EXPERIAN"], {
             error: "Type must be either CIBIL or EXPERIAN",
         })
-        .default("CIBIL"),
+        .default("CIBIL"), //thats the issue
 });
