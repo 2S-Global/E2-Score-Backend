@@ -24,6 +24,7 @@ export const getCibilScore = async (userData) => {
     console.log('is it working===>1526', response?.data)
 
   } catch (error) {
+
     console.log("error.response.data==>", error?.response?.data)
     console.log("error.response.status==>", error)
     console.log('is it working===>1528', error)
@@ -58,15 +59,24 @@ export const getExperianScore = async (userData) => {
     },
   });
 
-  const score = response?.data?.data.score.BureauScore
-  const rawData = response?.data
+
+
+
+
+  const score = response?.data?.data?.result_json?.INProfileResponse?.SCORE?.BureauScore
+
+
+  // const rawData = response?.data
 
   console.log("this is experian SCORE ==>", score)
-  console.log("this is experian RAW DATA ==>", rawData)
+  // console.log("this is experian RAW DATA ==>", rawData)
 
 
   return {
     score: score || "",
-    data: rawData,
+    // data: rawData,
   };
 };
+
+
+
