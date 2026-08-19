@@ -13,12 +13,8 @@ import User from "../../models/userModel.js";
 import CandidateKYC from "../../models/CandidateKYCModel.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import { verifyPaymentSchema } from "./validate/verifyPaymentSchema.js";
+import Fees from "../../models/feesModel.js";
 
-
-const CREDIT_SCORE_PRICES = {
-  CIBIL: 7,
-  EXPERIAN: 5,
-};
 
 
 export const createPayment = async (req, res) => {
@@ -27,10 +23,17 @@ export const createPayment = async (req, res) => {
 
     const reportType = String(type).toUpperCase();
 
-    const amountInRupees = CREDIT_SCORE_PRICES[reportType];
-
-    if (amountInRupees === undefined) {
+    if (reportType !== "CIBIL" && reportType !== "EXPERIAN") {
       return apiResponse(res, 400, false, "Invalid credit report type", null);
+    }
+
+    // Fetch dynamic fees from database
+    const fees = await Fees.findOne({});
+    let amountInRupees;
+    if (reportType === "CIBIL") {
+      amountInRupees = Number(fees?.cibil_score ?? 7);
+    } else {
+      amountInRupees = Number(fees?.experian_score ?? 5);
     }
 
     const amountInPaise = amountInRupees * 100;
@@ -55,15 +58,11 @@ export const createPayment = async (req, res) => {
 
 
 export const verifyPaymentAndGetScore = async (req, res) => {
-  const userId = `6937bc0115b0e2b4b04389fd`;
+  const userId = req.userId;
+  // const userId = `6937bc0115b0e2b4b04389fd`;
+
   if (!userId) {
-    return apiResponse(
-      res,
-      401,
-      false,
-      "Unauthorized: User ID not found in request context or body",
-      null,
-    );
+    return apiResponse(res, 401, false, "Unauthorized: User ID not found in request context or body", null);
   }
   try {
     const result = verifyPaymentSchema.safeParse(req.body)
@@ -72,20 +71,13 @@ export const verifyPaymentAndGetScore = async (req, res) => {
       return apiResponse(res, 422, false, 'Invalid data', result.error.issues[0].message)
     }
 
-
-
-
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, type } = result.data;
-
 
     const paymentVerification = verifyRazorpayPayment({
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
     });
-
-
-    console.log('is this good enough ====>', paymentVerification)
 
     if (!paymentVerification.success) {
       return apiResponse(
@@ -96,6 +88,7 @@ export const verifyPaymentAndGetScore = async (req, res) => {
         paymentVerification.message,
       );
     }
+
     const payment = {
       paymentId: paymentVerification.paymentId,
       orderId: paymentVerification.orderId,
@@ -104,11 +97,9 @@ export const verifyPaymentAndGetScore = async (req, res) => {
     const existingCibilPayment = await CibilModel.findOne({
       paymentId: payment.paymentId,
     });
-    const existingExperianPayment = await ExperianModel.findOne({
-      paymentId: payment.paymentId,
-    });
 
-    if (existingCibilPayment || existingExperianPayment) {
+
+    if (existingCibilPayment) {
       return apiResponse(res, 409, false, "Payment has already been used", null);
     }
 
@@ -144,22 +135,16 @@ export const verifyPaymentAndGetScore = async (req, res) => {
     const lastName = nameParts.slice(1).join(" ") || "";
 
     const payloadBUILDER = {
-      mobile_no: phone_number,
-      pan: panNumber,
+      mobile_number: phone_number,
       first_name: firstName,
       last_name: lastName,
-      dob: formattedDOB
     };
-
-    console.log('test the payload', payloadBUILDER);
 
     if (reportType === "CIBIL") {
       // 2. Fetch CIBIL score
-      // const cibilData = await getCibilScore(payloadBUILDER);
-      const cibilData = {
-        score: 99
-      }
-      // 3. Save CIBIL result in DB
+      const cibilData = await getCibilScore(payloadBUILDER);
+
+
       await CibilModel.create({
         userId,
         paymentId: payment.paymentId,
@@ -177,13 +162,23 @@ export const verifyPaymentAndGetScore = async (req, res) => {
         cibilData,
       );
     } else if (reportType === "EXPERIAN") {
-      // 2. Fetch Experian score using the builded payload instead of req.body
-      // const experianData = await getExperianScore(payloadBUILDER);
+      const existingExperianPayment = await ExperianModel.findOne({
+        paymentId: payment.paymentId,
+      });
 
-      const experianData = {
-        score: 99
+      if (existingExperianPayment) {
+        return apiResponse(res, 409, false, "Payment has already been used", null);
       }
+      const payload_EXPERIAN = {
+        mobile_no: phone_number,
+        pan: panNumber,
+        first_name: firstName,
+        last_name: lastName,
+        dob: formattedDOB
+      };
 
+      const experianData = await getExperianScore(payload_EXPERIAN);
+      console.log("experianData", experianData)
       // 3. Save Experian result in DB
       await ExperianModel.create({
         userId,
@@ -221,16 +216,17 @@ export const verifyPaymentAndGetScore = async (req, res) => {
 };
 
 export const getMyScores = async (req, res) => {
-  // const userId = req.userId
-  const userId = `6937bc0115b0e2b4b04389fd`;
+  const userId = req.userId;
+
+  if (!userId) {
+    return apiResponse(res, 401, false, "Unauthorized: User ID not found in request context or body", null);
+  }
+
   const { type } = req.params;
 
   try {
     if (type.toUpperCase() == "CIBIL") {
-      const myCibilScore = await CibilModel.findOne({ userId })
-        .sort({ createdAt: -1 })
-        .limit(1)
-        .select("Score  paymentDate");
+      const myCibilScore = await CibilModel.findOne({ userId }).sort({ createdAt: -1 }).limit(1).select("Score  paymentDate");
       return apiResponse(
         res,
         200,

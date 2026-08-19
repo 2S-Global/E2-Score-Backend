@@ -19,6 +19,12 @@ const Schema = new mongoose.Schema(
     },
     aadhar_fees: {
       type: String,
+    },  
+    cibil_score: {
+      type: String,
+    },
+    experian_score: {
+      type: String,
     },
   },
   { timestamps: true }

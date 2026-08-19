@@ -3,7 +3,7 @@ import axios from "axios";
 //to get CIBIL SCORE
 export const getCibilScore = async (userData) => {
   const API_URL = `${process.env.CIBIL_URL}/srv2/credit-report/check-score`;
-  
+
   const sendRequest = {
     ...userData,
     api_id: process.env.CIBIL_API_ID,
@@ -21,7 +21,7 @@ export const getCibilScore = async (userData) => {
       },
     });
 
-    console.log('is it working===>1526', response)
+    console.log('is it working===>1526', response?.data)
 
   } catch (error) {
     console.log("error.response.data==>", error?.response?.data)
@@ -29,20 +29,13 @@ export const getCibilScore = async (userData) => {
     console.log('is it working===>1528', error)
   }
 
-  const rawData = response?.data;
-  let score = null;
-
-
-  //blind try cause i dont know which key has the SCORE
-  if (rawData) {
-    score = rawData.score || rawData.Score || rawData.cibil_score || rawData.cibilScore;
-    if (!score && rawData.data) {
-      score = rawData.data.score || rawData.data.Score || rawData.data.cibil_score || rawData.data.cibilScore;
-    }
-  }
+  const score = response?.data?.data?.score;
+  const rawData = response?.data
+  console.log("this is CIBIL SCORE ==>", score)
+  console.log("this is CIBIL RAW DATA ==>", rawData)
 
   return {
-    score: score || "N/A",
+    score: score || "",
     data: rawData,
   };
 };
@@ -65,19 +58,15 @@ export const getExperianScore = async (userData) => {
     },
   });
 
-  const rawData = response.data;
-  let score = null;
+  const score = response?.data?.data.score.BureauScore
+  const rawData = response?.data
 
-  // Defensively search for score in expected paths
-  if (rawData) {
-    score = rawData.score || rawData.Score || rawData.experian_score || rawData.experianScore;
-    if (!score && rawData.data) {
-      score = rawData.data.score || rawData.data.Score || rawData.data.experian_score || rawData.data.experianScore;
-    }
-  }
+  console.log("this is experian SCORE ==>", score)
+  console.log("this is experian RAW DATA ==>", rawData)
+
 
   return {
-    score: score || "N/A",
+    score: score || "",
     data: rawData,
   };
 };

@@ -14,11 +14,11 @@ const ScoreRouter = express.Router();
 
 // Routes
 
-ScoreRouter.post("/create-payment", createPayment);
-ScoreRouter.post("/payment/create", createPayment);
+ScoreRouter.post("/create-payment", userAuth, createPayment);
+ScoreRouter.post("/payment/create", userAuth, createPayment);
 
 
-ScoreRouter.post("/credit-report/verify", verifyPaymentAndGetScore);
-ScoreRouter.get('/my-score/:type', getMyScores)
+ScoreRouter.post("/credit-report/verify", userAuth, verifyPaymentAndGetScore);
+ScoreRouter.get('/my-score/:type', userAuth, getMyScores);
 
 export default ScoreRouter;

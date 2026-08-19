@@ -26,5 +26,5 @@ const cibilmodel = new mongoose.Schema({
     timestamps: true
 });
 
-const CibilModel = mongoose.model("CibilModel", cibilmodel);
+const CibilModel = mongoose.model("Cibil", cibilmodel);
 export default CibilModel;
