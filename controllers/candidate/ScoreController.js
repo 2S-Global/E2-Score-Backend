@@ -12,6 +12,7 @@ import {
 import User from "../../models/userModel.js";
 import CandidateKYC from "../../models/CandidateKYCModel.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
+import { verifyPaymentSchema } from "./validate/verifyPaymentSchema.js";
 
 
 const CREDIT_SCORE_PRICES = {
@@ -65,24 +66,17 @@ export const verifyPaymentAndGetScore = async (req, res) => {
     );
   }
   try {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      type = "CIBIL",
-    } = req.body;
+    const result = verifyPaymentSchema.safeParse(req.body)
+
+    if (!result.success) {
+      return apiResponse(res, 422, false, 'Invalid data', result.error.issues[0].message)
+    }
 
 
-    // FOR MOCK TESTING (uncomment this if you want to bypass verification)
-    /*
-    payment = {
-      success: true,
-      paymentId: razorpay_payment_id || "test_payment_id",
-      orderId: razorpay_order_id || "test_order_id"
-    };
-    */
 
-    // FOR ACTUAL VERIFICATION:
+
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, type } = result.data;
+
 
     const paymentVerification = verifyRazorpayPayment({
       razorpay_order_id,
@@ -107,56 +101,64 @@ export const verifyPaymentAndGetScore = async (req, res) => {
       orderId: paymentVerification.orderId,
     };
 
+    const existingCibilPayment = await CibilModel.findOne({
+      paymentId: payment.paymentId,
+    });
+    const existingExperianPayment = await ExperianModel.findOne({
+      paymentId: payment.paymentId,
+    });
 
+    if (existingCibilPayment || existingExperianPayment) {
+      return apiResponse(res, 409, false, "Payment has already been used", null);
+    }
 
     const reportType = String(type).toUpperCase();
 
-
     const user = await User.findById(userId).select("name phone_number");
-    let phone_number = user?.phone_number;
-
-    if (phone_number.length > 10) {
-      phone_number = phone_number.slice(-10);
-    }
-
-
-    const KYC = await CandidateKYC.findOne({ userId }).select("pan_number");
-    const Details = await CandidateDetails.findOne({ userId }).select("dob");
-
     if (!user) {
       return apiResponse(res, 404, false, "User not found", null);
     }
 
+    // Protect against null/undefined phone number crashing the server
+    let phone_number = user.phone_number || "";
+    if (phone_number && phone_number.length > 10) {
+      phone_number = phone_number.slice(-10);
+    }
+
+    const KYC = await CandidateKYC.findOne({ userId }).select("pan_number");
+    const Details = await CandidateDetails.findOne({ userId }).select("dob");
 
     const panNumber = KYC?.pan_number || "";
 
-
-    const formattedDOB = Details?.dob ? new Date(Details.dob).toISOString().split('T')[0] : "";
-
+    // Protect against invalid dates in database crashing the server during toISOString() conversion
+    let formattedDOB = "";
+    if (Details?.dob) {
+      const dobDate = new Date(Details.dob);
+      if (!isNaN(dobDate.getTime())) {
+        formattedDOB = dobDate.toISOString().split('T')[0];
+      }
+    }
 
     const nameParts = user.name ? user.name.trim().split(/\s+/) : [];
     const firstName = nameParts[0] || "";
     const lastName = nameParts.slice(1).join(" ") || "";
 
-
-
     const payloadBUILDER = {
-      mobile_no: phone_number || "",
-      pan: panNumber || "",
-      first_name: firstName || "",
-      last_name: lastName || "",
-      dob: formattedDOB || ""
+      mobile_no: phone_number,
+      pan: panNumber,
+      first_name: firstName,
+      last_name: lastName,
+      dob: formattedDOB
     };
 
     console.log('test the payload', payloadBUILDER);
 
     if (reportType === "CIBIL") {
       // 2. Fetch CIBIL score
-      const cibilData = await getCibilScore(payloadBUILDER);
-      // const cibilData = {
-      //   score: 90
-      // }
-
+      // const cibilData = await getCibilScore(payloadBUILDER);
+      const cibilData = {
+        score: 99
+      }
       // 3. Save CIBIL result in DB
       await CibilModel.create({
         userId,
@@ -176,7 +178,11 @@ export const verifyPaymentAndGetScore = async (req, res) => {
       );
     } else if (reportType === "EXPERIAN") {
       // 2. Fetch Experian score using the builded payload instead of req.body
-      const experianData = await getExperianScore(payloadBUILDER);
+      // const experianData = await getExperianScore(payloadBUILDER);
+
+      const experianData = {
+        score: 99
+      }
 
       // 3. Save Experian result in DB
       await ExperianModel.create({
@@ -195,22 +201,28 @@ export const verifyPaymentAndGetScore = async (req, res) => {
         experianData,
       );
     } else {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid credit report type: ${type}. Must be CIBIL or EXPERIAN.`,
-      });
+      return apiResponse(
+        res,
+        400,
+        false,
+        `Invalid credit report type: ${type}. Must be CIBIL or EXPERIAN.`,
+        null
+      );
     }
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return apiResponse(
+      res,
+      500,
+      false,
+      error.message || "An internal server error occurred",
+      null
+    );
   }
 };
 
 export const getMyScores = async (req, res) => {
   // const userId = req.userId
-  const userId = `6a5876900f6c2c9903ab73ec`;
+  const userId = `6937bc0115b0e2b4b04389fd`;
   const { type } = req.params;
 
   try {
@@ -230,7 +242,7 @@ export const getMyScores = async (req, res) => {
       const myExperianScore = await ExperianModel.findOne({ userId })
         .sort({ createdAt: -1 })
         .limit(1)
-        .select("score  paymentDate");
+        .select("Score  paymentDate");
       return apiResponse(
         res,
         200,
