@@ -137,7 +137,7 @@ export const getSpecificFees = async (req, res) => {
   const { documentType } = req.params;
 
   try {
-    const fees = await Fees.findOne({});
+    const fees = await Fees.findOne().lean();
     if (!fees) {
       return res.status(404).json({
         success: false,
@@ -152,6 +152,8 @@ export const getSpecificFees = async (req, res) => {
       passport: fees.passport_fees,
       dl: fees.dl_fees,
       aadhar: fees.aadhar_fees,
+      cibil: fees.cibil_fees,
+      experian: fees.experian_fees,
     };
 
     // Pick fees dynamically or fallback to default
@@ -294,7 +296,7 @@ export const VerifyOrder = async (req, res) => {
     //Step 3 : Run Verification Process
     const verificationResult = await RunVerificationProcess(
       razorpay_order_id,
-      userId
+      userId,
     );
 
     if (orderofUser.documentType === "aadhar") {
@@ -309,7 +311,7 @@ export const VerifyOrder = async (req, res) => {
     // Step 4: Mark order as paid
     const updatedOrder = await markOrderPaid(
       razorpay_order_id,
-      razorpay_payment_id
+      razorpay_payment_id,
     );
 
     return res.status(200).json({
@@ -373,7 +375,7 @@ export const VerifyOtp = async (req, res) => {
     const response = await axios.post(
       `${Aadhar_URL}/api/v1/aadhaar-v2/submit-otp`,
       { key: aadharKey, request_id, otp },
-      { headers }
+      { headers },
     );
 
     // Store API response
