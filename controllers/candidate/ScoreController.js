@@ -9,15 +9,17 @@ import {
   getCibilScore,
   getExperianScore,
 } from "../../services/creditScoreService.js";
+import User from "../../models/userModel.js";
+import CandidateKYC from "../../models/CandidateKYCModel.js";
+import CandidateDetails from "../../models/CandidateDetailsModel.js";
 
-//CREDIT_SCORE_PRICES
-//VERY IMPORTANT => if api changes then change here
+
 const CREDIT_SCORE_PRICES = {
   CIBIL: 7,
   EXPERIAN: 5,
 };
 
-//create payment
+
 export const createPayment = async (req, res) => {
   try {
     const { type = "CIBIL" } = req.body;
@@ -49,12 +51,10 @@ export const createPayment = async (req, res) => {
   }
 };
 
-//Controller to verify Razorpay payment
-//and fetch the requested credit score
-//(CIBIL/Experian) synchronously.
+
 
 export const verifyPaymentAndGetScore = async (req, res) => {
-  const userId = `6a5876900f6c2c9903ab73ec`;
+  const userId = `6937bc0115b0e2b4b04389fd`;
   if (!userId) {
     return apiResponse(
       res,
@@ -72,28 +72,87 @@ export const verifyPaymentAndGetScore = async (req, res) => {
       type = "CIBIL",
     } = req.body;
 
-    // 1. Verify payment
-    const payment = verifyRazorpayPayment({
+
+    // FOR MOCK TESTING (uncomment this if you want to bypass verification)
+    /*
+    payment = {
+      success: true,
+      paymentId: razorpay_payment_id || "test_payment_id",
+      orderId: razorpay_order_id || "test_order_id"
+    };
+    */
+
+    // FOR ACTUAL VERIFICATION:
+
+    const paymentVerification = verifyRazorpayPayment({
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
     });
 
-    if (!payment.success) {
+
+    console.log('is this good enough ====>', paymentVerification)
+
+    if (!paymentVerification.success) {
       return apiResponse(
         res,
         400,
         false,
         "Payment verification failed",
-        payment.message,
+        paymentVerification.message,
       );
     }
+    const payment = {
+      paymentId: paymentVerification.paymentId,
+      orderId: paymentVerification.orderId,
+    };
+
+
 
     const reportType = String(type).toUpperCase();
 
+
+    const user = await User.findById(userId).select("name phone_number");
+    let phone_number = user?.phone_number;
+
+    if (phone_number.length > 10) {
+      phone_number = phone_number.slice(-10);
+    }
+
+
+    const KYC = await CandidateKYC.findOne({ userId }).select("pan_number");
+    const Details = await CandidateDetails.findOne({ userId }).select("dob");
+
+    if (!user) {
+      return apiResponse(res, 404, false, "User not found", null);
+    }
+
+
+    const panNumber = KYC?.pan_number || "";
+
+
+    const formattedDOB = Details?.dob ? new Date(Details.dob).toISOString().split('T')[0] : "";
+
+
+    const nameParts = user.name ? user.name.trim().split(/\s+/) : [];
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+
+
+    const payloadBUILDER = {
+      mobile_no: phone_number || "",
+      pan: panNumber || "",
+      first_name: firstName || "",
+      last_name: lastName || "",
+      dob: formattedDOB || ""
+    };
+
+    console.log('test the payload', payloadBUILDER);
+
     if (reportType === "CIBIL") {
       // 2. Fetch CIBIL score
-      const cibilData = await getCibilScore(req.body);
+      const cibilData = await getCibilScore(payloadBUILDER);
       // const cibilData = {
       //   score: 90
       // }
@@ -116,8 +175,8 @@ export const verifyPaymentAndGetScore = async (req, res) => {
         cibilData,
       );
     } else if (reportType === "EXPERIAN") {
-      // 2. Fetch Experian score
-      const experianData = await getExperianScore(req.body);
+      // 2. Fetch Experian score using the builded payload instead of req.body
+      const experianData = await getExperianScore(payloadBUILDER);
 
       // 3. Save Experian result in DB
       await ExperianModel.create({
@@ -146,66 +205,6 @@ export const verifyPaymentAndGetScore = async (req, res) => {
       success: false,
       error: error.message,
     });
-  }
-};
-
-//Controller to fetch CIBIL score directly without payment verification (legacy/compatibility).
-
-export const CibilScore = async (req, res) => {
-  try {
-    const request = req.body;
-    if (!request || typeof request !== "object" || Array.isArray(request)) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid request body",
-      });
-    }
-
-    const cibilData = await getCibilScore(request);
-    return res.status(200).json({
-      success: true,
-      data: cibilData.data,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-      status: error.response?.status || null,
-      response: error.response?.data || null,
-    });
-
-    /* return res.status(500).json({
-      success: false,
-      error: error.message,
-    }); */
-  }
-};
-
-//Controller to fetch Experian score directly without payment verification (legacy/compatibility).
-
-export const ExperianScore = async (req, res) => {
-  try {
-    const request = req.body;
-    if (!request || typeof request !== "object" || Array.isArray(request)) {
-      return apiResponse(res, 400, false, "Invalid request body", null);
-    }
-
-    const experianData = await getExperianScore(request);
-    return apiResponse(
-      res,
-      200,
-      true,
-      "Experian score fetched successfully",
-      experianData.data,
-    );
-  } catch (error) {
-    return apiResponse(
-      res,
-      500,
-      false,
-      error.message || "Error in fetching Experian score",
-      null,
-    );
   }
 };
 

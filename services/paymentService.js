@@ -21,8 +21,7 @@ export const verifyRazorpayPayment = (paymentData) => {
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
     return {
       success: false,
-      message:
-        "Missing payment verification parameters (order ID, payment ID, or signature)",
+      message: "Missing payment verification parameters (order ID, payment ID, or signature)",
     };
   }
 
