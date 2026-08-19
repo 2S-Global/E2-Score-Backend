@@ -1,5 +1,5 @@
 import { apiResponse } from "../../utility/apiResponse.js";
-import CibilModel from "../../models/Score/CibilScoreMode.js";
+import CibilModel from "../../models/Score/CibilScoreModel.js";
 import ExperianModel from "../../models/Score/ExperianModel.js";
 import {
   createRazorpayOrder,
@@ -143,7 +143,7 @@ export const verifyPaymentAndGetScore = async (req, res) => {
     if (reportType === "CIBIL") {
       // 2. Fetch CIBIL score
       const cibilData = await getCibilScore(payloadBUILDER);
-
+      console.log('cibilDatacibilDatacibilDatacibilDatacibilData===>', cibilData)
 
       await CibilModel.create({
         userId,

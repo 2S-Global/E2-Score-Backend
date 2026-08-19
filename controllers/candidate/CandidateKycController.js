@@ -152,10 +152,8 @@ export const getSpecificFees = async (req, res) => {
       passport: fees.passport_fees,
       dl: fees.dl_fees,
       aadhar: fees.aadhar_fees,
-      cibil_score: fees.cibil_score,
-      experian_score: fees.experian_score,
-      cibil: fees.cibil_score,
-      experian: fees.experian_score,
+      cibil: fees.cibil_fees,
+      experian: fees.experian_fees,
     };
 
     // Pick fees dynamically or fallback to default
