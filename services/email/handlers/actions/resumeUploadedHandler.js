@@ -3,7 +3,8 @@ import { resumeUploadedTemplate } from "../../templates/resumeUploadedTemplate.j
 
 export const resumeUploadedHandler = async (job) => {
   const { to, userdtl } = job.data;
+
   const htmlEmail = resumeUploadedTemplate(userdtl);
 
-  await sendMail(to, "Resume Update Notification", htmlEmail);
+  await sendMail({ to: to, subject: "Resume Update Notification", html: htmlEmail });
 };
