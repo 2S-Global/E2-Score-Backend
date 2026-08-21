@@ -1,6 +1,6 @@
 export const companyPackageActivationTemplate = (companyName, planDetailsHtml, discount) => `
       <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/lpvojh112at5ljbragy0.jpg" alt="Banner" style="width: 100%; height: auto;" />
+    <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
       </div>
       
         <div style="font-family: Arial, sans-serif; padding: 20px;">

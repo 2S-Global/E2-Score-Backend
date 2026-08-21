@@ -6,6 +6,7 @@ export const profileSummaryDeletedHandler = async (job) => {
     const html = profileSummaryDeletedTemplate(userdtl);
     
     await sendMail({
+        type: "profile",
         to: to,
         subject: "Your Profile Summary Has Been Deleted",
         html: html,

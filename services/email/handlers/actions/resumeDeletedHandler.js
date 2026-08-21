@@ -5,5 +5,10 @@ export const resumeDeletedHandler = async (job) => {
   const { to, userdtl } = job.data;
   const htmlEmail = resumeDeletedTemplate(userdtl);
 
-  await sendMail(to, "Resume Update Notification", htmlEmail);
+  await sendMail({
+    type: "documents",
+    to,
+    subject: "Resume Update Notification",
+    html: htmlEmail
+  });
 };

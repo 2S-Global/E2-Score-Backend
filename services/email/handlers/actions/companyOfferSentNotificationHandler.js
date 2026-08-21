@@ -6,6 +6,7 @@ export const companyOfferSentNotificationHandler = async (job) => {
     const html = companyOfferSentNotificationTemplate(designation, userName, userEmail, offer_letter_designation, offer_letter_joining_date_string, offer_letter_salary);
     
     await sendMail({
+        type: "jobs",
       to: email,
       subject: `Offer Sent to Candidate – ${offer_letter_designation}`,
       html: html,

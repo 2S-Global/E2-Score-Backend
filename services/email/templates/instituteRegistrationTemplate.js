@@ -1,6 +1,6 @@
 export const instituteRegistrationTemplate = (name, email, password, token) => `
       <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
+    <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
   </div>
         <p>Dear <strong>${name}</strong>,</p>
         <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>

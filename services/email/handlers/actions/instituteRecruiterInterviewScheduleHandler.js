@@ -6,6 +6,7 @@ export const instituteRecruiterInterviewScheduleHandler = async (job) => {
   const html = instituteRecruiterInterviewScheduleTemplate(total, date, role, studentsTableHtml);
 
   await sendMail({
+        type: "interviews",
     to: recruiterEmail,
     subject: `Position Interview Schedule Submission – ${total} Candidates for ${role}`,
     html: html,

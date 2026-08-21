@@ -6,6 +6,7 @@ export const workSampleUpdatedHandler = async (job) => {
     const html = workSampleUpdatedTemplate(userdtl);
     
     await sendMail({
+        type: "profile",
         to: to,
         subject: "Work Profile Update Notification",
         html: html,

@@ -6,6 +6,7 @@ export const keySkillsUpdatedHandler = async (job) => {
     const html = keySkillsUpdatedTemplate(userdtl);
     
     await sendMail({
+        type: "skills",
         to: to,
         subject: "Your Key Skill List Has Been Updated",
         html: html,

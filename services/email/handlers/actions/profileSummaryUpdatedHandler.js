@@ -8,6 +8,7 @@ export const profileSummaryUpdatedHandler = async (job) => {
 
 
     await sendMail({
+        type: "profile",
         to: to,
         subject: "Your Profile Summary Has Been Updated",
         html: html,

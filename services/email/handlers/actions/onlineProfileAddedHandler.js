@@ -6,6 +6,7 @@ export const onlineProfileAddedHandler = async (job) => {
     const html = onlineProfileAddedTemplate(userdtl);
     
     await sendMail({
+        type: "profile",
         to: to,
         subject: "Online Profile Update Notification",
         html: html,

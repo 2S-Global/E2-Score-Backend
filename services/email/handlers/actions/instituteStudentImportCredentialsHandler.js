@@ -6,6 +6,7 @@ export const instituteStudentImportCredentialsHandler = async (job) => {
     const html = instituteStudentImportCredentialsTemplate(name, email, password);
     
     await sendMail({
+        type: "registration",
       to: email,
       subject: "Access Credentials for Geisil",
       html: html,

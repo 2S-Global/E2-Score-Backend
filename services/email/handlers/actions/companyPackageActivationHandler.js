@@ -6,6 +6,7 @@ export const companyPackageActivationHandler = async (job) => {
     const html = companyPackageActivationTemplate(companyName, planDetailsHtml, discount);
     
     await sendMail({
+        type: "verification",
       to: email,
       subject: "QuikChek Account Activation and Package Details",
       html: html,

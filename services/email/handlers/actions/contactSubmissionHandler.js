@@ -6,6 +6,7 @@ export const contactSubmissionHandler = async (job) => {
     const html = contactSubmissionTemplate(name, email, subject, message, dispute);
     
     await sendMail({
+        type: "verification",
       to: "kp.sunit@gmail.com",
       cc: ["d.dey1988@gmail.com", "avik@2sglobal.co", "abhishek@2sglobal.us"],
       subject: dispute

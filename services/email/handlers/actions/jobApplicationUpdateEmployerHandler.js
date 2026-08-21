@@ -6,6 +6,7 @@ export const jobApplicationUpdateEmployerHandler = async (job) => {
     const html = jobApplicationUpdateEmployerTemplate(jobData);
 
     await sendMail({
+        type: "jobs",
         to: employerEmail,
         subject: `New Application Update – ${jobData.jobTitle}`,
         html: html,

@@ -6,6 +6,7 @@ export const homePageContactHandler = async (job) => {
     const html = homePageContactTemplate(name, email, subject, message);
     
     await sendMail({
+        type: "verification",
       to: "chandrasarkar2sglobal@gmail.com",
       subject: `📩 New Contact Form Submission: ${subject}`,
       html: html,

@@ -6,6 +6,7 @@ export const companyInterviewRescheduledHandler = async (job) => {
     const html = companyInterviewRescheduledTemplate(userName, designation, companyName, interviewDateString, formattedInterviewTime, interviewLocation);
     
     await sendMail({
+        type: "interviews",
       to: email,
       subject: `Interview Rescheduled – ${designation} at ${companyName}`,
       html: html,

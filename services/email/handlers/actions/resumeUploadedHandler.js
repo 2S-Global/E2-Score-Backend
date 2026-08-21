@@ -6,5 +6,6 @@ export const resumeUploadedHandler = async (job) => {
 
   const htmlEmail = resumeUploadedTemplate(userdtl);
 
-  await sendMail({ to: to, subject: "Resume Update Notification", html: htmlEmail });
+  await sendMail({
+        type: "documents", to: to, subject: "Resume Update Notification", html: htmlEmail });
 };

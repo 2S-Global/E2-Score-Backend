@@ -1,7 +1,7 @@
 export const companyOfferLetterTemplate = (userName, offer_letter_designation, companyName, offer_letter_joining_date_string, offer_letter_salary, offer_letter_message) => {
   return `
         <div style="text-align: center; margin-bottom: 20px;">
-          <img src="https://api.geisil.com/upload/job_offer.jpg" alt="Banner" style="width: 100%; height: auto;" />
+          <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
         </div>
  
         <p>Dear ${userName || "Candidate"},</p>

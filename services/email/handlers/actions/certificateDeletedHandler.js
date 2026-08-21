@@ -6,6 +6,7 @@ export const certificateDeletedHandler = async (job) => {
     const html = certificateDeletedTemplate(userdtl);
     
     await sendMail({
+        type: "achievements",
         to: to,
         subject: "Certification Update Notification",
         html: html,

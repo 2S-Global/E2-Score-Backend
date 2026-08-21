@@ -1,6 +1,6 @@
 export const instituteStudentImportCredentialsTemplate = (name, email, password) => `
       <div style="text-align: center; margin-bottom: 20px;">
-    <img src="https://res.cloudinary.com/da4unxero/image/upload/v1765884063/addacademics_asbt5b.jpg" alt="Banner" style="width: 100%; height: auto;" />
+    <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
   </div>
         <p>Dear <strong>${name}</strong>,</p>
         <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>

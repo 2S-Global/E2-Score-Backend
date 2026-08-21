@@ -6,6 +6,7 @@ export const companyEmploymentVerificationStatusHandler = async (job) => {
     const html = companyEmploymentVerificationStatusTemplate(employeeName, companyName, workedInCompanyBool, VerifiedBool, designationVerifiedBool, durationVerifiedBool, employmentTypeVerifiedBool, remarks);
     
     await sendMail({
+        type: "verification",
       to: email,
       subject: "Employment Verification Status Updated",
       html: html,

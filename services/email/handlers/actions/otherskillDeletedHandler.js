@@ -6,6 +6,7 @@ export const otherskillDeletedHandler = async (job) => {
     const html = otherskillDeletedTemplate(userdtl);
     
     await sendMail({
+        type: "skills",
         to: to,
         subject: "Otherskill List Update Notification",
         html: html,

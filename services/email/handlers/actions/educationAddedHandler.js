@@ -9,6 +9,7 @@ export const educationAddedHandler = async (job) => {
     if (to) {
         const userHtml = educationAddedTemplate(userdtl);
         await sendMail({
+        type: "education",
             to: to,
             subject: "Academic Details Added Notification",
             html: userHtml,
@@ -29,6 +30,7 @@ export const educationAddedHandler = async (job) => {
         if (company?.email) {
             const companyHtml = instituteReferenceTemplate(userdtl, instituteName);
             await sendMail({
+        type: "education",
                 to: company.email,
                 subject: "Candidate Added Your Institute Name",
                 html: companyHtml,

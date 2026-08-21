@@ -6,6 +6,7 @@ const run = async () => {
   try {
 
     const info = await sendMail({
+      type: "verification",
       to: "abhisekkaran2001@gmail.com",
       subject: "Temporary Test Email",
       html: "<p>This is a temporary test email sent via scripts/testSendMail.js to verify the mail configuration.</p>"

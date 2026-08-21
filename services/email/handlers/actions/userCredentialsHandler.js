@@ -6,6 +6,7 @@ export const userCredentialsHandler = async (job) => {
     const html = userCredentialsTemplate(name, email, password, token);
     
     await sendMail({
+        type: "registration",
       to: email,
       subject: "Access Credentials for Geisil",
       html: html,

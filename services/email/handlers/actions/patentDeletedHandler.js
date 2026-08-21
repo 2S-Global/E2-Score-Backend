@@ -6,6 +6,7 @@ export const patentDeletedHandler = async (job) => {
     const html = patentDeletedTemplate(userdtl);
     
     await sendMail({
+        type: "patent",
         to: to,
         subject: "Patent Update Notification",
         html: html,
