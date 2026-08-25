@@ -141,6 +141,7 @@ export const sendMail = async ({
   subject,
   text,
   html,
+  attachments,
 }) => {
   const account = accounts[type];
 
@@ -156,6 +157,7 @@ export const sendMail = async ({
     subject,
     text,
     html,
+    attachments,
   });
 
   return {

@@ -6,6 +6,7 @@ import KycOrder from "../../models/KycorderModel.js";
 import Razorpay from "razorpay";
 
 import axios from "axios";
+import { externalApiClient } from "../../logger/externalApiClient.js";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -376,26 +377,30 @@ export const VerifyOtp = async (req, res) => {
     const Aadhar_URL = process.env.AADHAR_BASE_URL;
     const aadharKey = process.env.AADHAR_KEY;
 
-    const response = await axios.post(
-      `${Aadhar_URL}/api/v1/aadhaar-v2/submit-otp`,
-      { key: aadharKey, request_id, otp },
-      { headers },
-    );
+    const response = await externalApiClient({
+      provider: "AADHAAR",
+      service: "submit-otp",
+      url: `${Aadhar_URL}/api/v1/aadhaar-v2/submit-otp`,
+      method: "POST",
+      data: { key: aadharKey, request_id, otp },
+      headers,
+      userId,
+    });
 
     // Store API response
-    userkyc.aadhar_response = response.data;
+    userkyc.aadhar_response = response;
 
-    if (response.data.status_code !== 200) {
+    if (response.status_code !== 200) {
       await userkyc.save();
       return res.status(400).json({
         success: false,
-        message: response.data.message || "OTP verification failed",
+        message: response.message || "OTP verification failed",
       });
     }
 
     // Match name with stored KYC name
     const isNameMatch =
-      response.data?.data?.full_name?.trim().toLowerCase() ===
+      response?.data?.full_name?.trim().toLowerCase() ===
       userkyc.aadhar_name?.trim().toLowerCase();
 
     userkyc.aadhar_verified = isNameMatch;

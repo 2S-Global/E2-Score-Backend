@@ -9,17 +9,22 @@ import morgan from "morgan";
 import db from "./config/db.js";
 import "./config/redis.js";
 import "./workers/emailWorkers.js";
+import "./workers/reportWorker.js";
+import { ReportScheduler } from "./schedulers/reportScheduler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 db();
+ReportScheduler().catch((err) => {
+  console.error("Failed to initialize ReportScheduler:", err);
+});
 
 const app = express();
 // Middleware
 app.use(
   cors({
-    origin: [
+    origin: [ 
       "https://geisil.com",
       "http://localhost:4173",
       "https://services.geisil.com",
@@ -111,6 +116,8 @@ import MentalTestQuizRouter from "./routes/mentalQuiz/MentalQuizRoutes.js";
 import MentalFeedBackRouter from "./routes/mentalFeedBack/MentalFeedBackRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import miscRouter from "./routes/miscRoutes.js";
+import trackerRouter from "./routes/ApitrackerRoutes/apitrackerRoutes.js";
+import reportGenerationRouter from "./routes/reportGenerationRouter/reportGenerationRouter.js";
 // Temporary route configuration
 // ⚠️ NOTE: Do not open, edit, or create `modify.js` inside the routes folder.
 // This file is reserved for internal use and should remain untouched.
@@ -206,6 +213,11 @@ app.use("/api/review", reviewRoutes);
 app.use('/api/check', miscRouter)
 
 app.use("/api/campus", campusRoutes);
+app.use('/api/tracker' , trackerRouter)
+app.use('/api/failure-report-generation' , reportGenerationRouter)
+
+
+
 app.use(errorHandler);
 const PORT = process.env.PORT || 3015;
 app.listen(PORT, () => {

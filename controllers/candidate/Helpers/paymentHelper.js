@@ -94,19 +94,19 @@ export const RunVerificationProcess = async (orderId, userId) => {
 
   switch (order.documentType) {
     case "pan":
-      return await verifyPanWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
+      return await verifyPanWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey, userId);
 
     case "epic":
-      return await verifyEpicWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
+      return await verifyEpicWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey, userId);
 
     case "passport":
-      return await verifyPassportWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
+      return await verifyPassportWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey, userId);
 
     case "dl":
-      return await verifyDLWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
+      return await verifyDLWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey, userId);
 
     case "aadhar":
-      return await verifyAadhaarWithZoop(kyc, Aadhar_URL, aadharKey);
+      return await verifyAadhaarWithZoop(kyc, Aadhar_URL, aadharKey, userId);
 
     default:
       return { success: false, message: "Unknown document type" };
@@ -130,13 +130,13 @@ export const RunVerificationProcesscompany = async (orderId, userId) => {
 
   switch (order.documentType) {
     case "pan":
-      return await verifyPanWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
+      return await verifyPanWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey, userId);
 
     case "gstin":
-      return await verifygstinWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
+      return await verifygstinWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey, userId);
 
     case "cin":
-      return await verifycinWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey);
+      return await verifycinWithZoop(kyc, Zoop_URL, zoopAppId, zoopApiKey, userId);
     default:
       return { success: false, message: "Unknown document type" };
   }
