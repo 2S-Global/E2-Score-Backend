@@ -10,10 +10,12 @@ import {
   removeSavedJob,
   getMySavedJobs,
   getJobsByUserIndustry,
+  getAllJob_List,
 } from "../../controllers/candidate/CandidateJobListingController.js";
 
 //import middleware
 import userAuth from "../../middleware/authMiddleware.js";
+import userAuthOptional from "../../middleware/authMiddlewareOptional.js";
 import Candimid from "../../middleware/candidateMiddleware.js";
 
 const CandidateJobListingRouter = express.Router();
@@ -34,29 +36,29 @@ CandidateJobListingRouter.get(
   "/get_all_job_list",
   userAuth,
   Candimid,
-  getAllJobList
+  getAllJobList,
 );
 
-CandidateJobListingRouter.post(
-  "/save_job",
-  userAuth,
-  Candimid,
-  saveJob
+CandidateJobListingRouter.get(
+  "/get_all_jobist",
+  userAuthOptional,
+  getAllJob_List,
 );
 
+CandidateJobListingRouter.post("/save_job", userAuth, Candimid, saveJob);
 
 CandidateJobListingRouter.post(
   "/remove_saved_job",
   userAuth,
   Candimid,
-  removeSavedJob
+  removeSavedJob,
 );
 
 CandidateJobListingRouter.get(
   "/get_saved_job",
   userAuth,
   Candimid,
-  getMySavedJobs
+  getMySavedJobs,
 );
 
 CandidateJobListingRouter.post(
@@ -64,12 +66,12 @@ CandidateJobListingRouter.post(
   /*   userAuth,
   Candimid, */
   upload.none(),
-  jobsearchFilters
+  jobsearchFilters,
 );
 CandidateJobListingRouter.get(
   "/get_job_recommendation",
   userAuth,
   Candimid,
-  getJobsByUserIndustry
+  getJobsByUserIndustry,
 );
 export default CandidateJobListingRouter;

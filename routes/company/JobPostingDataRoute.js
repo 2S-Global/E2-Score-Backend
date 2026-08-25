@@ -39,12 +39,14 @@ import {
   getRescheduleRequestByApplication,
   acceptRejectOfferLetter,
   getTotalApplicants,
-  getCandidateApplicationStats
+  getCandidateApplicationStats,
+  getJobPreview_Details,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
 import userAuth from "../../middleware/authMiddleware.js";
 import Companymid from "../../middleware/companyMiddleware.js";
+import userAuthOptional from "../../middleware/authMiddlewareOptional.js";
 
 import multer from "multer";
 const upload = multer();
@@ -78,7 +80,7 @@ jobPostingDataRouter.get(
   "/all_company_branches",
   userAuth,
   Companymid,
-  AllCompanyBranches
+  AllCompanyBranches,
 );
 
 // Save Job Posting Details API
@@ -87,7 +89,7 @@ jobPostingDataRouter.post(
   upload.none(),
   userAuth,
   Companymid,
-  AddJobPostingDetails
+  AddJobPostingDetails,
 );
 
 // Get Job Posting Details API
@@ -95,7 +97,7 @@ jobPostingDataRouter.get(
   "/get_job_posting_details",
   userAuth,
   Companymid,
-  GetJobPostingDetails
+  GetJobPostingDetails,
 );
 
 // Get Temp Job Posting Details API
@@ -103,7 +105,7 @@ jobPostingDataRouter.get(
   "/get_temp_job_posting_details",
   userAuth,
   Companymid,
-  GetTempJobPostingDetails
+  GetTempJobPostingDetails,
 );
 
 // Edit Job Posting Details API
@@ -112,7 +114,7 @@ jobPostingDataRouter.post(
   upload.none(),
   userAuth,
   Companymid,
-  EditJobPostingDetails
+  EditJobPostingDetails,
 );
 
 // Confirm Job Posting Details API
@@ -121,7 +123,7 @@ jobPostingDataRouter.post(
   upload.none(),
   userAuth,
   Companymid,
-  ConfirmJobPostingDetails
+  ConfirmJobPostingDetails,
 );
 
 // Edit Live Job Posting Details API
@@ -130,7 +132,7 @@ jobPostingDataRouter.post(
   upload.none(),
   userAuth,
   Companymid,
-  EditLiveJobPostingDetails
+  EditLiveJobPostingDetails,
 );
 
 // Confirm Live Job Posting Details API
@@ -139,7 +141,7 @@ jobPostingDataRouter.post(
   upload.none(),
   userAuth,
   Companymid,
-  ConfirmLiveJobPostingDetails
+  ConfirmLiveJobPostingDetails,
 );
 
 // Get All Job Listing API
@@ -147,7 +149,7 @@ jobPostingDataRouter.get(
   "/get_all_job_listing",
   userAuth,
   Companymid,
-  getAllJobListing
+  getAllJobListing,
 );
 
 // Delete Job Posting API
@@ -156,14 +158,20 @@ jobPostingDataRouter.delete(
   upload.none(),
   userAuth,
   Companymid,
-  deleteJobPosting
+  deleteJobPosting,
 );
 
 // Get All Job Listing API
 jobPostingDataRouter.get(
   "/get_job_preview_details",
   userAuth,
-  getJobPreviewDetails
+  getJobPreviewDetails,
+);
+// Get All Job Listing API Front
+jobPostingDataRouter.get(
+  "/get_job_previewDetails",
+  userAuthOptional,
+  getJobPreview_Details,
 );
 
 // Applied job API - from employee end
@@ -171,7 +179,7 @@ jobPostingDataRouter.post(
   "/apply-job-application",
   upload.none(),
   userAuth,
-  applyJobPosting
+  applyJobPosting,
 );
 
 // Get All Job Listing API
@@ -179,7 +187,7 @@ jobPostingDataRouter.get(
   "/get_all_job_related_candidates",
   userAuth,
   Companymid,
-  getAppliedCandidatesByJob
+  getAppliedCandidatesByJob,
 );
 
 // Get All Job related shortlisted candidates API
@@ -187,7 +195,7 @@ jobPostingDataRouter.get(
   "/get_all_job_related_shortlisted_candidates",
   userAuth,
   Companymid,
-  getShortlistedCandidatesByJob
+  getShortlistedCandidatesByJob,
 );
 
 // Get All Job related offer_sent candidates API
@@ -195,7 +203,7 @@ jobPostingDataRouter.get(
   "/get_all_job_related_offer_sent_candidates",
   userAuth,
   Companymid,
-  getOfferSentCandidatesByJob
+  getOfferSentCandidatesByJob,
 );
 
 // Get All Job related invitation_sent candidates API
@@ -203,7 +211,7 @@ jobPostingDataRouter.get(
   "/get_all_job_related_invitation_sent_candidates",
   userAuth,
   Companymid,
-  getInvitationSentCandidatesByJob
+  getInvitationSentCandidatesByJob,
 );
 
 // Reject Job Application API
@@ -212,7 +220,7 @@ jobPostingDataRouter.patch(
   upload.none(),
   userAuth,
   Companymid,
-  rejectJobApplicationStatus
+  rejectJobApplicationStatus,
 );
 
 // Accept Job Application API
@@ -221,7 +229,7 @@ jobPostingDataRouter.patch(
   upload.none(),
   userAuth,
   Companymid,
-  acceptJobApplicationStatus
+  acceptJobApplicationStatus,
 );
 
 // Accept Shortlisted Candidates (Interview Schedule) API
@@ -230,7 +238,7 @@ jobPostingDataRouter.patch(
   upload.none(),
   userAuth,
   Companymid,
-  acceptShortlistedCandidates
+  acceptShortlistedCandidates,
 );
 
 // Accept Shortlisted Candidates (Interview Reschedule) API
@@ -239,7 +247,7 @@ jobPostingDataRouter.patch(
   upload.none(),
   userAuth,
   Companymid,
-  rescheduleInterview
+  rescheduleInterview,
 );
 
 // Sent Offer to Candidates API
@@ -248,7 +256,7 @@ jobPostingDataRouter.patch(
   upload.none(),
   userAuth,
   Companymid,
-  sentOfferToCandidates
+  sentOfferToCandidates,
 );
 
 // Save Interview Feedback API
@@ -257,35 +265,31 @@ jobPostingDataRouter.post(
   upload.none(),
   userAuth,
   Companymid,
-  submitInterviewFeedback
+  submitInterviewFeedback,
 );
 
 // Get All Job Listing API
-jobPostingDataRouter.get(
-  "/get_all_my_applied_job",
-  userAuth,
-  getMyAppliedJobs
-);
+jobPostingDataRouter.get("/get_all_my_applied_job", userAuth, getMyAppliedJobs);
 
 // Accept or Reject Interview Invitation API
 jobPostingDataRouter.post(
   "/accept_interview_invitation",
   upload.none(),
-  acceptInterviewInvitation
+  acceptInterviewInvitation,
 );
 
 // Accept or Reject Offer Letter API
 jobPostingDataRouter.post(
   "/accept_reject_offer_letter",
   upload.none(),
-  acceptRejectOfferLetter
+  acceptRejectOfferLetter,
 );
 
 // Get check-application-status API
 jobPostingDataRouter.get(
   "/check-application-status",
   userAuth,
-  checkJobApplicationStatus
+  checkJobApplicationStatus,
 );
 
 // Request Reschedule By Candidate API
@@ -293,27 +297,27 @@ jobPostingDataRouter.post(
   "/request_reschedule_by_candidate",
   upload.none(),
   userAuth,
-  requestRescheduleByCandidate
+  requestRescheduleByCandidate,
 );
 
 // Get Request Reschedule By Candidate API
 jobPostingDataRouter.get(
   "/get-request-reschedule-data",
   userAuth,
-  getRescheduleRequestByApplication
+  getRescheduleRequestByApplication,
 );
 
 // Get Total Job Applications By Job API
 jobPostingDataRouter.get(
   "/get-total-job-applications",
   userAuth,
-  getTotalApplicants
+  getTotalApplicants,
 );
 
 jobPostingDataRouter.get(
   "/get-total-job-applications-by-id",
   userAuth,
-  getCandidateApplicationStats
+  getCandidateApplicationStats,
 );
 
 export default jobPostingDataRouter;

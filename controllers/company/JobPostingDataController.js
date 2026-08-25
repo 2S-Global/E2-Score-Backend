@@ -27,7 +27,6 @@ import SavedJob from "../../models/SavedJob.js";
 
 dayjs.extend(relativeTime);
 
-
 export const AllJobTitles = async (req, res) => {
   try {
     const searchText = req.query.q || ""; // text user typed
@@ -53,7 +52,6 @@ export const AllJobTitles = async (req, res) => {
   }
 };
 
-
 // List Job Specializations
 export const AllJobSpecialization = async (req, res) => {
   try {
@@ -65,7 +63,7 @@ export const AllJobSpecialization = async (req, res) => {
         isActive: true,
         name: { $regex: query || "", $options: "i" },
       },
-      { _id: 1, name: 1 }
+      { _id: 1, name: 1 },
     );
 
     res.status(200).json({
@@ -79,14 +77,12 @@ export const AllJobSpecialization = async (req, res) => {
   }
 };
 
-
-
 // List Job Types
 export const AllJobTypes = async (req, res) => {
   try {
     const jobTypes = await list_job_type.find(
       { isDel: false, isActive: true, isFlag: false },
-      { _id: 1, name: 1 }
+      { _id: 1, name: 1 },
     );
 
     res.status(200).json({
@@ -104,7 +100,7 @@ export const AllJobBenefits = async (req, res) => {
   try {
     const jobBenefits = await list_job_benefit.find(
       { isDel: false, isActive: true, isFlag: false },
-      { _id: 1, name: 1 }
+      { _id: 1, name: 1 },
     );
 
     res.status(200).json({
@@ -122,7 +118,7 @@ export const AllJobCareerLevels = async (req, res) => {
   try {
     const jobCareerLevels = await list_job_career_level.find(
       { isDel: false, isActive: true, isFlag: false },
-      { _id: 1, name: 1 }
+      { _id: 1, name: 1 },
     );
 
     res.status(200).json({
@@ -140,7 +136,7 @@ export const AllJobQualifications = async (req, res) => {
   try {
     const jobQualifications = await list_job_qualification.find(
       { isDel: false, isActive: true, isFlag: false },
-      { _id: 1, name: 1 }
+      { _id: 1, name: 1 },
     );
 
     res.status(200).json({
@@ -158,7 +154,7 @@ export const AllJobExperienceLevels = async (req, res) => {
   try {
     const jobExperienceLevels = await list_job_experience_level.find(
       { isDel: false, isActive: true, isFlag: false },
-      { _id: 1, name: 1 }
+      { _id: 1, name: 1 },
     );
 
     res.status(200).json({
@@ -176,7 +172,7 @@ export const AllJobModes = async (req, res) => {
   try {
     const jobModes = await list_job_mode.find(
       { isDel: false, isActive: true, isFlag: false },
-      { _id: 1, name: 1 }
+      { _id: 1, name: 1 },
     );
 
     res.status(200).json({
@@ -192,7 +188,6 @@ export const AllJobModes = async (req, res) => {
 // All Company Branches
 export const AllCompanyBranches = async (req, res) => {
   try {
-
     const company = await User.findById(req.userId);
     if (!company) {
       return res.status(404).json({ message: "Company not found." });
@@ -200,7 +195,7 @@ export const AllCompanyBranches = async (req, res) => {
 
     const companyBranches = await CompanyBranch.find(
       { userId: req.userId, is_del: false },
-      { name: 1, email: 1, phone: 1, address: 1 }
+      { name: 1, email: 1, phone: 1, address: 1 },
     ).lean();
 
     res.status(200).json({
@@ -216,7 +211,6 @@ export const AllCompanyBranches = async (req, res) => {
 // Add Job Posting Details API
 export const AddJobPostingDetails = async (req, res) => {
   try {
-
     const userId = req.userId;
 
     const company = await User.findById(req.userId);
@@ -256,7 +250,7 @@ export const AddJobPostingDetails = async (req, res) => {
       advertiseCity,
       advertiseCityName,
       resumeRequired,
-      jobSkills
+      jobSkills,
     } = req.body;
 
     console.log("Here is the body data by CSSSS )()()()()(", req.body);
@@ -285,7 +279,7 @@ export const AddJobPostingDetails = async (req, res) => {
       });
     }
 
-    if (!jobSkills.every(skill => typeof skill === "string")) {
+    if (!jobSkills.every((skill) => typeof skill === "string")) {
       return res.status(400).json({
         message: "All skills must be strings.",
       });
@@ -299,7 +293,7 @@ export const AddJobPostingDetails = async (req, res) => {
       });
     }
 
-    if (!specialization.every(spec => typeof spec === "string")) {
+    if (!specialization.every((spec) => typeof spec === "string")) {
       return res.status(400).json({
         message: "All specializations must be strings.",
       });
@@ -355,9 +349,7 @@ export const AddJobPostingDetails = async (req, res) => {
   const skillObjectIds = parsedSkills.map((skill) => skillMap[skill]);
   */
 
-
     // Iterrate Skills from name to array ends here   -- 31th october
-
 
     const newJob = new JobPosting({
       userId,
@@ -368,7 +360,7 @@ export const AddJobPostingDetails = async (req, res) => {
       specialization: specialization,
       // jobSkills: skillObjectIds,
       jobSkills: jobSkills,
-      jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
+      jobType: parseToArray(jobType).map((id) => mongoose.Types.ObjectId(id)),
       positionAvailable,
       showBy,
       expectedHours,
@@ -385,12 +377,16 @@ export const AddJobPostingDetails = async (req, res) => {
         amount: salary?.amount ? Number(salary.amount) : null,
         rate: salary?.rate || "per year",
       },
-      benefits: parseToArray(benefits).map(id => mongoose.Types.ObjectId(id)),
+      benefits: parseToArray(benefits).map((id) => mongoose.Types.ObjectId(id)),
       careerLevel: careerLevel ? mongoose.Types.ObjectId(careerLevel) : null,
-      experienceLevel: experienceLevel ? mongoose.Types.ObjectId(experienceLevel) : null,
-      gender: parseToArray(gender).map(id => mongoose.Types.ObjectId(id)),
+      experienceLevel: experienceLevel
+        ? mongoose.Types.ObjectId(experienceLevel)
+        : null,
+      gender: parseToArray(gender).map((id) => mongoose.Types.ObjectId(id)),
       industry,
-      qualification: parseToArray(qualification).map(id => mongoose.Types.ObjectId(id)),
+      qualification: parseToArray(qualification).map((id) =>
+        mongoose.Types.ObjectId(id),
+      ),
       jobLocationType,
       // country: country ? mongoose.Types.ObjectId(country) : null,
       country: country ? country : null,
@@ -402,7 +398,7 @@ export const AddJobPostingDetails = async (req, res) => {
       advertiseCity,
       advertiseCityName,
       status: "draft",
-      resumeRequired: resumeRequired
+      resumeRequired: resumeRequired,
     });
 
     console.log("New Job Object:", newJob);
@@ -424,7 +420,6 @@ export const AddJobPostingDetails = async (req, res) => {
 // Get Job Posting Details API
 export const GetJobPostingDetails = async (req, res) => {
   try {
-
     const userId = req.userId;
     const { jobId } = req.query;
 
@@ -438,15 +433,22 @@ export const GetJobPostingDetails = async (req, res) => {
     // console.log("Here is the Company Details", company);
 
     // Find job by id, status, and userId
-    let job = await JobPosting.findOne({ _id: jobId, userId, status: { $in: ["draft", "completed"] } })
-      .populate("specialization jobType benefits careerLevel experienceLevel gender qualification country city branch jobSkills").lean();  // 👈 important;
+    let job = await JobPosting.findOne({
+      _id: jobId,
+      userId,
+      status: { $in: ["draft", "completed"] },
+    })
+      .populate(
+        "specialization jobType benefits careerLevel experienceLevel gender qualification country city branch jobSkills",
+      )
+      .lean(); // 👈 important;
 
     console.log("Here is my Job Posting Details", job);
 
     if (!job) {
       return res.status(404).json({
         success: false,
-        message: "Job not found, status mismatch, or not authorized."
+        message: "Job not found, status mismatch, or not authorized.",
       });
     }
 
@@ -464,11 +466,13 @@ export const GetJobPostingDetails = async (req, res) => {
         : null,
     ]);
 
-
     // Fetch industry name (if applicable)
     let industryName = "Not specified";
     if (job.industry) {
-      const industryDoc = await list_industries.findOne({ id: job.industry }).select("job_industry").lean();
+      const industryDoc = await list_industries
+        .findOne({ id: job.industry })
+        .select("job_industry")
+        .lean();
       job.industryName = industryDoc?.job_industry || industryName;
     }
 
@@ -477,7 +481,6 @@ export const GetJobPostingDetails = async (req, res) => {
     job.countryName = countryDoc?.name || null;
     job.stateName = stateDoc?.name || null;
     job.cityName = cityDoc?.city_name || null;
-
 
     console.log("Here is the fetch Job Details", company.name);
 
@@ -575,17 +578,16 @@ export const GetTempJobPostingDetails = async (req, res) => {
   }
 };
 
-
-
 // Edit Job Posting Details API
 export const EditJobPostingDetails = async (req, res) => {
   try {
-
     const userId = req.userId;
 
     const { jobId } = req.query;
     if (!jobId) {
-      return res.status(404).json({ message: "jobId not provided in query parameter." });
+      return res
+        .status(404)
+        .json({ message: "jobId not provided in query parameter." });
     }
 
     // const id = mongoose.Types.ObjectId(jobId);
@@ -625,7 +627,7 @@ export const EditJobPostingDetails = async (req, res) => {
       advertiseCity,
       advertiseCityName,
       resumeRequired,
-      jobSkills
+      jobSkills,
     } = req.body;
 
     console.log("Here is the body data", req.body);
@@ -654,7 +656,7 @@ export const EditJobPostingDetails = async (req, res) => {
       });
     }
 
-    if (!jobSkills.every(skill => typeof skill === "string")) {
+    if (!jobSkills.every((skill) => typeof skill === "string")) {
       return res.status(400).json({
         message: "All skills must be strings.",
       });
@@ -668,13 +670,12 @@ export const EditJobPostingDetails = async (req, res) => {
       });
     }
 
-    if (!specialization.every(spec => typeof spec === "string")) {
+    if (!specialization.every((spec) => typeof spec === "string")) {
       return res.status(400).json({
         message: "All specializations must be strings.",
       });
     }
     // new block of code for Specialization ended
-
 
     /*
     // Iterrate Skills from name to array starts from here  --- 31th october
@@ -729,7 +730,6 @@ export const EditJobPostingDetails = async (req, res) => {
 
     */
 
-
     // Iterrate Skills from name to array ends here   -- 31th october
 
     const updatedJob = await JobPosting.findOneAndUpdate(
@@ -743,7 +743,7 @@ export const EditJobPostingDetails = async (req, res) => {
         specialization: specialization,
         // jobSkills: skillObjectIds,
         jobSkills: jobSkills,
-        jobType: parseToArray(jobType).map(id => mongoose.Types.ObjectId(id)),
+        jobType: parseToArray(jobType).map((id) => mongoose.Types.ObjectId(id)),
         positionAvailable,
         showBy,
         expectedHours,
@@ -760,12 +760,18 @@ export const EditJobPostingDetails = async (req, res) => {
           amount: salary?.amount ? Number(salary.amount) : null,
           rate: salary?.rate || "per year",
         },
-        benefits: parseToArray(benefits).map(id => mongoose.Types.ObjectId(id)),
+        benefits: parseToArray(benefits).map((id) =>
+          mongoose.Types.ObjectId(id),
+        ),
         careerLevel: careerLevel ? mongoose.Types.ObjectId(careerLevel) : null,
-        experienceLevel: experienceLevel ? mongoose.Types.ObjectId(experienceLevel) : null,
-        gender: parseToArray(gender).map(id => mongoose.Types.ObjectId(id)),
+        experienceLevel: experienceLevel
+          ? mongoose.Types.ObjectId(experienceLevel)
+          : null,
+        gender: parseToArray(gender).map((id) => mongoose.Types.ObjectId(id)),
         industry,
-        qualification: parseToArray(qualification).map(id => mongoose.Types.ObjectId(id)),
+        qualification: parseToArray(qualification).map((id) =>
+          mongoose.Types.ObjectId(id),
+        ),
         jobLocationType,
         // country: country ? mongoose.Types.ObjectId(country) : null,
         // city: city ? mongoose.Types.ObjectId(city) : null,
@@ -779,7 +785,7 @@ export const EditJobPostingDetails = async (req, res) => {
         resumeRequired: resumeRequired || false,
         // status: "draft"
       },
-      { new: true } // return updated document
+      { new: true }, // return updated document
     );
 
     console.log("New Job Object:", updatedJob);
@@ -804,7 +810,6 @@ export const sendJobApplicationsEmail123 = async ({
   job,
   applications,
 }) => {
-
   console.log("I am inside mail sending functions: ");
 
   const applicantsHtml = applications
@@ -829,7 +834,6 @@ export const sendJobApplicationsEmail123 = async ({
   });
 };
 
-
 // Confirm Job Posting Details API
 export const ConfirmJobPostingDetails = async (req, res) => {
   try {
@@ -843,21 +847,24 @@ export const ConfirmJobPostingDetails = async (req, res) => {
     const { jobId } = req.query;
 
     if (!jobId) {
-      return res.status(404).json({ message: "jobId not provided in query parameter." });
+      return res
+        .status(404)
+        .json({ message: "jobId not provided in query parameter." });
     }
 
     const updatedJob = await JobPosting.findOneAndUpdate(
       { _id: jobId, userId, status: { $in: ["draft", "completed"] } },
       {
-        status: "completed"
+        status: "completed",
       },
-      { new: true } // return updated document
+      { new: true }, // return updated document
     );
 
     if (!updatedJob) {
-      return res.status(404).json({ message: "Job not found or already confirmed" });
+      return res
+        .status(404)
+        .json({ message: "Job not found or already confirmed" });
     }
-
 
     // console.log("New Job Object:", updatedJob);
 
@@ -1075,13 +1082,10 @@ export const ConfirmLiveJobPostingDetails123 = async (req, res) => {
     return res.status(404).json({ message: "Temp job not found" });
   }
 
-  await JobPosting.findByIdAndUpdate(
-    tempJob.originalJobId,
-    {
-      ...tempJob.jobData,
-      status: "completed",
-    }
-  );
+  await JobPosting.findByIdAndUpdate(tempJob.originalJobId, {
+    ...tempJob.jobData,
+    status: "completed",
+  });
 
   await JobPostingTemp.findByIdAndDelete(tempId);
 
@@ -1165,11 +1169,9 @@ export const ConfirmLiveJobPostingDetails = async (req, res) => {
   }
 };
 
-
 // Get All Job Listing API
 export const getAllJobListing = async (req, res) => {
   try {
-
     const userId = req.userId;
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -1181,7 +1183,9 @@ export const getAllJobListing = async (req, res) => {
     }
 
     // Fetch logo from companyDetails
-    const companyDetails = await CompanyDetails.findOne({ userId }).select("logo");
+    const companyDetails = await CompanyDetails.findOne({ userId }).select(
+      "logo",
+    );
     const logo = companyDetails?.logo || null;
 
     const today = new Date();
@@ -1191,20 +1195,22 @@ export const getAllJobListing = async (req, res) => {
       userId,
       // status: "completed",
       status: { $in: ["completed", "draft"] },
-      is_del: false
+      is_del: false,
     })
       .populate("jobType", "name")
       .populate("country", "name")
       .populate("city", "city_name")
       .populate("branch", "name")
-      .select("_id jobTitle jobType jobLocationType advertiseCity advertiseCityName country city branch createdAt jobExpiryDate status")
+      .select(
+        "_id jobTitle jobType jobLocationType advertiseCity advertiseCityName country city branch createdAt jobExpiryDate status",
+      )
       .sort({ createdAt: -1 })
       .lean();
 
     // console.log("Here is my all Job List", jobs)
 
     // Get all job IDs
-    const jobIds = jobs.map(job => job._id);
+    const jobIds = jobs.map((job) => job._id);
 
     // Aggregate application counts
     const applicationCounts = await JobApplication.aggregate([
@@ -1212,21 +1218,20 @@ export const getAllJobListing = async (req, res) => {
         $match: {
           jobId: { $in: jobIds },
           isDel: false,
-          status: { $ne: "rejected" }
-
-        }
+          status: { $ne: "rejected" },
+        },
       },
       {
         $group: {
           _id: "$jobId",
-          appliedCount: { $sum: 1 }
-        }
-      }
+          appliedCount: { $sum: 1 },
+        },
+      },
     ]);
 
     // Convert to lookup map
     const applicationCountMap = {};
-    applicationCounts.forEach(item => {
+    applicationCounts.forEach((item) => {
       applicationCountMap[item._id.toString()] = item.appliedCount;
     });
 
@@ -1239,7 +1244,7 @@ export const getAllJobListing = async (req, res) => {
       if (job.jobLocationType === "remote") {
         location = "Remote";
         advertiseCityName =
-          job.advertiseCity === "Yes" ? (job.advertiseCityName || "") : "";
+          job.advertiseCity === "Yes" ? job.advertiseCityName || "" : "";
       }
 
       // On-site job logic
@@ -1288,7 +1293,6 @@ export const getAllJobListing = async (req, res) => {
   }
 };
 
-
 // Delete Job Posting API
 export const deleteJobPosting = async (req, res) => {
   try {
@@ -1313,7 +1317,7 @@ export const deleteJobPosting = async (req, res) => {
       _id: jobId,
       userId,
       // status: "completed",
-      is_del: false
+      is_del: false,
     });
 
     if (!job) {
@@ -1332,7 +1336,6 @@ export const deleteJobPosting = async (req, res) => {
       message: "Job deleted successfully.",
       jobId: job._id,
     });
-
   } catch (error) {
     console.error("Error deleting job posting:", error);
     return res.status(500).json({
@@ -1345,7 +1348,6 @@ export const deleteJobPosting = async (req, res) => {
 // Get Job Preview Details API
 export const getJobPreviewDetails = async (req, res) => {
   try {
-
     const userId = req.userId;
     const { jobId } = req.query;
 
@@ -1363,18 +1365,23 @@ export const getJobPreviewDetails = async (req, res) => {
     //   .populate("specialization jobType benefits careerLevel experienceLevel gender qualification country city branch").lean();
 
     // It will work for both candidate and employer
-    let job = await JobPosting.findOne({ _id: jobId, status: { $in: ["draft", "completed"] } })
-      .populate("specialization jobType benefits careerLevel experienceLevel gender qualification country city branch").lean();
+    let job = await JobPosting.findOne({
+      _id: jobId,
+      status: { $in: ["draft", "completed"] },
+    })
+      .populate(
+        "specialization jobType benefits careerLevel experienceLevel gender qualification country city branch",
+      )
+      .lean();
 
     console.log("Here is my Job Posting All Details - 30th october: ", job);
 
     if (!job) {
       return res.status(404).json({
         success: false,
-        message: "Job not found, status mismatch, or not authorized."
+        message: "Job not found, status mismatch, or not authorized.",
       });
     }
-
 
     //newly added
     const [application, bookmark] = await Promise.all([
@@ -1393,12 +1400,17 @@ export const getJobPreviewDetails = async (req, res) => {
     // Fetch industry name (if applicable)
     let industryName = "";
     if (job.industry) {
-      const industryDoc = await list_industries.findOne({ id: job.industry }).select("job_industry").lean();
+      const industryDoc = await list_industries
+        .findOne({ id: job.industry })
+        .select("job_industry")
+        .lean();
       industryName = industryDoc?.job_industry || industryName;
     }
 
     // Fetch company logo & cover
-    const companyDetails = await CompanyDetails.findOne({ userId: job.userId }).select("name logo cover website").lean();
+    const companyDetails = await CompanyDetails.findOne({ userId: job.userId })
+      .select("name logo cover website")
+      .lean();
     const logoImage = companyDetails?.logo || null;
     const coverImage = companyDetails?.cover || null;
     const companyWebsite = companyDetails?.website || null;
@@ -1409,7 +1421,8 @@ export const getJobPreviewDetails = async (req, res) => {
 
     if (job.jobLocationType === "remote") {
       location = "Remote";
-      advertiseCityName = job.advertiseCity === "Yes" ? (job.advertiseCityName || "") : "";
+      advertiseCityName =
+        job.advertiseCity === "Yes" ? job.advertiseCityName || "" : "";
     } else if (job.jobLocationType === "hybrid") {
       location = "Hybrid";
       advertiseCityName = "";
@@ -1427,7 +1440,7 @@ export const getJobPreviewDetails = async (req, res) => {
 
     const hasExpectedHours = !!job?.expectedHours;
     const isPartTime = job?.jobType?.some(
-      jt => jt.name?.toLowerCase() === "part-time"
+      (jt) => jt.name?.toLowerCase() === "part-time",
     );
 
     //Optimized return statement started
@@ -1436,8 +1449,8 @@ export const getJobPreviewDetails = async (req, res) => {
       {
         $match: {
           jobId: new mongoose.Types.ObjectId(job._id),
-          isDel: false
-        }
+          isDel: false,
+        },
       },
       {
         $group: {
@@ -1447,23 +1460,23 @@ export const getJobPreviewDetails = async (req, res) => {
 
           total_shortlisted: {
             $sum: {
-              $cond: [{ $eq: ["$status", "shortlisted"] }, 1, 0]
-            }
+              $cond: [{ $eq: ["$status", "shortlisted"] }, 1, 0],
+            },
           },
 
           total_interview_scheduled: {
             $sum: {
-              $cond: [{ $eq: ["$interviewInvitationAccepted", true] }, 1, 0]
-            }
+              $cond: [{ $eq: ["$interviewInvitationAccepted", true] }, 1, 0],
+            },
           },
 
           total_rejected: {
             $sum: {
-              $cond: [{ $eq: ["$status", "rejected"] }, 1, 0]
-            }
-          }
-        }
-      }
+              $cond: [{ $eq: ["$status", "rejected"] }, 1, 0],
+            },
+          },
+        },
+      },
     ]);
 
     const stats = applicationStats[0] || {};
@@ -1475,22 +1488,24 @@ export const getJobPreviewDetails = async (req, res) => {
       industry: industryName,
       jobSkills: job.jobSkills,
       specialization: job.specialization || [],
-      jobType: job.jobType?.map(jt => jt.name) || [],
+      jobType: job.jobType?.map((jt) => jt.name) || [],
       expectedHours: hasExpectedHours && isPartTime ? job.expectedHours : "",
-      benefits: job.benefits?.map(b => b.name) || [],
+      benefits: job.benefits?.map((b) => b.name) || [],
       careerLevel: job.careerLevel?.name || null,
       experienceLevel: job.experienceLevel?.name || null,
-      gender: job.gender?.map(g => g.name) || [],
-      qualification: job.qualification?.map(q => q.name) || [],
+      gender: job.gender?.map((g) => g.name) || [],
+      qualification: job.qualification?.map((q) => q.name) || [],
       jobLocationType: job.jobLocationType,
       location,
       advertiseCityName,
       createdAgo: dayjs(job.createdAt).fromNow(),
-      expiredAt: job.jobExpiryDate ? new Date(job.jobExpiryDate).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }) : "",
+      expiredAt: job.jobExpiryDate
+        ? new Date(job.jobExpiryDate).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "",
       salary: job.salary,
       opening: job.positionAvailable,
       logoImage: logoImage,
@@ -1524,6 +1539,271 @@ export const getJobPreviewDetails = async (req, res) => {
   }
 };
 
+// Get Job Preview Details API for Frontend
+export const getJobPreview_Details = async (req, res) => {
+  try {
+    // Authentication is optional
+    const userId = req.userId || null;
+    const { jobId } = req.query;
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID is required.",
+      });
+    }
+
+    // Find job by id and status
+    // Works for both candidate and employer
+    const job = await JobPosting.findOne({
+      _id: jobId,
+      status: { $in: ["draft", "completed"] },
+    })
+      .populate(
+        "specialization jobType benefits careerLevel experienceLevel gender qualification country city branch",
+      )
+      .lean();
+
+    console.log("Here is my Job Posting All Details - 30th october: ", job);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found, status mismatch, or not authorized.",
+      });
+    }
+
+    /* ===============================
+       USER-SPECIFIC DATA
+       Only fetch when authenticated
+    =============================== */
+
+    let application = null;
+    let bookmark = null;
+
+    if (userId) {
+      [application, bookmark] = await Promise.all([
+        JobApplication.findOne({
+          jobId: job._id,
+          userId,
+          isDel: false,
+        }).select("_id"),
+
+        SavedJob.findOne({
+          jobId: job._id,
+          userId,
+        }).select("_id"),
+      ]);
+    }
+
+    /* ===============================
+       FETCH INDUSTRY NAME
+    =============================== */
+
+    let industryName = "";
+
+    if (job.industry) {
+      const industryDoc = await list_industries
+        .findOne({ id: job.industry })
+        .select("job_industry")
+        .lean();
+
+      industryName = industryDoc?.job_industry || "";
+    }
+
+    /* ===============================
+       FETCH COMPANY DETAILS
+    =============================== */
+
+    const companyDetails = await CompanyDetails.findOne({
+      userId: job.userId,
+    })
+      .select("name logo cover website")
+      .lean();
+
+    const logoImage = companyDetails?.logo || null;
+    const coverImage = companyDetails?.cover || null;
+    const companyWebsite = companyDetails?.website || null;
+
+    /* ===============================
+       LOCATION & ADVERTISE CITY
+    =============================== */
+
+    let location = "";
+    let advertiseCityName = "";
+
+    if (job.jobLocationType === "remote") {
+      location = "Remote";
+
+      advertiseCityName =
+        job.advertiseCity === "Yes" ? job.advertiseCityName || "" : "";
+    } else if (job.jobLocationType === "hybrid") {
+      location = "Hybrid";
+      advertiseCityName = "";
+    } else if (job.jobLocationType === "on-site") {
+      const country = job.country?.name || "";
+      const city = job.city?.city_name || "";
+      const branch = job.branch?.name || "";
+
+      // Existing logic
+      location = [city, country].filter(Boolean).join(", ") || "On-site";
+
+      advertiseCityName = "";
+    } else {
+      location = "Not specified";
+      advertiseCityName = "";
+    }
+
+    /* ===============================
+       EXPECTED HOURS
+    =============================== */
+
+    const hasExpectedHours = !!job?.expectedHours;
+
+    const isPartTime = job?.jobType?.some(
+      (jt) => jt.name?.toLowerCase() === "part-time",
+    );
+
+    /* ===============================
+       APPLICATION STATISTICS
+       This is PUBLIC job information,
+       so it runs for authenticated
+       and unauthenticated users.
+    =============================== */
+
+    const applicationStats = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: new mongoose.Types.ObjectId(job._id),
+          isDel: false,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+
+          total_job_applicants: {
+            $sum: 1,
+          },
+
+          total_shortlisted: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "shortlisted"] }, 1, 0],
+            },
+          },
+
+          total_interview_scheduled: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: ["$interviewInvitationAccepted", true],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+
+          total_rejected: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "rejected"] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    const stats = applicationStats[0] || {};
+
+    /* ===============================
+       RESPONSE
+    =============================== */
+
+    const response = {
+      jobId: job._id,
+
+      title: job.jobTitle,
+
+      jobDescription: job.jobDescription,
+
+      industry: industryName,
+
+      jobSkills: job.jobSkills,
+
+      specialization: job.specialization || [],
+
+      jobType: job.jobType?.map((jt) => jt.name) || [],
+
+      expectedHours: hasExpectedHours && isPartTime ? job.expectedHours : "",
+
+      benefits: job.benefits?.map((b) => b.name) || [],
+
+      careerLevel: job.careerLevel?.name || null,
+
+      experienceLevel: job.experienceLevel?.name || null,
+
+      gender: job.gender?.map((g) => g.name) || [],
+
+      qualification: job.qualification?.map((q) => q.name) || [],
+
+      jobLocationType: job.jobLocationType,
+
+      location,
+
+      advertiseCityName,
+
+      createdAgo: dayjs(job.createdAt).fromNow(),
+
+      expiredAt: job.jobExpiryDate
+        ? new Date(job.jobExpiryDate).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "",
+
+      salary: job.salary,
+
+      opening: job.positionAvailable,
+
+      logoImage,
+
+      coverImage,
+
+      companyWebsite,
+
+      companyName: companyDetails?.name || "",
+
+      totalApplicants: stats.total_job_applicants || 0,
+
+      totalShortlisted: stats.total_shortlisted || 0,
+
+      totalInterviewScheduled: stats.total_interview_scheduled || 0,
+
+      totalRejected: stats.total_rejected || 0,
+
+      // Authenticated user -> actual status
+      // Guest user -> false
+      isApplied: !!application,
+
+      isBookmarked: !!bookmark,
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Job Preview Details Fetched successfully!",
+      data: response,
+    });
+  } catch (error) {
+    console.error("Error fetching job listings:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // Apply to Job Posting API (Candidate)
 export const applyJobPosting = async (req, res) => {
   try {
@@ -1536,7 +1816,7 @@ export const applyJobPosting = async (req, res) => {
       willingToRelocate,
       description,
       acceptedTerms,
-      experienceLevel
+      experienceLevel,
     } = req.body;
 
     if (!jobId) {
@@ -1594,18 +1874,21 @@ export const applyJobPosting = async (req, res) => {
 
     // Send email notification to employer
     // 3. Fetch applications for this job
-    const applications = await JobPosting.findById(
-      jobId,
-      { getApplicationUpdateEmail: 1, jobTitle: 1, userId: 1 }
-    ).lean();
+    const applications = await JobPosting.findById(jobId, {
+      getApplicationUpdateEmail: 1,
+      jobTitle: 1,
+      userId: 1,
+    }).lean();
 
     const candidateInfo = await User.findOne(
       { _id: userId },
-      { name: 1, email: 1, phone_number: 1 }
+      { name: 1, email: 1, phone_number: 1 },
     ).lean();
 
     if (!candidateInfo) {
-      return res.status(404).json({ message: "No candidate information found for this job" });
+      return res
+        .status(404)
+        .json({ message: "No candidate information found for this job" });
     }
 
     applications.candidateName = candidateInfo.name;
@@ -1629,7 +1912,7 @@ export const applyJobPosting = async (req, res) => {
         emailQueue.add("job_application_update_employer", {
           employerEmail: applications.getApplicationUpdateEmail,
           job: applications,
-        })
+        }),
       );
     }
 
@@ -1639,7 +1922,7 @@ export const applyJobPosting = async (req, res) => {
         emailQueue.add("job_application_candidate", {
           candidateEmail: applications.candidateEmail,
           job: applications,
-        })
+        }),
       );
     }
 
@@ -1673,7 +1956,6 @@ export const getAppliedCandidatesByJob = async (req, res) => {
         $match: {
           jobId: new mongoose.Types.ObjectId(jobId),
           isDel: false,
-
         },
       },
 
@@ -1697,7 +1979,9 @@ export const getAppliedCandidatesByJob = async (req, res) => {
           as: "personalDetails",
         },
       },
-      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true },
+      },
 
       // 4️⃣ Join Candidate Details (location)
       {
@@ -1708,7 +1992,12 @@ export const getAppliedCandidatesByJob = async (req, res) => {
           as: "candidateDetails",
         },
       },
-      { $unwind: { path: "$candidateDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       // 5️⃣ Join User Career (job role & salary)
       {
@@ -1770,7 +2059,6 @@ export const getAppliedCandidatesByJob = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-
 
       // 6️⃣ Final response shape
       {
@@ -1868,7 +2156,9 @@ export const getShortlistedCandidatesByJob = async (req, res) => {
           as: "personalDetails",
         },
       },
-      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true },
+      },
 
       // 4️⃣ Join Candidate Details (location)
       {
@@ -1879,7 +2169,12 @@ export const getShortlistedCandidatesByJob = async (req, res) => {
           as: "candidateDetails",
         },
       },
-      { $unwind: { path: "$candidateDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       // 5️⃣ Join User Career (job role & salary)
       {
@@ -1941,7 +2236,6 @@ export const getShortlistedCandidatesByJob = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-
 
       // 6️⃣ Final response shape
       {
@@ -2038,7 +2332,9 @@ export const getOfferSentCandidatesByJob = async (req, res) => {
           as: "personalDetails",
         },
       },
-      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true },
+      },
 
       // 4️⃣ Join Candidate Details (location)
       {
@@ -2049,7 +2345,12 @@ export const getOfferSentCandidatesByJob = async (req, res) => {
           as: "candidateDetails",
         },
       },
-      { $unwind: { path: "$candidateDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       // 5️⃣ Join User Career (job role & salary)
       {
@@ -2111,7 +2412,6 @@ export const getOfferSentCandidatesByJob = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-
 
       // 6️⃣ Final response shape
       {
@@ -2210,7 +2510,9 @@ export const getInvitationSentCandidatesByJob_ORIGINAL = async (req, res) => {
           as: "personalDetails",
         },
       },
-      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true },
+      },
 
       // 4️⃣ Join Candidate Details (location)
       {
@@ -2221,7 +2523,12 @@ export const getInvitationSentCandidatesByJob_ORIGINAL = async (req, res) => {
           as: "candidateDetails",
         },
       },
-      { $unwind: { path: "$candidateDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       // 5️⃣ Join User Career (job role & salary)
       {
@@ -2250,7 +2557,6 @@ export const getInvitationSentCandidatesByJob_ORIGINAL = async (req, res) => {
           },
         },
       },
-
 
       // 6️⃣ Join Job Role master
       // {
@@ -2283,7 +2589,6 @@ export const getInvitationSentCandidatesByJob_ORIGINAL = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-
 
       // 6️⃣ Final response shape
       {
@@ -2320,7 +2625,6 @@ export const getInvitationSentCandidatesByJob_ORIGINAL = async (req, res) => {
     });
   }
 };
-
 
 export const getInvitationSentCandidatesByJob = async (req, res) => {
   try {
@@ -2504,7 +2808,12 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
           interviewInvitationStatus: {
             $cond: {
               // 1️⃣ Check if interviewInvitationAccepted exists
-              if: { $ne: [{ $ifNull: ["$interviewInvitationAccepted", null] }, null] },
+              if: {
+                $ne: [
+                  { $ifNull: ["$interviewInvitationAccepted", null] },
+                  null,
+                ],
+              },
               then: {
                 $cond: {
                   if: { $eq: ["$interviewInvitationAccepted", true] },
@@ -2578,8 +2887,7 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
 
           // 📝 Feedback details
           feedback: {
-            communicationSkillScore:
-              "$feedback.communicationSkillScore",
+            communicationSkillScore: "$feedback.communicationSkillScore",
             technicalSkillScore: "$feedback.technicalSkillScore",
             aptitudeScore: "$feedback.aptitudeScore",
             overallScore: "$feedback.overallScore",
@@ -2606,10 +2914,6 @@ export const getInvitationSentCandidatesByJob = async (req, res) => {
   }
 };
 
-
-
-
-
 // Reject Job Application Status API
 export const rejectJobApplicationStatus = async (req, res) => {
   try {
@@ -2627,7 +2931,7 @@ export const rejectJobApplicationStatus = async (req, res) => {
     const updatedApplication = await JobApplication.findByIdAndUpdate(
       applicationId,
       { status: "rejected" },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedApplication) {
@@ -2642,7 +2946,6 @@ export const rejectJobApplicationStatus = async (req, res) => {
       message: "Application status updated to rejected",
       data: updatedApplication,
     });
-
   } catch (error) {
     console.error("Update Job Application Status Error:", error);
     return res.status(500).json({
@@ -2694,17 +2997,15 @@ export const acceptJobApplicationStatus = async (req, res) => {
 
     // 🔹 NEW: Fetch job details using application.jobId
     const job = await JobPosting.findById(application.jobId).select(
-      "jobTitle userId"
+      "jobTitle userId",
     );
 
     // 🔹 NEW: Fetch company name from company user (job.userId)
     const companyUser = await User.findById(job.userId).select("name");
 
-    const companyName =
-      companyUser?.name || "our organization";
+    const companyName = companyUser?.name || "our organization";
 
-    const designation =
-      job?.jobTitle || "the applied position";
+    const designation = job?.jobTitle || "the applied position";
 
     console.log("Here is my Sender User mail:", user.email);
 
@@ -2722,7 +3023,6 @@ export const acceptJobApplicationStatus = async (req, res) => {
       message: "Application status updated to shortlisted",
       data: application,
     });
-
   } catch (error) {
     console.error("Accept Job Application Status Error:", error);
     return res.status(500).json({
@@ -2745,12 +3045,8 @@ const formatTimeTo12Hour = (time24) => {
 // Accept Shortlisted Application Status API
 export const acceptShortlistedCandidates = async (req, res) => {
   try {
-    const {
-      applicationId,
-      interviewDate,
-      interviewTime,
-      formDesignation,
-    } = req.body;
+    const { applicationId, interviewDate, interviewTime, formDesignation } =
+      req.body;
 
     // 1️⃣ Validate input
     if (!applicationId) {
@@ -2796,17 +3092,15 @@ export const acceptShortlistedCandidates = async (req, res) => {
 
     // 🔹 NEW: Fetch job details using application.jobId
     const job = await JobPosting.findById(application.jobId).select(
-      "jobTitle userId jobLocationType address advertiseCity advertiseCityName"
+      "jobTitle userId jobLocationType address advertiseCity advertiseCityName",
     );
 
     // 🔹 NEW: Fetch company name from company user (job.userId)
     const companyUser = await User.findById(job.userId).select("name");
 
-    const companyName =
-      companyUser?.name || "our organization";
+    const companyName = companyUser?.name || "our organization";
 
-    const designation =
-      job?.jobTitle || "the applied position";
+    const designation = job?.jobTitle || "the applied position";
 
     let interviewLocation = "Remote";
 
@@ -2842,7 +3136,6 @@ export const acceptShortlistedCandidates = async (req, res) => {
       message: "Application status updated to Invitation Sent",
       data: application,
     });
-
   } catch (error) {
     console.error("Accept Job Application Status Error:", error);
     return res.status(500).json({
@@ -2855,12 +3148,8 @@ export const acceptShortlistedCandidates = async (req, res) => {
 // Interview Rescheduled API
 export const rescheduleInterview = async (req, res) => {
   try {
-    const {
-      applicationId,
-      interviewDate,
-      interviewTime,
-      formDesignation,
-    } = req.body;
+    const { applicationId, interviewDate, interviewTime, formDesignation } =
+      req.body;
 
     // 1️⃣ Validate input
     if (!applicationId) {
@@ -2906,7 +3195,7 @@ export const rescheduleInterview = async (req, res) => {
 
     // 6️⃣ Fetch job & company
     const job = await JobPosting.findById(application.jobId).select(
-      "jobTitle userId jobLocationType address advertiseCity advertiseCityName"
+      "jobTitle userId jobLocationType address advertiseCity advertiseCityName",
     );
 
     const companyUser = await User.findById(job.userId).select("name");
@@ -2926,7 +3215,6 @@ export const rescheduleInterview = async (req, res) => {
       }
     }
 
-
     if (user?.email) {
       // Send email via queue
       await emailQueue.add("company_interview_rescheduled", {
@@ -2945,7 +3233,6 @@ export const rescheduleInterview = async (req, res) => {
       message: "Interview rescheduled successfully",
       data: application,
     });
-
   } catch (error) {
     console.error("Reschedule Interview Error:", error);
     return res.status(500).json({
@@ -2954,7 +3241,6 @@ export const rescheduleInterview = async (req, res) => {
     });
   }
 };
-
 
 // Sent Offer to Candidates API
 export const sentOfferToCandidates = async (req, res) => {
@@ -3009,17 +3295,15 @@ export const sentOfferToCandidates = async (req, res) => {
 
     // 🔹 NEW: Fetch job details using application.jobId
     const job = await JobPosting.findById(application.jobId).select(
-      "jobTitle userId"
+      "jobTitle userId",
     );
 
     // 🔹 NEW: Fetch company name from company user (job.userId)
     const companyUser = await User.findById(job.userId).select("name email");
 
-    const companyName =
-      companyUser?.name || "our organization";
+    const companyName = companyUser?.name || "our organization";
 
-    const designation =
-      job?.jobTitle || "the applied position";
+    const designation = job?.jobTitle || "the applied position";
 
     if (user?.email) {
       // Send email via queue
@@ -3028,7 +3312,9 @@ export const sentOfferToCandidates = async (req, res) => {
         userName: user.name,
         offer_letter_designation,
         companyName,
-        offer_letter_joining_date_string: new Date(offer_letter_joining_date).toDateString(),
+        offer_letter_joining_date_string: new Date(
+          offer_letter_joining_date,
+        ).toDateString(),
         offer_letter_salary,
         offer_letter_message,
       });
@@ -3042,7 +3328,9 @@ export const sentOfferToCandidates = async (req, res) => {
         userName: user.name,
         userEmail: user.email,
         offer_letter_designation,
-        offer_letter_joining_date_string: new Date(offer_letter_joining_date).toDateString(),
+        offer_letter_joining_date_string: new Date(
+          offer_letter_joining_date,
+        ).toDateString(),
         offer_letter_salary,
       });
     }
@@ -3052,7 +3340,6 @@ export const sentOfferToCandidates = async (req, res) => {
       message: "Application status updated to Offer Sent",
       data: application,
     });
-
   } catch (error) {
     console.error("Accept Job Application Status Error:", error);
     return res.status(500).json({
@@ -3061,8 +3348,6 @@ export const sentOfferToCandidates = async (req, res) => {
     });
   }
 };
-
-
 
 export const getMyAppliedJobs = async (req, res) => {
   try {
@@ -3111,7 +3396,10 @@ export const getMyAppliedJobs = async (req, res) => {
 
       // Compute interviewInvitationStatus
       let interviewInvitationStatus = "pending";
-      if (appObj.interviewInvitationAccepted !== undefined && appObj.interviewInvitationAccepted !== null) {
+      if (
+        appObj.interviewInvitationAccepted !== undefined &&
+        appObj.interviewInvitationAccepted !== null
+      ) {
         if (appObj.interviewInvitationAccepted === true) {
           interviewInvitationStatus = "accepted";
         } else if (appObj.interviewInvitationAccepted === false) {
@@ -3200,7 +3488,7 @@ export const submitInterviewFeedback = async (req, res) => {
       {
         $set: { isInterviewFeedbackSubmitted: true },
       },
-      { new: true }
+      { new: true },
     );
 
     return res.status(201).json({
@@ -3208,7 +3496,6 @@ export const submitInterviewFeedback = async (req, res) => {
       message: "Interview feedback submitted successfully",
       data: feedback,
     });
-
   } catch (error) {
     console.error("Submit Interview Feedback Error:", error);
     return res.status(500).json({
@@ -3297,7 +3584,6 @@ export const acceptInterviewInvitation = async (req, res) => {
       });
     }
 
-
     // 4️⃣ Response
     return res.status(200).json({
       success: true,
@@ -3306,7 +3592,6 @@ export const acceptInterviewInvitation = async (req, res) => {
         : "Interview invitation rejected",
       data: application,
     });
-
   } catch (error) {
     console.error("Interview decision error:", error);
     return res.status(500).json({
@@ -3400,16 +3685,12 @@ export const acceptRejectOfferLetter = async (req, res) => {
       });
     }
 
-
     // 4️⃣ Response
     return res.status(200).json({
       success: true,
-      message: accept
-        ? "Offer letter accepted"
-        : "Offer letter rejected",
+      message: accept ? "Offer letter accepted" : "Offer letter rejected",
       data: application,
     });
-
   } catch (error) {
     console.error("Interview decision error:", error);
     return res.status(500).json({
@@ -3422,10 +3703,15 @@ export const acceptRejectOfferLetter = async (req, res) => {
 // Get check-application-status API
 export const checkJobApplicationStatus = async (req, res) => {
   try {
-    const userId = req.userId;   // from token
+    const userId = req.userId; // from token
     const { jobId } = req.query;
 
-    console.log("Check application status called with userId:", userId, "and jobId:", jobId);
+    console.log(
+      "Check application status called with userId:",
+      userId,
+      "and jobId:",
+      jobId,
+    );
 
     if (!jobId) {
       return res.status(400).json({
@@ -3458,7 +3744,6 @@ export const checkJobApplicationStatus = async (req, res) => {
       alreadyApplied: false,
       message: "User has not applied for this job",
     });
-
   } catch (error) {
     console.error("Check application status error:", error);
     return res.status(500).json({
@@ -3472,14 +3757,15 @@ export const checkJobApplicationStatus = async (req, res) => {
 export const requestRescheduleByCandidate = async (req, res) => {
   try {
     console.log("Request reschedule by candidate called with body:", req.body);
-    const {
-      applicationId,
-      requestDate,
-      requestStartTime,
-      requestEndTime,
-    } = req.body;
+    const { applicationId, requestDate, requestStartTime, requestEndTime } =
+      req.body;
 
-    if (!applicationId || !requestDate || !requestStartTime || !requestEndTime) {
+    if (
+      !applicationId ||
+      !requestDate ||
+      !requestStartTime ||
+      !requestEndTime
+    ) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -3513,15 +3799,16 @@ export const requestRescheduleByCandidate = async (req, res) => {
     await application.save();
 
     // 3️⃣ Fetch candidate
-    const candidate = await User.findById(application.userId)
-      .select("name email");
+    const candidate = await User.findById(application.userId).select(
+      "name email",
+    );
 
     // 4️⃣ Fetch job & employer
-    const job = await JobPosting.findById(application.jobId)
-      .select("jobTitle userId");
+    const job = await JobPosting.findById(application.jobId).select(
+      "jobTitle userId",
+    );
 
-    const employer = await User.findById(job.userId)
-      .select("name email");
+    const employer = await User.findById(job.userId).select("name email");
 
     // 5️⃣ Send mail to employer
     if (employer?.email) {
@@ -3537,13 +3824,11 @@ export const requestRescheduleByCandidate = async (req, res) => {
       });
     }
 
-
     return res.status(200).json({
       success: true,
       message: "Reschedule request sent successfully",
       data: application,
     });
-
   } catch (error) {
     console.error("Reschedule Request Error:", error);
     return res.status(500).json({
@@ -3636,7 +3921,7 @@ export const getTotalApplicants = async (req, res) => {
       JobApplication.countDocuments({
         isDel: false,
         // status: "interview_attended",
-        interviewInvitationAccepted: true
+        interviewInvitationAccepted: true,
       }),
       JobApplication.countDocuments({
         isDel: false,

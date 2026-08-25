@@ -3,7 +3,7 @@ import CompanyDetails from "../../models/company_Models/companydetails.js";
 import SavedJob from "../../models/SavedJob.js";
 import JobPosting from "../../models/company_Models/JobPostingModel.js";
 import list_job_experience_level from "../../models/ListJobExperienceLevelModel.js";
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
 dayjs.extend(relativeTime);
@@ -58,7 +58,7 @@ export const getAllJobList = async (req, res) => {
       .lean();
 
     const appliedJobSet = new Set(
-      appliedJobs.map((item) => item.jobId.toString())
+      appliedJobs.map((item) => item.jobId.toString()),
     );
 
     const savedJobs = await SavedJob.find({
@@ -161,6 +161,163 @@ export const getAllJobList = async (req, res) => {
     });
   }
 };
+//front End  All Job List
+export const getAllJob_List = async (req, res) => {
+  try {
+    // Authentication is optional
+    const userId = req.userId || null;
+
+    const today = new Date();
+
+    /* ===============================
+       STEP 1: FETCH JOBS
+    =============================== */
+    const jobs = await JobPosting.find({
+      status: "completed",
+      is_del: false,
+      jobExpiryDate: { $gte: today },
+    })
+      .populate("jobType", "name")
+      .populate("country", "name")
+      .populate("city", "city_name")
+      .populate("branch", "name")
+      .populate("experienceLevel", "name")
+      .select(
+        "_id userId jobTitle jobType jobLocationType advertiseCity advertiseCityName country city branch createdAt jobExpiryDate salary experienceLevel",
+      )
+      .sort({ createdAt: -1 })
+      .lean();
+
+    /* ===============================
+       STEP 2: FETCH USER-SPECIFIC DATA
+       Only when user is authenticated
+    =============================== */
+
+    let appliedJobSet = new Set();
+    let savedJobSet = new Set();
+
+    if (userId) {
+      const jobIds = jobs.map((job) => job._id);
+
+      // Applied jobs
+      const appliedJobs = await JobApplication.find({
+        userId,
+        jobId: { $in: jobIds },
+        isDel: false,
+      })
+        .select("jobId")
+        .lean();
+
+      appliedJobSet = new Set(appliedJobs.map((item) => item.jobId.toString()));
+
+      // Saved/bookmarked jobs
+      const savedJobs = await SavedJob.find({
+        userId,
+        jobId: { $in: jobIds },
+      })
+        .select("jobId")
+        .lean();
+
+      savedJobSet = new Set(savedJobs.map((item) => item.jobId.toString()));
+    }
+
+    /* ===============================
+       STEP 3: FETCH COMPANIES
+    =============================== */
+    const employerIds = [
+      ...new Set(jobs.map((job) => job.userId?.toString()).filter(Boolean)),
+    ];
+
+    const companies = await CompanyDetails.find({
+      userId: { $in: employerIds },
+    })
+      .select("userId name logo")
+      .lean();
+
+    const companyMap = {};
+
+    companies.forEach((company) => {
+      companyMap[company.userId.toString()] = {
+        companyName: company.name || "",
+        logo: company.logo || "",
+      };
+    });
+
+    /* ===============================
+       STEP 4: BUILD RESPONSE
+    =============================== */
+    const jobList = jobs.map((job) => {
+      const companyInfo = companyMap[job.userId?.toString()] || {
+        companyName: "",
+        logo: "",
+      };
+
+      let location = "";
+      let advertiseCityName = "";
+
+      // Remote
+      if (job.jobLocationType === "remote") {
+        location = "Remote";
+
+        advertiseCityName =
+          job.advertiseCity === "Yes" ? job.advertiseCityName || "" : "";
+      }
+
+      // On-site
+      if (job.jobLocationType === "on-site") {
+        const country = job.country?.name || "";
+        const city = job.city?.city_name || "";
+
+        location = [city, country].filter(Boolean).join(", ");
+      }
+
+      return {
+        _id: job._id,
+        jobTitle: job.jobTitle,
+
+        jobType: job.jobType?.map((t) => t.name) || [],
+
+        jobExperienceLevel: job?.experienceLevel?.name || "",
+
+        jobLocationType: job.jobLocationType,
+
+        location,
+
+        advertiseCityName,
+
+        salary: job.salary || "",
+
+        createdAgo: dayjs(job.createdAt).fromNow(),
+
+        createdDate: job.createdAt || "",
+
+        companyName: companyInfo.companyName,
+
+        logo: companyInfo.logo,
+
+        // User-specific flags
+        // Authenticated user -> actual value
+        // Guest user -> false
+        isBookmarked: userId ? savedJobSet.has(job._id.toString()) : false,
+
+        isApplied: userId ? appliedJobSet.has(job._id.toString()) : false,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Job listing fetched successfully.",
+      data: jobList,
+    });
+  } catch (error) {
+    console.error("Job List Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 
 export const jobsearchFilters = async (req, res) => {
   try {
@@ -220,9 +377,7 @@ export const jobsearchFilters = async (req, res) => {
   }
 };
 
-
 // SAVED JOB ========================================
-
 
 export const saveJob = async (req, res) => {
   try {
@@ -274,7 +429,6 @@ export const saveJob = async (req, res) => {
   }
 };
 
-
 export const removeSavedJob = async (req, res) => {
   try {
     const userId = req.userId;
@@ -310,8 +464,6 @@ export const removeSavedJob = async (req, res) => {
   }
 };
 
-
-
 export const getMySavedJobs = async (req, res) => {
   try {
     const userId = req.userId;
@@ -329,21 +481,21 @@ export const getMySavedJobs = async (req, res) => {
       .lean();
 
     const employerIds = savedJobs
-      .map(item => item.jobId?.userId)
+      .map((item) => item.jobId?.userId)
       .filter(Boolean);
 
     const companies = await CompanyDetails.find({
-      userId: { $in: employerIds }
-    }).select("userId logo name").lean();
-
+      userId: { $in: employerIds },
+    })
+      .select("userId logo name")
+      .lean();
 
     console.log("companies", companies);
 
     const logoMap = {};
-    companies.forEach(c => {
+    companies.forEach((c) => {
       logoMap[c.userId.toString()] = c.logo;
     });
-
 
     //total applied
     const totalApplied = await JobApplication.countDocuments({
@@ -364,7 +516,10 @@ export const getMySavedJobs = async (req, res) => {
           logo: logoMap[item.jobId?.userId?.toString()] || null,
           jobType: item.jobId?.jobType?.map((t) => t.name) || [],
           jobExperienceLevel: item.jobId?.experienceLevel?.name || "",
-          companyName: companies.find(c => c.userId.toString() === item.jobId?.userId?.toString())?.name || "",
+          companyName:
+            companies.find(
+              (c) => c.userId.toString() === item.jobId?.userId?.toString(),
+            )?.name || "",
         },
       })),
     });
