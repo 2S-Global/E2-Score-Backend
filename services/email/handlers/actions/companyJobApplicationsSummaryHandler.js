@@ -6,6 +6,7 @@ export const companyJobApplicationsSummaryHandler = async (job) => {
   const html = companyJobApplicationsSummaryTemplate(jobTitle, totalApplications, applicantsHtml);
 
   await sendMail({
+        type: "jobs",
     to: employerEmail,
     subject: `Applications Received for ${jobTitle}`,
     html: html,

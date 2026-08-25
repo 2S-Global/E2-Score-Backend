@@ -31,11 +31,11 @@ export const createPayment = async (req, res) => {
     const fees = await Fees.findOne({});
     let amountInRupees;
     if (reportType === "CIBIL") {
-      amountInRupees = Number(fees?.cibil_score ?? 7);
+      amountInRupees = Number(fees?.cibil_fees ?? 25);
     } else {
-      amountInRupees = Number(fees?.experian_score ?? 5);
+      amountInRupees = Number(fees?.experian_fees ?? 30);
     }
-
+    
     const amountInPaise = amountInRupees * 100;
 
     const order = await createRazorpayOrder(amountInPaise, "INR");
@@ -142,7 +142,7 @@ export const verifyPaymentAndGetScore = async (req, res) => {
 
     if (reportType === "CIBIL") {
       // 2. Fetch CIBIL score
-      const cibilData = await getCibilScore(payloadBUILDER);
+      const cibilData = await getCibilScore(payloadBUILDER, userId);
       console.log('cibilDatacibilDatacibilDatacibilDatacibilData===>', cibilData)
 
       await CibilModel.create({
@@ -177,7 +177,7 @@ export const verifyPaymentAndGetScore = async (req, res) => {
         dob: formattedDOB
       };
 
-      const experianData = await getExperianScore(payload_EXPERIAN);
+      const experianData = await getExperianScore(payload_EXPERIAN, userId);
       console.log("experianData", experianData)
       // 3. Save Experian result in DB
       await ExperianModel.create({

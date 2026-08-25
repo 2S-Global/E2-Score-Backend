@@ -6,6 +6,7 @@ export const presentationAddedHandler = async (job) => {
     const html = presentationAddedTemplate(userdtl);
     
     await sendMail({
+        type: "achievements",
         to: to,
         subject: "Presentation Update Notification",
         html: html,

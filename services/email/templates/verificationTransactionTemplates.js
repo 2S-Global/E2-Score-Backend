@@ -1,6 +1,6 @@
 export const verificationOrderConfirmedTemplate = (user, orderNumber, overallBillingTotal, emailTable) => `
   <div style="text-align: center; margin-bottom: 20px;">
-<img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
+<img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
 </div>
     <p>Dear <strong>${user.name}</strong>,</p>
     <p>Thank you for shopping with QuikChek. We have successfully received your order, and it's now being processed.</p>
@@ -26,7 +26,7 @@ export const verificationOrderConfirmedTemplate = (user, orderNumber, overallBil
 
 export const verificationPaymentReceivedTemplate = (user, orderNumber, emailTable) => `
   <div style="text-align: center; margin-bottom: 20px;">
-<img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
+<img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
 </div>
     <p>Dear <strong>${user.name}</strong>,</p>
     <p>Thank you for your payment! We are pleased to inform you that your payment for Order #${orderNumber} has been successfully processed.</p>
@@ -48,7 +48,7 @@ export const verificationPaymentReceivedTemplate = (user, orderNumber, emailTabl
 
 export const verificationAdminNotificationTemplate = (user, orderNumber, amount, emailTable) => `
 <div style="text-align: center; margin-bottom: 20px;">
-  <img src="https://res.cloudinary.com/da4unxero/image/upload/v1745565670/QuikChek%20images/New%20banner%20images/bx5dt5rz0zdmowryb0bz.jpg" alt="Banner" style="width: 100%; height: auto;" />
+  <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
 </div>
 
 <p>Dear <strong>Admin</strong>,</p>

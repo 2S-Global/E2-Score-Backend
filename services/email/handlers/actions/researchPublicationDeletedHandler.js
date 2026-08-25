@@ -6,6 +6,7 @@ export const researchPublicationDeletedHandler = async (job) => {
     const html = researchPublicationDeletedTemplate(userdtl);
     
     await sendMail({
+        type: "research",
         to: to,
         subject: "Profile Update Notification",
         html: html,

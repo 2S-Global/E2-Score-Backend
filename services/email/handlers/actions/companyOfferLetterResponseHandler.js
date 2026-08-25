@@ -6,6 +6,7 @@ export const companyOfferLetterResponseHandler = async (job) => {
     const html = companyOfferLetterResponseTemplate(accept, employerName, candidateName, jobTitle);
     
     await sendMail({
+        type: "jobs",
       to: email,
       subject: accept ? `Offer Letter Accepted – ${jobTitle}` : `Offer Letter Rejected – ${jobTitle}`,
       html: html,

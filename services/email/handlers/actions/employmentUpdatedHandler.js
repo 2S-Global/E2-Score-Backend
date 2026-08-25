@@ -6,6 +6,7 @@ export const employmentUpdatedHandler = async (job) => {
     const html = employmentUpdatedTemplate(userdtl);
     
     await sendMail({
+        type: "experience",
         to: to,
         subject: "Employment Update Notification",
         html: html,

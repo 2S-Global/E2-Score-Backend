@@ -6,6 +6,7 @@ export const companyInterviewResponseHandler = async (job) => {
     const html = companyInterviewResponseTemplate(accept, employerName, candidateName, jobTitle);
     
     await sendMail({
+        type: "interviews",
       to: email,
       subject: accept ? `Interview Invitation Accepted – ${jobTitle}` : `Interview Invitation Rejected – ${jobTitle}`,
       html: html,

@@ -6,6 +6,7 @@ export const certificateUpdatedHandler = async (job) => {
     const html = certificateUpdatedTemplate(userdtl);
     
     await sendMail({
+        type: "achievements",
         to: to,
         subject: "Certification Update Notification",
         html: html,

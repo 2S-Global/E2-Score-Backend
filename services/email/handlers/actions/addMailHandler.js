@@ -1,6 +1,7 @@
 import { sendMail } from "../../emailService.js";
 import { projectAddedTemplate } from "../../templates/projectAddedTemplate.js";
 
+
 export const processAddMail = async (job) => {
     const { email, name } = job.data;
 
@@ -11,6 +12,7 @@ export const processAddMail = async (job) => {
     const dynamicHtml = projectAddedTemplate(name);
 
     await sendMail({
+        type: "projects",
         to: email,
         subject: "Project Details Update Notification",
         html: dynamicHtml,

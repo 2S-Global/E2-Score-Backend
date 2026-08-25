@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Failed Requests Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        }
+        /* Avoid breaks inside table rows for clean PDF layouts */
+        tr {
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+<body class="bg-white text-black text-xs leading-[1.45] m-0 p-0">
+    <%
+      const safeFailures = (typeof failures !== 'undefined' && Array.isArray(failures)) ? failures : [];
+      
+      let failedCount = 0;
+      let timeoutCount = 0;
+      safeFailures.forEach(f => {
+          if (f.status === 'FAILED') failedCount++;
+          if (f.status === 'TIMEOUT') timeoutCount++;
+      });
+      
+      const formatDateTime = (dateStr) => {
+          if (!dateStr) return 'N/A';
+          const date = new Date(dateStr);
+          return date.toLocaleString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true,
+              timeZone: 'Asia/Kolkata'
+          });
+      };
+    %>
+    
+    <div class="w-full box-border p-0">
+        <!-- Report Header Section -->
+        <div class="flex justify-between items-start mb-5">
+            <div class="flex-grow pr-5">
+                <div class="flex flex-col gap-0.5 mb-1.5">
+                    <h2 class="m-0 text-xl font-bold text-black">
+                        Failed API Requests Report
+                    </h2>
+                    <span class="text-[11px] font-medium text-[#555555]">E2-Score-Backend System Logs</span>
+                </div>
+            </div>
+            <div class="text-right text-[11px] text-black">
+                <div><strong>Generated:</strong> <%= typeof generatedDate !== 'undefined' ? generatedDate : new Date().toLocaleString() %></div>
+    
+            </div>
+        </div>
+
+        <!-- Summary Statistics Section -->
+        <div class="mt-4">
+            <h3 class="m-0 mb-2.5 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] uppercase rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Summary Statistics</h3>
+            <div class="flex gap-8 mb-4 text-[11px] font-semibold text-black px-1">
+                <div>TOTAL FAILURES: <%= safeFailures.length %></div>
+                <div>FAILED STATUS: <%= failedCount %></div>
+                <div>TIMEOUT STATUS: <%= timeoutCount %></div>
+            </div>
+        </div>
+
+        <!-- Failure Logs Detail Section -->
+        <div class="mt-6">
+            <h3 class="m-0 mb-3 text-black bg-[#f2f2f2] text-center py-1 px-0 text-xs font-bold tracking-[0.5px] uppercase rounded-[2px] w-full box-border [page-break-after:avoid] [break-after:avoid]">Failure Logs Detail</h3>
+            
+            <table class="w-full table-fixed divide-y divide-gray-300 text-left border-collapse">
+                <thead class="bg-[#f2f2f2] text-[9.5px] text-black uppercase font-bold">
+                    <tr>
+                        <th scope="col" class="w-[16%] px-2 py-2 border border-gray-300">Timestamp (IST)</th>
+                        <th scope="col" class="w-[16%] px-2 py-2 border border-gray-300">User Details</th>
+                        <th scope="col" class="w-[16%] px-2 py-2 border border-gray-300">Service/Provider</th>
+                        <th scope="col" class="w-[20%] px-2 py-2 border border-gray-300">Endpoint</th>
+                        <th scope="col" class="w-[10%] px-2 py-2 border border-gray-300 text-center">Status</th>
+                        <th scope="col" class="w-[8%] px-2 py-2 border border-gray-300 text-center">HTTP</th>
+                        <th scope="col" class="w-[14%] px-2 py-2 border border-gray-300">Error Message</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 bg-white text-[9.5px] text-black">
+                    <% if (safeFailures.length === 0) { %>
+                        <tr>
+                            <td colspan="7" class="px-2 py-6 text-center text-gray-500 border border-gray-300">
+                                No failed requests found in the last 24 hours.
+                            </td>
+                        </tr>
+                    <% } else { %>
+                        <% safeFailures.forEach((log) => { %>
+                            <tr class="[page-break-inside:avoid] [break-inside:avoid]">
+                                <td class="px-2 py-2 border border-gray-300 font-medium break-words">
+                                    <%= formatDateTime(log.createdAt) %>
+                                </td>
+                                <td class="px-2 py-2 border border-gray-300 break-words">
+                                    <% if (log.userId) { %>
+                                        <div class="font-semibold"><%= log.userId.name || 'N/A' %></div>
+                                        <div class="text-[9px] text-[#555555]"><%= log.userId.email || 'N/A' %></div>
+                                    <% } else { %>
+                                        <div class="text-[#777777]">Guest/System</div>
+                                    <% } %>
+                                </td>
+                                <td class="px-2 py-2 border border-gray-300 break-words">
+                                    <div class="font-semibold"><%= log.service || 'N/A' %></div>
+                                    <div class="text-[9px] text-[#555555] uppercase"><%= log.provider || 'N/A' %></div>
+                                </td>
+                                <td class="px-2 py-2 border border-gray-300 break-all">
+                                    <%= log.endpoint || 'N/A' %>
+                                </td>
+                                <td class="px-2 py-2 border border-gray-300 text-center font-bold">
+                                    <%= log.status %>
+                                </td>
+                                <td class="px-2 py-2 border border-gray-300 font-mono text-center">
+                                    <%= log.httpStatus || '-' %>
+                                </td>
+                                <td class="px-2 py-2 border border-gray-300 text-[#555555] text-[9px] break-words">
+                                    <%= log.errorMessage || 'None' %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

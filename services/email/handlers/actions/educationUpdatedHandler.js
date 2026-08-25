@@ -6,6 +6,7 @@ export const educationUpdatedHandler = async (job) => {
     const html = educationUpdatedTemplate(userdtl);
     
     await sendMail({
+        type: "education",
         to: to,
         subject: "Academic Details Update Notification",
         html: html,

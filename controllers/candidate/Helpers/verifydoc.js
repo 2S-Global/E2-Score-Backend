@@ -1,4 +1,5 @@
 import axios from "axios";
+import { externalApiClient } from "../../../logger/externalApiClient.js";
 
 function convertDateFormat(dateString) {
   const date = new Date(dateString);
@@ -17,7 +18,8 @@ export const verifyPanWithZoop = async (
   kyc,
   Zoop_URL,
   zoopAppId,
-  zoopApiKey
+  zoopApiKey,
+  userId
 ) => {
   if (!kyc.pan_number || !kyc.pan_name) {
     return { success: false, message: "PAN number or name is missing" };
@@ -36,23 +38,25 @@ export const verifyPanWithZoop = async (
   };
 
   try {
-    const response = await axios.post(
-      `${Zoop_URL}/api/v1/in/identity/pan/lite`,
-      panData,
-      {
-        headers: {
-          "app-id": zoopAppId,
-          "api-key": zoopApiKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await externalApiClient({
+      provider: "ZOOP",
+      service: "pan-verification",
+      url: `${Zoop_URL}/api/v1/in/identity/pan/lite`,
+      method: "POST",
+      data: panData,
+      headers: {
+        "app-id": zoopAppId,
+        "api-key": zoopApiKey,
+        "Content-Type": "application/json",
+      },
+      userId,
+    });
 
-    kyc.pan_response = response.data;
+    kyc.pan_response = response;
 
     // Verify PAN name
     if (
-      response.data?.result?.user_full_name?.trim().toLowerCase() ===
+      response?.result?.user_full_name?.trim().toLowerCase() ===
       kyc.pan_name?.trim().toLowerCase()
     ) {
       kyc.pan_verified = true;
@@ -67,7 +71,7 @@ export const verifyPanWithZoop = async (
       message: kyc.pan_verified
         ? " PAN verification successful. Provided name matches official records."
         : " PAN verification failed. Provided name does not match official records.",
-      response: response.data,
+      response: response,
     };
   } catch (error) {
     kyc.pan_response = error.response?.data || { error: error.message };
@@ -90,7 +94,8 @@ export const verifyEpicWithZoop = async (
   kyc,
   Zoop_URL,
   zoopAppId,
-  zoopApiKey
+  zoopApiKey,
+  userId
 ) => {
   if (!kyc.epic_number || !kyc.epic_name) {
     return { success: false, message: "EPIC number or name is missing" };
@@ -108,27 +113,29 @@ export const verifyEpicWithZoop = async (
   };
 
   try {
-    const response = await axios.post(
-      `${Zoop_URL}/api/v1/in/identity/voter/advance`,
-      epicData,
-      {
-        headers: {
-          "app-id": zoopAppId,
-          "api-key": zoopApiKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await externalApiClient({
+      provider: "ZOOP",
+      service: "epic-verification",
+      url: `${Zoop_URL}/api/v1/in/identity/voter/advance`,
+      method: "POST",
+      data: epicData,
+      headers: {
+        "app-id": zoopAppId,
+        "api-key": zoopApiKey,
+        "Content-Type": "application/json",
+      },
+      userId,
+    });
 
-    kyc.epic_response = response.data;
+    kyc.epic_response = response;
 
     // Verify EPIC name
     const epicName = kyc.epic_name?.trim().toLowerCase();
 
-    const apiNameEnglish = response.data?.result?.user_name_english
+    const apiNameEnglish = response?.result?.user_name_english
       ?.trim()
       .toLowerCase();
-    const apiNameVernacular = response.data?.result?.user_name_vernacular
+    const apiNameVernacular = response?.result?.user_name_vernacular
       ?.trim()
       .toLowerCase();
 
@@ -148,7 +155,7 @@ export const verifyEpicWithZoop = async (
       message: kyc.epic_verified
         ? " EPIC verification successful. Provided name matches official records."
         : " EPIC verification failed. Provided name does not match official records.",
-      response: response.data,
+      response: response,
     };
   } catch (error) {
     kyc.epic_response = error.response?.data || { error: error.message };
@@ -171,7 +178,8 @@ export const verifyPassportWithZoop = async (
   kyc,
   Zoop_URL,
   zoopAppId,
-  zoopApiKey
+  zoopApiKey,
+  userId
 ) => {
   if (!kyc.passport_number || !kyc.passport_name || !kyc.passport_dob) {
     return {
@@ -194,31 +202,33 @@ export const verifyPassportWithZoop = async (
   };
 
   try {
-    const response = await axios.post(
-      `${Zoop_URL}/api/v1/in/identity/passport/advance`,
-      passportData,
-      {
-        headers: {
-          "app-id": zoopAppId,
-          "api-key": zoopApiKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await externalApiClient({
+      provider: "ZOOP",
+      service: "passport-verification",
+      url: `${Zoop_URL}/api/v1/in/identity/passport/advance`,
+      method: "POST",
+      data: passportData,
+      headers: {
+        "app-id": zoopAppId,
+        "api-key": zoopApiKey,
+        "Content-Type": "application/json",
+      },
+      userId,
+    });
 
-    kyc.passport_response = response.data;
+    kyc.passport_response = response;
 
     // Verify Passprt name and date of birth
     const passportName = kyc.passport_name?.trim().toLowerCase();
     const passportDob = convertDateFormat(kyc.passport_dob);
 
     const firstName =
-      response.data?.result?.name_on_passport?.trim().toLowerCase() || "";
+      response?.result?.name_on_passport?.trim().toLowerCase() || "";
     const lastName =
-      response.data?.result?.customer_last_name?.trim().toLowerCase() || "";
+      response?.result?.customer_last_name?.trim().toLowerCase() || "";
 
     const apipassportName = `${firstName} ${lastName}`.trim();
-    const apiDob = response.data?.result?.customer_dob?.trim() || "";
+    const apiDob = response?.result?.customer_dob?.trim() || "";
 
     if (
       passportName &&
@@ -239,7 +249,7 @@ export const verifyPassportWithZoop = async (
       message: kyc.passport_verified
         ? " Passport verification successful. Provided details matches official records."
         : " Passport verification failed. Provided details does not match official records.",
-      response: response.data,
+      response: response,
     };
   } catch (error) {
     kyc.passport_response = error.response?.data || { error: error.message };
@@ -262,7 +272,8 @@ export const verifyDLWithZoop = async (
   kyc,
   Zoop_URL,
   zoopAppId,
-  zoopApiKey
+  zoopApiKey,
+  userId
 ) => {
   if (!kyc.dl_number || !kyc.dl_name || !kyc.dl_dob) {
     return {
@@ -285,27 +296,29 @@ export const verifyDLWithZoop = async (
   };
 
   try {
-    const response = await axios.post(
-      `${Zoop_URL}/api/v1/in/identity/dl/advance`,
-      dlData,
-      {
-        headers: {
-          "app-id": zoopAppId,
-          "api-key": zoopApiKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await externalApiClient({
+      provider: "ZOOP",
+      service: "dl-verification",
+      url: `${Zoop_URL}/api/v1/in/identity/dl/advance`,
+      method: "POST",
+      data: dlData,
+      headers: {
+        "app-id": zoopAppId,
+        "api-key": zoopApiKey,
+        "Content-Type": "application/json",
+      },
+      userId,
+    });
 
-    kyc.dl_response = response.data;
+    kyc.dl_response = response;
 
     // Verify dl name and date of birth
     const dlName = kyc.dl_name?.trim().toLowerCase();
     const dlDob = convertDateFormat(kyc.dl_dob); // DD-MM-YYYY
 
     const apiDlName =
-      response.data?.result?.user_full_name?.trim().toLowerCase() || "";
-    const apiDob = response.data?.result?.user_dob?.trim() || ""; // Already DD-MM-YYYY
+      response?.result?.user_full_name?.trim().toLowerCase() || "";
+    const apiDob = response?.result?.user_dob?.trim() || ""; // Already DD-MM-YYYY
 
     if (dlName && dlDob && dlName === apiDlName && dlDob === apiDob) {
       kyc.dl_verified = true;
@@ -320,7 +333,7 @@ export const verifyDLWithZoop = async (
       message: kyc.dl_verified
         ? " Driving License verification successful. Provided details matches official records."
         : " Driving License verification failed. Provided details does not match official records.",
-      response: response.data,
+      response: response,
     };
   } catch (error) {
     kyc.dl_response = error.response?.data || { error: error.message };
@@ -339,7 +352,7 @@ export const verifyDLWithZoop = async (
 /**
  * Aadhaar Verification (stub)
  */
-export const verifyAadhaarWithZoop = async (kyc, Aadhar_URL, aadharKey) => {
+export const verifyAadhaarWithZoop = async (kyc, Aadhar_URL, aadharKey, userId) => {
   if (!kyc.aadhar_number || !kyc.aadhar_name) {
     return {
       success: false,
@@ -352,23 +365,27 @@ export const verifyAadhaarWithZoop = async (kyc, Aadhar_URL, aadharKey) => {
   };
 
   try {
-    const response = await axios.post(
-      `${Aadhar_URL}/api/v1/aadhaar-v2/generate-otp`,
-      {
+    const response = await externalApiClient({
+      provider: "AADHAAR",
+      service: "generate-otp",
+      url: `${Aadhar_URL}/api/v1/aadhaar-v2/generate-otp`,
+      method: "POST",
+      data: {
         key: aadharKey,
         id_number: kyc.aadhar_number,
       },
-      { headers }
-    );
+      headers,
+      userId,
+    });
 
-    kyc.aadhar_response = response.data;
+    kyc.aadhar_response = response;
 
     await kyc.save();
 
     return {
       success: true,
       message: "Aadhaar verification OTP sent successfully.",
-      response: response.data,
+      response: response,
     };
   } catch (error) {
     kyc.aadhar_response = error.response?.data || { error: error.message };
@@ -391,7 +408,8 @@ export const verifygstinWithZoop = async (
   kyc,
   Zoop_URL,
   zoopAppId,
-  zoopApiKey
+  zoopApiKey,
+  userId
 ) => {
   if (!kyc.gstin_number || !kyc.gstin_name) {
     return { success: false, message: "GSTIN number or name is missing" };
@@ -409,23 +427,25 @@ export const verifygstinWithZoop = async (
   };
 
   try {
-    const response = await axios.post(
-      `${Zoop_URL}/api/v1/in/merchant/gstin/lite`,
-      gstinData,
-      {
-        headers: {
-          "app-id": zoopAppId,
-          "api-key": zoopApiKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await externalApiClient({
+      provider: "ZOOP",
+      service: "gstin-verification",
+      url: `${Zoop_URL}/api/v1/in/merchant/gstin/lite`,
+      method: "POST",
+      data: gstinData,
+      headers: {
+        "app-id": zoopAppId,
+        "api-key": zoopApiKey,
+        "Content-Type": "application/json",
+      },
+      userId,
+    });
 
-    kyc.gstin_response = response.data;
+    kyc.gstin_response = response;
 
     // Verify PAN name
     if (
-      response.data?.result?.legal_name?.trim().toLowerCase() ===
+      response?.result?.legal_name?.trim().toLowerCase() ===
       kyc.gstin_name?.trim().toLowerCase()
     ) {
       kyc.gstin_verified = true;
@@ -440,7 +460,7 @@ export const verifygstinWithZoop = async (
       message: kyc.gstin_verified
         ? " GSTIN verification successful. Provided name matches official records."
         : " GSTIN verification failed. Provided name does not match official records.",
-      response: response.data,
+      response: response,
     };
   } catch (error) {
     kyc.gstin_response = error.response?.data || { error: error.message };
@@ -463,7 +483,8 @@ export const verifycinWithZoop = async (
   kyc,
   Zoop_URL,
   zoopAppId,
-  zoopApiKey
+  zoopApiKey,
+  userId
 ) => {
   if (!kyc.cin_number || !kyc.cin_name) {
     return { success: false, message: "CIN number or name is missing" };
@@ -481,22 +502,24 @@ export const verifycinWithZoop = async (
   };
 
   try {
-    const response = await axios.post(
-      `${Zoop_URL}/api/v1/in/merchant/cin/advance`,
-      cinData,
-      {
-        headers: {
-          "app-id": zoopAppId,
-          "api-key": zoopApiKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await externalApiClient({
+      provider: "ZOOP",
+      service: "cin-verification",
+      url: `${Zoop_URL}/api/v1/in/merchant/cin/advance`,
+      method: "POST",
+      data: cinData,
+      headers: {
+        "app-id": zoopAppId,
+        "api-key": zoopApiKey,
+        "Content-Type": "application/json",
+      },
+      userId,
+    });
 
-    kyc.cin_response = response.data;
+    kyc.cin_response = response;
 
     const fetchedName =
-      response?.data?.result?.company_info?.company_name ?? "";
+      response?.result?.company_info?.company_name ?? "";
     const inputName = kyc.cin_name ?? "";
 
     const nameMatches =
@@ -511,7 +534,7 @@ export const verifycinWithZoop = async (
       message: kyc.cin_verified
         ? " CIN verification successful. Provided name matches official records."
         : " CIN verification failed. Provided name does not match official records.",
-      response: response.data,
+      response: response,
     };
   } catch (error) {
     kyc.cin_response = error.response?.data || { error: error.message };

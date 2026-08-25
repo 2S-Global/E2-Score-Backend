@@ -10,9 +10,10 @@ export const projectUpdatedHandler = async (job) => {
 
   const html = projectUpdatedTemplate(userdtl);
   
-  await sendMail(
+  await sendMail({
+    type: "projects",
     to,
-    "Project Details Update Notification",
+    subject: "Project Details Update Notification",
     html
-  );
+  });
 };

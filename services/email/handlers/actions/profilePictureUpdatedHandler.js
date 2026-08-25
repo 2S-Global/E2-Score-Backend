@@ -6,6 +6,7 @@ export const profilePictureUpdatedHandler = async (job) => {
     const html = profilePictureUpdatedTemplate(user);
     
     await sendMail({
+        type: "profile",
         to: to,
         subject: "Your Profile Picture Has Been Updated",
         html: html,

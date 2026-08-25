@@ -6,6 +6,7 @@ export const forgotPasswordHandler = async (job) => {
     const html = forgotPasswordTemplate(name, newPassword);
     
     await sendMail({
+        type: "password",
       to: email,
       subject: "Password Reset Successful - Action Required",
       html: html,

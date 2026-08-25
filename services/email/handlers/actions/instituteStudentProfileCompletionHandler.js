@@ -6,6 +6,7 @@ export const instituteStudentProfileCompletionHandler = async (job) => {
     const html = instituteStudentProfileCompletionTemplate(name, progress);
     
     await sendMail({
+        type: "profile",
       to: email,
       subject: `Profile Completion Reminder - Current Score: ${progress}%`,
       html: html,

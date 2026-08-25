@@ -1,7 +1,7 @@
 export const companyInterviewRescheduledTemplate = (userName, designation, companyName, interviewDateString, formattedInterviewTime, interviewLocation) => {
   return `
         <div style="text-align: center; margin-bottom: 20px;">
-          <img src="https://api.geisil.com/upload/rescheduling_interview.jpg" alt="Banner" style="width: 100%; height: auto;" />
+          <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
         </div>
 
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation"

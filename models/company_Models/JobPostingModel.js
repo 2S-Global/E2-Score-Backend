@@ -17,7 +17,6 @@ const jobPostingSchema = new mongoose.Schema(
         },
         getApplicationUpdateEmail: {
             type: String,
-            required: true,
         },
         // specialization: [{
         //     type: mongoose.Schema.Types.ObjectId,

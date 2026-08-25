@@ -6,6 +6,7 @@ export const workSampleDeletedHandler = async (job) => {
     const html = workSampleDeletedTemplate(userdtl);
     
     await sendMail({
+        type: "profile",
         to: to,
         subject: "Work Profile Update Notification",
         html: html,

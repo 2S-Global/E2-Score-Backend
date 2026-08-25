@@ -6,6 +6,7 @@ export const resumeHeadlineUpdatedHandler = async (job) => {
     const html = resumeHeadlineUpdatedTemplate(userdtl);
     
     await sendMail({
+        type: "profile",
         to: to,
         subject: "Your Resume Headline Has Been Updated",
         html: html,

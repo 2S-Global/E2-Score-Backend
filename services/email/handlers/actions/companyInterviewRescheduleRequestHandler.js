@@ -6,6 +6,7 @@ export const companyInterviewRescheduleRequestHandler = async (job) => {
     const html = companyInterviewRescheduleRequestTemplate(employerName, candidateName, jobTitle, requestDateString, requestStartTime, requestEndTime);
     
     await sendMail({
+        type: "interviews",
       to: email,
       subject: `Reschedule Request – ${jobTitle}`,
       html: html,

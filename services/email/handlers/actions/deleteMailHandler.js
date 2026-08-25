@@ -12,6 +12,7 @@ export async function processDeleteMail(job) {
   const dynamicHtml = projectDeletedTemplate(name);
 
   await sendMail({
+        type: "projects",
     to: email,
     subject: "Project Details Update Notification",
     html: dynamicHtml,

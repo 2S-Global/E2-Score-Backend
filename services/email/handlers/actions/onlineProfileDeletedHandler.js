@@ -6,6 +6,7 @@ export const onlineProfileDeletedHandler = async (job) => {
     const html = onlineProfileDeletedTemplate(userdtl);
     
     await sendMail({
+        type: "profile",
         to: to,
         subject: "Online Profile Update Notification",
         html: html,

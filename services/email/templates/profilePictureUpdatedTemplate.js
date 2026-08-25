@@ -3,7 +3,7 @@ export const profilePictureUpdatedTemplate = (user) => `
 
     <!-- Banner Image -->
     <div>
-      <img src="${process.env.CLIENT_BASE_URL_TEMP}/images/emailheader/changeimage.png"
+      <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}"
            alt="GEISIL Banner" 
            style="width:100%; border-radius:8px 8px 0 0; display:block;" />
     </div>

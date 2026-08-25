@@ -6,6 +6,7 @@ export const profileUpdatedHandler = async (job) => {
     const html = profileUpdatedTemplate(user, changeListHTML);
 
     await sendMail({
+        type: "profile",
         to: to,
         subject: "Profile Update Notification",
         html: html,
