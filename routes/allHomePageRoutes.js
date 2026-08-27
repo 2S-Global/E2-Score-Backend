@@ -23,20 +23,10 @@ import adminMiddleware from "../middleware/adminMiddleware.js";
 
 // Initialize router
 const HomePageRouter = express.Router();
-// Setup multer with memory storage for handling file uploads
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Get Banner Details for Home Page
 HomePageRouter.get("/getBannerDetails", getAllFields);
-
-// HomePageRouter.post(
-//   "/add-banner-details",
-//   upload.single("newImage"),
-//   addBannerDetails
-// );
-
-// HomePageRouter.post("/add-banner-details", upload.array("banners"), addBannerDetails);
 
 HomePageRouter.get("/all-banner", getAllBannners);
 

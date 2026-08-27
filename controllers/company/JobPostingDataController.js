@@ -218,7 +218,6 @@ export const AddJobPostingDetails = async (req, res) => {
       return res.status(404).json({ message: "Company not found." });
     }
 
-    // console.log("Request body:", req.body);
 
     const {
       jobTitle,

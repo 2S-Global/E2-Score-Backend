@@ -14,13 +14,18 @@ const worker = new Worker(
         console.log("Generating failed request report...");
 
         const { window } = job.data;
+        console.log('window====>', window);
 
         try {
             const { pdfBuffer, failuresCount, from, to } = await generateFailedRequestsReport(window);
-            console.log(`PDF generated successfully. File size: ${pdfBuffer.length} bytes`);
+            if (pdfBuffer) {
 
-            await sendFailedRequestsReportEmail(pdfBuffer, failuresCount, from , to);
-            console.log("Email with PDF report sent successfully.");
+            } else {
+
+            }
+
+            await sendFailedRequestsReportEmail(pdfBuffer, failuresCount, from, to);
+
 
             return {
                 records: failuresCount,
