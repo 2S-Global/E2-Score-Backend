@@ -41,6 +41,7 @@ import {
   getTotalApplicants,
   getCandidateApplicationStats,
   getJobPreview_Details,
+  getTotalExperience,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -181,6 +182,9 @@ jobPostingDataRouter.post(
   userAuth,
   applyJobPosting,
 );
+
+jobPostingDataRouter.get('/get-total-experienced', upload.none(),
+  userAuth, getTotalExperience)
 
 // Get All Job Listing API
 jobPostingDataRouter.get(

@@ -23,6 +23,8 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime.js";
 import { emailQueue } from "../../queues/emailQueue.js";
 import SavedJob from "../../models/SavedJob.js";
+import CandidateDetails from "../../models/CandidateDetailsModel.js";
+import { apiResponse } from "../../utility/apiResponse.js";
 //import CompanyDetails from "../../models/company_Models/companydetails.js";
 
 dayjs.extend(relativeTime);
@@ -1500,10 +1502,10 @@ export const getJobPreviewDetails = async (req, res) => {
       createdAgo: dayjs(job.createdAt).fromNow(),
       expiredAt: job.jobExpiryDate
         ? new Date(job.jobExpiryDate).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
         : "",
       salary: job.salary,
       opening: job.positionAvailable,
@@ -1755,10 +1757,10 @@ export const getJobPreview_Details = async (req, res) => {
 
       expiredAt: job.jobExpiryDate
         ? new Date(job.jobExpiryDate).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
         : "",
 
       salary: job.salary,
@@ -3999,3 +4001,26 @@ export const getCandidateApplicationStats = async (req, res) => {
     });
   }
 };
+
+
+export const getTotalExperience = async (req, res) => {
+  // const userId = req.userId
+  const userId = `69089a4b63d40bedba5f4a9b`
+  try {
+
+    const response = await CandidateDetails.findOne({
+      userId: userId,
+      isDel: false
+    }).select('totalExperience').lean()
+
+    if (!response) {
+      return apiResponse(res, 404, false, "Candidate details not found", null, error);
+    }
+
+    return apiResponse(res, 200, true, "Total experience fetched successfully", response)
+  } catch (error) {
+    return apiResponse(res, 500, false, "Internal server error", null, error);
+
+  }
+
+}

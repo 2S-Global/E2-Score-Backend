@@ -9,6 +9,7 @@ import { emailQueue } from "../../queues/emailQueue.js";
 import { apiResponse } from "../../utility/apiResponse.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import { logger } from "../../middleware/logger/logger.js";
+import { syncCandidateExperience } from "../../utility/experienceHelper.js";
 
 const isFullTime = (type) => {
   if (!type || typeof type !== "string") return false;
@@ -510,6 +511,9 @@ export const addEmploymentDetails = async (req, res) => {
     });
 
     await employment.save();
+
+    // Sync candidate total experience in CandidateDetails
+    await syncCandidateExperience(userId);
 
     // Step 3: Check if any user has this companyId
     const existingCompanyUser = await User.findOne({
@@ -1037,6 +1041,10 @@ export const editEmploymentDetails = async (req, res) => {
       },
       { new: true },
     );
+
+    // Sync candidate total experience in CandidateDetails
+    await syncCandidateExperience(userId);
+
     const userdtl = await User.findById(userId);
     if (userdtl) {
       await emailQueue.add('employment_updated', {
@@ -1079,7 +1087,7 @@ export const deleteEmploymentDetails = async (req, res) => {
     // Find the existing document
     const employmentDetails = await Employment.findOne({
       _id,
-      userId,
+      user: userId,
       isDel: false,
     });
 
@@ -1093,6 +1101,9 @@ export const deleteEmploymentDetails = async (req, res) => {
     // Soft delete: mark as deleted
     employmentDetails.isDel = true;
     await employmentDetails.save();
+
+    // Sync candidate total experience in CandidateDetails
+    await syncCandidateExperience(userId);
 
     const userdtl = await User.findById(userId);
     if (userdtl) {

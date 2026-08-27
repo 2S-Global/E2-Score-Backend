@@ -14,10 +14,10 @@ const uploadToCloudinary = (buffer, folder = "uploads", publicId = null) => {
         else resolve(result);
       }
     );
-
+    
     // Convert buffer to readable stream and pipe to cloudinary stream
     const readable = new Readable();
-    readable._read = () => {};
+    readable._read = () => { };
     readable.push(buffer);
     readable.push(null);
     readable.pipe(stream);

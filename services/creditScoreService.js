@@ -3,6 +3,7 @@ import { externalApiClient } from "../logger/externalApiClient.js";
 
 //to get CIBIL SCORE
 export const getCibilScore = async (userData, userId) => {
+
   const API_URL = `${process.env.CIBIL_URL}/srv2/credit-report/check-score`;
 
   const sendRequest = {
@@ -12,7 +13,7 @@ export const getCibilScore = async (userData, userId) => {
     token_id: process.env.CIBIL_TOKEN_ID,
   };
 
-  //RESPONSE LOG 
+  //RESPONSE LOG
   const response = await externalApiClient({
     provider: "CIBIL",
     service: "credit-report",
@@ -46,7 +47,7 @@ export const getExperianScore = async (userData, userId) => {
     token_id: process.env.CIBIL_TOKEN_ID,
   };
 
-
+  
   //RESPONSE LOG
   const response = await externalApiClient({
     provider: "EXPERIAN",
