@@ -12,7 +12,7 @@ export const getCibilScore = async (userData, userId) => {
     token_id: process.env.CIBIL_TOKEN_ID,
   };
 
-  //RESPONSE LOG 
+  //RESPONSE LOG
   const response = await externalApiClient({
     provider: "CIBIL",
     service: "credit-report",
@@ -22,12 +22,10 @@ export const getCibilScore = async (userData, userId) => {
     userId,
   });
 
-  console.log('external API response', response)
-
+  console.log("external API response", response);
 
   const score = response?.data?.score;
-  const rawData = response?.data
-
+  const rawData = response?.data;
 
   return {
     score: score || "",
@@ -46,7 +44,6 @@ export const getExperianScore = async (userData, userId) => {
     token_id: process.env.CIBIL_TOKEN_ID,
   };
 
-
   //RESPONSE LOG
   const response = await externalApiClient({
     provider: "EXPERIAN",
@@ -57,16 +54,16 @@ export const getExperianScore = async (userData, userId) => {
     userId,
   });
 
-  console.log('EXPERIAN API TESTING ==> ', response)
+  console.log("EXPERIAN API TESTING ==> ", response);
 
-  const score = response?.data?.result_json?.INProfileResponse?.SCORE?.BureauScore;
+  const score =
+    response?.data?.result_json?.INProfileResponse?.SCORE?.BureauScore;
+  const Pdf = response?.data?.pdf_url;
 
   console.log("this is experian SCORE ==>", score);
 
   return {
     score: score || "",
+    pdf: Pdf || "",
   };
 };
-
-
-

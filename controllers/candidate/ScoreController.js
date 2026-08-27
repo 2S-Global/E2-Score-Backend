@@ -14,8 +14,7 @@ import CandidateKYC from "../../models/CandidateKYCModel.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import { verifyPaymentSchema } from "./validate/verifyPaymentSchema.js";
 import Fees from "../../models/feesModel.js";
-
-
+import { emailQueue } from "../../queues/emailQueue.js";
 
 export const createPayment = async (req, res) => {
   try {
@@ -35,7 +34,7 @@ export const createPayment = async (req, res) => {
     } else {
       amountInRupees = Number(fees?.experian_fees ?? 30);
     }
-    
+
     const amountInPaise = amountInRupees * 100;
 
     const order = await createRazorpayOrder(amountInPaise, "INR");
@@ -55,23 +54,34 @@ export const createPayment = async (req, res) => {
   }
 };
 
-
-
 export const verifyPaymentAndGetScore = async (req, res) => {
   const userId = req.userId;
   // const userId = `6937bc0115b0e2b4b04389fd`;
 
   if (!userId) {
-    return apiResponse(res, 401, false, "Unauthorized: User ID not found in request context or body", null);
+    return apiResponse(
+      res,
+      401,
+      false,
+      "Unauthorized: User ID not found in request context or body",
+      null,
+    );
   }
   try {
-    const result = verifyPaymentSchema.safeParse(req.body)
+    const result = verifyPaymentSchema.safeParse(req.body);
 
     if (!result.success) {
-      return apiResponse(res, 422, false, 'Invalid data', result.error.issues[0].message)
+      return apiResponse(
+        res,
+        422,
+        false,
+        "Invalid data",
+        result.error.issues[0].message,
+      );
     }
 
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, type } = result.data;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, type } =
+      result.data;
 
     const paymentVerification = verifyRazorpayPayment({
       razorpay_order_id,
@@ -98,14 +108,19 @@ export const verifyPaymentAndGetScore = async (req, res) => {
       paymentId: payment.paymentId,
     });
 
-
     if (existingCibilPayment) {
-      return apiResponse(res, 409, false, "Payment has already been used", null);
+      return apiResponse(
+        res,
+        409,
+        false,
+        "Payment has already been used",
+        null,
+      );
     }
 
     const reportType = String(type).toUpperCase();
 
-    const user = await User.findById(userId).select("name phone_number");
+    const user = await User.findById(userId).select("name phone_number email");
     if (!user) {
       return apiResponse(res, 404, false, "User not found", null);
     }
@@ -126,7 +141,7 @@ export const verifyPaymentAndGetScore = async (req, res) => {
     if (Details?.dob) {
       const dobDate = new Date(Details.dob);
       if (!isNaN(dobDate.getTime())) {
-        formattedDOB = dobDate.toISOString().split('T')[0];
+        formattedDOB = dobDate.toISOString().split("T")[0];
       }
     }
 
@@ -143,7 +158,10 @@ export const verifyPaymentAndGetScore = async (req, res) => {
     if (reportType === "CIBIL") {
       // 2. Fetch CIBIL score
       const cibilData = await getCibilScore(payloadBUILDER, userId);
-      console.log('cibilDatacibilDatacibilDatacibilDatacibilData===>', cibilData)
+      console.log(
+        "cibilDatacibilDatacibilDatacibilDatacibilData===>",
+        cibilData,
+      );
 
       await CibilModel.create({
         userId,
@@ -152,6 +170,18 @@ export const verifyPaymentAndGetScore = async (req, res) => {
         status: "SUCCESS",
         Score: String(cibilData.score),
       });
+
+      try {
+        await emailQueue.add("latest_CIBIL_score", {
+          to: user.email,
+          userdtl: {
+            name: user.name,
+            cibilScore: cibilData.score,
+          },
+        });
+      } catch (emailError) {
+        console.error("Queueing email failed:", emailError);
+      }
 
       // 4. Return response
       return apiResponse(
@@ -167,18 +197,25 @@ export const verifyPaymentAndGetScore = async (req, res) => {
       });
 
       if (existingExperianPayment) {
-        return apiResponse(res, 409, false, "Payment has already been used", null);
+        return apiResponse(
+          res,
+          409,
+          false,
+          "Payment has already been used",
+          null,
+        );
       }
       const payload_EXPERIAN = {
         mobile_no: phone_number,
         pan: panNumber,
         first_name: firstName,
         last_name: lastName,
-        dob: formattedDOB
+        dob: formattedDOB,
       };
 
       const experianData = await getExperianScore(payload_EXPERIAN, userId);
-      console.log("experianData", experianData)
+
+      console.log("experianData", experianData);
       // 3. Save Experian result in DB
       await ExperianModel.create({
         userId,
@@ -186,6 +223,19 @@ export const verifyPaymentAndGetScore = async (req, res) => {
         paymentDate: new Date(),
         Score: String(experianData.score),
       });
+
+      try {
+        await emailQueue.add("latest_experian_score", {
+          to: user.email,
+          userdtl: {
+            name: user.name,
+            experianScore: experianData.score,
+            pdfUrl: experianData.pdf,
+          },
+        });
+      } catch (emailError) {
+        console.error("Queueing email failed:", emailError);
+      }
 
       // 4. Return response
       return apiResponse(
@@ -201,7 +251,7 @@ export const verifyPaymentAndGetScore = async (req, res) => {
         400,
         false,
         `Invalid credit report type: ${type}. Must be CIBIL or EXPERIAN.`,
-        null
+        null,
       );
     }
   } catch (error) {
@@ -210,7 +260,7 @@ export const verifyPaymentAndGetScore = async (req, res) => {
       500,
       false,
       error.message || "An internal server error occurred",
-      null
+      null,
     );
   }
 };
@@ -219,14 +269,23 @@ export const getMyScores = async (req, res) => {
   const userId = req.userId;
 
   if (!userId) {
-    return apiResponse(res, 401, false, "Unauthorized: User ID not found in request context or body", null);
+    return apiResponse(
+      res,
+      401,
+      false,
+      "Unauthorized: User ID not found in request context or body",
+      null,
+    );
   }
 
   const { type } = req.params;
 
   try {
     if (type.toUpperCase() == "CIBIL") {
-      const myCibilScore = await CibilModel.findOne({ userId }).sort({ createdAt: -1 }).limit(1).select("Score  paymentDate");
+      const myCibilScore = await CibilModel.findOne({ userId })
+        .sort({ createdAt: -1 })
+        .limit(1)
+        .select("Score  paymentDate");
       return apiResponse(
         res,
         200,

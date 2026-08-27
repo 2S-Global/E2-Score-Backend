@@ -19,15 +19,15 @@ const Schema = new mongoose.Schema(
     },
     aadhar_fees: {
       type: String,
-    },  
-    cibil_score: {
+    },
+    cibil_fees: {
       type: String,
     },
-    experian_score: {
+    experian_fees: {
       type: String,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Fees = mongoose.model("Fee", Schema);

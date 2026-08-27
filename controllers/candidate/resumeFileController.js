@@ -86,7 +86,7 @@ export const uploadPDF = async (req, res) => {
     const userdtl = await User.findById(userId);
     console.log("wokring hard ==>", userdtl);
     try {
-      console.log('new PIN===>', userdtl.email)
+      console.log("new PIN===>", userdtl.email);
       await emailQueue.add("resume_uploaded", {
         to: userdtl.email,
         userdtl: {
@@ -145,7 +145,6 @@ export const uploadCoverLetter = async (req, res) => {
         .json({ message: "Cover letter not found for this user." });
     }
 
-
     const userdtl = await User.findById(userId);
     /*  
         const htmlEmail = \`
@@ -190,7 +189,7 @@ export const uploadCoverLetter = async (req, res) => {
     */
     await emailQueue.add("resume_update_notification", {
       email: userdtl.email,
-      name: userdtl.name
+      name: userdtl.name,
     });
 
     return res.status(200).json({
@@ -267,9 +266,8 @@ export const getCoverLetterDetails = async (req, res) => {
         .json({ message: "No Cover letter found for this user." });
     }
 
-
     //send background Email
-    const userdtl = await User.findById(userId);
+    /* const userdtl = await User.findById(userId);
     console.log("wokring hard ==>", userdtl);
     try {
       await emailQueue.add("cover_letter_uploaded", {
@@ -280,7 +278,7 @@ export const getCoverLetterDetails = async (req, res) => {
       });
     } catch (emailError) {
       console.error("Queueing email failed:", emailError);
-    }
+    } */
 
     return res.status(200).json({
       success: true,
