@@ -15,7 +15,11 @@ const run = async () => {
     console.log(`Generating report for window: ${testWindow}...`);
     
     const { pdfBuffer, failuresCount, from, to } = await generateFailedRequestsReport(testWindow);
-    console.log(`PDF generated successfully. Buffer length: ${pdfBuffer.length} bytes.`);
+    if (pdfBuffer) {
+      console.log(`PDF generated successfully. Buffer length: ${pdfBuffer.length} bytes.`);
+    } else {
+      console.log("No failures found. Skipping PDF generation.");
+    }
     console.log(`Total failures count in period: ${failuresCount}`);
 
     // Mock User.find to force email recipient to gamermohan39@gmail.com

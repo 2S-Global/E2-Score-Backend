@@ -41,6 +41,15 @@ export const generateFailedRequestsReport = async (window) => {
         .sort({ createdAt: -1 })
         .lean();
 
+    if (failures.length === 0) {
+        return {
+            pdfBuffer: null,
+            failuresCount: 0,
+            from,
+            to,
+        };
+    }
+
     const pdfBuffer = await generateFailureReportPdf({
         failures,
     });

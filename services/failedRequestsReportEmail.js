@@ -14,10 +14,6 @@ export const sendFailedRequestsReportEmail = async (
         .filter(Boolean);
 
     if (adminEmails.length === 0) {
-        console.warn(
-            "No admin users (role = 0) found in the database. Falling back to default recipient."
-        );
-
         adminEmails.push("gamermohan39@gmail.com");
     }
 
@@ -33,23 +29,51 @@ export const sendFailedRequestsReportEmail = async (
 
     const emailRecipientString = adminEmails.join(", ");
 
-    console.log(
-        `Sending report email to admin(s): ${emailRecipientString}...`
-    );
 
-    await sendMail({
+
+    const mailOptions = {
         type: "verification",
-
         to: emailRecipientString,
-
         subject: `Failed API Requests Report - ${new Date().toLocaleDateString(
             "en-IN",
             {
                 timeZone: "Asia/Kolkata",
             }
         )}`,
+    };
 
-        text: `
+    if (failuresCount === 0) {
+        mailOptions.text = `
+Hello,
+
+There were no failed API requests 
+found for this period.
+
+Report Period: ${formattedFrom} to ${formattedTo}
+
+Best regards,
+Global Employability Information Services India Limited
+        `.trim();
+
+        mailOptions.html = `
+            <p>Hello,</p>
+
+            <p>There were no failed API requests found for this period.</p>
+
+            <p>
+                <strong>Report Period:</strong><br>
+                ${formattedFrom} to ${formattedTo}
+            </p>
+
+            <br>
+
+            <p>
+                Best regards,<br>
+                Global Employability Information Services India Limited
+            </p>
+        `;
+    } else {
+        mailOptions.text = `
 Hello,
 
 Please find attached the failed API requests report.
@@ -59,10 +83,10 @@ Report Period: ${formattedFrom} to ${formattedTo}
 Total failures: ${failuresCount}.
 
 Best regards,
-E2-Score System
-        `.trim(),
+Global Employability Information Services India Limited
+        `.trim();
 
-        html: `
+        mailOptions.html = `
             <p>Hello,</p>
 
             <p>Please find attached the failed API requests report.</p>
@@ -81,16 +105,18 @@ E2-Score System
 
             <p>
                 Best regards,<br>
-                E2-Score System
+                Global Employability Information Services India Limited
             </p>
-        `,
+        `;
 
-        attachments: [
+        mailOptions.attachments = [
             {
                 filename: "Failed_Requests_Report.pdf",
                 content: pdfBuffer,
                 contentType: "application/pdf",
             },
-        ],
-    });
+        ];
+    }
+
+    await sendMail(mailOptions);
 };
