@@ -5,6 +5,7 @@ import CompanyBranch from "../../models/company_Models/CompanyBranch.js";
 import User from "../../models/userModel.js";
 import Employment from "../../models/Employment.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
+import CandidateKYC from "../../models/CandidateKYCModel.js";
 import mongoose from "mongoose";
 import list_tbl_countrie from "../../models/monogo_query/countriesModel.js";
 import personalDetails from "../../models/personalDetails.js";
@@ -456,7 +457,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
     }
 
     // Run queries in parallel
-    const [users, candidateDetails, personalDetail, employments] =
+    const [users, candidateDetails, personalDetail, employments, candidateKYC] =
       await Promise.all([
         User.findOne(
           { _id: userId },
@@ -495,6 +496,11 @@ export const getMultipleEmployeeDetails = async (req, res) => {
             remarks: 1,
             _id: 0,
           },
+        ).lean(),
+
+        CandidateKYC.findOne(
+          { userId: userId },
+          { pan_number: 1, _id: 0 },
         ).lean(),
       ]);
 
@@ -550,6 +556,7 @@ export const getMultipleEmployeeDetails = async (req, res) => {
       ...(candidateDetails || {}),
       ...(personalDetail || {}),
       ...(employments || {}),
+      ...(candidateKYC || {}),
     };
 
     res.status(200).json({
