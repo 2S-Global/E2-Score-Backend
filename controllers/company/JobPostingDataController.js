@@ -25,6 +25,7 @@ import { emailQueue } from "../../queues/emailQueue.js";
 import SavedJob from "../../models/SavedJob.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import { apiResponse } from "../../utility/apiResponse.js";
+import recentSearchModel from "../../models/recentSearchModel.js";
 //import CompanyDetails from "../../models/company_Models/companydetails.js";
 
 dayjs.extend(relativeTime);
@@ -3704,7 +3705,7 @@ export const acceptRejectOfferLetter = async (req, res) => {
 // Get check-application-status API
 export const checkJobApplicationStatus = async (req, res) => {
   try {
-    const userId = req.userId; // from token
+    const userId = req.userId; 
     const { jobId } = req.query;
 
     console.log(
@@ -3715,10 +3716,7 @@ export const checkJobApplicationStatus = async (req, res) => {
     );
 
     if (!jobId) {
-      return res.status(400).json({
-        success: false,
-        message: "jobId is required",
-      });
+      return apiResponse(res, 400, false, "jobId is required", null, null);
     }
 
     // Check if application already exists
@@ -4004,8 +4002,7 @@ export const getCandidateApplicationStats = async (req, res) => {
 
 
 export const getTotalExperience = async (req, res) => {
-  // const userId = req.userId
-  const userId = `69089a4b63d40bedba5f4a9b`
+  const userId = req.userId;
   try {
 
     const response = await CandidateDetails.findOne({
@@ -4014,7 +4011,7 @@ export const getTotalExperience = async (req, res) => {
     }).select('totalExperience').lean()
 
     if (!response) {
-      return apiResponse(res, 404, false, "Candidate details not found", null, error);
+      return apiResponse(res, 404, false, "Candidate details not found", null, null);
     }
 
     return apiResponse(res, 200, true, "Total experience fetched successfully", response)
@@ -4024,3 +4021,114 @@ export const getTotalExperience = async (req, res) => {
   }
 
 }
+export const GetRecentSearches = async (req, res) => {
+  try {
+    const userId = "69089a4b63d40bedba5f4a9b";
+    const search = req.query.q?.trim();
+
+    const filter = {
+      userId,
+    };
+
+    if (search) {
+      filter.normalizedQuery = {
+        $regex: search.toLowerCase(),
+        $options: "i",
+      };
+    }
+
+    const recentSearches = await recentSearchModel
+      .find(filter)
+      .sort({ lastSearchedAt: -1 })
+      .limit(10)
+      .select("query lastSearchedAt")
+      .lean();
+
+    return apiResponse(
+      res,
+      200,
+      true,
+      "Recent searches fetched successfully",
+      recentSearches,
+      null
+    );
+  } catch (error) {
+    return apiResponse(
+      res,
+      500,
+      false,
+      "Internal server error",
+      null,
+      error
+    );
+  }
+};
+
+
+export const SaveRecentSearches = async (req, res) => {
+  try {
+    const userId = "69089a4b63d40bedba5f4a9b";
+    const { query } = req.body;
+
+    if (!query || !query.trim()) {
+      return apiResponse(
+        res,
+        400,
+        false,
+        "Search query is required",
+        null,
+        null
+      );
+    }
+
+    const cleanedQuery = query.trim();
+    const normalizedQuery = cleanedQuery
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+
+    const recentSearch = await recentSearchModel.findOneAndUpdate(
+      {
+        userId,
+        normalizedQuery,
+      },
+      {
+        $set: {
+          query: cleanedQuery,
+          lastSearchedAt: new Date(),
+        },
+
+        $inc: {
+          searchCount: 1,
+        },
+
+        $setOnInsert: {
+          userId,
+          normalizedQuery,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+      }
+    );
+
+    return apiResponse(
+      res,
+      200,
+      true,
+      "Recent search saved successfully",
+      recentSearch,
+      null
+    );
+  } catch (error) {
+    return apiResponse(
+      res,
+      500,
+      false,
+      "Internal server error",
+      null,
+      error
+    );
+  }
+};

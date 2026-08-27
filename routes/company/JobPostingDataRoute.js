@@ -42,6 +42,8 @@ import {
   getCandidateApplicationStats,
   getJobPreview_Details,
   getTotalExperience,
+  SaveRecentSearches,
+  GetRecentSearches,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -322,6 +324,20 @@ jobPostingDataRouter.get(
   "/get-total-job-applications-by-id",
   userAuth,
   getCandidateApplicationStats,
+);
+
+jobPostingDataRouter.post(
+  "/save-recent-searches",
+  upload.none(),
+  userAuth,
+  SaveRecentSearches,
+);
+
+
+jobPostingDataRouter.get(
+  "/get-recent-searches",
+  userAuth,
+  GetRecentSearches,
 );
 
 export default jobPostingDataRouter;
