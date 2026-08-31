@@ -10,14 +10,18 @@ import CandidateKYC from "../../models/CandidateKYCModel.js";
 import list_education_level from "../../models/monogo_query/educationLevelModel.js";
 import list_course_type from "../../models/monogo_query/courseTypeModel.js";
 import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
-import { InstitueStudent, InstitueStudentSemester, StudentPlacement } from "../../models/InstitueStudentModel.js";
+import {
+  InstitueStudent,
+  InstitueStudentSemester,
+  StudentPlacement,
+} from "../../models/InstitueStudentModel.js";
 import student_course_details from "../../models/studentCourseModel.js";
 import companyRequirement from "../../models/companyRequirementModel.js";
 import { emailQueue } from "../../queues/emailQueue.js";
 import mongoose from "mongoose";
-import { Types } from 'mongoose';
+import { Types } from "mongoose";
 import { GetProgress } from "../../utility/helper/getprogress.js";
-import { studentDetails } from "../../utility/student.js"
+import { studentDetails } from "../../utility/student.js";
 import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
 export const sendMailSudent = async (data) => {
   // Send email via queue
@@ -29,12 +33,10 @@ export const sendMailSudent = async (data) => {
     date: data?.date && new Date(data?.date).toISOString().split("T")[0],
     time: data?.time,
   });
-}
-
+};
 
 export const sendMailRecruiter = async (data, students) => {
-
-  let stu = ""
+  let stu = "";
 
   if (students?.length > 0) {
     stu = `
@@ -50,7 +52,7 @@ export const sendMailRecruiter = async (data, students) => {
         </tr>
       </thead>
       <tbody>
-      `
+      `;
     for (const item of students) {
       stu += `<tr style="background:#ffffff;">
         <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.studentName}</td>
@@ -59,12 +61,10 @@ export const sendMailRecruiter = async (data, students) => {
         <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.tenTh}%</td>
         <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.twelveTh}%</td>
         <td style="padding:12px;border-bottom:1px solid #e5e7eb;">${item?.course}</td>
-      </tr>`
+      </tr>`;
     }
-    stu += `</tbody></table>`
+    stu += `</tbody></table>`;
   }
-
-
 
   // Send email via queue
   await emailQueue.add("institute_recruiter_interview_schedule", {
@@ -74,12 +74,12 @@ export const sendMailRecruiter = async (data, students) => {
     role: data?.role,
     studentsTableHtml: stu,
   });
-}
+};
 
 export const GetunverifiedStudents = async (req, res) => {
   try {
     const userId = req.userId;
-    
+
     // ✅ Step 1: Verify institute linked to user
     const instituteDetails = await CompanyDetails.findOne({
       userId,
@@ -93,7 +93,9 @@ export const GetunverifiedStudents = async (req, res) => {
     }
 
     // ✅ Step 2: Fetch all matching institutes (case-insensitive & trimmed name)
-    const escapedInstituteName = instituteDetails.name.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const escapedInstituteName = instituteDetails.name
+      .trim()
+      .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     const listOfInstitutes = await list_university_colleges.find({
       name: { $regex: new RegExp(`^${escapedInstituteName}$`, "i") },
       is_del: 0,
@@ -154,8 +156,9 @@ export const GetunverifiedStudents = async (req, res) => {
       userId: student.userId?._id || null,
       name: student.userId?.name || "",
       email: student.userId?.email || "",
-      details: `${courseMap[student.courseName] || student.courseName || ""
-        } || ${student.duration?.from || ""}-${student.duration?.to || ""}`,
+      details: `${
+        courseMap[student.courseName] || student.courseName || ""
+      } || ${student.duration?.from || ""}-${student.duration?.to || ""}`,
       photo: student.userId?.profilePicture || null,
     }));
 
@@ -245,15 +248,15 @@ export const GetallStudents = async (req, res) => {
       userId: student.userId?._id || null,
       name: student.userId?.name || "Unknown",
       email: student.userId?.email || "N/A",
-      details: `${courseMap[student.courseName] || student.courseName || "Unknown Course"
-        } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"}`,
+      details: `${
+        courseMap[student.courseName] || student.courseName || "Unknown Course"
+      } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"}`,
       photo: student.userId?.profilePicture || null,
     }));
 
     /* console.log(
       `✅ Returning ${finalList.length} formatted unverified students`
     ); */
-
 
     return res.status(200).json({
       success: true,
@@ -287,7 +290,9 @@ export const GetverifiedStudents = async (req, res) => {
     }
 
     // ✅ Step 2: Fetch all matching institutes (case-insensitive & trimmed name)
-    const escapedInstituteName = instituteDetails.name.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const escapedInstituteName = instituteDetails.name
+      .trim()
+      .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     const listOfInstitutes = await list_university_colleges.find({
       name: { $regex: new RegExp(`^${escapedInstituteName}$`, "i") },
       is_del: 0,
@@ -348,8 +353,9 @@ export const GetverifiedStudents = async (req, res) => {
       userId: student.userId?._id || null,
       name: student.userId?.name || "Unknown",
       email: student.userId?.email || "N/A",
-      details: `${courseMap[student.courseName] || student.courseName || "Unknown Course"
-        } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"}`,
+      details: `${
+        courseMap[student.courseName] || student.courseName || "Unknown Course"
+      } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"}`,
       photo: student.userId?.profilePicture || null,
     }));
 
@@ -398,7 +404,7 @@ export const GetstudentDetails = async (req, res) => {
         personalDetails
           .findOne(
             { user: userId },
-            { permanentAddress: 1, pan_number: 1, _id: 0 }
+            { permanentAddress: 1, pan_number: 1, _id: 0 },
           )
           .lean()
           .exec(),
@@ -446,8 +452,9 @@ export const GetstudentDetails = async (req, res) => {
       education.courseName = courseDoc?.name || null;
     }
     //-- Enrich Duration
-    education.durationstring = `${education.duration?.from || "N/A"}-${education.duration?.to || "N/A"
-      }`;
+    education.durationstring = `${education.duration?.from || "N/A"}-${
+      education.duration?.to || "N/A"
+    }`;
     // --- Enrich list_grading_system ---
     if (education?.gradingSystem) {
       const gradingSystemDoc = await list_grading_system
@@ -505,9 +512,6 @@ export const UpdatestudentStatus = async (req, res) => {
     const instituteId = req.userId;
     console.log(instituteId);
 
-
-
-
     // ✅ Step 1: Verify institute linked to user
     const instituteDetails = await CompanyDetails.findOne({
       userId: instituteId,
@@ -546,12 +550,22 @@ export const UpdatestudentStatus = async (req, res) => {
         marks_verified,
         remarks,
       },
-      { new: true }
+      { new: true },
     );
 
     if (updatedUserEducation && is_studied_here) {
-      let student = await studentDetails(instituteId, updatedUserEducation?.userId, updatedUserEducation?.level)
+      let student = await studentDetails(
+        instituteId,
+        updatedUserEducation?.userId,
+        updatedUserEducation?.level,
+      );
       const currentYear = new Date().getFullYear();
+
+      const dob = await CandidateDetails.findOne(
+        { userId: updatedUserEducation?.userId },
+        { dob: 1 },
+      );
+
       if (student?.length) {
         const stu = {
           name: student?.[0]?.name,
@@ -560,19 +574,16 @@ export const UpdatestudentStatus = async (req, res) => {
           admissionYear: updatedUserEducation?.duration?.from,
           email: student?.[0]?.email,
           phoneNumber: student?.[0]?.phone_number,
-          isSelfRegistered: 'yes',
+          isSelfRegistered: "yes",
           userCreatedId: student?.[0]?._id,
+          dob: dob?.dob,
           instituteId: new mongoose.Types.ObjectId(instituteId),
           endYear: updatedUserEducation?.duration?.to,
-          presentYear: currentYear
-        }
+          presentYear: currentYear,
+        };
         let abc = await InstitueStudent.create(stu);
-        console.log('is_studied_here', student, abc)
-
+        console.log("is_studied_here", student, abc);
       }
-
-
-
     }
     // Handle not found
     if (!updatedUserEducation) {
@@ -632,7 +643,7 @@ export const GetStudentsByVerification = async (req, res) => {
       userId,
       isDel: false,
     });
-    console.log("Mohan das working ====>", userId, instituteDetails)
+    console.log("Mohan das working ====>", userId, instituteDetails);
 
     if (!instituteDetails) {
       return res
@@ -641,7 +652,9 @@ export const GetStudentsByVerification = async (req, res) => {
     }
 
     // ✅ Step 3: Get institute IDs (case-insensitive & trimmed name)
-    const escapedInstituteName = instituteDetails.name.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const escapedInstituteName = instituteDetails.name
+      .trim()
+      .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     const listOfInstitutes = await list_university_colleges.find({
       name: { $regex: new RegExp(`^${escapedInstituteName}$`, "i") },
       is_del: 0,
@@ -661,7 +674,7 @@ export const GetStudentsByVerification = async (req, res) => {
       }
     });
 
-    console.log("Mohan das ==> ", instituteIds)
+    console.log("Mohan das ==> ", instituteIds);
 
     // ✅ Step 3: Dynamic filter (MAIN LOGIC)
     let verificationFilter = {};
@@ -683,8 +696,7 @@ export const GetStudentsByVerification = async (req, res) => {
         ...verificationFilter,
       })
       .populate("userId", "name email profilePicture")
-      .lean()
-
+      .lean();
 
     if (!studentList.length) {
       return res.status(200).json({
@@ -725,11 +737,13 @@ export const GetStudentsByVerification = async (req, res) => {
         userId: student.userId?._id || null,
         name: student.userId?.name || "Unknown",
         email: student.userId?.email || "N/A",
-        details: `${courseMap[student.courseName] ||
+        details: `${
+          courseMap[student.courseName] ||
           student.courseName ||
           "Unknown Course"
-          } || ${student.duration?.from || "N/A"}-${student.duration?.to || "N/A"
-          }`,
+        } || ${student.duration?.from || "N/A"}-${
+          student.duration?.to || "N/A"
+        }`,
         photo: student.userId?.profilePicture || null,
 
         // ✅ Add this line
@@ -742,7 +756,6 @@ export const GetStudentsByVerification = async (req, res) => {
       total: finalList.length,
       data: finalList,
     });
-
   } catch (err) {
     console.error("❌ Error in GetStudentsByVerification:", err);
     return res.status(500).json({
@@ -838,13 +851,12 @@ export const GetStudentsByVerification = async (req, res) => {
   }
 }; */
 
-
 export const instituteStudent = async (req, res) => {
   try {
-    const user = req?.user
+    const user = req?.user;
     console.log("user in instituteStudent controller", user);
-    let currentYear = new Date().getFullYear()
-    console.log("currentYear", currentYear)
+    let currentYear = new Date().getFullYear();
+    console.log("currentYear", currentYear);
     // const progress = await GetProgress(user.user_id);
     // 2️⃣ Get Institue Student
     const institueStudent = await InstitueStudent.aggregate([
@@ -855,17 +867,17 @@ export const instituteStudent = async (req, res) => {
           is_del: false,
           $or: [
             {
-              isSelfRegistered: { $exists: false }
+              isSelfRegistered: { $exists: false },
             },
             {
-              isSelfRegistered: "no"
+              isSelfRegistered: "no",
             },
             {
               isSelfRegistered: "yes",
-              endYear: { $gte: String(currentYear) }
-            }
-          ]
-        }
+              endYear: { $gte: String(currentYear) },
+            },
+          ],
+        },
       },
       // ✅ ADD THIS
       {
@@ -880,12 +892,12 @@ export const instituteStudent = async (req, res) => {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$InstitueStudentId", "$$insId"] },   // join condition
-                    { $eq: ["$is_del", false] }       // ✅ child condition
-                  ]
-                }
-              }
-            }
+                    { $eq: ["$InstitueStudentId", "$$insId"] }, // join condition
+                    { $eq: ["$is_del", false] }, // ✅ child condition
+                  ],
+                },
+              },
+            },
           ],
           as: "semesters",
         },
@@ -899,11 +911,11 @@ export const instituteStudent = async (req, res) => {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$_id", "$$pro"] },   // join condition
-                    { $eq: ["$is_del", 0] }     // ✅ child condition
-                  ]
-                }
-              }
+                    { $eq: ["$_id", "$$pro"] }, // join condition
+                    { $eq: ["$is_del", 0] }, // ✅ child condition
+                  ],
+                },
+              },
             },
             {
               $project: {
@@ -912,15 +924,17 @@ export const instituteStudent = async (req, res) => {
                 type: 1,
                 course_durartion: 1,
                 courseStructure: 1,
-                marksType: 1
-              }
-            }
+                marksType: 1,
+              },
+            },
           ],
           as: "programDetails",
         },
       },
 
-      { $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true },
+      },
 
       /*   {
           $addFields: {
@@ -942,11 +956,15 @@ export const instituteStudent = async (req, res) => {
                   {
                     marksType: "$programDetails.marksType",
                     courseStructure: "$programDetails.courseStructure",
-                    originalMarks: "$$sem.marks",   // ✅ keep original
+                    originalMarks: "$$sem.marks", // ✅ keep original
                     convertedMarks: {
                       $let: {
                         vars: {
-                          type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
+                          type: {
+                            $toLower: {
+                              $ifNull: ["$programDetails.marksType", ""],
+                            },
+                          },
                         },
                         in: {
                           $cond: [
@@ -956,24 +974,27 @@ export const instituteStudent = async (req, res) => {
                             {
                               $cond: [
                                 { $eq: ["$$type", "dgpa"] },
-                                { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
+                                {
+                                  $multiply: [
+                                    { $subtract: ["$$sem.marks", 0.75] },
+                                    10,
+                                  ],
+                                },
 
-                                "$$sem.marks"
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+                                "$$sem.marks",
+                              ],
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
       },
-
-
     ]);
 
     // Here I have started my new code for independent candidates from user   --  started
@@ -1133,16 +1154,11 @@ export const instituteStudent = async (req, res) => {
 
     //console.log("selfRegisteredWithProgress is result: ", selfRegisteredWithProgress);
 
-
-
-
-
     // return res.status(200).json({
     //   success: true,
     //   count: institueStudent.length,
     //   data: institueStudent,
     // });
-
 
     // return res.status(200).json({
     //   success: true,
@@ -1155,7 +1171,6 @@ export const instituteStudent = async (req, res) => {
       count: institueStudent.length,
       data: institueStudent,
     });
-
   } catch (error) {
     console.error("Error fetching student:", error);
     return res.status(500).json({
@@ -1167,14 +1182,11 @@ export const instituteStudent = async (req, res) => {
 
 export const getCompanyRequirementSudents = async (req, res) => {
   try {
-    const user = req?.user
+    const user = req?.user;
     const { program, tenth, twelvth } = req.query;
-    let programs = program.split(",")
+    let programs = program.split(",");
 
-
-    const programIds = programs.map(id => new Types.ObjectId(id));
-
-
+    const programIds = programs.map((id) => new Types.ObjectId(id));
 
     // const progress = await GetProgress(user.user_id);
     // 2️⃣ Get Institue Student
@@ -1199,12 +1211,12 @@ export const getCompanyRequirementSudents = async (req, res) => {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$InstitueStudentId", "$$insId"] },   // join condition
-                    { $eq: ["$is_del", false] }       // ✅ child condition
-                  ]
-                }
-              }
-            }
+                    { $eq: ["$InstitueStudentId", "$$insId"] }, // join condition
+                    { $eq: ["$is_del", false] }, // ✅ child condition
+                  ],
+                },
+              },
+            },
           ],
           as: "semesters",
         },
@@ -1218,11 +1230,11 @@ export const getCompanyRequirementSudents = async (req, res) => {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$_id", "$$pro"] },   // join condition
-                    { $eq: ["$is_del", 0] }     // ✅ child condition
-                  ]
-                }
-              }
+                    { $eq: ["$_id", "$$pro"] }, // join condition
+                    { $eq: ["$is_del", 0] }, // ✅ child condition
+                  ],
+                },
+              },
             },
             {
               $project: {
@@ -1231,15 +1243,17 @@ export const getCompanyRequirementSudents = async (req, res) => {
                 type: 1,
                 course_durartion: 1,
                 courseStructure: 1,
-                marksType: 1
-              }
-            }
+                marksType: 1,
+              },
+            },
           ],
           as: "programDetails",
         },
       },
 
-      { $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true },
+      },
       {
         $match: {
           $expr: {
@@ -1247,13 +1261,13 @@ export const getCompanyRequirementSudents = async (req, res) => {
               {
                 $subtract: [
                   { $toInt: "$programDetails.total_number_of_semesters" },
-                  "$promotedSemester"
-                ]
+                  "$promotedSemester",
+                ],
               },
-              [1, 2]
-            ]
-          }
-        }
+              [1, 2],
+            ],
+          },
+        },
       },
 
       /*   {
@@ -1276,11 +1290,15 @@ export const getCompanyRequirementSudents = async (req, res) => {
                   {
                     marksType: "$programDetails.marksType",
                     courseStructure: "$programDetails.courseStructure",
-                    originalMarks: "$$sem.marks",   // ✅ keep original
+                    originalMarks: "$$sem.marks", // ✅ keep original
                     convertedMarks: {
                       $let: {
                         vars: {
-                          type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
+                          type: {
+                            $toLower: {
+                              $ifNull: ["$programDetails.marksType", ""],
+                            },
+                          },
                         },
                         in: {
                           $cond: [
@@ -1290,26 +1308,28 @@ export const getCompanyRequirementSudents = async (req, res) => {
                             {
                               $cond: [
                                 { $eq: ["$$type", "dgpa"] },
-                                { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
+                                {
+                                  $multiply: [
+                                    { $subtract: ["$$sem.marks", 0.75] },
+                                    10,
+                                  ],
+                                },
 
-                                "$$sem.marks"
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+                                "$$sem.marks",
+                              ],
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
       },
-
-
     ]);
-
 
     // Here I have started my new code for independent candidates from user   --  started
 
@@ -1468,7 +1488,6 @@ export const getCompanyRequirementSudents = async (req, res) => {
       count: institueStudent.length,
       data: institueStudent,
     });
-
   } catch (error) {
     console.error("Error fetching student:", error);
     return res.status(500).json({
@@ -1478,58 +1497,52 @@ export const getCompanyRequirementSudents = async (req, res) => {
   }
 };
 
-
 export const StudentInterview = async (req, res) => {
   try {
-    const user = req?.user
+    const user = req?.user;
     const { students, recruiter } = req.body;
-    console.log('students', students)
+    console.log("students", students);
     if (students?.length === 0) {
       return res.status(500).json({
         success: false,
         message: "Please select a student",
       });
     }
-    console.log('Interview Details:', students, recruiter)
-    let allStudent = students?.map((item) => (
-      {
-        companyRequirementId: recruiter?._id,
-        instituteId: user?.userId,
-        sudentId: item?.userCreatedId,
-        studentName: item?.name,
-        studentEmail: item?.email,
-        tenTh: item?.tenTh,
-        twelveTh: item?.twelveTh,
-        course: item?.programDetails?.name,
-        studentPhone: item?.phoneNumber,
-        recruiterId: recruiter?.companyName?._id,
-        recruiterName: recruiter?.companyName?.companyName,
-        recruiterEmail: recruiter?.companyName?.email,
-        role: recruiter?.role,
-        date: recruiter?.date,
-        time: recruiter?.time,
-        institueStudentId: item?._id,
-      }
-    ))
+    console.log("Interview Details:", students, recruiter);
+    let allStudent = students?.map((item) => ({
+      companyRequirementId: recruiter?._id,
+      instituteId: user?.userId,
+      sudentId: item?.userCreatedId,
+      studentName: item?.name,
+      studentEmail: item?.email,
+      tenTh: item?.tenTh,
+      twelveTh: item?.twelveTh,
+      course: item?.programDetails?.name,
+      studentPhone: item?.phoneNumber,
+      recruiterId: recruiter?.companyName?._id,
+      recruiterName: recruiter?.companyName?.companyName,
+      recruiterEmail: recruiter?.companyName?.email,
+      role: recruiter?.role,
+      date: recruiter?.date,
+      time: recruiter?.time,
+      institueStudentId: item?._id,
+    }));
     const result = await StudentPlacement.insertMany(allStudent);
 
     if (allStudent?.length > 0) {
       allStudent?.map(async (item) => {
         return await sendMailSudent(item);
-      })
-      let rec = allStudent[0]
-      rec["total"] = allStudent?.length || 0
+      });
+      let rec = allStudent[0];
+      rec["total"] = allStudent?.length || 0;
       await sendMailRecruiter(rec, allStudent);
     }
-
-
 
     return res.status(200).json({
       success: true,
       count: result?.length,
       data: allStudent,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -1537,8 +1550,6 @@ export const StudentInterview = async (req, res) => {
     });
   }
 };
-
-
 
 export const instituteStudentDetails = async (req, res) => {
   try {
@@ -1588,10 +1599,7 @@ export const instituteStudentDetails = async (req, res) => {
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ["$_id", "$$pro"] },
-                    { $eq: ["$is_del", 0] },
-                  ],
+                  $and: [{ $eq: ["$_id", "$$pro"] }, { $eq: ["$is_del", 0] }],
                 },
               },
             },
@@ -1633,10 +1641,7 @@ export const instituteStudentDetails = async (req, res) => {
                         vars: {
                           type: {
                             $toLower: {
-                              $ifNull: [
-                                "$programDetails.marksType",
-                                "",
-                              ],
+                              $ifNull: ["$programDetails.marksType", ""],
                             },
                           },
                         },
@@ -1650,10 +1655,7 @@ export const instituteStudentDetails = async (req, res) => {
                                 {
                                   $multiply: [
                                     {
-                                      $subtract: [
-                                        "$$sem.marks",
-                                        0.75,
-                                      ],
+                                      $subtract: ["$$sem.marks", 0.75],
                                     },
                                     10,
                                   ],
@@ -1706,7 +1708,7 @@ export const instituteStudentAvgMarks = async (user, ID) => {
           instituteId: new Types.ObjectId(user?.userId),
           status: true,
           is_del: false,
-          _id: ID
+          _id: ID,
         },
       },
       // ✅ ADD THIS
@@ -1722,12 +1724,12 @@ export const instituteStudentAvgMarks = async (user, ID) => {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$InstitueStudentId", "$$insId"] },   // join condition
-                    { $eq: ["$is_del", false] }       // ✅ child condition
-                  ]
-                }
-              }
-            }
+                    { $eq: ["$InstitueStudentId", "$$insId"] }, // join condition
+                    { $eq: ["$is_del", false] }, // ✅ child condition
+                  ],
+                },
+              },
+            },
           ],
           as: "semesters",
         },
@@ -1741,11 +1743,11 @@ export const instituteStudentAvgMarks = async (user, ID) => {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$_id", "$$pro"] },   // join condition
-                    { $eq: ["$is_del", 0] }     // ✅ child condition
-                  ]
-                }
-              }
+                    { $eq: ["$_id", "$$pro"] }, // join condition
+                    { $eq: ["$is_del", 0] }, // ✅ child condition
+                  ],
+                },
+              },
             },
             {
               $project: {
@@ -1754,22 +1756,24 @@ export const instituteStudentAvgMarks = async (user, ID) => {
                 type: 1,
                 course_durartion: 1,
                 courseStructure: 1,
-                marksType: 1
-              }
-            }
+                marksType: 1,
+              },
+            },
           ],
           as: "programDetails",
         },
       },
 
-      { $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true },
+      },
 
       {
         $addFields: {
           debugProgramId: "$program",
           debugMatchedCourseId: "$programDetails._id",
-          debugMarksType: "$programDetails.marksType"
-        }
+          debugMarksType: "$programDetails.marksType",
+        },
       },
 
       {
@@ -1784,11 +1788,15 @@ export const instituteStudentAvgMarks = async (user, ID) => {
                   {
                     marksType: "$programDetails.marksType",
                     courseStructure: "$programDetails.courseStructure",
-                    originalMarks: "$$sem.marks",   // ✅ keep original
+                    originalMarks: "$$sem.marks", // ✅ keep original
                     convertedMarks: {
                       $let: {
                         vars: {
-                          type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
+                          type: {
+                            $toLower: {
+                              $ifNull: ["$programDetails.marksType", ""],
+                            },
+                          },
                         },
                         in: {
                           $cond: [
@@ -1798,21 +1806,26 @@ export const instituteStudentAvgMarks = async (user, ID) => {
                             {
                               $cond: [
                                 { $eq: ["$$type", "dgpa"] },
-                                { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
+                                {
+                                  $multiply: [
+                                    { $subtract: ["$$sem.marks", 0.75] },
+                                    10,
+                                  ],
+                                },
 
-                                "$$sem.marks"
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+                                "$$sem.marks",
+                              ],
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
       },
       // ✅ Calculate average percentage
       {
@@ -1823,29 +1836,27 @@ export const instituteStudentAvgMarks = async (user, ID) => {
                 $cond: [
                   { $gt: [{ $size: "$semesters" }, 0] },
                   { $avg: "$semesters.convertedMarks" },
-                  0
-                ]
+                  0,
+                ],
               },
-              2
-            ]
-          }
-        }
-      }
-
+              2,
+            ],
+          },
+        },
+      },
     ]);
 
     return institueStudent;
-
   } catch (error) {
     console.error("Error fetching student:", error);
-    return error
+    return error;
   }
 };
 
 export const instituteStudentSearch = async (req, res) => {
   try {
     const { course, semester } = req.query;
-    const user = req?.user
+    const user = req?.user;
 
     const currentYear = new Date().getFullYear();
     // 🔹 Basic match
@@ -1855,14 +1866,14 @@ export const instituteStudentSearch = async (req, res) => {
       is_del: false,
       program: new Types.ObjectId(course),
       promotedSemester: Number(semester),
-      promotedYear: String(currentYear)
+      promotedYear: String(currentYear),
     };
     console.log("search abc", user, course, semester, match);
 
     // 2️⃣ Get Institue Student
     const institueStudent = await InstitueStudent.aggregate([
       {
-        $match: match
+        $match: match,
       },
       // ✅ ADD THIS
       {
@@ -1877,12 +1888,12 @@ export const instituteStudentSearch = async (req, res) => {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$InstitueStudentId", "$$insId"] },   // join condition
-                    { $eq: ["$is_del", false] }       // ✅ child condition
-                  ]
-                }
-              }
-            }
+                    { $eq: ["$InstitueStudentId", "$$insId"] }, // join condition
+                    { $eq: ["$is_del", false] }, // ✅ child condition
+                  ],
+                },
+              },
+            },
           ],
           as: "semesters",
         },
@@ -1896,11 +1907,11 @@ export const instituteStudentSearch = async (req, res) => {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$_id", "$$pro"] },   // join condition
-                    { $eq: ["$is_del", 0] }     // ✅ child condition
-                  ]
-                }
-              }
+                    { $eq: ["$_id", "$$pro"] }, // join condition
+                    { $eq: ["$is_del", 0] }, // ✅ child condition
+                  ],
+                },
+              },
             },
             {
               $project: {
@@ -1909,15 +1920,17 @@ export const instituteStudentSearch = async (req, res) => {
                 type: 1,
                 course_durartion: 1,
                 courseStructure: 1,
-                marksType: 1
-              }
-            }
+                marksType: 1,
+              },
+            },
           ],
           as: "programDetails",
         },
       },
 
-      { $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true },
+      },
       {
         $addFields: {
           semesters: {
@@ -1930,11 +1943,15 @@ export const instituteStudentSearch = async (req, res) => {
                   {
                     marksType: "$programDetails.marksType",
                     courseStructure: "$programDetails.courseStructure",
-                    originalMarks: "$$sem.marks",   // ✅ keep original
+                    originalMarks: "$$sem.marks", // ✅ keep original
                     convertedMarks: {
                       $let: {
                         vars: {
-                          type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
+                          type: {
+                            $toLower: {
+                              $ifNull: ["$programDetails.marksType", ""],
+                            },
+                          },
                         },
                         in: {
                           $cond: [
@@ -1944,24 +1961,27 @@ export const instituteStudentSearch = async (req, res) => {
                             {
                               $cond: [
                                 { $eq: ["$$type", "dgpa"] },
-                                { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
+                                {
+                                  $multiply: [
+                                    { $subtract: ["$$sem.marks", 0.75] },
+                                    10,
+                                  ],
+                                },
 
-                                "$$sem.marks"
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+                                "$$sem.marks",
+                              ],
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
       },
-
-
     ]);
 
     return res.status(200).json({
@@ -1986,7 +2006,7 @@ export const addCustomCourse = async (req, res) => {
       course_durartion,
       total_number_of_semesters,
       courseStructure,
-      marksType
+      marksType,
     } = req.body;
 
     const userId = req.userId;
@@ -1996,9 +2016,16 @@ export const addCustomCourse = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    if (!name || !course_durartion || !total_number_of_semesters || !courseStructure || !marksType) {
+    if (
+      !name ||
+      !course_durartion ||
+      !total_number_of_semesters ||
+      !courseStructure ||
+      !marksType
+    ) {
       return res.status(400).json({
-        message: "name, course_durartion, total_number_of_semesters, courseStructure, marksType are required",
+        message:
+          "name, course_durartion, total_number_of_semesters, courseStructure, marksType are required",
       });
     }
 
@@ -2046,7 +2073,7 @@ export const updateCustomCourse = async (req, res) => {
       course_durartion,
       total_number_of_semesters,
       courseStructure,
-      marksType
+      marksType,
     } = req.body;
 
     const userId = req.userId;
@@ -2070,7 +2097,7 @@ export const updateCustomCourse = async (req, res) => {
     const existingCourse = await student_course_details.findOne({
       _id: courseId,
       userId: userId,
-      is_del: 0
+      is_del: 0,
     });
 
     if (!existingCourse) {
@@ -2086,9 +2113,9 @@ export const updateCustomCourse = async (req, res) => {
     if (course_durartion !== undefined)
       updateData.course_durartion = course_durartion.trim();
     if (total_number_of_semesters !== undefined)
-      updateData.total_number_of_semesters =
-        total_number_of_semesters.trim();
-    if (courseStructure !== undefined) updateData.courseStructure = courseStructure;
+      updateData.total_number_of_semesters = total_number_of_semesters.trim();
+    if (courseStructure !== undefined)
+      updateData.courseStructure = courseStructure;
     if (marksType !== undefined) updateData.marksType = marksType;
 
     // ⚠️ Prevent empty update
@@ -2102,7 +2129,7 @@ export const updateCustomCourse = async (req, res) => {
     const updatedCourse = await student_course_details.findByIdAndUpdate(
       courseId,
       { $set: updateData },
-      { new: true }
+      { new: true },
     );
 
     return res.status(200).json({
@@ -2158,7 +2185,7 @@ export const deleteCustomCourse = async (req, res) => {
     await student_course_details.findByIdAndUpdate(
       courseId,
       { $set: { is_del: 1 } },
-      { new: true }
+      { new: true },
     );
 
     return res.status(200).json({
@@ -2186,10 +2213,12 @@ export const getAllCourses = async (req, res) => {
     }
 
     // ✅ Fetch courses
-    const courses = await student_course_details.find({
-      userId: userId,
-      is_del: 0,
-    }).sort({ createdAt: -1 });
+    const courses = await student_course_details
+      .find({
+        userId: userId,
+        is_del: 0,
+      })
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -2217,7 +2246,7 @@ export const getTotalStudentsCount = async (req, res) => {
       });
     }
 
-    // Count students for this institute 
+    // Count students for this institute
     const totalStudents = await InstitueStudent.countDocuments({
       instituteId: instituteId,
     });
@@ -2294,11 +2323,10 @@ export const getActiveCompanies = async (req, res) => {
 
 export const instituteStudentByPlacementReady = async (req, res) => {
   try {
-    const user = req?.user
+    const user = req?.user;
     console.log("user in instituteStudent controller", user);
 
     const progress = await GetProgress(user.user_id);
-
 
     // 2️⃣ Get Institue Student
     const institueStudent = await InstitueStudent.aggregate([
@@ -2307,7 +2335,7 @@ export const instituteStudentByPlacementReady = async (req, res) => {
           instituteId: new Types.ObjectId(user?.userId),
           status: true,
           is_del: false,
-          promotedSemester: { $gte: 6 }
+          promotedSemester: { $gte: 6 },
         },
       },
       // ✅ ADD THIS
@@ -2323,12 +2351,12 @@ export const instituteStudentByPlacementReady = async (req, res) => {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$InstitueStudentId", "$$insId"] },   // join condition
-                    { $eq: ["$is_del", false] }       // ✅ child condition
-                  ]
-                }
-              }
-            }
+                    { $eq: ["$InstitueStudentId", "$$insId"] }, // join condition
+                    { $eq: ["$is_del", false] }, // ✅ child condition
+                  ],
+                },
+              },
+            },
           ],
           as: "semesters",
         },
@@ -2342,11 +2370,11 @@ export const instituteStudentByPlacementReady = async (req, res) => {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$_id", "$$pro"] },   // join condition
-                    { $eq: ["$is_del", 0] }     // ✅ child condition
-                  ]
-                }
-              }
+                    { $eq: ["$_id", "$$pro"] }, // join condition
+                    { $eq: ["$is_del", 0] }, // ✅ child condition
+                  ],
+                },
+              },
             },
             {
               $project: {
@@ -2355,15 +2383,17 @@ export const instituteStudentByPlacementReady = async (req, res) => {
                 type: 1,
                 course_durartion: 1,
                 courseStructure: 1,
-                marksType: 1
-              }
-            }
+                marksType: 1,
+              },
+            },
           ],
           as: "programDetails",
         },
       },
 
-      { $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true },
+      },
 
       /*   {
           $addFields: {
@@ -2385,11 +2415,15 @@ export const instituteStudentByPlacementReady = async (req, res) => {
                   {
                     marksType: "$programDetails.marksType",
                     courseStructure: "$programDetails.courseStructure",
-                    originalMarks: "$$sem.marks",   // ✅ keep original
+                    originalMarks: "$$sem.marks", // ✅ keep original
                     convertedMarks: {
                       $let: {
                         vars: {
-                          type: { $toLower: { $ifNull: ["$programDetails.marksType", ""] } }
+                          type: {
+                            $toLower: {
+                              $ifNull: ["$programDetails.marksType", ""],
+                            },
+                          },
                         },
                         in: {
                           $cond: [
@@ -2399,24 +2433,27 @@ export const instituteStudentByPlacementReady = async (req, res) => {
                             {
                               $cond: [
                                 { $eq: ["$$type", "dgpa"] },
-                                { $multiply: [{ $subtract: ["$$sem.marks", 0.75] }, 10] },
+                                {
+                                  $multiply: [
+                                    { $subtract: ["$$sem.marks", 0.75] },
+                                    10,
+                                  ],
+                                },
 
-                                "$$sem.marks"
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
+                                "$$sem.marks",
+                              ],
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
       },
-
-
     ]);
 
     const studentsWithProgress = await Promise.all(
@@ -2427,9 +2464,9 @@ export const instituteStudentByPlacementReady = async (req, res) => {
 
         return {
           ...student,
-          progress
+          progress,
         };
-      })
+      }),
     );
 
     /*
@@ -2446,7 +2483,6 @@ export const instituteStudentByPlacementReady = async (req, res) => {
       count: studentsWithProgress.length,
       data: studentsWithProgress,
     });
-
   } catch (error) {
     console.error("Error fetching student:", error);
     return res.status(500).json({
@@ -2513,7 +2549,6 @@ export const studentByDepartments = async (req, res) => {
   }
 };
 
-
 export const getTotalRecruit = async (req, res) => {
   try {
     const instituteId = req.userId; // assuming institute is logged in
@@ -2528,7 +2563,7 @@ export const getTotalRecruit = async (req, res) => {
     // Count students for this institute
     const totalStudents = await CompanyByInstitute.countDocuments({
       userId: instituteId,
-      status: "Active"
+      status: "Active",
     });
 
     return res.status(200).json({

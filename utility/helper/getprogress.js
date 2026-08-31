@@ -29,8 +29,8 @@ export const GetProgress = async (userId) => {
     if (career.CurrentDepartment?.length) sections.push("Department");
     if (career.CurrentIndustry?.length) sections.push("Industry type");
   }
-  if (user.numberVerified) {
-    sections.push("verified_mobile")
+  if (user?.numberVerified) {
+    sections.push("verified_mobile");
   }
 
   if (resume) {
@@ -59,8 +59,7 @@ export const GetProgress = async (userId) => {
     sections.push("Education");
   }
 
-
-  console.log("total sections ==.", sections)
+  console.log("total sections ==.", sections);
   // Fetch all progress values in one DB call
   const progresses = await Progress.find({
     section_name: { $in: sections },

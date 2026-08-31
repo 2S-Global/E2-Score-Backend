@@ -13,8 +13,6 @@ export const studentDetails = async (user, stuId, level) => {
       isDel: false,
     });
 
-
-    
     let selfRegisteredStudents = [];
     let formattedSelfRegisteredStudents = [];
 
@@ -24,9 +22,7 @@ export const studentDetails = async (user, stuId, level) => {
         is_del: 0,
       });
 
-      const instituteIds = listOfInstitutes.map((inst) =>
-        inst.id.toString()
-      );
+      const instituteIds = listOfInstitutes.map((inst) => inst.id.toString());
 
       const currentYear = new Date().getFullYear();
 
@@ -36,51 +32,42 @@ export const studentDetails = async (user, stuId, level) => {
           instituteName: { $in: instituteIds },
           "duration.to": {
             $exists: true,
-            $gte: currentYears
+            $gte: currentYear,
           },
           userId: stuId,
           level: level,
-          is_verified: true
+          is_verified: true,
         })
         .populate("userId", "name email profilePicture gender phone_number")
         .lean();
 
-
       const genderIds = [
         ...new Set(
-          selfRegisteredStudents
-            .map(s => s.userId?.gender)
-            .filter(Boolean)
-        )
+          selfRegisteredStudents.map((s) => s.userId?.gender).filter(Boolean),
+        ),
       ];
 
-      const genders = await list_gender.find({
-        _id: { $in: genderIds }
-      }).lean();
+      const genders = await list_gender
+        .find({
+          _id: { $in: genderIds },
+        })
+        .lean();
 
       const genderMap = genders.reduce((acc, gender) => {
         acc[gender._id.toString()] = gender.name;
         return acc;
       }, {});
 
-
-
-
-
-
-
-
-
-
-
       // ✅ Step 6: Course mapping
-      const courseIds = [...new Set(selfRegisteredStudents.map((s) => s.courseName))];
+      const courseIds = [
+        ...new Set(selfRegisteredStudents.map((s) => s.courseName)),
+      ];
       const coursesOld = await list_university_course.find({
         id: { $in: courseIds },
         is_del: 0,
       });
 
-      const mongoCourseIds = coursesOld.map((item) => item?._id.toString())
+      const mongoCourseIds = coursesOld.map((item) => item?._id.toString());
       const courses = await student_course_details.find({
         userId: user,
         course_mongo_id: { $in: mongoCourseIds },
@@ -92,10 +79,10 @@ export const studentDetails = async (user, stuId, level) => {
           _id: course._id,
           type: course.type,
           name: course.name,
-          course_durartion: course.course_durartion || '',
-          courseStructure: course.courseStructure || '',
-          marksType: course.marksType || '',
-          total_number_of_semesters: course.total_number_of_semesters || '',
+          course_durartion: course.course_durartion || "",
+          courseStructure: course.courseStructure || "",
+          marksType: course.marksType || "",
+          total_number_of_semesters: course.total_number_of_semesters || "",
         };
         return acc;
       }, {});
@@ -107,19 +94,19 @@ export const studentDetails = async (user, stuId, level) => {
           name: student.userId?.name,
           email: student.userId?.email,
           phone_number: student.userId?.phone_number,
-          "tenTh": student.level == 1 ? student.marks : "",
-          "twelveTh": student.level == 2 ? student.marks : "",
+          tenTh: student.level == 1 ? student.marks : "",
+          twelveTh: student.level == 2 ? student.marks : "",
           profilePicture: student.userId?.profilePicture,
           isSelfRegistered: true,
           program: courseMap[student.courseName]?._id || null,
-          gender: genderMap[student.userId?.gender]?.toLowerCase()?.charAt(0) || null,
+          gender:
+            genderMap[student.userId?.gender]?.toLowerCase()?.charAt(0) || null,
           programDetails: courseMap[student.courseName] || null,
-        })
+        }),
       );
-
     }
-    return formattedSelfRegisteredStudents
+    return formattedSelfRegisteredStudents;
   } catch (error) {
-    return false
+    return false;
   }
 };
