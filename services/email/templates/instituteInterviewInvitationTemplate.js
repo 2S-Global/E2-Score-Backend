@@ -1,4 +1,10 @@
-export const instituteInterviewInvitationTemplate = (studentName, role, recruiterName, date, time) => {
+export const instituteInterviewInvitationTemplate = (
+  studentName,
+  role,
+  recruiterName,
+  date,
+  time,
+) => {
   const dateTime = `
         <ul>
           <li><strong>Date:</strong> ${date}</li>
@@ -12,5 +18,5 @@ export const instituteInterviewInvitationTemplate = (studentName, role, recruite
         ${dateTime}
         <p>If you have any questions, feel free to contact us.</p>
         <br/>
-        <p>Regards,<br/>E2Score Verification Team</p>`;
+        <p>Regards,<br/>Global Employability Information Services India Limited</p>`;
 };

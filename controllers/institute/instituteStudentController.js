@@ -1497,7 +1497,7 @@ export const getCompanyRequirementSudents = async (req, res) => {
   }
 };
 
-export const StudentInterview = async (req, res) => {
+/* export const StudentInterview = async (req, res) => {
   try {
     const user = req?.user;
     const { students, recruiter } = req.body;
@@ -1512,7 +1512,7 @@ export const StudentInterview = async (req, res) => {
     let allStudent = students?.map((item) => ({
       companyRequirementId: recruiter?._id,
       instituteId: user?.userId,
-      sudentId: item?.userCreatedId,
+      studentId: item?.userCreatedId,
       studentName: item?.name,
       studentEmail: item?.email,
       tenTh: item?.tenTh,
@@ -1544,6 +1544,93 @@ export const StudentInterview = async (req, res) => {
       data: allStudent,
     });
   } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}; */
+
+export const StudentInterview = async (req, res) => {
+  try {
+    const user = req?.user;
+    const { students, recruiter } = req.body;
+
+    if (!students || students.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please select a student",
+      });
+    }
+
+    const allStudent = students.map((item) => ({
+      companyRequirementId: recruiter?._id,
+      instituteId: user?.userId,
+      studentId: item?.userCreatedId,
+      studentName: item?.name,
+      studentEmail: item?.email,
+      tenTh: item?.tenTh,
+      twelveTh: item?.twelveTh,
+      course: item?.programDetails?.name,
+      studentPhone: item?.phoneNumber,
+      recruiterId: recruiter?.companyName?._id,
+      recruiterName: recruiter?.companyName?.companyName,
+      recruiterEmail: recruiter?.companyName?.email,
+      role: recruiter?.role,
+      date: recruiter?.date,
+      time: recruiter?.time,
+      institueStudentId: item?._id,
+    }));
+
+    // Get existing student + recruiter combinations
+    const existingRecords = await StudentPlacement.find({
+      $or: allStudent.map((item) => ({
+        studentId: item.studentId,
+        recruiterId: item.recruiterId,
+      })),
+    }).select("studentId recruiterId");
+
+    // Create a quick lookup Set
+    const existingSet = new Set(
+      existingRecords.map((item) => `${item.studentId}_${item.recruiterId}`),
+    );
+
+    // Only keep students that don't already exist
+    const newStudents = allStudent.filter((item) => {
+      const key = `${item.studentId}_${item.recruiterId}`;
+      return !existingSet.has(key);
+    });
+
+    if (newStudents.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "All selected students are already assigned to this recruiter.",
+      });
+    }
+
+    // Insert only new records
+    const result = await StudentPlacement.insertMany(newStudents);
+
+    // Send student emails
+    await Promise.all(newStudents.map((item) => sendMailSudent(item)));
+
+    // Send recruiter email
+    const rec = {
+      ...newStudents[0],
+      total: newStudents.length,
+    };
+
+    await sendMailRecruiter(rec, newStudents);
+
+    return res.status(200).json({
+      success: true,
+      count: result.length,
+      data: newStudents,
+    });
+  } catch (error) {
+    console.error("StudentInterview Error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Internal server error",

@@ -31,6 +31,7 @@ import {
   getAllCompaniesByInstituteByLatestRequirement,
   getEvaluationByUserId,
   getAllCompaniesByInstituteByStatus,
+  getAllCompaniesByInstitutePlacement,
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -63,7 +64,7 @@ InstituteProfileRouter.post(
   ]),
   userAuth,
   Institutemid,
-  AddorUpdateCompany
+  AddorUpdateCompany,
 );
 
 // Get Company Details
@@ -71,7 +72,7 @@ InstituteProfileRouter.get(
   "/get_company_details",
   userAuth,
   Institutemid,
-  GetCompanyDetails
+  GetCompanyDetails,
 );
 
 // Delete Cover Photo
@@ -79,7 +80,7 @@ InstituteProfileRouter.delete(
   "/delete_cover_photo",
   userAuth,
   Institutemid,
-  Deletecoverphoto
+  Deletecoverphoto,
 );
 
 // ================= ACCOUNT ROUTES =================
@@ -89,7 +90,7 @@ InstituteProfileRouter.get(
   "/get_account_details",
   userAuth,
   Institutemid,
-  GetAccountDetails
+  GetAccountDetails,
 );
 
 // Update Account Details
@@ -98,7 +99,7 @@ InstituteProfileRouter.put(
   upload.none(),
   userAuth,
   Institutemid,
-  updateAccountDetails
+  updateAccountDetails,
 );
 
 // ================= CONTACT PERSON ROUTES =================
@@ -109,7 +110,7 @@ InstituteProfileRouter.post(
   upload.none(),
   userAuth,
   Institutemid,
-  AddorUpdateContactPerson
+  AddorUpdateContactPerson,
 );
 
 // Get Contact Person
@@ -117,7 +118,7 @@ InstituteProfileRouter.get(
   "/get_contact_person",
   userAuth,
   Institutemid,
-  GetContactPerson
+  GetContactPerson,
 );
 
 // ================= SOCIAL ROUTES =================
@@ -128,7 +129,7 @@ InstituteProfileRouter.post(
   upload.none(),
   userAuth,
   Institutemid,
-  addOrUpdateSocial
+  addOrUpdateSocial,
 );
 
 // Get Social
@@ -140,7 +141,7 @@ InstituteProfileRouter.post(
   userAuth,
   Institutemid,
   upload.none(),
-  syncStudentCourses
+  syncStudentCourses,
 );
 
 // Add company by Institute
@@ -149,7 +150,7 @@ InstituteProfileRouter.post(
   userAuth,
   Institutemid,
   upload.none(),
-  addCompanyByInstitute
+  addCompanyByInstitute,
 );
 
 InstituteProfileRouter.put(
@@ -157,10 +158,21 @@ InstituteProfileRouter.put(
   userAuth,
   Institutemid,
   upload.none(),
-  editCompanyByInstitute
+  editCompanyByInstitute,
 );
 
-InstituteProfileRouter.get("/get_all_companies_by_institute", userAuth, Institutemid, getAllCompaniesByInstitute);
+InstituteProfileRouter.get(
+  "/get_all_companies_by_institute",
+  userAuth,
+  Institutemid,
+  getAllCompaniesByInstitute,
+);
+InstituteProfileRouter.get(
+  "/get_all_companies_by_institute_placement",
+  userAuth,
+  Institutemid,
+  getAllCompaniesByInstitutePlacement,
+);
 InstituteProfileRouter.get(
   "/get_all_companies_by_institute_status",
   userAuth,
@@ -168,40 +180,144 @@ InstituteProfileRouter.get(
   getAllCompaniesByInstituteByStatus,
 );
 
-InstituteProfileRouter.get("/get_all_companies_by_institute_by_latest_requirement", userAuth, Institutemid, getAllCompaniesByInstituteByLatestRequirement);
+InstituteProfileRouter.get(
+  "/get_all_companies_by_institute_by_latest_requirement",
+  userAuth,
+  Institutemid,
+  getAllCompaniesByInstituteByLatestRequirement,
+);
 
-InstituteProfileRouter.delete("/delete_company_by_institute", userAuth, Institutemid, deleteCompanyByInstitute);
+InstituteProfileRouter.delete(
+  "/delete_company_by_institute",
+  userAuth,
+  Institutemid,
+  deleteCompanyByInstitute,
+);
 
-InstituteProfileRouter.post("/add_company_requirement", userAuth, Institutemid, upload.none(), addCompanyRequirement);
+InstituteProfileRouter.post(
+  "/add_company_requirement",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  addCompanyRequirement,
+);
 
-InstituteProfileRouter.put("/update_company_requirement", userAuth, Institutemid, upload.none(), updateCompanyRequirement);
+InstituteProfileRouter.put(
+  "/update_company_requirement",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  updateCompanyRequirement,
+);
 
-InstituteProfileRouter.get("/get_company_requirement", userAuth, Institutemid, getAllCompanyRequirements);
+InstituteProfileRouter.get(
+  "/get_company_requirement",
+  userAuth,
+  Institutemid,
+  getAllCompanyRequirements,
+);
 
-InstituteProfileRouter.get("/get_company_requirement_by_id", userAuth, Institutemid, getCompanyRequirementById);
+InstituteProfileRouter.get(
+  "/get_company_requirement_by_id",
+  userAuth,
+  Institutemid,
+  getCompanyRequirementById,
+);
 
-InstituteProfileRouter.delete("/delete_company_requirement", userAuth, Institutemid, upload.none(), deleteCompanyRequirement);
+InstituteProfileRouter.delete(
+  "/delete_company_requirement",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  deleteCompanyRequirement,
+);
 
-InstituteProfileRouter.post("/add_student_assigned_company", userAuth, Institutemid, upload.none(), selectStudentForCompany);
+InstituteProfileRouter.post(
+  "/add_student_assigned_company",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  selectStudentForCompany,
+);
 
 // Add company by Institute
-InstituteProfileRouter.post("/add_faculty", userAuth, Institutemid, upload.none(), addFaculty);
+InstituteProfileRouter.post(
+  "/add_faculty",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  addFaculty,
+);
 
-InstituteProfileRouter.get("/get_faculty", userAuth, Institutemid, upload.none(), getFaculty);
+InstituteProfileRouter.get(
+  "/get_faculty",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  getFaculty,
+);
 
-InstituteProfileRouter.get("/total_faculty", userAuth, Institutemid, upload.none(), countFaculty);
+InstituteProfileRouter.get(
+  "/total_faculty",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  countFaculty,
+);
 
-InstituteProfileRouter.put("/update_faculty", userAuth, Institutemid, upload.none(), editFaculty);
+InstituteProfileRouter.put(
+  "/update_faculty",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  editFaculty,
+);
 
-InstituteProfileRouter.post("/add_evaluation", userAuth, Institutemid, upload.none(), addEvaluation);
+InstituteProfileRouter.post(
+  "/add_evaluation",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  addEvaluation,
+);
 
-InstituteProfileRouter.get("/get_evaluation", userAuth, Institutemid, upload.none(), getEvaluation);
-InstituteProfileRouter.get("/get_evaluation_by_user_id", userAuth, Institutemid, upload.none(), getEvaluationByUserId);
+InstituteProfileRouter.get(
+  "/get_evaluation",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  getEvaluation,
+);
+InstituteProfileRouter.get(
+  "/get_evaluation_by_user_id",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  getEvaluationByUserId,
+);
 
-InstituteProfileRouter.get("/get_evaluation_by_decending", userAuth, Institutemid, upload.none(), getEvaluationByDecending);
+InstituteProfileRouter.get(
+  "/get_evaluation_by_decending",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  getEvaluationByDecending,
+);
 
-InstituteProfileRouter.put("/update_evaluation", userAuth, Institutemid, upload.none(), editEvaluation);
+InstituteProfileRouter.put(
+  "/update_evaluation",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  editEvaluation,
+);
 
-InstituteProfileRouter.delete("/delete_evaluation", userAuth, Institutemid, upload.none(), deleteEvaluation);
+InstituteProfileRouter.delete(
+  "/delete_evaluation",
+  userAuth,
+  Institutemid,
+  upload.none(),
+  deleteEvaluation,
+);
 
 export default InstituteProfileRouter;

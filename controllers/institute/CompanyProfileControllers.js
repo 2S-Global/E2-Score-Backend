@@ -100,10 +100,10 @@ export const AddorUpdateCompany = async (req, res) => {
         : null,
       cover
         ? uploadToCloudinary(
-          cover.buffer,
-          "e2score/cover",
-          `cover-${Date.now()}`
-        )
+            cover.buffer,
+            "e2score/cover",
+            `cover-${Date.now()}`,
+          )
         : null,
     ]);
 
@@ -124,14 +124,14 @@ export const AddorUpdateCompany = async (req, res) => {
         ...(logoResult && { logo: logoResult.secure_url }),
         ...(coverResult && { cover: coverResult.secure_url }),
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     // update in user table
     await User.findOneAndUpdate(
       { _id: userId },
       { $set: { name: name?.trim() } },
-      { new: true }
+      { new: true },
     );
 
     const listOfInstitutes = await list_university_colleges.find({
@@ -175,8 +175,7 @@ export const AddorUpdateCompany = async (req, res) => {
             name: course.name,
             type: course.type || "",
             course_durartion: course.course_durartion || "",
-            total_number_of_semesters:
-              course.total_number_of_semesters || "",
+            total_number_of_semesters: course.total_number_of_semesters || "",
             is_del: 0,
           },
         },
@@ -313,7 +312,7 @@ export const GetAccountDetails = async (req, res) => {
 
     const companyDetails = await CompanyDetails.findOne(
       { userId: req.userId, isDel: false },
-      { name: 1 }
+      { name: 1 },
     ).lean();
 
     const companyName =
@@ -500,7 +499,7 @@ export const addCompanyByInstitute = async (req, res) => {
       initialOpenPositions,
       notes,
       address,
-      sectors
+      sectors,
     });
 
     return res.status(201).json({
@@ -580,12 +579,12 @@ export const editCompanyByInstitute = async (req, res) => {
         initialOpenPositions,
         notes,
         address,
-        sectors
+        sectors,
       },
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     // 🔹 Company not found
@@ -660,7 +659,6 @@ export const getAllCompaniesByInstitute123 = async (req, res) => {
     });
   }
 };
-
 
 export const getAllCompaniesByInstitute = async (req, res) => {
   try {
@@ -767,81 +765,81 @@ export const getAllCompaniesByInstitute = async (req, res) => {
     }
 
     // Company list with latest requirement
-   const companies = await CompanyByInstitute.aggregate([
-     {
-       $match: {
-         userId: new mongoose.Types.ObjectId(userId),
-         isDel: false,
-       },
-     },
-     {
-       $lookup: {
-         from: "companyrequirements",
-         let: { companyId: "$_id" },
-         pipeline: [
-           {
-             $match: {
-               $expr: {
-                 $eq: ["$companyName", "$$companyId"],
-               },
-             },
-           },
-           { $sort: { createdAt: -1 } },
-           { $limit: 1 },
-         ],
-         as: "latestRequirement",
-       },
-     },
-     {
-       $unwind: {
-         path: "$latestRequirement",
-         preserveNullAndEmptyArrays: true,
-       },
-     },
+    const companies = await CompanyByInstitute.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          isDel: false,
+        },
+      },
+      {
+        $lookup: {
+          from: "companyrequirements",
+          let: { companyId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$companyName", "$$companyId"],
+                },
+              },
+            },
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "latestRequirement",
+        },
+      },
+      {
+        $unwind: {
+          path: "$latestRequirement",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
-     // ADD THIS
-     {
-       $lookup: {
-         from: "reviews",
-         let: {
-           companyId: "$_id",
-         },
-         pipeline: [
-           {
-             $match: {
-               $expr: {
-                 $and: [
-                   {
-                     $eq: [
-                       "$institute_id",
-                       new mongoose.Types.ObjectId(userId),
-                     ],
-                   },
-                   {
-                     $eq: ["$recruiter_id", "$$companyId"],
-                   },
-                 ],
-               },
-             },
-           },
-         ],
-         as: "review",
-       },
-     },
-     {
-       $addFields: {
-         rating: {
-           $ifNull: [{ $arrayElemAt: ["$review.star", 0] }, 0],
-         },
-       },
-     },
+      // ADD THIS
+      {
+        $lookup: {
+          from: "reviews",
+          let: {
+            companyId: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: [
+                        "$institute_id",
+                        new mongoose.Types.ObjectId(userId),
+                      ],
+                    },
+                    {
+                      $eq: ["$recruiter_id", "$$companyId"],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "review",
+        },
+      },
+      {
+        $addFields: {
+          rating: {
+            $ifNull: [{ $arrayElemAt: ["$review.star", 0] }, 0],
+          },
+        },
+      },
 
-     {
-       $sort: {
-         "latestRequirement.createdAt": -1,
-       },
-     },
-   ]);
+      {
+        $sort: {
+          "latestRequirement.createdAt": -1,
+        },
+      },
+    ]);
     return res.status(200).json({
       success: true,
       message: "Company list fetched successfully",
@@ -855,6 +853,70 @@ export const getAllCompaniesByInstitute = async (req, res) => {
   }
 };
 
+export const getAllCompaniesByInstitutePlacement = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    // Company list with latest requirement
+    const companies = await CompanyByInstitute.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          isDel: false,
+        },
+      },
+      {
+        $lookup: {
+          from: "companyrequirements",
+          let: { companyId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$companyName", "$$companyId"],
+                },
+              },
+            },
+            { $sort: { createdAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "latestRequirement",
+        },
+      },
+      {
+        $unwind: {
+          path: "$latestRequirement",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $sort: {
+          "latestRequirement.date": -1,
+        },
+      },
+      {
+        $limit: 50,
+      },
+    ]);
+    return res.status(200).json({
+      success: true,
+      message: "Company list fetched successfully",
+      data: companies,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 export const getAllCompaniesByInstituteByStatus = async (req, res) => {
   try {
@@ -875,7 +937,7 @@ export const getAllCompaniesByInstituteByStatus = async (req, res) => {
           $match: {
             _id: new mongoose.Types.ObjectId(companyId),
             userId: new mongoose.Types.ObjectId(userId),
-            status:"Active",
+            status: "Active",
             isDel: false,
           },
         },
@@ -967,7 +1029,7 @@ export const getAllCompaniesByInstituteByStatus = async (req, res) => {
         $match: {
           userId: new mongoose.Types.ObjectId(userId),
           isDel: false,
-          status: "Active"
+          status: "Active",
         },
       },
       {
@@ -1051,7 +1113,10 @@ export const getAllCompaniesByInstituteByStatus = async (req, res) => {
   }
 };
 
-export const getAllCompaniesByInstituteByLatestRequirement1234 = async (req, res) => {
+export const getAllCompaniesByInstituteByLatestRequirement1234 = async (
+  req,
+  res,
+) => {
   try {
     const userId = req.userId;
     const companyId = req.query.id;
@@ -1105,7 +1170,7 @@ export const getAllCompaniesByInstituteByLatestRequirement1234 = async (req, res
 
 export const getAllCompaniesByInstituteByLatestRequirement = async (
   req,
-  res
+  res,
 ) => {
   try {
     const userId = req.userId;
@@ -1213,7 +1278,7 @@ export const deleteCompanyByInstitute = async (req, res) => {
     const deletedCompany = await CompanyByInstitute.findOneAndUpdate(
       { _id: companyId, userId, isDel: false },
       { isDel: true },
-      { new: true }
+      { new: true },
     );
 
     if (!deletedCompany) {
@@ -1251,14 +1316,11 @@ export const addCompanyRequirement = async (req, res) => {
       ratings,
       courses,
       tenth,
-      twelvth
+      twelvth,
     } = req.body;
 
     // Validation
-    if (
-      !userId ||
-      !companyName
-    ) {
+    if (!userId || !companyName) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -1289,7 +1351,7 @@ export const addCompanyRequirement = async (req, res) => {
       ratings,
       courses,
       tenth,
-      twelvth
+      twelvth,
     });
 
     const savedData = await newRequirement.save();
@@ -1325,7 +1387,7 @@ export const updateCompanyRequirement = async (req, res) => {
       ratings,
       courses,
       tenth,
-      twelvth
+      twelvth,
     } = req.body;
 
     // Validate IDs
@@ -1354,26 +1416,19 @@ export const updateCompanyRequirement = async (req, res) => {
     if (remarks) updateData.remarks = remarks;
     if (date) updateData.date = date;
     if (time) updateData.time = time;
-    if (numberOfCandidates)
-      updateData.numberOfCandidates = numberOfCandidates;
-    if (numberOfOpenings)
-      updateData.numberOfOpenings = numberOfOpenings;
-    if (numberOfHired)
-      updateData.numberOfHired = numberOfHired;
-    if (ratings)
-      updateData.ratings = ratings;
-     if (courses)
-      updateData.courses = courses;
-     if (tenth)
-      updateData.tenth = tenth;
-     if (twelvth)
-      updateData.twelvth = twelvth;
+    if (numberOfCandidates) updateData.numberOfCandidates = numberOfCandidates;
+    if (numberOfOpenings) updateData.numberOfOpenings = numberOfOpenings;
+    if (numberOfHired) updateData.numberOfHired = numberOfHired;
+    if (ratings) updateData.ratings = ratings;
+    if (courses) updateData.courses = courses;
+    if (tenth) updateData.tenth = tenth;
+    if (twelvth) updateData.twelvth = twelvth;
 
     // Find and update
     const updatedRequirement = await CompanyRequirement.findOneAndUpdate(
       { _id: requirementId, userId: userId }, // ensure user owns the data
       { $set: updateData },
-      { new: true } // return updated document
+      { new: true }, // return updated document
     );
 
     if (!updatedRequirement) {
@@ -1517,11 +1572,7 @@ export const selectStudentForCompany = async (req, res) => {
   try {
     const instituteId = req.userId;
 
-    const {
-      studentId,
-      requirementId,
-      instituteCompanyId,
-    } = req.body;
+    const { studentId, requirementId, instituteCompanyId } = req.body;
 
     // 🔹 Basic Validation
     if (!instituteId || !studentId || !requirementId || !instituteCompanyId) {
@@ -1571,7 +1622,6 @@ export const selectStudentForCompany = async (req, res) => {
       message: "Student scheduled successfully",
       data: selectedStudent,
     });
-
   } catch (error) {
     console.error("Error selecting student:", error);
     return res.status(500).json({
@@ -1598,7 +1648,7 @@ export const addFaculty = async (req, res) => {
       recognitions,
       courses_name,
       office_hours,
-      address
+      address,
     } = req.body;
 
     // 🔹 Basic validation
@@ -1645,7 +1695,7 @@ export const addFaculty = async (req, res) => {
       recognitions,
       courses_name,
       office_hours,
-      address
+      address,
     });
 
     return res.status(201).json({
@@ -1663,7 +1713,6 @@ export const addFaculty = async (req, res) => {
 
 export const getFaculty = async (req, res) => {
   try {
-
     console.log("API is hitting successfully ! ");
     const userId = req.userId;
     const facultyId = req.query.id;
@@ -1697,7 +1746,7 @@ export const getFaculty = async (req, res) => {
         },
         {
           name: 1,
-        }
+        },
       );
 
       const facultyData = faculty.toObject();
@@ -1750,7 +1799,6 @@ export const countFaculty = async (req, res) => {
       message: "Faculty count fetched successfully",
       totalFaculty,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -1779,7 +1827,7 @@ export const editFaculty = async (req, res) => {
       recognitions,
       courses_name,
       office_hours,
-      address
+      address,
     } = req.body;
 
     // 🔹 Validation
@@ -1810,12 +1858,12 @@ export const editFaculty = async (req, res) => {
         recognitions,
         courses_name,
         office_hours,
-        address
+        address,
       },
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     // 🔹 Faculty member not found
@@ -1856,12 +1904,7 @@ export const addEvaluation = async (req, res) => {
     } = req.body;
 
     // 🔹 Basic validation
-    if (
-      !userId ||
-      !student_name ||
-      !evaluation_type ||
-      !status
-    ) {
+    if (!userId || !student_name || !evaluation_type || !status) {
       return res.status(400).json({
         success: false,
         message: "Required fields are missing",
@@ -1913,7 +1956,7 @@ export const addEvaluation = async (req, res) => {
       date,
       evaluator_name,
       notes,
-      location
+      location,
     });
 
     return res.status(201).json({
@@ -2033,7 +2076,6 @@ export const getEvaluation = async (req, res) => {
     });
   }
 };
-
 
 export const getEvaluationByUserId = async (req, res) => {
   try {
@@ -2212,10 +2254,7 @@ export const editEvaluation = async (req, res) => {
     }
 
     // 🔹 evaluation_type validation
-    if (
-      evaluation_type &&
-      !Array.isArray(evaluation_type)
-    ) {
+    if (evaluation_type && !Array.isArray(evaluation_type)) {
       return res.status(400).json({
         success: false,
         message: "evaluation_type must be an array",
@@ -2223,29 +2262,28 @@ export const editEvaluation = async (req, res) => {
     }
 
     // 🔹 Update evaluation
-    const updatedEvaluation =
-      await StudentEvaluation.findOneAndUpdate(
-        {
-          _id: evaluationId,
-          userId,
-          isDel: false,
-        },
-        {
-          student_name,
-          role,
-          evaluation_type,
-          status,
-          score,
-          date,
-          evaluator_name,
-          notes,
-          location,
-        },
-        {
-          new: true,
-          runValidators: true,
-        }
-      ).populate("student_name", "name");
+    const updatedEvaluation = await StudentEvaluation.findOneAndUpdate(
+      {
+        _id: evaluationId,
+        userId,
+        isDel: false,
+      },
+      {
+        student_name,
+        role,
+        evaluation_type,
+        status,
+        score,
+        date,
+        evaluator_name,
+        notes,
+        location,
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    ).populate("student_name", "name");
 
     // 🔹 Evaluation not found
     if (!updatedEvaluation) {
@@ -2285,20 +2323,19 @@ export const deleteEvaluation = async (req, res) => {
     }
 
     // 🔹 Soft delete evaluation
-    const deletedEvaluation =
-      await StudentEvaluation.findOneAndUpdate(
-        {
-          _id: evaluationId,
-          userId,
-          isDel: false,
-        },
-        {
-          isDel: true,
-        },
-        {
-          new: true,
-        }
-      );
+    const deletedEvaluation = await StudentEvaluation.findOneAndUpdate(
+      {
+        _id: evaluationId,
+        userId,
+        isDel: false,
+      },
+      {
+        isDel: true,
+      },
+      {
+        new: true,
+      },
+    );
 
     // 🔹 Evaluation not found
     if (!deletedEvaluation) {
