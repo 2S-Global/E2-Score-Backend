@@ -101,8 +101,13 @@ const StudentPlacementSchema = new mongoose.Schema(
       required: true,
     },
     placement: { type: Number, default: 0 },
+    ctc: { type: Number, default: 0 },
+    location: { type: String, trim: true },
+    status: { type: String, trim: true },
+    recruiterStatus: { type: String, trim: true },
     role: { type: String, trim: true },
     date: { type: Date },
+    offerDate: { type: Date },
     time: { type: String, trim: true },
     tenTh: { type: String, trim: true },
     twelveTh: { type: String, trim: true },
@@ -116,4 +121,87 @@ const StudentPlacementSchema = new mongoose.Schema(
 export const StudentPlacement = mongoose.model(
   "StudentPlacement",
   StudentPlacementSchema,
+);
+
+const StudentPlacementTimelineSchema = new mongoose.Schema(
+  {
+    instituteId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    studentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    recruiterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "companybyinstitutes",
+      required: true,
+    },
+    companyRequirementId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CompanyRequirement",
+      required: true,
+    },
+    institueStudentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "instituestudents",
+      required: true,
+    },
+    date: { type: Date },
+    status: {
+      type: String,
+      enum: [
+        "Online assessment",
+        "Technical rounds",
+        "Hiring manager round + culture fit",
+        "Final interview cleared",
+        "Offer extended",
+        "Offer accepted",
+        "Joined",
+        "Rejected",
+      ],
+    },
+    remark: { type: String, trim: true },
+    statusOrder: {
+      type: Number,
+      required: true,
+    },
+    is_del: { type: Boolean, default: false },
+  },
+  { timestamps: true },
+);
+const STATUS_ORDER = {
+  "Online assessment": 1,
+  "Technical rounds": 2,
+  "Hiring manager round + culture fit": 3,
+  "Final interview cleared": 4,
+  "Offer extended": 5,
+  "Offer accepted": 6,
+  Joined: 7,
+  Rejected: 8,
+};
+
+StudentPlacementTimelineSchema.pre("validate", function (next) {
+  this.statusOrder = STATUS_ORDER[this.status];
+  next();
+});
+StudentPlacementTimelineSchema.pre("findOneAndUpdate", function (next) {
+  const update = this.getUpdate();
+  const status = update.status ?? update.$set?.status;
+  if (status) {
+    update.$set = {
+      ...(update.$set || {}),
+      statusOrder: STATUS_ORDER[status],
+    };
+  }
+
+  next();
+});
+
+export const StudentPlacementTimeline = mongoose.model(
+  "StudentPlacementTimeline",
+  StudentPlacementTimelineSchema,
 );

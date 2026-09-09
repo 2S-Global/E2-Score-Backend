@@ -11,6 +11,10 @@ import CompanyRequirement from "../../models/companyRequirementModel.js";
 import SelectedStudent from "../../models/StudentAssignedCompanyModel.js";
 import InstituteFaculty from "../../models/InstituteFacultyModel.js";
 import StudentEvaluation from "../../models/EvaluationModel.js";
+import {
+  StudentPlacement,
+  StudentPlacementTimeline,
+} from "../../models/InstitueStudentModel.js";
 import mongoose from "mongoose";
 import Review from "../../models/instituteFeedback.js";
 /**
@@ -917,7 +921,259 @@ export const getAllCompaniesByInstitutePlacement = async (req, res) => {
     });
   }
 };
+export const getCompaniesByInstitutePlacementStudent = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const companyRequirementId = req.query.id;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
 
+    const matchStage = {
+      instituteId: new mongoose.Types.ObjectId(userId),
+      is_del: false,
+    };
+    // If ID is provided, filter by companyRequirementId
+    if (companyRequirementId) {
+      matchStage.companyRequirementId = new mongoose.Types.ObjectId(
+        companyRequirementId,
+      );
+    }
+
+    // Get total count
+    const totalResult = await StudentPlacement.aggregate([
+      {
+        $match: matchStage,
+      },
+      {
+        $count: "total",
+      },
+    ]);
+    const total = totalResult[0]?.total || 0;
+    const student = await StudentPlacement.aggregate([
+      {
+        $match: matchStage,
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Student list fetched successfully",
+      data: student,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const SaveStudentPlacementTimeline = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { placementId, date, status, remark, _id } = req.body?.data;
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    const {
+      instituteId,
+      studentId,
+      recruiterId,
+      companyRequirementId,
+      institueStudentId,
+    } = await StudentPlacement.findOne({
+      _id: placementId,
+      instituteId: userId,
+    });
+
+    if (
+      !instituteId ||
+      !studentId ||
+      !recruiterId ||
+      !companyRequirementId ||
+      !institueStudentId ||
+      !status
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Required fields are missing",
+      });
+    }
+
+    const filter = _id
+      ? {
+          _id,
+          is_del: false,
+        }
+      : {
+          instituteId,
+          studentId,
+          recruiterId,
+          companyRequirementId,
+          institueStudentId,
+          status,
+          is_del: false,
+        };
+
+    const update = {
+      $set: {
+        instituteId,
+        studentId,
+        recruiterId,
+        companyRequirementId,
+        institueStudentId,
+        status,
+        ...(date !== undefined && { date }),
+        ...(remark !== undefined && { remark }),
+      },
+    };
+
+    const timeline = await StudentPlacementTimeline.findOneAndUpdate(
+      filter,
+      update,
+      {
+        new: true,
+        upsert: !_id,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Placement timeline saved successfully",
+      data: timeline,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+export const UpdateStudentPlacement = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const { student, ctc, location, status, offerDate } = req.body;
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+    const updatedPlacement = await StudentPlacement.findOneAndUpdate(
+      {
+        _id: student,
+        instituteId: userId,
+      },
+      {
+        $set: {
+          ctc,
+          location,
+          status,
+          offerDate,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Data saved successfully",
+      data: updatedPlacement,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getStudentPlacementTimeline = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const id = req.params.id;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    const student = await StudentPlacement.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(id),
+          instituteId: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: "studentplacementtimelines",
+          let: { cri: "$companyRequirementId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$companyRequirementId", "$$cri"] },
+                    { $eq: ["$is_del", false] },
+                  ],
+                },
+              },
+            },
+            {
+              $sort: {
+                statusOrder: 1, // ascending
+              },
+            },
+          ],
+          as: "timelines",
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Student timelines fetched successfully",
+      data: student,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 export const getAllCompaniesByInstituteByStatus = async (req, res) => {
   try {
     const userId = req.userId;

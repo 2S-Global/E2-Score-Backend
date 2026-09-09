@@ -32,6 +32,10 @@ import {
   getEvaluationByUserId,
   getAllCompaniesByInstituteByStatus,
   getAllCompaniesByInstitutePlacement,
+  getCompaniesByInstitutePlacementStudent,
+  SaveStudentPlacementTimeline,
+  UpdateStudentPlacement,
+  getStudentPlacementTimeline,
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -173,6 +177,35 @@ InstituteProfileRouter.get(
   Institutemid,
   getAllCompaniesByInstitutePlacement,
 );
+
+InstituteProfileRouter.get(
+  "/get_all_companies_institute_placement_student",
+  userAuth,
+  Institutemid,
+  getCompaniesByInstitutePlacementStudent,
+);
+
+InstituteProfileRouter.post(
+  "/student_placement_timeline",
+  userAuth,
+  Institutemid,
+  SaveStudentPlacementTimeline,
+);
+
+InstituteProfileRouter.put(
+  "/student_offer_update",
+  userAuth,
+  Institutemid,
+  UpdateStudentPlacement,
+);
+
+InstituteProfileRouter.get(
+  "/student_offer_update/:id",
+  userAuth,
+  Institutemid,
+  getStudentPlacementTimeline,
+);
+
 InstituteProfileRouter.get(
   "/get_all_companies_by_institute_status",
   userAuth,
