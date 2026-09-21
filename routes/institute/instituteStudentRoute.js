@@ -23,19 +23,17 @@ import {
   getCompanyRequirementSudents,
   StudentInterview,
   getTotalRecruit,
+  instituteStudentAssessment,
 } from "../../controllers/institute/instituteStudentController.js";
 
 import {
   insStudentImport,
   addInstituteStudentManually,
   deleteInstituteStudent,
-  sendProgressScoreMail
+  sendProgressScoreMail,
 } from "../../controllers/institute/instituteStudentImport.js";
 
-import {
-  insStudentMarksImport
-} from "../../controllers/institute/instituteStudentImportMarks.js";
-
+import { insStudentMarksImport } from "../../controllers/institute/instituteStudentImportMarks.js";
 
 // Middleware
 import userAuth from "../../middleware/authMiddleware.js";
@@ -52,35 +50,35 @@ InstituteStudentRouter.get(
   "/get_unverfired_students",
   userAuth,
   Institutemid,
-  GetunverifiedStudents
+  GetunverifiedStudents,
 );
 
 InstituteStudentRouter.get(
   "/get_students_by_status",
   userAuth,
   Institutemid,
-  GetStudentsByVerification
+  GetStudentsByVerification,
 );
 
 InstituteStudentRouter.get(
   "/get_verified_students",
   userAuth,
   Institutemid,
-  GetverifiedStudents
+  GetverifiedStudents,
 );
 
 InstituteStudentRouter.get(
   "/get_all_students",
   userAuth,
   Institutemid,
-  GetallStudents
+  GetallStudents,
 );
 
 InstituteStudentRouter.get(
   "/get_student_details",
   userAuth,
   Institutemid,
-  GetstudentDetails
+  GetstudentDetails,
 );
 
 InstituteStudentRouter.put(
@@ -88,7 +86,7 @@ InstituteStudentRouter.put(
   userAuth,
   Institutemid,
   upload.none(),
-  UpdatestudentStatus
+  UpdatestudentStatus,
 );
 
 InstituteStudentRouter.post(
@@ -96,41 +94,48 @@ InstituteStudentRouter.post(
   userAuth,
   Institutemid,
   csvFile.single("csv"),
-  insStudentImport
+  insStudentImport,
 );
 InstituteStudentRouter.post(
   "/import-candidates-marks",
   userAuth,
   Institutemid,
   csvFile.single("csv"),
-  insStudentMarksImport
+  insStudentMarksImport,
 );
 InstituteStudentRouter.get(
   "/institute-student-list",
   userAuth,
   Institutemid,
-  instituteStudent
+  instituteStudent,
+);
+
+InstituteStudentRouter.get(
+  "/institute-student-assessment-list",
+  userAuth,
+  Institutemid,
+  instituteStudentAssessment,
 );
 
 InstituteStudentRouter.get(
   "/company-requirement-sudents",
   userAuth,
   Institutemid,
-  getCompanyRequirementSudents
+  getCompanyRequirementSudents,
 );
 
 InstituteStudentRouter.post(
   "/student-interview",
   userAuth,
   Institutemid,
-  StudentInterview
+  StudentInterview,
 );
 
 InstituteStudentRouter.get(
   "/institute-student-details-by-id",
   userAuth,
   Institutemid,
-  instituteStudentDetails
+  instituteStudentDetails,
 );
 
 // Add Custom Course
@@ -165,7 +170,7 @@ InstituteStudentRouter.get(
   "/get-all-courses",
   userAuth,
   Institutemid,
-  getAllCourses
+  getAllCourses,
 );
 
 // Add Institute Student Manually
@@ -173,7 +178,7 @@ InstituteStudentRouter.post(
   "/add-institute-student-manually",
   userAuth,
   Institutemid,
-  addInstituteStudentManually
+  addInstituteStudentManually,
 );
 
 // Delete Institute Student Manually
@@ -189,14 +194,14 @@ InstituteStudentRouter.get(
   "/institute-student-search",
   userAuth,
   Institutemid,
-  instituteStudentSearch
+  instituteStudentSearch,
 );
 
 InstituteStudentRouter.get(
   "/get_students_counts",
   userAuth,
   Institutemid,
-  getTotalStudentsCount
+  getTotalStudentsCount,
 );
 
 InstituteStudentRouter.get(
@@ -210,28 +215,28 @@ InstituteStudentRouter.get(
   "/get-active-companies",
   userAuth,
   Institutemid,
-  getActiveCompanies
+  getActiveCompanies,
 );
 
 InstituteStudentRouter.get(
   "/institute-student-list-by-placement-ready",
   userAuth,
   Institutemid,
-  instituteStudentByPlacementReady
+  instituteStudentByPlacementReady,
 );
 
 InstituteStudentRouter.get(
   "/student-by-departments",
   userAuth,
   Institutemid,
-  studentByDepartments
+  studentByDepartments,
 );
 
 InstituteStudentRouter.get(
   "/send-progress-mail",
   userAuth,
   Institutemid,
-  sendProgressScoreMail
+  sendProgressScoreMail,
 );
 
 export default InstituteStudentRouter;

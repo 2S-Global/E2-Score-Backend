@@ -1180,6 +1180,172 @@ export const instituteStudent = async (req, res) => {
   }
 };
 
+export const instituteStudentAssessment = async (req, res) => {
+  try {
+    const user = req.user;
+    const currentYear = new Date().getFullYear();
+
+    const instituteStudent = await InstitueStudent.aggregate([
+      {
+        $match: {
+          instituteId: new Types.ObjectId(user.userId),
+          status: true,
+          is_del: false,
+          $or: [
+            {
+              isSelfRegistered: { $exists: false },
+            },
+            {
+              isSelfRegistered: "no",
+            },
+            {
+              isSelfRegistered: "yes",
+              endYear: { $gte: String(currentYear) },
+            },
+          ],
+        },
+      },
+
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+
+      // 1️⃣ InstitueStudent → users
+      {
+        $lookup: {
+          from: "users",
+          let: {
+            emailId: "$email",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$email", "$$emailId"],
+                    },
+                    {
+                      $eq: ["$is_del", false],
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                email: 1,
+                name: 1,
+              },
+            },
+          ],
+          as: "users",
+        },
+      },
+
+      {
+        $unwind: {
+          path: "$users",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 2️⃣ users → mentaltestattempts
+      {
+        $lookup: {
+          from: "mentaltestattempts",
+          let: {
+            userId: "$users._id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$userId", "$$userId"],
+                    },
+                    {
+                      $eq: ["$is_Deleted", false],
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                userId: 1,
+                createdAt: 1,
+              },
+            },
+          ],
+          as: "mentaltestattempts",
+        },
+      },
+      // 2️⃣ users → attemptedmentaltestfeedbacks
+      {
+        $lookup: {
+          from: "attemptedmentaltestfeedbacks",
+          let: {
+            userId: "$users._id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$user", "$$userId"],
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+            { $limit: 1 },
+            {
+              $project: {
+                _id: 1,
+                user: 1,
+                remarks: 1,
+                scores: 1,
+                createdAt: 1,
+              },
+            },
+          ],
+          as: "attemptedmentaltestfeedbacks",
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: instituteStudent.length,
+      data: instituteStudent,
+    });
+  } catch (error) {
+    console.error("Error fetching student:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 export const getCompanyRequirementSudents = async (req, res) => {
   try {
     const user = req?.user;

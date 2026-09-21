@@ -1117,6 +1117,228 @@ export const UpdateStudentPlacement = async (req, res) => {
   }
 };
 
+export const PlacementsGraph = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 5);
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
+    const result = await StudentPlacement.aggregate([
+      {
+        $match: {
+          instituteId: new mongoose.Types.ObjectId(userId),
+          is_del: false,
+          status: "Offered",
+          offerDate: { $gte: startDate },
+        },
+      },
+
+      {
+        $project: {
+          month: {
+            $dateToString: {
+              format: "%Y-%m",
+              date: "$offerDate",
+            },
+          },
+          offers: { $literal: 1 },
+          accepted: { $literal: 0 },
+        },
+      },
+      {
+        $unionWith: {
+          coll: StudentPlacementTimeline.collection.name,
+          pipeline: [
+            {
+              $match: {
+                instituteId: new mongoose.Types.ObjectId(userId),
+                is_del: false,
+                status: "Offer accepted",
+                date: { $gte: startDate },
+              },
+            },
+
+            {
+              $project: {
+                month: {
+                  $dateToString: {
+                    format: "%Y-%m",
+                    date: "$date",
+                  },
+                },
+                offers: { $literal: 0 },
+                accepted: { $literal: 1 },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          offers: {
+            $sum: "$offers",
+          },
+          accepted: {
+            $sum: "$accepted",
+          },
+        },
+      },
+
+      {
+        $project: {
+          _id: 0,
+          month: {
+            $dateToString: {
+              format: "%b",
+              date: {
+                $dateFromString: {
+                  dateString: {
+                    $concat: ["$_id", "-01"],
+                  },
+                  format: "%Y-%m-%d",
+                },
+              },
+            },
+          },
+          /*   "year-month": "$_id", */
+          offers: 1,
+          accepted: 1,
+        },
+      },
+      {
+        $sort: {
+          "year-month": 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Fetch data successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const PlacementsStatistics = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    const year = new Date().getFullYear();
+
+    const OfferExtendedCount = await StudentPlacementTimeline.countDocuments({
+      status: "Offer extended",
+      is_del: false,
+      instituteId: new mongoose.Types.ObjectId(userId),
+      date: {
+        $gte: new Date(`${year}-01-01T00:00:00.000Z`),
+        $lt: new Date(`${year + 1}-01-01T00:00:00.000Z`),
+      },
+    });
+
+    const OfferAcceptedCount = await StudentPlacementTimeline.countDocuments({
+      status: "Offer accepted",
+      is_del: false,
+      instituteId: new mongoose.Types.ObjectId(userId),
+      date: {
+        $gte: new Date(`${year}-01-01T00:00:00.000Z`),
+        $lt: new Date(`${year + 1}-01-01T00:00:00.000Z`),
+      },
+    });
+
+    // 1. Avg. CTC
+    const avgCtcResult = await StudentPlacement.aggregate([
+      {
+        $match: {
+          instituteId: new mongoose.Types.ObjectId(userId),
+          is_del: false,
+          status: "Offered",
+          offerDate: {
+            $gte: new Date(`${year}-01-01T00:00:00.000Z`),
+            $lt: new Date(`${year + 1}-01-01T00:00:00.000Z`),
+          },
+          ctc: {
+            $exists: true,
+            $ne: null,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          avgCtc: {
+            $avg: "$ctc",
+          },
+        },
+      },
+    ]);
+
+    const avgCtcLpa = avgCtcResult.length
+      ? Number((avgCtcResult[0].avgCtc / 100000).toFixed(1))
+      : 0;
+
+    // 2. Total Students
+    const totalStudents = await StudentPlacement.countDocuments({
+      instituteId: userId,
+      is_del: false,
+    });
+
+    // 3. Placed Students
+    const placedStudents = await StudentPlacement.countDocuments({
+      instituteId: userId,
+      is_del: false,
+      status: "Offered",
+      offerDate: {
+        $gte: new Date(`${year}-01-01T00:00:00.000Z`),
+        $lt: new Date(`${year + 1}-01-01T00:00:00.000Z`),
+      },
+    });
+
+    // 4. Placement Rate
+    const placementRate = totalStudents
+      ? Number(((placedStudents / totalStudents) * 100).toFixed(1))
+      : 0;
+
+    return res.status(200).json({
+      success: true,
+      message: "Fetch data successfully",
+      data: {
+        OfferExtended: OfferExtendedCount || 0,
+        OfferAccepted: OfferAcceptedCount || 0,
+        avgCtc: `₹ ${avgCtcLpa} LPA`,
+        placementRate: `${placementRate}%`,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const getStudentPlacementTimeline = async (req, res) => {
   try {
     const userId = req.userId;

@@ -243,7 +243,10 @@ export const submitMentalTestFeedBackController = async (req, res) => {
     for (const headerId in headerScores) {
       const headerObj = headerScores[headerId];
       const maxPossibleScore = headerObj.questionCount * 5;
-      const percentage = maxPossibleScore > 0 ? Math.round((headerObj.totalScore / maxPossibleScore) * 100) : 0;
+      const percentage =
+        maxPossibleScore > 0
+          ? Math.round((headerObj.totalScore / maxPossibleScore) * 100)
+          : 0;
 
       const traitInfo = getTraitInfo(headerObj.headerName, percentage);
 
@@ -563,7 +566,9 @@ export const updateMentalTestFeedBackController = async (req, res) => {
     } else if (oldFeedbackDoc) {
       // If questions array is not provided but the header changed to an existing one,
       // move all questions from the old document to the target document
-      const currentIds = new Set(targetFeedbackDoc.questions.map((q) => q._id.toString()));
+      const currentIds = new Set(
+        targetFeedbackDoc.questions.map((q) => q._id.toString()),
+      );
       for (const q of oldFeedbackDoc.questions) {
         if (!currentIds.has(q._id.toString())) {
           targetFeedbackDoc.questions.push(q);
@@ -670,9 +675,6 @@ export const deleteMentalTestFeedBackController = async (req, res) => {
   }
 };
 
-
-
-
 // --- Configuration & Constants ---
 const LIKERT_MAX_SCORE = 5;
 const REVERSE_SCALE_BASE = LIKERT_MAX_SCORE + 1; // 6
@@ -696,7 +698,7 @@ const TRAIT_KEYWORD_MAP = [
 const getStyleCodeFromHeaderName = (headerName = "") => {
   const normalized = headerName.toLowerCase();
   const match = TRAIT_KEYWORD_MAP.find(({ keywords }) =>
-    keywords.some((kw) => normalized.includes(kw))
+    keywords.some((kw) => normalized.includes(kw)),
   );
   return match ? match.code : "I";
 };
@@ -704,7 +706,8 @@ const getStyleCodeFromHeaderName = (headerName = "") => {
 // --- Controller Handler ---
 export const getMentalTestFeedbackDetailsController = async (req, res) => {
   try {
-    const userId = req.userId
+    //const userId = req.userId
+    const userId = req.query.id || req.userId;
     // const userId = `6a66f386e6b505694b13c270`
 
     if (!userId) {
@@ -712,7 +715,9 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
     }
 
     // 1. Fetch user attempts (lean mode for faster plain-JS performance)
-    const attempts = await AttemptedMentalTestFeedbackModel.find({ user: userId })
+    const attempts = await AttemptedMentalTestFeedbackModel.find({
+      user: userId,
+    })
       .populate("user", "name email phone")
       .lean();
 
@@ -721,7 +726,9 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
     }
 
     // 2. Fetch active feedback templates
-    const feedbackTemplates = await MentalTestFeedBackModel.find({ is_del: false })
+    const feedbackTemplates = await MentalTestFeedBackModel.find({
+      is_del: false,
+    })
       .populate("header")
       .lean();
 
@@ -795,36 +802,39 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
     // 5. Compute Header Percentages and Identify Top Trait
     let highestHeader = null;
 
-    const headerScores = Array.from(headerScoresMap.values()).map((headerObj) => {
-      const maxPossibleScore = headerObj.questionCount * LIKERT_MAX_SCORE;
-      const percentage =
-        maxPossibleScore > 0
-          ? Math.round((headerObj.totalScore / maxPossibleScore) * 100)
-          : 0;
+    const headerScores = Array.from(headerScoresMap.values()).map(
+      (headerObj) => {
+        const maxPossibleScore = headerObj.questionCount * LIKERT_MAX_SCORE;
+        const percentage =
+          maxPossibleScore > 0
+            ? Math.round((headerObj.totalScore / maxPossibleScore) * 100)
+            : 0;
 
-      const traitInfo = typeof getTraitInfo === "function"
-        ? getTraitInfo(headerObj.headerName, percentage)
-        : { level: "", characteristics: "", idealRoles: "" };
+        const traitInfo =
+          typeof getTraitInfo === "function"
+            ? getTraitInfo(headerObj.headerName, percentage)
+            : { level: "", characteristics: "", idealRoles: "" };
 
-      const enrichedHeader = {
-        ...headerObj,
-        percentage,
-        descriptor: traitInfo.level,
-        workplaceCharacteristics: traitInfo.characteristics,
-        idealFunctionalRoles: traitInfo.idealRoles,
-      };
+        const enrichedHeader = {
+          ...headerObj,
+          percentage,
+          descriptor: traitInfo.level,
+          workplaceCharacteristics: traitInfo.characteristics,
+          idealFunctionalRoles: traitInfo.idealRoles,
+        };
 
-      if (
-        !highestHeader ||
-        percentage > highestHeader.percentage ||
-        (percentage === highestHeader.percentage &&
-          headerObj.totalScore > highestHeader.totalScore)
-      ) {
-        highestHeader = enrichedHeader;
-      }
+        if (
+          !highestHeader ||
+          percentage > highestHeader.percentage ||
+          (percentage === highestHeader.percentage &&
+            headerObj.totalScore > highestHeader.totalScore)
+        ) {
+          highestHeader = enrichedHeader;
+        }
 
-      return enrichedHeader;
-    });
+        return enrichedHeader;
+      },
+    );
 
     // 6. Determine Primary Personality Style
     let primaryStyleName = DEFAULT_PRIMARY_STYLE.name;
@@ -838,7 +848,8 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
           : DEFAULT_PRIMARY_STYLE.name;
 
       descriptor =
-        typeof DESCRIPTORS !== "undefined" && DESCRIPTORS?.pronounced?.[styleCode]
+        typeof DESCRIPTORS !== "undefined" &&
+        DESCRIPTORS?.pronounced?.[styleCode]
           ? DESCRIPTORS.pronounced[styleCode]
           : DEFAULT_PRIMARY_STYLE.descriptor;
     }
@@ -866,7 +877,7 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
         primaryStyleName,
         descriptor,
       },
-      null
+      null,
     );
   } catch (error) {
     console.error("[getMentalTestFeedbackDetailsController] Exception:", error);
@@ -877,8 +888,7 @@ export const getMentalTestFeedbackDetailsController = async (req, res) => {
       false,
       "Internal Server Error",
       null,
-      error.message
+      error.message,
     );
   }
 };
-

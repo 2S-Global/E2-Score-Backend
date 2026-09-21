@@ -225,7 +225,12 @@ export const submitMentalTestController = async (req, res) => {
 
     if (!isValid.success) {
       return apiResponse(
-        res, 400, false, "Invalid Data", null, isValid.error.issues[0].message,
+        res,
+        400,
+        false,
+        "Invalid Data",
+        null,
+        isValid.error.issues[0].message,
       );
     }
 
@@ -331,15 +336,18 @@ export const submitMentalTestController = async (req, res) => {
       discProfile: attempt.result.primaryStyle || null,
       profileName: DISC_PROFILE_NAMES[attempt.result.primaryStyle] || null,
       idealRoles: DISC_PROFILE_ROLES[attempt.result.primaryStyle] || null,
-      secondaryDiscProfile: attempt.result.secondaryStyle && (attempt.result.gap ?? 0) < 4
-        ? attempt.result.secondaryStyle
-        : null,
-      secondaryProfileName: attempt.result.secondaryStyle && (attempt.result.gap ?? 0) < 4
-        ? DISC_PROFILE_NAMES[attempt.result.secondaryStyle]
-        : null,
-      secondaryIdealRoles: attempt.result.secondaryStyle && (attempt.result.gap ?? 0) < 4
-        ? DISC_PROFILE_ROLES[attempt.result.secondaryStyle]
-        : null,
+      secondaryDiscProfile:
+        attempt.result.secondaryStyle && (attempt.result.gap ?? 0) < 4
+          ? attempt.result.secondaryStyle
+          : null,
+      secondaryProfileName:
+        attempt.result.secondaryStyle && (attempt.result.gap ?? 0) < 4
+          ? DISC_PROFILE_NAMES[attempt.result.secondaryStyle]
+          : null,
+      secondaryIdealRoles:
+        attempt.result.secondaryStyle && (attempt.result.gap ?? 0) < 4
+          ? DISC_PROFILE_ROLES[attempt.result.secondaryStyle]
+          : null,
     };
 
     return apiResponse(
@@ -364,8 +372,8 @@ export const submitMentalTestController = async (req, res) => {
 
 export const getUserAttemptHistory = async (req, res) => {
   try {
-    const userId = req.userId;
-    // const userId = `6a66f386e6b505694b13c270`
+    // const userId = req.userId;
+    const userId = req.query.id || req.userId;
     const attempts = await MentalTestAttemptModel.find({
       userId,
       is_Deleted: false,

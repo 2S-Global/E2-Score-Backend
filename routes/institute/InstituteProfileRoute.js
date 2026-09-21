@@ -36,6 +36,8 @@ import {
   SaveStudentPlacementTimeline,
   UpdateStudentPlacement,
   getStudentPlacementTimeline,
+  PlacementsGraph,
+  PlacementsStatistics,
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -198,7 +200,19 @@ InstituteProfileRouter.put(
   Institutemid,
   UpdateStudentPlacement,
 );
+InstituteProfileRouter.get(
+  "/placements-graph",
+  userAuth,
+  Institutemid,
+  PlacementsGraph,
+);
 
+InstituteProfileRouter.get(
+  "/placements-statistics",
+  userAuth,
+  Institutemid,
+  PlacementsStatistics,
+);
 InstituteProfileRouter.get(
   "/student_offer_update/:id",
   userAuth,
