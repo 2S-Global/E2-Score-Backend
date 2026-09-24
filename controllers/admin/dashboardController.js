@@ -1059,7 +1059,7 @@ export const getAllJobApplicantsList = async (req, res) => {
     console.error("Error fetching applied candidates:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal server error kkkkkkkk",
+      message: "Internal server error kkkkk",
     });
   }
 };
