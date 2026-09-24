@@ -44,6 +44,7 @@ import {
   getTotalExperience,
   SaveRecentSearches,
   GetRecentSearches,
+  getJobListingNotExpir,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -155,6 +156,13 @@ jobPostingDataRouter.get(
   getAllJobListing,
 );
 
+jobPostingDataRouter.get(
+  "/getJobListingNotExpir",
+  userAuth,
+  Companymid,
+  getJobListingNotExpir,
+);
+
 // Delete Job Posting API
 jobPostingDataRouter.delete(
   "/delete_job_posting",
@@ -185,8 +193,12 @@ jobPostingDataRouter.post(
   applyJobPosting,
 );
 
-jobPostingDataRouter.get('/get-total-experienced', upload.none(),
-  userAuth, getTotalExperience)
+jobPostingDataRouter.get(
+  "/get-total-experienced",
+  upload.none(),
+  userAuth,
+  getTotalExperience,
+);
 
 // Get All Job Listing API
 jobPostingDataRouter.get(
@@ -333,11 +345,6 @@ jobPostingDataRouter.post(
   SaveRecentSearches,
 );
 
-
-jobPostingDataRouter.get(
-  "/get-recent-searches",
-  userAuth,
-  GetRecentSearches,
-);
+jobPostingDataRouter.get("/get-recent-searches", userAuth, GetRecentSearches);
 
 export default jobPostingDataRouter;

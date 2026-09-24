@@ -221,7 +221,6 @@ export const AddJobPostingDetails = async (req, res) => {
       return res.status(404).json({ message: "Company not found." });
     }
 
-
     const {
       jobTitle,
       jobDescription,
@@ -1295,6 +1294,132 @@ export const getAllJobListing = async (req, res) => {
   }
 };
 
+// Get All Job Listing API
+export const getJobListingNotExpir = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const company = await User.findById(userId);
+    if (!company) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Fetch logo from companyDetails
+    const companyDetails = await CompanyDetails.findOne({ userId }).select(
+      "logo",
+    );
+    const logo = companyDetails?.logo || null;
+
+    const today = new Date();
+
+    // Fetch jobs for this user where status is "completed" and expiryDate is not passed
+    const jobs = await JobPosting.find({
+      userId,
+      // status: "completed",
+      status: { $in: ["completed", "draft"] },
+      is_del: false,
+      jobExpiryDate: { $gte: new Date() },
+    })
+      .populate("jobType", "name")
+      .populate("country", "name")
+      .populate("city", "city_name")
+      .populate("branch", "name")
+      .select(
+        "_id jobTitle jobType jobLocationType advertiseCity advertiseCityName country city branch createdAt jobExpiryDate status",
+      )
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+
+    // console.log("Here is my all Job List", jobs)
+
+    // Get all job IDs
+    const jobIds = jobs.map((job) => job._id);
+
+    // Aggregate application counts
+    const applicationCounts = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+          isDel: false,
+          status: { $ne: "rejected" },
+        },
+      },
+      {
+        $group: {
+          _id: "$jobId",
+          appliedCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Convert to lookup map
+    const applicationCountMap = {};
+    applicationCounts.forEach((item) => {
+      applicationCountMap[item._id.toString()] = item.appliedCount;
+    });
+
+    // Build response
+    const jobList = jobs.map((job) => {
+      let location = "";
+      let advertiseCityName = "";
+
+      // Remote job logic
+      if (job.jobLocationType === "remote") {
+        location = "Remote";
+        advertiseCityName =
+          job.advertiseCity === "Yes" ? job.advertiseCityName || "" : "";
+      }
+
+      // On-site job logic
+      else if (job.jobLocationType === "on-site") {
+        const country = job.country?.name || "";
+        const city = job.city?.city_name || "";
+        const branch = job.branch?.name || "";
+
+        location = [city, country].filter(Boolean).join(", ");
+      }
+
+      // Format date to "October 27, 2017"
+      const formatDate = (date) => {
+        if (!date) return "";
+        return new Date(date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+      };
+
+      return {
+        _id: job._id,
+        jobTitle: job.jobTitle,
+        jobType: job.jobType.map((item) => item.name),
+        jobLocationType: job.jobLocationType,
+        location,
+        advertiseCityName,
+        createdAt: formatDate(job.createdAt),
+        expiryDate: formatDate(job.jobExpiryDate),
+        isActive: !job.jobExpiryDate || new Date(job.jobExpiryDate) >= today,
+        logo,
+        appliedCount: applicationCountMap[job._id.toString()] || 0,
+        status: job.status,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Job listing fetched successfully.",
+      data: jobList,
+    });
+  } catch (error) {
+    console.error("Error fetching job listings:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Delete Job Posting API
 export const deleteJobPosting = async (req, res) => {
   try {
@@ -1503,10 +1628,10 @@ export const getJobPreviewDetails = async (req, res) => {
       createdAgo: dayjs(job.createdAt).fromNow(),
       expiredAt: job.jobExpiryDate
         ? new Date(job.jobExpiryDate).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
         : "",
       salary: job.salary,
       opening: job.positionAvailable,
@@ -1758,10 +1883,10 @@ export const getJobPreview_Details = async (req, res) => {
 
       expiredAt: job.jobExpiryDate
         ? new Date(job.jobExpiryDate).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
         : "",
 
       salary: job.salary,
@@ -3705,7 +3830,7 @@ export const acceptRejectOfferLetter = async (req, res) => {
 // Get check-application-status API
 export const checkJobApplicationStatus = async (req, res) => {
   try {
-    const userId = req.userId; 
+    const userId = req.userId;
     const { jobId } = req.query;
 
     console.log(
@@ -4000,27 +4125,38 @@ export const getCandidateApplicationStats = async (req, res) => {
   }
 };
 
-
 export const getTotalExperience = async (req, res) => {
   const userId = req.userId;
   try {
-
     const response = await CandidateDetails.findOne({
       userId: userId,
-      isDel: false
-    }).select('totalExperience').lean()
+      isDel: false,
+    })
+      .select("totalExperience")
+      .lean();
 
     if (!response) {
-      return apiResponse(res, 404, false, "Candidate details not found", null, null);
+      return apiResponse(
+        res,
+        404,
+        false,
+        "Candidate details not found",
+        null,
+        null,
+      );
     }
 
-    return apiResponse(res, 200, true, "Total experience fetched successfully", response)
+    return apiResponse(
+      res,
+      200,
+      true,
+      "Total experience fetched successfully",
+      response,
+    );
   } catch (error) {
     return apiResponse(res, 500, false, "Internal server error", null, error);
-
   }
-
-}
+};
 export const GetRecentSearches = async (req, res) => {
   try {
     const userId = "69089a4b63d40bedba5f4a9b";
@@ -4050,20 +4186,12 @@ export const GetRecentSearches = async (req, res) => {
       true,
       "Recent searches fetched successfully",
       recentSearches,
-      null
+      null,
     );
   } catch (error) {
-    return apiResponse(
-      res,
-      500,
-      false,
-      "Internal server error",
-      null,
-      error
-    );
+    return apiResponse(res, 500, false, "Internal server error", null, error);
   }
 };
-
 
 export const SaveRecentSearches = async (req, res) => {
   try {
@@ -4077,14 +4205,12 @@ export const SaveRecentSearches = async (req, res) => {
         false,
         "Search query is required",
         null,
-        null
+        null,
       );
     }
 
     const cleanedQuery = query.trim();
-    const normalizedQuery = cleanedQuery
-      .toLowerCase()
-      .replace(/\s+/g, " ");
+    const normalizedQuery = cleanedQuery.toLowerCase().replace(/\s+/g, " ");
 
     const recentSearch = await recentSearchModel.findOneAndUpdate(
       {
@@ -4110,7 +4236,7 @@ export const SaveRecentSearches = async (req, res) => {
         new: true,
         upsert: true,
         runValidators: true,
-      }
+      },
     );
 
     return apiResponse(
@@ -4119,16 +4245,9 @@ export const SaveRecentSearches = async (req, res) => {
       true,
       "Recent search saved successfully",
       recentSearch,
-      null
+      null,
     );
   } catch (error) {
-    return apiResponse(
-      res,
-      500,
-      false,
-      "Internal server error",
-      null,
-      error
-    );
+    return apiResponse(res, 500, false, "Internal server error", null, error);
   }
 };

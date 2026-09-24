@@ -1,0 +1,63 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: CI - Build Express App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check Node version
+        run: node -v
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Express App
+        run: npm run build
+
+  deploy:
+    name: CD - Deploy to VPS
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 2222
+
+          script: |
+            set -e
+
+            cd /var/www/api.geisil.com
+
+            echo "Pulling latest code..."
+            git pull origin main
+
+            echo "Installing dependencies..."
+            npm install
+
+            echo "Building Express app..."
+            npm run build
+
+            echo "Restarting Express..."
+            pm2 restart api-geisil --update-env
+
+            echo "Checking PM2..."
+            pm2 status
