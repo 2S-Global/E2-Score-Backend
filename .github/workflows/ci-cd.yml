@@ -48,16 +48,13 @@ jobs:
             cd /var/www/api.geisil.com
 
             echo "Pulling latest code..."
-            git pull origin main
+              git pull origin main
 
-            echo "Installing dependencies..."
-            npm install
+              echo "Installing dependencies..."
+              npm install
 
-            echo "Building Express app..."
-            npm run build
+              echo "Restarting Express..."
+              pm2 restart api-geisil --update-env
 
-            echo "Restarting Express..."
-            pm2 restart api-geisil --update-env
-
-            echo "Checking PM2..."
-            pm2 status
+              echo "Checking PM2..."
+              pm2 status
