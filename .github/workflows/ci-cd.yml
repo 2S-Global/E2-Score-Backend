@@ -44,6 +44,9 @@ jobs:
 
             cd /var/www/api.geisil.com
 
+             echo "Marking repository as safe..."
+             git config --global --add safe.directory /var/www/api.geisil.com
+
             echo "Pulling latest code..."
               git pull origin main
 
