@@ -17,27 +17,23 @@ import Job from "../../models/company_Models/JobPostingModel.js";
 
 export const getTotal = async (req, res) => {
   try {
-    const [
-      totalCompany,
-      totalInstitution,
-      totalCandidate
-    ] = await Promise.all([
+    const [totalCompany, totalInstitution, totalCandidate] = await Promise.all([
       User.countDocuments({ role: 2, is_del: false }), // Users with role_id = 1
       User.countDocuments({ role: 3, is_del: false }), // Fully verified users
       User.countDocuments({ role: 1, is_del: false }), // Pending verification users
     ]);
 
-    const TotalPayment = '0.00';
+    const TotalPayment = "0.00";
 
     res.status(200).json({
       success: true,
       totalCompany,
       totalInstitution,
       totalCandidate,
-      TotalPayment
+      TotalPayment,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -61,40 +57,50 @@ export const getMonthlyCompanyDetails = async (req, res) => {
         $match: {
           role: 2,
           is_del: false,
-          createdAt: { $gte: startDate }
-        }
+          createdAt: { $gte: startDate },
+        },
       },
       {
         $group: {
           _id: {
             year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" }
+            month: { $month: "$createdAt" },
           },
-          total: { $sum: 1 }
-        }
+          total: { $sum: 1 },
+        },
       },
       {
         $project: {
           _id: 0,
           year: "$_id.year",
           month: "$_id.month",
-          total: 1
-        }
-      }
+          total: 1,
+        },
+      },
     ]);
 
     // Step 2: Convert data to a Map for faster lookup
     const dataMap = new Map();
-    monthlyData.forEach(item => {
+    monthlyData.forEach((item) => {
       dataMap.set(`${item.year}-${item.month}`, item.total);
     });
 
     // Step 3: Generate result for last 12 months
     const monthNames = [
-      "", "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
-
 
     let totalSum = 0;
     for (let i = 11; i >= 0; i--) {
@@ -109,10 +115,8 @@ export const getMonthlyCompanyDetails = async (req, res) => {
 
     const result = [];
 
-
     for (let i = 11; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1); // Safe and immutable
-
 
       const year = date.getFullYear();
       const month = date.getMonth() + 1; // 1-based month
@@ -125,20 +129,19 @@ export const getMonthlyCompanyDetails = async (req, res) => {
         month,
         monthName: monthNames[month],
         total,
-        percentage: +percentage.toFixed(2)
+        percentage: +percentage.toFixed(2),
       });
     }
 
     res.status(200).json({
       success: true,
-      data: result
+      data: result,
     });
   } catch (error) {
     console.error("Error in getMonthlyCompanyDetails:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 /**
  * @route POST /api/dashboard/getMonthlyRegistered
@@ -158,33 +161,44 @@ export const getMonthlyRegistered = async (req, res) => {
       {
         $match: {
           all_verified: 1,
-          createdAt: { $gte: sixMonthsAgo }
-        }
+          createdAt: { $gte: sixMonthsAgo },
+        },
       },
       {
         $group: {
           _id: {
             year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" }
+            month: { $month: "$createdAt" },
           },
-          total: { $sum: 1 }
-        }
+          total: { $sum: 1 },
+        },
       },
       {
         $project: {
           _id: 0,
           year: "$_id.year",
           month: "$_id.month",
-          total: 1
-        }
-      }
+          total: 1,
+        },
+      },
     ]);
 
     // Generate last 6 months with default 0
     const result = [];
     const monthNames = [
-      "", "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     for (let i = 5; i >= 0; i--) {
@@ -195,26 +209,25 @@ export const getMonthlyRegistered = async (req, res) => {
       const month = date.getMonth() + 1;
 
       const match = monthlyData.find(
-        (item) => item.year === year && item.month === month
+        (item) => item.year === year && item.month === month,
       );
 
       result.push({
         year,
         month,
         monthName: monthNames[month],
-        total: match ? match.total : 0
+        total: match ? match.total : 0,
       });
     }
 
     res.status(200).json({
       success: true,
-      data: result
+      data: result,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 /**
  * @route POST /api/dashboard/getMonthlyCandidateDetails
@@ -236,41 +249,51 @@ export const getMonthlyCandidateDetails = async (req, res) => {
         $match: {
           role: 1,
           is_del: false,
-          createdAt: { $gte: sixMonthsAgo }
-        }
+          createdAt: { $gte: sixMonthsAgo },
+        },
       },
       {
         $group: {
           _id: {
             year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" }
+            month: { $month: "$createdAt" },
           },
-          total: { $sum: 1 }
-        }
+          total: { $sum: 1 },
+        },
       },
       {
         $project: {
           _id: 0,
           year: "$_id.year",
           month: "$_id.month",
-          total: 1
-        }
-      }
+          total: 1,
+        },
+      },
     ]);
 
     // Step 2: Convert results to map for quick access
     const dataMap = new Map();
-    monthlyData.forEach(item => {
+    monthlyData.forEach((item) => {
       dataMap.set(`${item.year}-${item.month}`, item.total);
     });
 
     const monthNames = [
-      "", "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     const result = [];
-
 
     // Step 3: Final result for last 6 months
     for (let i = 5; i >= 0; i--) {
@@ -284,20 +307,19 @@ export const getMonthlyCandidateDetails = async (req, res) => {
         year,
         month,
         monthName: monthNames[month],
-        total
+        total,
       });
     }
 
     res.status(200).json({
       success: true,
-      data: result
+      data: result,
     });
   } catch (error) {
     console.error("Error in getMonthlyCandidateDetails:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 /**
  * @route POST /api/dashboard/getMonthlyInstitutionsDetails
@@ -319,37 +341,48 @@ export const getMonthlyInstitutionsDetails = async (req, res) => {
         $match: {
           role: 3,
           is_del: false,
-          createdAt: { $gte: twelveMonthsAgo }
-        }
+          createdAt: { $gte: twelveMonthsAgo },
+        },
       },
       {
         $group: {
           _id: {
             year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" }
+            month: { $month: "$createdAt" },
           },
-          total: { $sum: 1 }
-        }
+          total: { $sum: 1 },
+        },
       },
       {
         $project: {
           _id: 0,
           year: "$_id.year",
           month: "$_id.month",
-          total: 1
-        }
-      }
+          total: 1,
+        },
+      },
     ]);
 
     // Step 2: Convert to a Map for quick access
     const dataMap = new Map();
-    monthlyData.forEach(item => {
+    monthlyData.forEach((item) => {
       dataMap.set(`${item.year}-${item.month}`, item.total);
     });
 
     const monthNames = [
-      "", "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     const result = [];
@@ -378,20 +411,19 @@ export const getMonthlyInstitutionsDetails = async (req, res) => {
         month,
         monthName: monthNames[month],
         total,
-        percentage: +percentage.toFixed(2)
+        percentage: +percentage.toFixed(2),
       });
     }
 
     res.status(200).json({
       success: true,
-      data: result
+      data: result,
     });
   } catch (error) {
     console.error("Error in getMonthlyInstitutionsDetails:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 export const getTotalFrontend = async (req, res) => {
   try {
@@ -400,7 +432,7 @@ export const getTotalFrontend = async (req, res) => {
     // Get the company package for this employer
     const companyPackage = await CompanyPackage.findOne({
       companyId: user_id,
-      is_del: false
+      is_del: false,
     });
 
     const totalSelectedPlans = companyPackage?.selected_plan?.length || 0;
@@ -408,15 +440,18 @@ export const getTotalFrontend = async (req, res) => {
     const [
       totalActiveVerification,
       totalPendingVerifications,
-      totalTransactionAmountAgg
+      totalTransactionAmountAgg,
     ] = await Promise.all([
       // Fully verified users under this employer
-      UserVerification.countDocuments({ all_verified: 1, employer_id: user_id }),
+      UserVerification.countDocuments({
+        all_verified: 1,
+        employer_id: user_id,
+      }),
 
       // Pending verifications under this employer
       UserVerification.countDocuments({
         all_verified: { $in: [0, null] },
-        employer_id: user_id
+        employer_id: user_id,
       }),
 
       // Total transaction amount under this employer
@@ -424,39 +459,39 @@ export const getTotalFrontend = async (req, res) => {
         {
           $match: {
             employer_id: user_id,
-
-          }
+          },
         },
         {
           $group: {
             _id: 0,
-            total: { $sum: "$amount" } // assuming amount is already stored as number
-          }
+            total: { $sum: "$amount" }, // assuming amount is already stored as number
+          },
         },
         {
           $project: {
             _id: 0,
-            total: 1
-          }
-        }
-      ])
+            total: 1,
+          },
+        },
+      ]),
     ]);
 
     // const totalTransactionAmount = totalTransactionAmountAgg[0]?.total || 0;
-    const totalTransactionAmount = parseFloat((totalTransactionAmountAgg[0]?.total || 0).toFixed(2));
+    const totalTransactionAmount = parseFloat(
+      (totalTransactionAmountAgg[0]?.total || 0).toFixed(2),
+    );
 
     res.status(200).json({
       success: true,
       totalSelectedPlans,
       totalActiveVerification,
       totalPendingVerifications,
-      totalTransactionAmount
+      totalTransactionAmount,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 /**
  * @route POST /api/dashboard/getMonthlyUserDetails
@@ -466,8 +501,6 @@ export const getTotalFrontend = async (req, res) => {
  * @returns {object} 200 - Data Fetched successfully!
  * @returns {object} 500 - Error fetching Data
  */
-
-
 
 export const getMonthlyUserDetails = async (req, res) => {
   try {
@@ -480,33 +513,44 @@ export const getMonthlyUserDetails = async (req, res) => {
         $match: {
           // role: 1,
           is_del: false,
-          createdAt: { $gte: sixMonthsAgo }
-        }
+          createdAt: { $gte: sixMonthsAgo },
+        },
       },
       {
         $group: {
           _id: {
             year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" }
+            month: { $month: "$createdAt" },
           },
-          total: { $sum: 1 }
-        }
+          total: { $sum: 1 },
+        },
       },
       {
         $project: {
           _id: 0,
           year: "$_id.year",
           month: "$_id.month",
-          total: 1
-        }
-      }
+          total: 1,
+        },
+      },
     ]);
 
     // Generate last 6 months with default 0
     const result = [];
     const monthNames = [
-      "", "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     for (let i = 5; i >= 0; i--) {
@@ -517,26 +561,25 @@ export const getMonthlyUserDetails = async (req, res) => {
       const month = date.getMonth() + 1;
 
       const match = monthlyData.find(
-        (item) => item.year === year && item.month === month
+        (item) => item.year === year && item.month === month,
       );
 
       result.push({
         year,
         month,
         monthName: monthNames[month],
-        total: match ? match.total : 0
+        total: match ? match.total : 0,
       });
     }
 
     res.status(200).json({
       success: true,
-      data: result
+      data: result,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 export const getMonthlyUserVerificationsFrontend = async (req, res) => {
   try {
@@ -564,32 +607,43 @@ export const getMonthlyUserVerificationsFrontend = async (req, res) => {
         $match: {
           employer_id: user_id,
           all_verified: 1,
-          createdAt: { $gte: startDate, $lte: endDate }
-        }
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
       },
       {
         $group: {
           _id: {
             year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" }
+            month: { $month: "$createdAt" },
           },
-          total: { $sum: 1 }
-        }
+          total: { $sum: 1 },
+        },
       },
       {
         $project: {
           _id: 0,
           year: "$_id.year",
           month: "$_id.month",
-          total: 1
-        }
-      }
+          total: 1,
+        },
+      },
     ]);
 
     const result = [];
     const monthNames = [
-      "", "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     for (let i = 0; i < 12; i++) {
@@ -598,7 +652,7 @@ export const getMonthlyUserVerificationsFrontend = async (req, res) => {
       const month = date.getMonth() + 1;
 
       const match = monthlyData.find(
-        (item) => item.year === year && item.month === month
+        (item) => item.year === year && item.month === month,
       );
 
       result.push({
@@ -606,13 +660,13 @@ export const getMonthlyUserVerificationsFrontend = async (req, res) => {
         month,
         monthName: `${monthNames[month]} ${year}`,
         monthLabel: `${monthNames[month]} ${year}`, // Correct label
-        total: match ? match.total : 0
+        total: match ? match.total : 0,
       });
     }
 
     res.status(200).json({
       success: true,
-      data: result
+      data: result,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -626,7 +680,7 @@ export const getLatestApplicants = async (req, res) => {
     // 1️⃣ Get jobs posted by logged-in user
     const myJobs = await Job.find(
       { userId: userId, is_del: false },
-      { _id: 1 }
+      { _id: 1 },
     );
 
     if (!myJobs.length) {
@@ -637,7 +691,7 @@ export const getLatestApplicants = async (req, res) => {
       });
     }
 
-    const jobIds = myJobs.map(job => job._id);
+    const jobIds = myJobs.map((job) => job._id);
 
     // 2️⃣ Get applicants for those jobs
     const appliedCandidates = await JobApplication.aggregate([
@@ -652,7 +706,6 @@ export const getLatestApplicants = async (req, res) => {
       {
         $sort: { appliedAt: -1 },
       },
-
 
       // 🔹 User
       {
@@ -674,7 +727,9 @@ export const getLatestApplicants = async (req, res) => {
           as: "personalDetails",
         },
       },
-      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true },
+      },
 
       // 🔹 Candidate Details
       {
@@ -685,7 +740,12 @@ export const getLatestApplicants = async (req, res) => {
           as: "candidateDetails",
         },
       },
-      { $unwind: { path: "$candidateDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       // 🔹 Career
       {
@@ -774,7 +834,7 @@ export const getAllJobApplicantsList = async (req, res) => {
     // 1️⃣ Get jobs posted by logged-in user
     const myJobs = await Job.find(
       { userId: userId, is_del: false },
-      { _id: 1 }
+      { _id: 1 },
     );
 
     if (!myJobs.length) {
@@ -785,7 +845,7 @@ export const getAllJobApplicantsList = async (req, res) => {
       });
     }
 
-    const jobIds = myJobs.map(job => job._id);
+    const jobIds = myJobs.map((job) => job._id);
 
     // 2️⃣ Get applicants for those jobs
     const appliedCandidates = await JobApplication.aggregate([
@@ -800,7 +860,6 @@ export const getAllJobApplicantsList = async (req, res) => {
       {
         $sort: { appliedAt: -1 },
       },
-
 
       // 🔹 User
       {
@@ -822,7 +881,9 @@ export const getAllJobApplicantsList = async (req, res) => {
           as: "personalDetails",
         },
       },
-      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true },
+      },
 
       // 🔹 Candidate Details
       {
@@ -833,7 +894,12 @@ export const getAllJobApplicantsList = async (req, res) => {
           as: "candidateDetails",
         },
       },
-      { $unwind: { path: "$candidateDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       // 🔹 Career
       {
@@ -911,7 +977,12 @@ export const getAllJobApplicantsList = async (req, res) => {
           interviewInvitationStatus: {
             $cond: {
               // 1️⃣ Check if interviewInvitationAccepted exists
-              if: { $ne: [{ $ifNull: ["$interviewInvitationAccepted", null] }, null] },
+              if: {
+                $ne: [
+                  { $ifNull: ["$interviewInvitationAccepted", null] },
+                  null,
+                ],
+              },
               then: {
                 $cond: {
                   if: { $eq: ["$interviewInvitationAccepted", true] },
@@ -964,8 +1035,7 @@ export const getAllJobApplicantsList = async (req, res) => {
           interviewInvitationStatus: 1,
           // 📝 Feedback details
           feedback: {
-            communicationSkillScore:
-              "$feedback.communicationSkillScore",
+            communicationSkillScore: "$feedback.communicationSkillScore",
             technicalSkillScore: "$feedback.technicalSkillScore",
             aptitudeScore: "$feedback.aptitudeScore",
             overallScore: "$feedback.overallScore",
@@ -978,8 +1048,7 @@ export const getAllJobApplicantsList = async (req, res) => {
       },
     ]);
 
-
-    console.log("is it wokring==>", appliedCandidates)
+    console.log("is it wokring==>", appliedCandidates);
 
     return res.status(200).json({
       success: true,
@@ -990,12 +1059,10 @@ export const getAllJobApplicantsList = async (req, res) => {
     console.error("Error fetching applied candidates:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Internal server error kkkkkkkk",
     });
   }
 };
-
-
 
 export const getEmployerDashboardStats = async (req, res) => {
   try {
@@ -1010,10 +1077,10 @@ export const getEmployerDashboardStats = async (req, res) => {
     // Get my job IDs
     const myJobs = await Job.find(
       { userId: userId, is_del: false },
-      { _id: 1 }
+      { _id: 1 },
     );
 
-    const jobIds = myJobs.map(job => job._id);
+    const jobIds = myJobs.map((job) => job._id);
 
     // If no jobs, return zero stats
     if (!jobIds.length) {
@@ -1066,7 +1133,6 @@ export const getEmployerDashboardStats = async (req, res) => {
   }
 };
 
-
 export const getMonthlyApplicantsStats = async (req, res) => {
   try {
     const userId = req.userId;
@@ -1074,8 +1140,18 @@ export const getMonthlyApplicantsStats = async (req, res) => {
     // 1️⃣ Build last 6 months array
     const months = [];
     const monthNames = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
 
     const now = new Date();
@@ -1093,12 +1169,9 @@ export const getMonthlyApplicantsStats = async (req, res) => {
     }
 
     // 2️⃣ Get employer job IDs
-    const jobs = await Job.find(
-      { userId: userId, is_del: false },
-      { _id: 1 }
-    );
+    const jobs = await Job.find({ userId: userId, is_del: false }, { _id: 1 });
 
-    const jobIds = jobs.map(job => job._id);
+    const jobIds = jobs.map((job) => job._id);
 
     if (!jobIds.length) {
       return res.status(200).json({
@@ -1138,9 +1211,9 @@ export const getMonthlyApplicantsStats = async (req, res) => {
     ]);
 
     // 4️⃣ Merge aggregation result with months list
-    stats.forEach(item => {
+    stats.forEach((item) => {
       const key = `${item._id.year}-${item._id.month}`;
-      const index = months.findIndex(m => m.key === key);
+      const index = months.findIndex((m) => m.key === key);
       if (index !== -1) {
         months[index].totalApplicants = item.totalApplicants;
       }
@@ -1173,8 +1246,18 @@ export const getMonthlyAppliedJobsStatus = async (req, res) => {
     // 1️⃣ Build last 6 months array
     const months = [];
     const monthNames = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
 
     const now = new Date();
@@ -1192,11 +1275,7 @@ export const getMonthlyAppliedJobsStatus = async (req, res) => {
     }
 
     const [year, month] = months[0].key.split("-");
-    const startDate = new Date(Date.UTC(
-      Number(year),
-      Number(month) - 1,
-      1
-    ));
+    const startDate = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
 
     // 3️⃣ FIXED aggregation pipeline
     const stats = await JobApplication.aggregate([
@@ -1234,9 +1313,9 @@ export const getMonthlyAppliedJobsStatus = async (req, res) => {
     ]);
 
     // 4️⃣ Merge aggregation result with months list
-    stats.forEach(item => {
+    stats.forEach((item) => {
       const key = `${item._id.year}-${item._id.month}`;
-      const index = months.findIndex(m => m.key === key);
+      const index = months.findIndex((m) => m.key === key);
       if (index !== -1) {
         months[index].totalAppliedJobs = item.totalAppliedJobs;
       }
@@ -1250,7 +1329,6 @@ export const getMonthlyAppliedJobsStatus = async (req, res) => {
         totalAppliedJobs,
       })),
     });
-
   } catch (error) {
     console.error("Candidate monthly applied jobs stats error:", error);
     return res.status(500).json({
