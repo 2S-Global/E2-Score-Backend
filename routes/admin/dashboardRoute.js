@@ -1,23 +1,39 @@
-import express from 'express';
-import multer from 'multer';
-import dotenv from 'dotenv';
-import { v2 as cloudinary } from 'cloudinary';
+import express from "express";
+import multer from "multer";
+import dotenv from "dotenv";
+import { v2 as cloudinary } from "cloudinary";
 
-import { getTotal, getLatestApplicants, getMonthlyApplicantsStats, getEmployerDashboardStats, getMonthlyCompanyDetails, getMonthlyCandidateDetails, getMonthlyUserDetails, getMonthlyInstitutionsDetails, getTotalFrontend, getMonthlyUserVerificationsFrontend, getMonthlyAppliedJobsStatus, getAllJobApplicantsList } from '../../controllers/admin/dashboardController.js';
+import {
+  getTotal,
+  getLatestApplicants,
+  getMonthlyApplicantsStats,
+  getEmployerDashboardStats,
+  getMonthlyCompanyDetails,
+  getMonthlyCandidateDetails,
+  getMonthlyUserDetails,
+  getMonthlyInstitutionsDetails,
+  getTotalFrontend,
+  getMonthlyUserVerificationsFrontend,
+  getMonthlyAppliedJobsStatus,
+  getAllJobApplicantsList,
+  getAllJobApplicantsCount,
+  instituteStudentAssessment,
+  jobSourcing,
+} from "../../controllers/admin/dashboardController.js";
 
 //Middleware
-import userAuth from '../../middleware/authMiddleware.js';
-import Companymid from '../../middleware/companyMiddleware.js';
-import adminMiddleware from '../../middleware/adminMiddleware.js';
+import userAuth from "../../middleware/authMiddleware.js";
+import Companymid from "../../middleware/companyMiddleware.js";
+import adminMiddleware from "../../middleware/adminMiddleware.js";
 
 // Initialize dotenv to load environment variables
 dotenv.config();
 
 // Configure Cloudinary
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 // Initialize router
@@ -29,24 +45,79 @@ const upload = multer({ storage: storage });
 
 // userRouter.post('/list_verified_users', upload.none(), userAuth, Companymid, listUserVerifiedList);
 
-
 userRouter.get("/getTotal", userAuth, adminMiddleware, getTotal);
-userRouter.get("/getMonthlyCompanyDetails", userAuth, adminMiddleware, getMonthlyCompanyDetails);
-userRouter.get("/getMonthlyInstitutionsDetails", userAuth, adminMiddleware, getMonthlyInstitutionsDetails);
-userRouter.get("/getMonthlyCandidateDetails", userAuth, adminMiddleware, getMonthlyCandidateDetails);
+userRouter.get(
+  "/getMonthlyCompanyDetails",
+  userAuth,
+  adminMiddleware,
+  getMonthlyCompanyDetails,
+);
+userRouter.get(
+  "/getMonthlyInstitutionsDetails",
+  userAuth,
+  adminMiddleware,
+  getMonthlyInstitutionsDetails,
+);
+userRouter.get(
+  "/getMonthlyCandidateDetails",
+  userAuth,
+  adminMiddleware,
+  getMonthlyCandidateDetails,
+);
 userRouter.get("/getMonthlyUserDetails", getMonthlyUserDetails);
 
-
 userRouter.post("/getTotalFrontend", userAuth, Companymid, getTotalFrontend);
-userRouter.get("/getMonthlyUserVerificationsFrontend", userAuth, Companymid, getMonthlyUserVerificationsFrontend);
+userRouter.get(
+  "/getMonthlyUserVerificationsFrontend",
+  userAuth,
+  Companymid,
+  getMonthlyUserVerificationsFrontend,
+);
 // userRouter.get("/getTotal",getTotal);
 
+userRouter.get(
+  "/getLatestApplicants",
+  userAuth,
+  Companymid,
+  getLatestApplicants,
+);
+userRouter.get(
+  "/getEmployerDashboardStats",
+  userAuth,
+  Companymid,
+  getEmployerDashboardStats,
+);
+userRouter.get(
+  "/getMonthlyApplicantsStats",
+  userAuth,
+  Companymid,
+  getMonthlyApplicantsStats,
+);
+userRouter.get(
+  "/getMonthlyJobAppliedStatus",
+  userAuth,
+  getMonthlyAppliedJobsStatus,
+);
+userRouter.get(
+  "/getAllJobApplicantsList",
+  userAuth,
+  Companymid,
+  getAllJobApplicantsList,
+);
+userRouter.get(
+  "/getStudentAssessment",
+  userAuth,
+  Companymid,
+  instituteStudentAssessment,
+);
 
-userRouter.get("/getLatestApplicants", userAuth, Companymid, getLatestApplicants);
-userRouter.get("/getEmployerDashboardStats", userAuth, Companymid, getEmployerDashboardStats);
-userRouter.get("/getMonthlyApplicantsStats", userAuth, Companymid, getMonthlyApplicantsStats);
-userRouter.get("/getMonthlyJobAppliedStatus", userAuth, getMonthlyAppliedJobsStatus);
-userRouter.get("/getAllJobApplicantsList", userAuth, Companymid, getAllJobApplicantsList);
+userRouter.get(
+  "/getAllJobApplicantsCount",
+  userAuth,
+  Companymid,
+  getAllJobApplicantsCount,
+);
 
+userRouter.get("/jobSourcing", userAuth, Companymid, jobSourcing);
 
 export default userRouter;

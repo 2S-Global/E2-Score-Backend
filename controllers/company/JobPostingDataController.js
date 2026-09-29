@@ -1944,6 +1944,7 @@ export const applyJobPosting = async (req, res) => {
       description,
       acceptedTerms,
       experienceLevel,
+      recruitmentSources,
     } = req.body;
 
     if (!jobId) {
@@ -1997,6 +1998,7 @@ export const applyJobPosting = async (req, res) => {
       description,
       acceptedTerms,
       experienceLevel,
+      recruitmentSources,
     });
 
     // Send email notification to employer

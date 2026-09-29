@@ -1059,7 +1059,387 @@ export const getAllJobApplicantsList = async (req, res) => {
     console.error("Error fetching applied candidates:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal server error kkkkkkkkk",
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getAllJobApplicantsCount = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Get only job IDs posted by this user
+    const jobIds = await Job.find({ userId, is_del: false }, { _id: 1 }).lean();
+
+    if (!jobIds.length) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          Applied: 0,
+          Shortlisted: 0,
+          Interview: 0,
+          Offer: 0,
+          Rejected: 0,
+        },
+      });
+    }
+
+    const ids = jobIds.map((job) => job._id);
+
+    // Group applications directly in MongoDB
+    const result = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: { $in: ids },
+          isDel: false,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+
+          applied: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "applied"] }, 1, 0],
+            },
+          },
+
+          shortlisted: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "shortlisted"] }, 1, 0],
+            },
+          },
+
+          interview: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "invitation_sent"] }, 1, 0],
+            },
+          },
+
+          offer: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "offer_sent"] }, 1, 0],
+            },
+          },
+
+          rejected: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "rejected"] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    const counts = result[0] || {
+      applied: 0,
+      shortlisted: 0,
+      interview: 0,
+      offer: 0,
+      rejected: 0,
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        Applied: counts.applied,
+        Shortlisted: counts.shortlisted,
+        Interview: counts.interview,
+        Offer: counts.offer,
+        Rejected: counts.rejected,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching applicant counts:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const instituteStudentAssessment = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // 1. Get only jobs posted by this institute/user
+    const jobIds = await Job.find(
+      {
+        userId,
+        is_del: false,
+      },
+      {
+        _id: 1,
+      },
+    ).lean();
+
+    if (!jobIds.length) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: [],
+      });
+    }
+
+    const ids = jobIds.map((job) => job._id);
+
+    // 2. Get applications
+    const instituteStudent = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: { $in: ids },
+          isDel: false,
+        },
+      },
+
+      // Latest applications first
+      {
+        $sort: {
+          appliedAt: -1,
+        },
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "users",
+        },
+      },
+
+      {
+        $unwind: {
+          path: "$users",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $lookup: {
+          from: "mentaltestattempts",
+
+          let: {
+            userId: "$users._id",
+          },
+
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$userId", "$$userId"],
+                    },
+                    {
+                      $eq: ["$is_Deleted", false],
+                    },
+                  ],
+                },
+              },
+            },
+
+            // Latest attempt first
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+
+            {
+              $project: {
+                _id: 1,
+                userId: 1,
+                createdAt: 1,
+              },
+            },
+          ],
+
+          as: "mentaltestattempts",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "attemptedmentaltestfeedbacks",
+
+          let: {
+            userId: "$users._id",
+          },
+
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$user", "$$userId"],
+                },
+              },
+            },
+
+            // Latest feedback first
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+
+            // Only latest feedback
+            {
+              $limit: 1,
+            },
+
+            {
+              $project: {
+                _id: 1,
+                user: 1,
+                remarks: 1,
+                scores: 1,
+                createdAt: 1,
+              },
+            },
+          ],
+
+          as: "attemptedmentaltestfeedbacks",
+        },
+      },
+
+      //  GROUP BY USER ID
+      {
+        $group: {
+          _id: "$userId",
+
+          // User details
+          users: {
+            $first: "$users",
+          },
+
+          // All jobs/applications of this student
+          applications: {
+            $push: {
+              _id: "$_id",
+              jobId: "$jobId",
+              appliedAt: "$appliedAt",
+            },
+          },
+
+          // Mental test attempts
+          mentaltestattempts: {
+            $first: "$mentaltestattempts",
+          },
+
+          // Latest feedback
+          attemptedmentaltestfeedbacks: {
+            $first: "$attemptedmentaltestfeedbacks",
+          },
+        },
+      },
+
+      // 7. Optional: sort students by latest application
+      {
+        $sort: {
+          "applications.0.appliedAt": -1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: instituteStudent.length,
+      data: instituteStudent,
+    });
+  } catch (error) {
+    console.error("Error fetching student:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const jobSourcing = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const jobs = await Job.find(
+      {
+        userId,
+        is_del: false,
+      },
+      { _id: 1 },
+    ).lean();
+
+    const data = {
+      CampusDrive: {
+        count: 0,
+        percentage: 0,
+      },
+      Referrals: {
+        count: 0,
+        percentage: 0,
+      },
+      JobPortals: {
+        count: 0,
+        percentage: 0,
+      },
+      Direct: {
+        count: 0,
+        percentage: 0,
+      },
+    };
+
+    if (!jobs.length) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data,
+      });
+    }
+
+    const jobIds = jobs.map((job) => job._id);
+
+    const result = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+          isDel: false,
+        },
+      },
+      {
+        $group: {
+          _id: "$recruitmentSources",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Total applications
+    const total = result.reduce((sum, item) => sum + item.count, 0);
+
+    // Calculate percentage
+    result.forEach((item) => {
+      if (item._id && data[item._id] !== undefined) {
+        data[item._id] = {
+          count: item.count,
+          percentage: total
+            ? Number(((item.count / total) * 100).toFixed(2))
+            : 0,
+        };
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: total,
+      data,
+    });
+  } catch (error) {
+    console.error("Error fetching student:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };
