@@ -3,7 +3,12 @@ import multer from "multer";
 
 //import controllers
 
-import { getCandidateDetails, getCandidateDashboardData, getAllCandidates } from "../../controllers/candidate/candidateDetailsController.js";
+import {
+  getCandidateDetails,
+  getCandidateDashboardData,
+  getAllCandidates,
+  getCandidateTimeline,
+} from "../../controllers/candidate/candidateDetailsController.js";
 import { getCandidateDetailsV2 } from "../../controllers/candidate/candidatedetailsv2.js";
 //import middleware
 
@@ -28,7 +33,17 @@ CandidateDetailsRouter.get("/get_candidate_details", getCandidateDetails);
 // );
 
 CandidateDetailsRouter.get("/get_candidate_details_v2", getCandidateDetailsV2);
-CandidateDetailsRouter.get("/get_candidate_dashboard_data", userAuth, getCandidateDashboardData);
-CandidateDetailsRouter.get("/get_all_candidates", userAuth, Companymid, getAllCandidates);
+CandidateDetailsRouter.get(
+  "/get_candidate_dashboard_data",
+  userAuth,
+  getCandidateDashboardData,
+);
+CandidateDetailsRouter.get("/timeline/:jobId", userAuth, getCandidateTimeline);
+CandidateDetailsRouter.get(
+  "/get_all_candidates",
+  userAuth,
+  Companymid,
+  getAllCandidates,
+);
 
 export default CandidateDetailsRouter;
