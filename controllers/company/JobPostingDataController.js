@@ -3084,6 +3084,54 @@ export const rejectJobApplicationStatus = async (req, res) => {
   }
 };
 
+// Reject Job Application Status API
+export const restoreJobApplicationStatus = async (req, res) => {
+  try {
+    const { applicationId } = req.body;
+
+    // 1️⃣ Validate input
+    if (!applicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Application ID is required",
+      });
+    }
+
+    // 3️⃣ Update status
+    const updatedApplication = await JobApplication.findByIdAndUpdate(
+      applicationId,
+      {
+        status: "applied",
+        interviewDate: null,
+        isInterviewFeedbackSubmitted: false,
+        interviewTime: null,
+      },
+      { new: true },
+    );
+
+    await InterviewFeedback.deleteOne({ applicationId });
+
+    if (!updatedApplication) {
+      return res.status(404).json({
+        success: false,
+        message: "Job application not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Application status updated to rejected",
+      data: updatedApplication,
+    });
+  } catch (error) {
+    console.error("Update Job Application Status Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 // Accept Job Application Status API
 export const acceptJobApplicationStatus = async (req, res) => {
   try {
@@ -4161,7 +4209,7 @@ export const getTotalExperience = async (req, res) => {
 };
 export const GetRecentSearches = async (req, res) => {
   try {
-    const userId = "69089a4b63d40bedba5f4a9b";
+    const userId = req.userId;
     const search = req.query.q?.trim();
 
     const filter = {
@@ -4197,7 +4245,7 @@ export const GetRecentSearches = async (req, res) => {
 
 export const SaveRecentSearches = async (req, res) => {
   try {
-    const userId = "69089a4b63d40bedba5f4a9b";
+    const userId = req.userId;
     const { query } = req.body;
 
     if (!query || !query.trim()) {

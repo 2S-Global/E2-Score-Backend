@@ -45,6 +45,7 @@ import {
   SaveRecentSearches,
   GetRecentSearches,
   getJobListingNotExpir,
+  restoreJobApplicationStatus,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -241,6 +242,13 @@ jobPostingDataRouter.patch(
   rejectJobApplicationStatus,
 );
 
+jobPostingDataRouter.patch(
+  "/restore_job_application_status",
+  upload.none(),
+  userAuth,
+  Companymid,
+  restoreJobApplicationStatus,
+);
 // Accept Job Application API
 jobPostingDataRouter.patch(
   "/accept_job_application_status",

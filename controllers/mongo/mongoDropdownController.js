@@ -163,7 +163,7 @@ export const All_country = async (req, res) => {
         is_active: 1,
         name: "India", // exact match only
       },
-      { _id: 0, id: 1, name: 1 }
+      { _id: 0, id: 1, name: 1 },
     );
 
     res.status(200).json({
@@ -178,8 +178,6 @@ export const All_country = async (req, res) => {
     });
   }
 };
-
-
 
 export const All_state = async (req, res) => {
   try {
@@ -197,7 +195,7 @@ export const All_state = async (req, res) => {
         name: 1,
         stateCode: 1,
         countryId: 1,
-      }
+      },
     );
 
     res.status(200).json({
@@ -215,16 +213,11 @@ export const All_state = async (req, res) => {
   }
 };
 
-
-
-
-
 export const All_gender = async (req, res) => {
   try {
-    const gender = await list_gender.find(
-      { is_del: 0, is_active: 1 },
-      { _id: 1, name: 1 }
-    );
+    const gender = await list_gender
+      .find({ is_del: 0, is_active: 1 }, { _id: 1, name: 1 })
+      .sort({ sort_order: 1 });
 
     const formattedGender = gender.map((genders) => ({
       id: genders._id,
@@ -240,9 +233,6 @@ export const All_gender = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
-
-
-
 
 export const getSkill = async (req, res) => {
   try {
@@ -289,7 +279,7 @@ export const getMatchingSkillBySql = async (req, res) => {
       `SELECT Skill FROM key_skills 
        WHERE is_del = 0 AND is_active = 1 AND Skill LIKE ? 
        ORDER BY Skill LIMIT 50;`,
-      [`${skill_name}%`]
+      [`${skill_name}%`],
     );
 
     const skills = rows.map((row) => row.Skill);
@@ -323,7 +313,7 @@ export const getMatchingSkill = async (req, res) => {
           is_active: 1,
           Skill: { $regex: `^${skill_name}`, $options: "i" }, // case-insensitive "starts with"
         },
-        "Skill" // project only Skill field
+        "Skill", // project only Skill field
       )
       .sort({ Skill: 1 })
       .limit(5)
@@ -358,7 +348,7 @@ export const getEducationLevel = async (req, res) => {
     const educationLevelList = await list_education_level
       .find(
         { is_del: 0, is_active: 1 },
-        "id level duration type" // project only `id` and `name`
+        "id level duration type", // project only `id` and `name`
       )
       .lean();
 
@@ -381,17 +371,12 @@ export const getEducationLevel = async (req, res) => {
   }
 };
 
-
-
 /**
  * @description Get all University State from the s
  * @route GET /api/sql/dropdown/all_university_state
  * @success {object} 200 - All University States
  * @error {object} 500 - Database query failed
  */
-
-
-
 
 export const getAllState = async (req, res) => {
   try {
@@ -474,7 +459,7 @@ export const getCourseByUniversity = async (req, res) => {
       const universityIdResult = await list_university_univercities
         .findOne(
           { name: university_id.trim(), is_del: 0, is_active: 1 },
-          { id: 1 }
+          { id: 1 },
         )
         .lean();
 
@@ -487,7 +472,7 @@ export const getCourseByUniversity = async (req, res) => {
               is_del: 0,
               is_active: 1,
             },
-            { id: 1 }
+            { id: 1 },
           )
           .lean();
 
@@ -506,7 +491,7 @@ export const getCourseByUniversity = async (req, res) => {
                 is_del: 0,
                 is_active: 1,
               },
-              { courses: 1 }
+              { courses: 1 },
             )
             .lean();
 
@@ -598,7 +583,7 @@ export const getMatchingCourses = async (req, res) => {
           is_del: 0,
           is_active: 1,
         },
-        { id: 1, name: 1, _id: 0 }
+        { id: 1, name: 1, _id: 0 },
       )
       .limit(100)
       .lean();
@@ -607,11 +592,11 @@ export const getMatchingCourses = async (req, res) => {
     matchingCourses.sort((a, b) => {
       const scoreA = stringSimilarity.compareTwoStrings(
         a.name.toLowerCase(),
-        course_name.toLowerCase()
+        course_name.toLowerCase(),
       );
       const scoreB = stringSimilarity.compareTwoStrings(
         b.name.toLowerCase(),
-        course_name.toLowerCase()
+        course_name.toLowerCase(),
       );
       return scoreB - scoreA;
     });
@@ -709,7 +694,7 @@ export const getEducationBoardById = async (req, res) => {
           $or: [{ state_region_id: boardId }, { state_region_id: 0 }],
           is_active: 1,
         },
-        { id: 1, board_name: 1, _id: 0 }
+        { id: 1, board_name: 1, _id: 0 },
       )
       .lean();
 
@@ -804,7 +789,7 @@ export const getCollegeNameById = async (req, res) => {
             is_del: 0,
             is_active: 1,
           },
-          { id: 1, name: 1, _id: 0 }
+          { id: 1, name: 1, _id: 0 },
         )
         .lean();
 
@@ -912,7 +897,7 @@ export const getMaritalStatus = async (req, res) => {
         is_active: 1,
         status: { $in: ["Civil partnership", "Married"] },
       },
-      { _id: 1, status: 1 }
+      { _id: 1, status: 1 },
     );
 
     const hasPartner = marriedCivilIds.map((items) => items._id);
@@ -941,7 +926,7 @@ export const getCategoryDetails = async (req, res) => {
     const categoryList = await list_category
       .find(
         { is_del: 0, is_active: 1 },
-        "_id category_name" // project only `id` and `name`
+        "_id category_name", // project only `id` and `name`
       )
       .lean();
 
@@ -973,7 +958,7 @@ export const getVisaType = async (req, res) => {
     const visaTypeList = await list_visa_type
       .find(
         { is_del: 0, is_active: 1 },
-        "_id visa_name" // project only `id` and `name`
+        "_id visa_name", // project only `id` and `name`
       )
       .lean();
 
@@ -1035,7 +1020,7 @@ export const getCareerBreakReason = async (req, res) => {
     const breakList = await list_career_break_reason
       .find(
         { is_del: 0, is_active: 1 },
-        "_id name" // project only `id` and `name`
+        "_id name", // project only `id` and `name`
       )
       .lean();
 
@@ -1067,7 +1052,7 @@ export const getLanguage = async (req, res) => {
     const languageList = await list_language
       .find(
         { is_del: 0, is_active: 1 },
-        "_id name" // project only `id` and `name`
+        "_id name", // project only `id` and `name`
       )
       .lean();
 
@@ -1099,7 +1084,7 @@ export const getLanguageProficiency234 = async (req, res) => {
     const proficiencyList = await list_language_proficiency
       .find(
         { is_del: 0, is_active: 1 },
-        "_id name" // project only `id` and `name`
+        "_id name", // project only `id` and `name`
       )
       .lean();
 
@@ -1125,7 +1110,7 @@ export const getLanguageProficiency = async (req, res) => {
     const proficiencyList = await list_language_proficiency
       .find(
         { is_del: 0, is_active: 1 },
-        "_id name" // project only `id` and `name`
+        "_id name", // project only `id` and `name`
       )
       .lean();
 
@@ -1471,7 +1456,7 @@ export const getTechSkills = async (req, res) => {
     const rows = await list_tech_skill.find({ is_del: 0, is_active: 1 });
 
     const allSkills = rows.map(
-      (row) => row.name.charAt(0).toUpperCase() + row.name.slice(1)
+      (row) => row.name.charAt(0).toUpperCase() + row.name.slice(1),
     );
 
     res.status(200).json({
@@ -1499,7 +1484,7 @@ export const getNonTechSkills = async (req, res) => {
     const rows = await list_non_it_skills.find({ is_del: 0, is_active: 1 });
 
     const allSkills = rows.map(
-      (row) => row.name.charAt(0).toUpperCase() + row.name.slice(1)
+      (row) => row.name.charAt(0).toUpperCase() + row.name.slice(1),
     );
 
     res.status(200).json({
@@ -1545,7 +1530,7 @@ export const getAllSchoolLists = async (req, res) => {
     const schoolLists = await list_school_list
       .find(
         { board_id: boardId, is_del: 0, is_active: 1 },
-        { id: 1, school_name: 1, _id: 0 }
+        { id: 1, school_name: 1, _id: 0 },
       )
       .lean();
 

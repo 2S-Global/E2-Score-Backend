@@ -19,6 +19,7 @@ import {
   getAllJobApplicantsCount,
   instituteStudentAssessment,
   jobSourcing,
+  getJobApplicantsByCandidate,
 } from "../../controllers/admin/dashboardController.js";
 
 //Middleware
@@ -103,6 +104,12 @@ userRouter.get(
   userAuth,
   Companymid,
   getAllJobApplicantsList,
+);
+userRouter.get(
+  "/getJobApplicantsByCandidate",
+  userAuth,
+  Companymid,
+  getJobApplicantsByCandidate,
 );
 userRouter.get(
   "/getStudentAssessment",
