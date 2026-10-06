@@ -1,4 +1,8 @@
-export const instituteStudentImportCredentialsTemplate = (name, email, password) => `
+export const instituteStudentImportCredentialsTemplate = (
+  name,
+  email,
+  password,
+) => `
       <div style="text-align: center; margin-bottom: 20px;">
     <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
   </div>
@@ -6,7 +10,7 @@ export const instituteStudentImportCredentialsTemplate = (name, email, password)
         <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
         <p>
           We are pleased to provide you with access to our newly launched platform,
-          <a href="https://e2-score-updated.vercel.app" target="_blank">https://e2-score-updated.vercel.app</a>,
+          <a href="https://services.geisil.com" target="_blank">https://services.geisil.com</a>,
           <strong>Geisil</strong> is a comprehensive job and career platform designed for both candidates and companies. Candidates can register, update their professional profiles, and apply to job opportunities. Employers can sign in, post jobs, and verify candidates who have listed their company in their employment details. Institutes also have the ability to verify candidates in a similar way.
         </p>
       
@@ -18,7 +22,7 @@ export const instituteStudentImportCredentialsTemplate = (name, email, password)
       
         <p>
           Please log in to the platform at 
-          <a href="https://e2-score-updated.vercel.app" target="_blank">https://e2-score-updated.vercel.app</a> 
+          <a href="https://services.geisil.com" target="_blank">https://services.geisil.com</a> 
           using the provided credentials. We strongly recommend that you change your password
           upon your first login for security reasons.
         </p>

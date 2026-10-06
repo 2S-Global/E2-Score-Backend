@@ -6,7 +6,7 @@ export const candidateRegistrationTemplate = (name, email, password, token) => `
         <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
         <p>
           We are pleased to provide you with access to our newly launched platform,
-          <a href="https://e2-score-updated.vercel.app" target="_blank">https://e2-score-updated.vercel.app</a>,
+          <a href="https://services.geisil.com" target="_blank">https://services.geisil.com</a>,
           <strong>Geisil</strong> is a comprehensive job and career platform designed for both candidates and companies. Candidates can register, update their professional profiles, and apply to job opportunities. Employers can sign in, post jobs, and verify candidates who have listed their company in their employment details. Institutes also have the ability to verify candidates in a similar way.
         </p>
             
