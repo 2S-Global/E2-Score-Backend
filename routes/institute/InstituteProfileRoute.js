@@ -38,6 +38,7 @@ import {
   getStudentPlacementTimeline,
   PlacementsGraph,
   PlacementsStatistics,
+  getAllCompaniesOpenPositions,
 } from "../../controllers/institute/CompanyProfileControllers.js";
 
 import {
@@ -173,6 +174,14 @@ InstituteProfileRouter.get(
   Institutemid,
   getAllCompaniesByInstitute,
 );
+
+InstituteProfileRouter.get(
+  "/get_all_companies_open_positions",
+  userAuth,
+  Institutemid,
+  getAllCompaniesOpenPositions,
+);
+
 InstituteProfileRouter.get(
   "/get_all_companies_by_institute_placement",
   userAuth,

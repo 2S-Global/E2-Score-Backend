@@ -857,6 +857,158 @@ export const getAllCompaniesByInstitute = async (req, res) => {
   }
 };
 
+export const getAllCompaniesOpenPositions = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user",
+      });
+    }
+
+    const currentYear = new Date().getFullYear();
+
+    const companies = await CompanyByInstitute.aggregate([
+      // Get companies for this institute
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          isDel: false,
+        },
+      },
+
+      // Get latest requirement for each company for the current year
+      {
+        $lookup: {
+          from: "companyrequirements",
+          let: {
+            companyId: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$companyName", "$$companyId"],
+                    },
+                    {
+                      $eq: [
+                        {
+                          $year: "$createdAt",
+                        },
+                        currentYear,
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+
+            // Latest requirement first
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+
+            // Only latest requirement
+            {
+              $limit: 1,
+            },
+          ],
+          as: "latestRequirement",
+        },
+      },
+
+      // Convert latestRequirement array to object
+      {
+        $unwind: {
+          path: "$latestRequirement",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Sort companies by latest requirement
+      {
+        $sort: {
+          "latestRequirement.createdAt": -1,
+        },
+      },
+
+      // Store company list and calculate total candidates
+      {
+        $group: {
+          _id: null,
+          companies: {
+            $push: "$$ROOT",
+          },
+          openPositions: {
+            $sum: {
+              $ifNull: ["$latestRequirement.numberOfOpenings", 0],
+            },
+          },
+          totalCompanies: {
+            $sum: 1,
+          },
+        },
+      },
+      // Remove _id from final response
+      {
+        $project: {
+          _id: 0,
+          openPositions: 1,
+          totalCompanies: 1,
+        },
+      },
+    ]);
+    //  Placed Students
+    const HiresStudents = await StudentPlacement.countDocuments({
+      instituteId: userId,
+      is_del: false,
+      status: "Offered",
+      offerDate: {
+        $gte: new Date(`${currentYear}-01-01T00:00:00.000Z`),
+        $lt: new Date(`${currentYear + 1}-01-01T00:00:00.000Z`),
+      },
+    });
+
+    // Total Students
+    const totalStudents = await StudentPlacement.countDocuments({
+      instituteId: userId,
+      is_del: false,
+    });
+
+    // Conversion Rate
+    const ConversionRate = totalStudents
+      ? Number(((HiresStudents / totalStudents) * 100).toFixed(1))
+      : 0;
+
+    if (companies[0]) {
+      companies[0]["totalHires"] = HiresStudents;
+      companies[0]["conversionRate"] = ConversionRate;
+    }
+    // Result
+    const result = companies[0] || {
+      totalCandidates: 0,
+      totalCompanies: 0,
+      totalHires: 0,
+    };
+    return res.status(200).json({
+      success: true,
+      message: "fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const getAllCompaniesByInstitutePlacement = async (req, res) => {
   try {
     const userId = req.userId;
@@ -1210,7 +1362,7 @@ export const PlacementsGraph = async (req, res) => {
               },
             },
           },
-          /*   "year-month": "$_id", */
+          "year-month": "$_id",
           offers: 1,
           accepted: 1,
         },
