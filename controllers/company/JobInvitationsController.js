@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import JobInvitations from "../../models/company_Models/JobInvitations.js";
+import JobInvitationHandoff from "../../models/company_Models/JobInvitationHandoff.js";
 import JobPosting from "../../models/company_Models/JobPostingModel.js";
+import CompanyDetails from "../../models/company_Models/companydetails.js";
 import JobApplication from "../../models/jobApplicationModel.js";
 import User from "../../models/userModel.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
@@ -39,6 +41,16 @@ const verifyInvitationToken = (token) => {
     throw new Error("Invalid invitation response token.");
   }
   return payload;
+};
+
+const createInvitationHandoff = async (userId) => {
+  const ticket = randomBytes(32).toString("hex");
+  await JobInvitationHandoff.create({
+    ticketHash: createHash("sha256").update(ticket).digest("hex"),
+    userId,
+    expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+  });
+  return ticket;
 };
 
 const htmlResponsePage = (content) => `<!doctype html>
@@ -83,22 +95,30 @@ export const showJobInvitationResponse = async (req, res) => {
 
     const token = escapeHtml(req.query.token);
     const requestedDecision = req.query.decision;
-    const confirmationForm = ["Accepted", "Rejected"].includes(
-      requestedDecision,
-    )
-      ? `
-      <p>${requestedDecision === "Accepted" ? "Confirming will submit your application and record your acceptance of the application terms." : "Confirming will record your rejection of this invitation."}</p>
+    const responseForm =
+      requestedDecision === "Accepted"
+        ? `
         <form method="post" action="/api/job-invitations/respond">
           <input type="hidden" name="token" value="${token}" />
-          <input type="hidden" name="decision" value="${requestedDecision}" />
-          <button type="submit" style="padding:10px 18px;cursor:pointer">Confirm ${requestedDecision === "Accepted" ? "Accept" : "Reject"}</button>
+          <input type="hidden" name="decision" value="Accepted" />
+          <button type="submit" style="padding:10px 18px;cursor:pointer">Continue to profile</button>
         </form>
+        <script>document.forms[0].requestSubmit()</script>
       `
-      : `
+        : requestedDecision === "Rejected"
+          ? `
+        <form method="post" action="/api/job-invitations/respond">
+          <input type="hidden" name="token" value="${token}" />
+          <input type="hidden" name="decision" value="Rejected" />
+          <button type="submit" style="padding:10px 18px;cursor:pointer">Reject</button>
+        </form>
+        <script>document.forms[0].requestSubmit()</script>
+      `
+          : `
         <p>Choose whether to accept this invitation.</p>
         <form method="post" action="/api/job-invitations/respond" style="display:flex;gap:12px;flex-wrap:wrap">
           <input type="hidden" name="token" value="${token}" />
-          <button type="submit" name="decision" value="Accepted" style="padding:10px 18px;cursor:pointer">Accept</button>
+          <button type="submit" name="decision" value="Accepted" style="padding:10px 18px;cursor:pointer">Profile Update</button>
           <button type="submit" name="decision" value="Rejected" style="padding:10px 18px;cursor:pointer">Reject</button>
         </form>
       `;
@@ -109,9 +129,9 @@ export const showJobInvitationResponse = async (req, res) => {
         htmlResponsePage(`
         <h1>Job invitation</h1>
         <p>You've been invited to apply for <strong>${escapeHtml(invitation.jobTitle)}</strong>.</p>
-        <p>Accepting submits an application using “Not specified” for preferences that were not provided.</p>
-        <p>By confirming Accept, you agree to submit the application and accept its terms.</p>
-        ${confirmationForm}
+        <p>Profile Update submits your application using “Not specified” for preferences that were not provided, then opens your candidate dashboard.</p>
+        <p>By continuing, you agree to submit the application and accept its terms.</p>
+        ${responseForm}
       `),
       );
   } catch {
@@ -171,6 +191,28 @@ export const respondToJobInvitation = async (req, res) => {
         );
     }
 
+    let handoffUrl;
+    try {
+      const clientBaseUrl = process.env.CLIENT_BASE_URL?.trim();
+      if (!clientBaseUrl) {
+        throw new Error("Client base URL is not configured.");
+      }
+      handoffUrl = new URL("/invitation-login", clientBaseUrl);
+      if (!["http:", "https:"].includes(handoffUrl.protocol)) {
+        throw new Error("Client base URL must use HTTP or HTTPS.");
+      }
+    } catch (error) {
+      console.error("Invalid invitation dashboard configuration:", error);
+      return res
+        .status(500)
+        .type("html")
+        .send(
+          htmlResponsePage(
+            "<h1>Unable to continue</h1><p>The dashboard is temporarily unavailable. Please contact support.</p>",
+          ),
+        );
+    }
+
     const job = await JobPosting.findOne({
       _id: invitation.jobId,
       is_del: false,
@@ -194,7 +236,7 @@ export const respondToJobInvitation = async (req, res) => {
     });
     let newAccountPassword;
 
-    if (candidate?.is_del) {
+    if (candidate?.is_del || candidate?.is_active === false) {
       return res
         .status(409)
         .type("html")
@@ -244,6 +286,11 @@ export const respondToJobInvitation = async (req, res) => {
       ]);
     }
 
+    if (!candidate.isVerified) {
+      candidate.isVerified = true;
+      await candidate.save();
+    }
+
     const application = await JobApplication.findOne({
       jobId: invitation.jobId,
       userId: candidate._id,
@@ -266,6 +313,7 @@ export const respondToJobInvitation = async (req, res) => {
 
     invitation.status = "Accepted";
     await invitation.save();
+    const handoffTicket = await createInvitationHandoff(candidate._id);
 
     const emailJobs = [];
     if (newAccountPassword) {
@@ -307,16 +355,8 @@ export const respondToJobInvitation = async (req, res) => {
     }
     await Promise.all(emailJobs);
 
-    return res
-      .status(200)
-      .type("html")
-      .send(
-        htmlResponsePage(
-          wasAlreadyApplied
-            ? "<h1>Invitation accepted</h1><p>You have already applied for this job.</p>"
-            : "<h1>Invitation accepted</h1><p>Your job application has been submitted.</p>",
-        ),
-      );
+    handoffUrl.hash = new URLSearchParams({ ticket: handoffTicket }).toString();
+    return res.redirect(303, handoffUrl.toString());
   } catch (error) {
     console.error("Failed to process job invitation response:", error);
     return res
@@ -330,15 +370,73 @@ export const respondToJobInvitation = async (req, res) => {
   }
 };
 
+export const redeemJobInvitationHandoff = async (req, res) => {
+  try {
+    const { ticket } = req.body || {};
+    if (typeof ticket !== "string" || !/^[a-f0-9]{64}$/i.test(ticket)) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid invitation handoff ticket is required.",
+      });
+    }
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({
+        success: false,
+        message: "Authentication is temporarily unavailable.",
+      });
+    }
+
+    const handoff = await JobInvitationHandoff.findOneAndDelete({
+      ticketHash: createHash("sha256").update(ticket).digest("hex"),
+      expiresAt: { $gt: new Date() },
+    });
+    if (!handoff) {
+      return res.status(401).json({
+        success: false,
+        message: "This invitation handoff has expired or was already used.",
+      });
+    }
+
+    const candidate = await User.findOne({
+      _id: handoff.userId,
+      role: 1,
+      is_del: false,
+      is_active: true,
+      isVerified: true,
+    }).select("_id name role company_id");
+    if (!candidate) {
+      return res.status(401).json({
+        success: false,
+        message: "The candidate account is unavailable.",
+      });
+    }
+
+    const token = jwt.sign(
+      { userId: candidate._id, companyId: candidate.company_id },
+      process.env.JWT_SECRET,
+      { expiresIn: "30d" },
+    );
+    return res.status(200).json({
+      success: true,
+      token,
+      user: {
+        name: candidate.name,
+        role: candidate.role,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to redeem job invitation handoff:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to sign in from this invitation. Please try again.",
+    });
+  }
+};
+
 export const addJobInvitation = async (req, res) => {
   try {
     const backendUrl = process.env.BACKEND_URL?.replace(/\/$/, "");
 
-    console.log(
-      "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq=========================>",
-      process.env.BACKEND_URL,
-      process.env.JWT_SECRET,
-    );
     if (!backendUrl || !process.env.JWT_SECRET) {
       return res.status(500).json({
         success: false,
@@ -383,11 +481,18 @@ export const addJobInvitation = async (req, res) => {
       designation: designation.trim(),
     });
 
+    const companyDetails = await CompanyDetails.findOne({
+      userId: req.userId,
+      isDel: false,
+    })
+      .select("name")
+      .lean();
     const responseToken = createInvitationToken(invitation);
     await emailQueue.add("job_invitation", {
       name: invitation.senderName,
       email: invitation.senderEmail,
       jobTitle: invitation.jobTitle,
+      companyName: companyDetails?.name?.trim() || "GEISIL",
       respondUrl: `${backendUrl}/api/job-invitations/respond?token=${encodeURIComponent(responseToken)}`,
     });
 

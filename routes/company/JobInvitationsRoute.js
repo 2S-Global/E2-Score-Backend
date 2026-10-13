@@ -2,6 +2,7 @@ import express from "express";
 import {
   addJobInvitation,
   getJobInvitationList,
+  redeemJobInvitationHandoff,
   respondToJobInvitation,
   showJobInvitationResponse,
 } from "../../controllers/company/JobInvitationsController.js";
@@ -17,6 +18,11 @@ jobInvitationsRouter.post(
   "/respond",
   express.urlencoded({ extended: false }),
   respondToJobInvitation,
+);
+jobInvitationsRouter.post(
+  "/redeem",
+  express.json(),
+  redeemJobInvitationHandoff,
 );
 
 export default jobInvitationsRouter;
