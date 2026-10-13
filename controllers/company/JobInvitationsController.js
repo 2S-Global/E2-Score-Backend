@@ -98,12 +98,11 @@ export const showJobInvitationResponse = async (req, res) => {
     const responseForm =
       requestedDecision === "Accepted"
         ? `
-        <form method="post" action="/api/job-invitations/respond">
+        <form id="invitation-response" method="post" action="/api/job-invitations/respond">
           <input type="hidden" name="token" value="${token}" />
           <input type="hidden" name="decision" value="Accepted" />
-          <button type="submit" style="padding:10px 18px;cursor:pointer">Continue to profile</button>
         </form>
-        <script>document.forms[0].requestSubmit()</script>
+        <script>document.getElementById("invitation-response").requestSubmit()</script>
       `
         : requestedDecision === "Rejected"
           ? `
