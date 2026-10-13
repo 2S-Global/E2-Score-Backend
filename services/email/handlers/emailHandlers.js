@@ -48,6 +48,7 @@ import { verificationTransactionHandler } from "./actions/verificationTransactio
 import { applicationShortlistedHandler } from "./actions/applicationShortlistedHandler.js";
 import { jobApplicationUpdateEmployerHandler } from "./actions/jobApplicationUpdateEmployerHandler.js";
 import { jobApplicationCandidateHandler } from "./actions/jobApplicationCandidateHandler.js";
+import { jobInvitationHandler } from "./actions/jobInvitationHandler.js";
 import { companyRegistrationHandler } from "./actions/companyRegistrationHandler.js";
 import { contactSubmissionHandler } from "./actions/contactSubmissionHandler.js";
 import { homePageContactHandler } from "./actions/homePageContactHandler.js";
@@ -131,6 +132,7 @@ export const emailHandlers = {
   application_shortlisted: applicationShortlistedHandler,
   job_application_update_employer: jobApplicationUpdateEmployerHandler,
   job_application_candidate: jobApplicationCandidateHandler,
+  job_invitation: jobInvitationHandler,
   company_registration: companyRegistrationHandler,
   contact_submission: contactSubmissionHandler,
   home_page_contact: homePageContactHandler,

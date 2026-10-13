@@ -24,7 +24,7 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: [ 
+    origin: [
       "https://geisil.com",
       "http://localhost:4173",
       "https://services.geisil.com",
@@ -87,6 +87,7 @@ import candidateBookmarkRouter from "./routes/admin/candidateBookmarkRoute.js";
 import CompanyProfileRouter from "./routes/company/CompanyProfileRoute.js";
 import jobPostingDataRouter from "./routes/company/JobPostingDataRoute.js";
 import CompanyKycRoute from "./routes/company/companykycRoute.js";
+import jobInvitationsRouter from "./routes/company/JobInvitationsRoute.js";
 //Institute Routes
 import InstituteProfileRouter from "./routes/institute/InstituteProfileRoute.js";
 import InstituteStudentRouter from "./routes/institute/instituteStudentRoute.js";
@@ -189,6 +190,7 @@ app.use("/api/useradmin", userAdminRouter);
 app.use("/api/companyprofile", CompanyProfileRouter);
 app.use("/api/jobposting", jobPostingDataRouter);
 app.use("/api/companykyc", CompanyKycRoute);
+app.use("/api/job-invitations", jobInvitationsRouter);
 app.use("/api/fields", fieldsRouts);
 
 //Bookmark routes for Admin
@@ -210,13 +212,11 @@ app.use("/api/mental-feedback", MentalFeedBackRouter);
 app.use("/api/home", homeRouter);
 app.use("/api/contact", contactRoutes);
 app.use("/api/review", reviewRoutes);
-app.use('/api/check', miscRouter)
+app.use("/api/check", miscRouter);
 
 app.use("/api/campus", campusRoutes);
-app.use('/api/tracker' , trackerRouter)
-app.use('/api/failure-report-generation' , reportGenerationRouter)
-
-
+app.use("/api/tracker", trackerRouter);
+app.use("/api/failure-report-generation", reportGenerationRouter);
 
 app.use(errorHandler);
 const PORT = process.env.PORT || 3015;

@@ -25,8 +25,6 @@ import { calculateEducationGapPenalty } from "../Helpers/calculateGap.js";
 import { calculateStudyPeriodScoreByUserId } from "../Helpers/calculateStudyPeriodScoreByUserId.js";
 import kycCalculation from "../Helpers/kycCalculation.js";
 
-
-
 import axios from "axios";
 
 /**
@@ -57,7 +55,7 @@ export const getUserBySql = async (req, res) => {
     if (user.gender) {
       const [genderResult] = await db_sql.query(
         "SELECT name FROM gender WHERE id = ?",
-        [user.gender]
+        [user.gender],
       );
       if (genderResult?.length) {
         gender_name = genderResult[0].name;
@@ -67,7 +65,7 @@ export const getUserBySql = async (req, res) => {
     // Fetch all UserEducation records for the user and get the max level
     const educations = await UserEducation.find(
       { userId: user_id, isDel: false },
-      "level isPrimary"
+      "level isPrimary",
     ).lean();
 
     let selectedLevel = null;
@@ -79,7 +77,7 @@ export const getUserBySql = async (req, res) => {
         selectedLevel = Math.max(
           ...educations
             .map((edu) => parseInt(edu.level))
-            .filter((lvl) => !isNaN(lvl))
+            .filter((lvl) => !isNaN(lvl)),
         );
       }
     }
@@ -88,7 +86,7 @@ export const getUserBySql = async (req, res) => {
     if (selectedLevel !== null) {
       const [levelResult] = await db_sql.query(
         "SELECT level FROM education_level WHERE id = ?",
-        [selectedLevel]
+        [selectedLevel],
       );
       if (levelResult?.length) {
         levelName = levelResult[0].level;
@@ -130,7 +128,7 @@ export const getUser = async (req, res) => {
     const personalData = await candidateDetails
       .findOne(
         { userId: user_id },
-        "dob country_id currentLocation hometown fatherName motherName currentSalary totalExperience"
+        "dob country_id currentLocation hometown fatherName motherName currentSalary totalExperience",
       )
       .lean();
 
@@ -149,9 +147,9 @@ export const getUser = async (req, res) => {
     user.phone_number = displayPhone;
 
     // Fetch gender name from SQL
-    let gender_name = ""
+    let gender_name = "";
     console.log("Value123:", user.gender);
-    console.log("Type123:", typeof user.gender);;
+    console.log("Type123:", typeof user.gender);
     if (user.gender) {
       const genderObjectId = new mongoose.Types.ObjectId(user.gender);
       const genderResult = await list_gender.findOne({
@@ -179,7 +177,7 @@ export const getUser = async (req, res) => {
         selectedLevel = Math.max(
           ...educations
             .map((edu) => parseInt(edu.level))
-            .filter((lvl) => !isNaN(lvl))
+            .filter((lvl) => !isNaN(lvl)),
         );
       }
     }
@@ -253,7 +251,7 @@ export const getResumeHeadline = async (req, res) => {
     }
 
     const user = await personalDetails.findOne({ user: user_id });
-    
+
     if (!user) {
       return res.status(404).json({ message: "No headline found" });
     }
@@ -307,10 +305,10 @@ export const getUserDetails = async (req, res) => {
     const userId = req.userId;
 
     const userData = await User.findById(userId, "name gender");
-    
+
     const personalData = await candidateDetails.findOne(
       { userId: userId },
-      "dob country_id currentLocation hometown fatherName motherName currentSalary totalExperience"
+      "dob country_id currentLocation hometown fatherName motherName currentSalary totalExperience",
     );
 
     if (!userData) {
@@ -368,7 +366,7 @@ export const getcandidateskills = async (req, res) => {
     const skills = await list_key_skill
       .find(
         { _id: { $in: uniqueSkillIds }, is_del: 0, is_active: 1 },
-        { Skill: 1, _id: 0 }
+        { Skill: 1, _id: 0 },
       )
       .lean();
 
@@ -398,10 +396,11 @@ export const getUserEducationBySql = async (req, res) => {
     const user = req.userId;
 
     // 1. Get education records
-    const educationRecords = await usereducation.find({
-      userId: user,
-      isDel: false,
-    })
+    const educationRecords = await usereducation
+      .find({
+        userId: user,
+        isDel: false,
+      })
       .sort({ level: -1 })
       .lean();
 
@@ -494,11 +493,6 @@ export const getUserEducation = async (req, res) => {
       return res.status(404).json({ message: "No education data found." });
     }
 
-
-
-
-
-
     // Get all unique values used in the records
     const getUniqueValues = (key) => [
       ...new Set(educationRecords.map((rec) => rec[key]).filter(Boolean)),
@@ -529,53 +523,53 @@ export const getUserEducation = async (req, res) => {
     ] = await Promise.all([
       levelIds.length
         ? list_education_level
-          .find({ id: { $in: levelIds } }, { id: 1, level: 1, _id: 0 })
-          .lean()
+            .find({ id: { $in: levelIds } }, { id: 1, level: 1, _id: 0 })
+            .lean()
         : [],
       stateIds.length
         ? list_university_state
-          .find({ id: { $in: stateIds } }, { id: 1, name: 1, _id: 0 })
-          .lean()
+            .find({ id: { $in: stateIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       universityIds.length
         ? list_university_univercities
-          .find({ id: { $in: universityIds } }, { id: 1, name: 1, _id: 0 })
-          .lean()
+            .find({ id: { $in: universityIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       instituteIds.length
         ? list_university_colleges
-          .find({ id: { $in: instituteIds } }, { id: 1, name: 1, _id: 0 })
-          .lean()
+            .find({ id: { $in: instituteIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       courseIds.length
         ? list_university_course
-          .find({ id: { $in: courseIds } }, { id: 1, name: 1, _id: 0 })
-          .lean()
+            .find({ id: { $in: courseIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       courseTypeIds.length
         ? list_course_type
-          .find({ id: { $in: courseTypeIds } }, { id: 1, name: 1, _id: 0 })
-          .lean()
+            .find({ id: { $in: courseTypeIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       gradingSystemIds.length
         ? list_grading_system
-          .find({ id: { $in: gradingSystemIds } }, { id: 1, name: 1, _id: 0 })
-          .lean()
+            .find({ id: { $in: gradingSystemIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       mediumIds.length
         ? list_medium_of_education
-          .find({ id: { $in: mediumIds } }, { id: 1, name: 1, _id: 0 })
-          .lean()
+            .find({ id: { $in: mediumIds } }, { id: 1, name: 1, _id: 0 })
+            .lean()
         : [],
       boardIds.length
         ? list_education_boards
-          .find({ id: { $in: boardIds } }, { id: 1, board_name: 1, _id: 0 })
-          .lean()
+            .find({ id: { $in: boardIds } }, { id: 1, board_name: 1, _id: 0 })
+            .lean()
         : [],
       schoolIds.length
         ? list_school_list
-          .find({ id: { $in: schoolIds } }, { id: 1, school_name: 1, _id: 0 })
-          .lean()
+            .find({ id: { $in: schoolIds } }, { id: 1, school_name: 1, _id: 0 })
+            .lean()
         : [],
     ]);
 
@@ -843,15 +837,15 @@ export const getEditUserData = async (req, res) => {
       const [boardVal, school_nameVal] = await Promise.all([
         board
           ? list_education_boards
-            .findOne({ id: board }, { board_name: 1, _id: 0 })
-            .lean()
-            .then((doc) => doc?.board_name || "")
+              .findOne({ id: board }, { board_name: 1, _id: 0 })
+              .lean()
+              .then((doc) => doc?.board_name || "")
           : Promise.resolve(""),
         school_name
           ? list_school_list
-            .findOne({ id: school_name }, { school_name: 1, _id: 0 })
-            .lean()
-            .then((doc) => doc?.school_name || "")
+              .findOne({ id: school_name }, { school_name: 1, _id: 0 })
+              .lean()
+              .then((doc) => doc?.school_name || "")
           : Promise.resolve(""),
       ]);
 
@@ -862,21 +856,21 @@ export const getEditUserData = async (req, res) => {
         await Promise.all([
           universityName
             ? list_university_univercities
-              .findOne({ id: universityName }, { name: 1, _id: 0 })
-              .lean()
-              .then((doc) => doc?.name || "")
+                .findOne({ id: universityName }, { name: 1, _id: 0 })
+                .lean()
+                .then((doc) => doc?.name || "")
             : Promise.resolve(""),
           courseName
             ? list_university_course
-              .findOne({ id: courseName }, { name: 1, _id: 0 })
-              .lean()
-              .then((doc) => doc?.name || "")
+                .findOne({ id: courseName }, { name: 1, _id: 0 })
+                .lean()
+                .then((doc) => doc?.name || "")
             : Promise.resolve(""),
           instituteName
             ? list_university_colleges
-              .findOne({ id: instituteName }, { name: 1, _id: 0 })
-              .lean()
-              .then((doc) => doc?.name || "")
+                .findOne({ id: instituteName }, { name: 1, _id: 0 })
+                .lean()
+                .then((doc) => doc?.name || "")
             : Promise.resolve(""),
         ]);
 
@@ -887,10 +881,10 @@ export const getEditUserData = async (req, res) => {
 
     const levelType = level
       ? (
-        await list_education_level
-          .findOne({ id: level }, { level: 1, _id: 0 })
-          .lean()
-      )?.level || ""
+          await list_education_level
+            .findOne({ id: level }, { level: 1, _id: 0 })
+            .lean()
+        )?.level || ""
       : "";
 
     return res.status(200).json({
@@ -954,7 +948,7 @@ export const getCandidateInfo = async (req, res) => {
     }
 
     const user = await User.findOne({ _id: user_id }).select(
-      "name phone_number email"
+      "name phone_number email",
     );
 
     if (!user) {
@@ -1093,19 +1087,19 @@ export const candidatePhoneNumberVerify = async (req, res) => {
         phoneNumber.countryCallingCode + phoneNumber.nationalNumber;
 
       const message = encodeURIComponent(
-        `Dear User, Use OTP : ${otp} to verify your mobile number for GEISIL. This code is valid for 2 minutes. Global Employability Information Services India Limited.`
+        `Dear User, Use OTP : ${otp} to verify your mobile number for GEISIL. This code is valid for 2 minutes. Global Employability Information Services India Limited.`,
       );
 
       const curlCommand = `curl -X GET "${link}/api/v2/SendSMS?SenderId=GEISIL&Message=${message}&MobileNumbers=${formattedMobile}&ApiKey=${sms_key}&ClientId=${sms_clientId}" -H "accept: text/plain"`;
 
       exec(curlCommand, (error, stdout, stderr) => {
         if (error) {
-          //console.error("❌ CURL Error:", error.message);
+          console.error("❌ CURL Error:", error.message);
           return;
         }
 
         if (stderr) {
-          // console.error("⚠️ CURL STDERR:", stderr);
+          console.error("⚠️ CURL STDERR:", stderr);
           return;
         }
 
@@ -1159,7 +1153,7 @@ export const candidateVerifyOtp = async (req, res) => {
     await User.findByIdAndUpdate(
       user_id,
       { numberVerified: true },
-      { new: true }
+      { new: true },
     );
 
     // Delete verifyDetails entry after successful verification
@@ -1211,14 +1205,16 @@ export const getScore = async (req, res) => {
         kycCalculation(userId),
         calculateEducationGapPenalty(userId), // ✅ IMPORTANT
       ]);
-    console.log('4 data is working or not===>', gapResult)
+    console.log("4 data is working or not===>", gapResult);
 
     /* -----------------------------------
     
        BASE SCORE (SUM)
     ----------------------------------- */
-    const baseScore = (educationResult?.totalScore || 0) + (studyResult?.score || 0) + (kycResult?.totalScore || 0);
-
+    const baseScore =
+      (educationResult?.totalScore || 0) +
+      (studyResult?.score || 0) +
+      (kycResult?.totalScore || 0);
 
     const gapPenalty = gapResult?.gapPenalty || 0;
 

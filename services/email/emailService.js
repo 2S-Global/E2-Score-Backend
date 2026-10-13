@@ -119,7 +119,7 @@ function getTransporter(type) {
   if (!account.user || !account.pass) {
     throw new Error(`Missing SMTP credentials for: ${type}`);
   }
-
+  console.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww=>", account);
   if (!transporters[type]) {
     transporters[type] = nodemailer.createTransport({
       host: HOST,
