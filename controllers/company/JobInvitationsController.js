@@ -29,6 +29,7 @@ const createInvitationToken = (invitation) =>
     {
       invitationId: invitation._id.toString(),
       email: invitation.senderEmail,
+      companyName: invitation.companyName,
       purpose: "job-invitation-response",
     },
     process.env.JWT_SECRET,
@@ -53,7 +54,7 @@ const createInvitationHandoff = async (userId) => {
   return ticket;
 };
 
-const htmlResponsePage = (content) => `<!doctype html>
+const htmlResponsePage = (content, companyName = "GEISIL") => `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -61,9 +62,29 @@ const htmlResponsePage = (content) => `<!doctype html>
     <title>Job invitation</title>
   </head>
   <body style="font-family:Arial,sans-serif;color:#222;max-width:560px;margin:48px auto;padding:24px;line-height:1.5">
-   <div style="text-align: center; margin-bottom: 20px;">
-    <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
+<div style="position: relative; margin-bottom: 20px; text-align: center; overflow: hidden;">
+  <img
+    src="https://res.cloudinary.com/da4unxero/image/upload/v1791972718/jobinvitationEmail_wxx3la.jpg"
+    alt=""
+    style="display: block; width: 100%; height: auto;"
+  />
+
+  <div style="
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 66px;
+    color: #1107ed !important;
+   font-size: 18px;
+   font-weight: bold;
+   text-transform: uppercase;
+  ">
+    ${companyName}
   </div>
+</div>
+    
     ${content}
      <div style="text-align: center; margin-top: 30px;">
       <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
@@ -89,6 +110,7 @@ export const showJobInvitationResponse = async (req, res) => {
         .send(
           htmlResponsePage(
             "<h1>Invitation unavailable</h1><p>This invitation has already been answered or is no longer valid.</p>",
+            payload?.companyName?.trim(),
           ),
         );
     }
@@ -192,7 +214,7 @@ export const respondToJobInvitation = async (req, res) => {
 
     let handoffUrl;
     try {
-      const clientBaseUrl = process.env.CLIENT_BASE_URL?.trim();
+      const clientBaseUrl = process.env.CLIENT_FRONTEND_URL?.trim();
       if (!clientBaseUrl) {
         throw new Error("Client base URL is not configured.");
       }
@@ -345,12 +367,12 @@ export const respondToJobInvitation = async (req, res) => {
           }),
         );
       }
-      emailJobs.push(
+      /* emailJobs.push(
         emailQueue.add("job_application_candidate", {
           candidateEmail: candidate.email,
           job: candidateData,
         }),
-      );
+      ); */
     }
     await Promise.all(emailJobs);
 
@@ -486,7 +508,12 @@ export const addJobInvitation = async (req, res) => {
     })
       .select("name")
       .lean();
-    const responseToken = createInvitationToken(invitation);
+    invitation["companyName"] = companyDetails?.name?.trim() || "GEISIL";
+    const newInvitation = {
+      ...invitation.toObject(),
+      companyName: companyDetails?.name?.trim() || "GEISIL",
+    };
+    const responseToken = createInvitationToken(newInvitation);
     await emailQueue.add("job_invitation", {
       name: invitation.senderName,
       email: invitation.senderEmail,
