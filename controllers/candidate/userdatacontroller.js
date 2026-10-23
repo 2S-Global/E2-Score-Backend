@@ -116,7 +116,7 @@ export const getUserBySql = async (req, res) => {
 // Updated API for mongodb
 export const getUser = async (req, res) => {
   try {
-    const user_id = req.userId;
+    const user_id = req.query.Id || req.userId;
     const user = await User.findById(user_id).lean();
 
     const progress = await GetProgress(user_id);
@@ -244,7 +244,7 @@ export const getUser = async (req, res) => {
  */
 export const getResumeHeadline = async (req, res) => {
   try {
-    const user_id = req.userId;
+    const user_id = req.query.Id || req.userId;
 
     if (!user_id) {
       return res.status(400).json({ message: "User ID is required" });
@@ -273,7 +273,7 @@ export const getResumeHeadline = async (req, res) => {
  */
 export const getProfileSummary = async (req, res) => {
   try {
-    const user_id = req.userId;
+    const user_id = req.query.Id || req.userId;
 
     if (!user_id) {
       return res.status(400).json({ message: "User ID is required" });
@@ -347,7 +347,7 @@ export const getUserDetails = async (req, res) => {
  */
 export const getcandidateskills = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
 
     const candidate = await personalDetails.findOne({ user: userId }).lean();
 
@@ -479,7 +479,7 @@ export const getUserEducationBySql = async (req, res) => {
 
 export const getUserEducation = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
 
     const educationRecords = await usereducation
       .find({
@@ -1193,7 +1193,7 @@ export const getNameByToken = async (req, res) => {
 //Get scores
 export const getScore = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
 
     /* -----------------------------------
        CALL ALL HELPERS (INCLUDING GAP)

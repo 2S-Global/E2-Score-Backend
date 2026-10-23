@@ -29,7 +29,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-
 export const addProfilePicture = async (req, res) => {
   try {
     const user_id = req.userId;
@@ -51,7 +50,7 @@ export const addProfilePicture = async (req, res) => {
               } else {
                 resolve(result);
               }
-            }
+            },
           )
           .end(req.file.buffer);
       });
@@ -72,7 +71,7 @@ export const addProfilePicture = async (req, res) => {
     // If there was an old image, delete it from Cloudinary
     if (oldPublicId) {
       await cloudinary.uploader.destroy(
-        `e2score/profile_picture/${oldPublicId}`
+        `e2score/profile_picture/${oldPublicId}`,
       );
     }
 
@@ -80,7 +79,7 @@ export const addProfilePicture = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       user_id,
       { profilePicture: profilePictureUrl },
-      { new: true }
+      { new: true },
     );
     if (user) {
       await emailQueue.add("profile_picture_updated", {
@@ -101,8 +100,6 @@ export const addProfilePicture = async (req, res) => {
   }
 };
 
-
-
 // Add Resume Headline add test comand new
 export const addResumeHeadline = async (req, res) => {
   try {
@@ -121,7 +118,7 @@ export const addResumeHeadline = async (req, res) => {
     const updated = await PersonalDetails.findOneAndUpdate(
       { user: user },
       { resumeHeadline: resumeHeadline },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     );
 
     if (userdtl) {
@@ -144,7 +141,6 @@ export const addResumeHeadline = async (req, res) => {
   }
 };
 
-
 export const deleteProfileSummary = async (req, res) => {
   try {
     const userId = req.userId;
@@ -160,7 +156,7 @@ export const deleteProfileSummary = async (req, res) => {
     // Unset the profileSummary field (soft delete)
     await PersonalDetails.updateOne(
       { user: userId },
-      { $unset: { profileSummary: "" } }
+      { $unset: { profileSummary: "" } },
     );
 
     const userdtl = await User.findById(userId);
@@ -184,7 +180,6 @@ export const deleteProfileSummary = async (req, res) => {
     });
   }
 };
-
 
 export const updateUserDetails = async (req, res) => {
   try {
@@ -308,14 +303,13 @@ export const updateUserDetails = async (req, res) => {
 
     /*  } */
 
-
     //tittle case for name
     if (newUserData.name) {
       newUserData.name = newUserData.name
         .trim()
         .toLowerCase()
         .split(/\s+/)
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
     }
 
@@ -329,7 +323,7 @@ export const updateUserDetails = async (req, res) => {
     await CandidateDetails.findOneAndUpdate(
       { userId: user_id },
       { ...newDetailsData, updatedAt: new Date() },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     );
 
     // ---------- SEND EMAIL IF CHANGES EXIST ----------
@@ -369,8 +363,6 @@ export const updateUserDetails = async (req, res) => {
   }
 };
 
-
-
 // Add Profile Summary
 export const addProfileSummary = async (req, res) => {
   try {
@@ -389,7 +381,7 @@ export const addProfileSummary = async (req, res) => {
     const updated = await PersonalDetails.findOneAndUpdate(
       { user: user },
       { profileSummary: profileSummary },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     );
 
     if (userdtl) {
@@ -411,8 +403,6 @@ export const addProfileSummary = async (req, res) => {
       .json({ message: "Error saving Profile Summary", error: error.message });
   }
 };
-
-
 
 export const addKeySkillsBySql = async (req, res) => {
   try {
@@ -438,7 +428,7 @@ export const addKeySkillsBySql = async (req, res) => {
     const placeholders = skills.map(() => "?").join(", ");
     const [rows] = await db_sql.execute(
       `SELECT id, Skill FROM key_skills WHERE Skill IN (${placeholders})`,
-      skills
+      skills,
     );
 
     const skillMap = {};
@@ -463,7 +453,7 @@ export const addKeySkillsBySql = async (req, res) => {
     await PersonalDetails.findOneAndUpdate(
       { user },
       { skills: skillIds },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     return res.status(201).json({
@@ -536,11 +526,10 @@ export const addKeySkills = async (req, res) => {
     ];
 
     // Escape regex characters
-    const escapeRegex = (str) =>
-      str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
     const regexArray = parsedSkills.map(
-      (skill) => new RegExp(`^${escapeRegex(skill)}$`, "i")
+      (skill) => new RegExp(`^${escapeRegex(skill)}$`, "i"),
     );
 
     const matchedSkills = await list_key_skill
@@ -550,7 +539,7 @@ export const addKeySkills = async (req, res) => {
           is_del: 0,
           is_active: 1,
         },
-        "_id Skill"
+        "_id Skill",
       )
       .lean();
 
@@ -586,7 +575,7 @@ export const addKeySkills = async (req, res) => {
       {
         upsert: true,
         new: true,
-      }
+      },
     );
 
     try {
@@ -616,7 +605,6 @@ export const addKeySkills = async (req, res) => {
   }
 };
 
-
 export const uploadFileToExternalServer = async (file) => {
   const form = new FormData();
   form.append("file", file.buffer, {
@@ -628,7 +616,7 @@ export const uploadFileToExternalServer = async (file) => {
     const response = await axios.post(
       "https://a2zcart.uk/e2score/fileupload/upload.php",
       form,
-      { headers: form.getHeaders() }
+      { headers: form.getHeaders() },
     );
 
     return response.data?.file_path;
@@ -663,7 +651,7 @@ async function getOrInsertIdBySql(tableName, columnName, value) {
   }
   const [existingRows] = await db_sql.execute(
     `SELECT id FROM ${tableName} WHERE ${columnName} = ? AND is_del = 0 AND is_active = 1`,
-    [value.trim()]
+    [value.trim()],
   );
   if (existingRows.length > 0) {
     return existingRows[0].id;
@@ -671,7 +659,7 @@ async function getOrInsertIdBySql(tableName, columnName, value) {
   // If not found, insert new row
   const [insertResult] = await db_sql.execute(
     `INSERT INTO ${tableName} (${columnName}, is_active, is_del, flag) VALUES (?, 0, 0, 1)`,
-    [trimmedValue]
+    [trimmedValue],
   );
   return insertResult.insertId;
 }
@@ -681,7 +669,7 @@ async function getOrInsertId(
   fieldName,
   value,
   additionalFieldName = null,
-  additionalFieldValue = null
+  additionalFieldValue = null,
 ) {
   if (!value || typeof value !== "string") {
     return null;
@@ -792,7 +780,8 @@ export const submitUserEducation = async (req, res) => {
           data.math_marks === ""
         ) {
           return res.status(400).json({
-            message: "English marks and Math marks are required for 12th grade.",
+            message:
+              "English marks and Math marks are required for 12th grade.",
           });
         }
 
@@ -812,7 +801,11 @@ export const submitUserEducation = async (req, res) => {
       }
 
       const passingYear = Number(data.year_of_passing);
-      if (isNaN(passingYear) || passingYear < 1950 || passingYear > currentYear) {
+      if (
+        isNaN(passingYear) ||
+        passingYear < 1950 ||
+        passingYear > currentYear
+      ) {
         return res.status(400).json({
           message: `Passing year must be a valid year between 1950 and ${currentYear}.`,
         });
@@ -920,7 +913,9 @@ export const submitUserEducation = async (req, res) => {
       if (isNaN(marksNum) || marksNum < 0 || marksNum > 100) {
         return res
           .status(400)
-          .json({ message: "Marks percentage must be a number between 0 and 100." });
+          .json({
+            message: "Marks percentage must be a number between 0 and 100.",
+          });
       }
     }
 
@@ -946,7 +941,7 @@ export const submitUserEducation = async (req, res) => {
     if (isPrimary) {
       await UserEducation.updateMany(
         { userId: user, isPrimary: true, isDel: false },
-        { $set: { isPrimary: false } }
+        { $set: { isPrimary: false } },
       );
     }
 
@@ -959,14 +954,14 @@ export const submitUserEducation = async (req, res) => {
       const boardId = await getOrInsertId(
         list_education_boards,
         "board_name",
-        data.board
+        data.board,
       );
       const schoolId = await getOrInsertId(
         list_school_list,
         "school_name",
         data.school_name,
         "board_id",
-        boardId
+        boardId,
       );
 
       const educationData = {
@@ -997,7 +992,7 @@ export const submitUserEducation = async (req, res) => {
         savedRecord = await UserEducation.findByIdAndUpdate(
           existing._id,
           educationData,
-          { new: true }
+          { new: true },
         );
       } else {
         const newRecord = new UserEducation(educationData);
@@ -1046,12 +1041,16 @@ export const submitUserEducation = async (req, res) => {
         instituteName: data?.institute_name,
       });
     } catch (emailError) {
-      console.error("Queueing email notification failed (record was saved successfully):", emailError);
+      console.error(
+        "Queueing email notification failed (record was saved successfully):",
+        emailError,
+      );
     }
 
     return res.status(201).json({
-      message: `Education ${levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
-        } successfully`,
+      message: `Education ${
+        levelId === "1" || levelId === "2" ? "saved/updated" : "saved"
+      } successfully`,
       data: savedRecord,
     });
   } catch (error) {
@@ -1062,7 +1061,6 @@ export const submitUserEducation = async (req, res) => {
     });
   }
 };
-
 
 export const updateUserEducation = async (req, res) => {
   try {
@@ -1120,7 +1118,8 @@ export const updateUserEducation = async (req, res) => {
           data.math_marks === ""
         ) {
           return res.status(400).json({
-            message: "English marks and Math marks are required for 12th grade.",
+            message:
+              "English marks and Math marks are required for 12th grade.",
           });
         }
 
@@ -1140,7 +1139,11 @@ export const updateUserEducation = async (req, res) => {
       }
 
       const passingYear = Number(data.year_of_passing);
-      if (isNaN(passingYear) || passingYear < 1950 || passingYear > currentYear) {
+      if (
+        isNaN(passingYear) ||
+        passingYear < 1950 ||
+        passingYear > currentYear
+      ) {
         return res.status(400).json({
           message: `Passing year must be between 1950 and ${currentYear}.`,
         });
@@ -1276,7 +1279,7 @@ export const updateUserEducation = async (req, res) => {
     if (isPrimary) {
       await UserEducation.updateMany(
         { userId: user, isPrimary: true, isDel: false },
-        { $set: { isPrimary: false } }
+        { $set: { isPrimary: false } },
       );
     }
 
@@ -1289,14 +1292,14 @@ export const updateUserEducation = async (req, res) => {
       const boardId = await getOrInsertId(
         list_education_boards,
         "board_name",
-        data.board
+        data.board,
       );
       const schoolId = await getOrInsertId(
         list_school_list,
         "school_name",
         data.school_name,
         "board_id",
-        boardId
+        boardId,
       );
 
       const educationData = {
@@ -1319,7 +1322,7 @@ export const updateUserEducation = async (req, res) => {
       savedRecord = await UserEducation.findByIdAndUpdate(
         edit_id,
         educationData,
-        { new: true }
+        { new: true },
       );
     } else {
       const [universityId, instituteId, courseId] = await Promise.all([
@@ -1351,7 +1354,7 @@ export const updateUserEducation = async (req, res) => {
       savedRecord = await UserEducation.findByIdAndUpdate(
         edit_id,
         educationData,
-        { new: true }
+        { new: true },
       );
     }
 
@@ -1368,7 +1371,10 @@ export const updateUserEducation = async (req, res) => {
         });
       }
     } catch (emailError) {
-      console.error("Queueing email notification failed (record updated successfully):", emailError);
+      console.error(
+        "Queueing email notification failed (record updated successfully):",
+        emailError,
+      );
     }
 
     return res.status(200).json({
@@ -1383,7 +1389,6 @@ export const updateUserEducation = async (req, res) => {
     });
   }
 };
-
 
 export const deleteUserEducation = async (req, res) => {
   try {
@@ -1434,7 +1439,6 @@ export const deleteUserEducation = async (req, res) => {
     });
   }
 };
-
 
 export const addCareerProfile = async (req, res) => {
   try {
@@ -1520,7 +1524,7 @@ export const addCareerProfile = async (req, res) => {
       const updated = await UserCareer.findOneAndUpdate(
         { userId },
         dataToSave,
-        { new: true }
+        { new: true },
       );
 
       if (htmllist) {
@@ -1577,7 +1581,6 @@ export const addCareerProfile = async (req, res) => {
   }
 };
 
-
 export const getCareerProfileBySql = async (req, res) => {
   try {
     const userId = req.userId;
@@ -1616,27 +1619,27 @@ export const getCareerProfileBySql = async (req, res) => {
       await Promise.all([
         CurrentIndustry
           ? db_sql.execute("SELECT job_industry FROM industries WHERE id = ?", [
-            CurrentIndustry,
-          ])
+              CurrentIndustry,
+            ])
           : Promise.resolve([[]]),
         CurrentDepartment
           ? db_sql.execute(
-            "SELECT job_department FROM departments WHERE id = ?",
-            [CurrentDepartment]
-          )
+              "SELECT job_department FROM departments WHERE id = ?",
+              [CurrentDepartment],
+            )
           : Promise.resolve([[]]),
         JobRole
           ? db_sql.execute("SELECT job_role FROM job_roles WHERE id = ?", [
-            JobRole,
-          ])
+              JobRole,
+            ])
           : Promise.resolve([[]]),
         locationIds.length > 0
           ? db_sql.execute(
-            `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
-              .map(() => "?")
-              .join(", ")})`,
-            locationIds
-          )
+              `SELECT id, city_name FROM india_cities WHERE id IN (${locationIds
+                .map(() => "?")
+                .join(", ")})`,
+              locationIds,
+            )
           : Promise.resolve([[]]),
       ]);
 
@@ -1644,7 +1647,7 @@ export const getCareerProfileBySql = async (req, res) => {
     const departmentName = departmentResult[0][0]?.job_department || "";
     const jobRoleName = jobRoleResult[0][0]?.job_role || "";
     const locationMap = new Map(
-      locationResult[0].map((row) => [row.id, row.city_name])
+      locationResult[0].map((row) => [row.id, row.city_name]),
     );
 
     const locationNames = locationIds
@@ -1682,7 +1685,7 @@ export const getCareerProfileBySql = async (req, res) => {
 
 export const getCareerProfile = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
 
     if (!userId) {
       return res.status(400).json({ message: "User not authenticated" });
@@ -1719,24 +1722,24 @@ export const getCareerProfile = async (req, res) => {
       await Promise.all([
         CurrentIndustry
           ? list_industries
-            .findOne({ id: CurrentIndustry })
-            .select("job_industry")
-            .lean()
+              .findOne({ id: CurrentIndustry })
+              .select("job_industry")
+              .lean()
           : null,
         CurrentDepartment
           ? list_department
-            .findOne({ id: CurrentDepartment })
-            .select("job_department")
-            .lean()
+              .findOne({ id: CurrentDepartment })
+              .select("job_department")
+              .lean()
           : null,
         JobRole
           ? list_job_role.findById(JobRole).select("job_role").lean()
           : null,
         locationIds.length > 0
           ? list_india_cities
-            .find({ id: { $in: locationIds } })
-            .select("city_name")
-            .lean()
+              .find({ id: { $in: locationIds } })
+              .select("city_name")
+              .lean()
           : [],
       ]);
 
@@ -1771,50 +1774,47 @@ export const getCareerProfile = async (req, res) => {
   }
 };
 
-
-
-
 export const removeProfilePicture = async (req, res) => {
-  const userId = req.userId
+  const userId = req.userId;
 
   try {
-
     const userDetails = await User.findOne({
-      _id: userId
-    })
+      _id: userId,
+    });
 
     if (!userDetails) {
-      return apiResponse(res, 404, false, "User not found", null, null)
+      return apiResponse(res, 404, false, "User not found", null, null);
     }
 
-
-    const profilePicture = userDetails?.profilePicture
+    const profilePicture = userDetails?.profilePicture;
     if (!profilePicture) {
-      return apiResponse(res, 400, false, "No profile picture Uploaded yet", null, null)
+      return apiResponse(
+        res,
+        400,
+        false,
+        "No profile picture Uploaded yet",
+        null,
+        null,
+      );
     }
 
     const publicId = profilePicture?.split("/").pop()?.split(".")[0];
-    await cloudinary.uploader.destroy(
-      `e2score/profile_picture/${publicId}`
-    );
+    await cloudinary.uploader.destroy(`e2score/profile_picture/${publicId}`);
 
-    userDetails.profilePicture = ""
-    await userDetails.save()
-
-    return apiResponse(res, 200, true, "Profile picture removed successfully", null, null)
-
-
-  } catch (error) {
-    console.error(error);
+    userDetails.profilePicture = "";
+    await userDetails.save();
 
     return apiResponse(
       res,
-      500,
-      false,
-      "Something went wrong"
+      200,
+      true,
+      "Profile picture removed successfully",
+      null,
+      null,
     );
+  } catch (error) {
+    console.error(error);
+
+    return apiResponse(res, 500, false, "Something went wrong");
   }
-}
-
-
-
+};

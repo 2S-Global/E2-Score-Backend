@@ -373,7 +373,7 @@ export const submitMentalTestController = async (req, res) => {
 export const getUserAttemptHistory = async (req, res) => {
   try {
     // const userId = req.userId;
-    const userId = req.query.id || req.userId;
+    const userId = req.query.id || req.query.Id || req.userId;
     const attempts = await MentalTestAttemptModel.find({
       userId,
       is_Deleted: false,

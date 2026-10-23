@@ -707,7 +707,7 @@ const getStyleCodeFromHeaderName = (headerName = "") => {
 export const getMentalTestFeedbackDetailsController = async (req, res) => {
   try {
     //const userId = req.userId
-    const userId = req.query.id || req.userId;
+    const userId = req.query.id || req.query.Id || req.userId;
     // const userId = `6a66f386e6b505694b13c270`
 
     if (!userId) {

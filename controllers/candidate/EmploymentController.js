@@ -14,7 +14,12 @@ import { syncCandidateExperience } from "../../utility/experienceHelper.js";
 const isFullTime = (type) => {
   if (!type || typeof type !== "string") return false;
   const normalized = type.toLowerCase().trim();
-  return normalized === "full-time" || normalized === "full time" || normalized === "fulltime" || normalized === "full";
+  return (
+    normalized === "full-time" ||
+    normalized === "full time" ||
+    normalized === "fulltime" ||
+    normalized === "full"
+  );
 };
 
 /**
@@ -40,7 +45,7 @@ export const getMatchingCompanyBySql = async (req, res) => {
       `SELECT NAME FROM company 
        WHERE is_del = 0 AND is_active = 1 AND NAME LIKE ? 
        ORDER BY NAME LIMIT 50;`,
-      [`${company_name}%`]
+      [`${company_name}%`],
     );
 
     const company = rows.map((row) => row.NAME);
@@ -58,7 +63,7 @@ export const getMatchingCompanyBySql = async (req, res) => {
 
 export const getMatchingCompany = async (req, res) => {
   const { company_name } = req.query;
-  console.log("working==>", company_name)
+  console.log("working==>", company_name);
 
   if (!company_name || company_name.trim() === "") {
     return res.status(400).json({
@@ -74,7 +79,7 @@ export const getMatchingCompany = async (req, res) => {
       trim: true,
     });
 
-    console.log("mainj thing ==>", querySlug)
+    console.log("mainj thing ==>", querySlug);
 
     if (!querySlug) {
       return res.status(200).json({
@@ -88,11 +93,12 @@ export const getMatchingCompany = async (req, res) => {
       .find({
         isDel: false,
         isActive: true,
-        slug: { $regex: `^${querySlug}` }
+        slug: { $regex: `^${querySlug}` },
       })
       .sort({ companyname: 1 })
       .limit(20)
-      .select("companyname").lean()
+      .select("companyname")
+      .lean();
 
     const companyNames = companies.map((c) => c.companyname);
 
@@ -159,17 +165,15 @@ export const getRandomCompany = async (req, res) => {
           companyname: {
             $regex: "^" + escaped,
             $options: "i",
-          }
+          },
         },
         {
           _id: 0,
           companyname: 1,
-        }
+        },
       )
       .limit(100)
       .lean();
-
-
 
     return res.status(200).json({
       success: true,
@@ -188,7 +192,7 @@ export const getRandomCompany = async (req, res) => {
 export const getRandomCompanysql = async (req, res) => {
   try {
     const [rows] = await db_sql.execute(
-      "SELECT NAME FROM `company` WHERE is_del = 0 AND is_active = 1 ORDER BY LIMIT 50;"
+      "SELECT NAME FROM `company` WHERE is_del = 0 AND is_active = 1 ORDER BY LIMIT 50;",
     );
 
     // Convert to array of strings
@@ -204,7 +208,6 @@ export const getRandomCompanysql = async (req, res) => {
     res.status(500).json({ success: false, message: "Database query failed" });
   }
 };
-
 
 export const getAllCompany = async (req, res) => {
   const { company_name } = req.query;
@@ -313,7 +316,7 @@ export const addEmploymentDetailsBySql = async (req, res) => {
     // Checking Company name exist in database. If not exist then insert that value in database
     const [companyName] = await db_sql.execute(
       "SELECT id, NAME FROM company WHERE NAME = ? AND is_del = 0",
-      [company_name.trim()]
+      [company_name.trim()],
     );
 
     let companyId;
@@ -322,7 +325,7 @@ export const addEmploymentDetailsBySql = async (req, res) => {
     } else {
       const [insertResult] = await db_sql.execute(
         "INSERT INTO company (name, is_active, is_del, flag) VALUES (?, 0, 0, 1)",
-        [company_name.trim()]
+        [company_name.trim()],
       );
 
       companyId = insertResult.insertId;
@@ -387,8 +390,8 @@ export const addEmploymentDetails = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-
-    const currentlyWorkingBool = currentlyWorking === true || currentlyWorking === "true";
+    const currentlyWorkingBool =
+      currentlyWorking === true || currentlyWorking === "true";
 
     //check cureent employee or not
     if (currentlyWorkingBool) {
@@ -396,19 +399,31 @@ export const addEmploymentDetails = async (req, res) => {
         user: userId,
         currentEmployment: true,
         isDel: false,
-      }).select("_id")
+      }).select("_id");
 
       if (currentEmployment.length > 0) {
-        return apiResponse(res, 400, false, "Already have a current employment", null, null);
+        return apiResponse(
+          res,
+          400,
+          false,
+          "Already have a current employment",
+          null,
+          null,
+        );
       }
     }
-
-
 
     const { dob } = await CandidateDetails.findOne({ userId }).select("dob");
 
     if (!dob) {
-      return apiResponse(res, 400, false, "Date of Birth not found", null, null);
+      return apiResponse(
+        res,
+        400,
+        false,
+        "Date of Birth not found",
+        null,
+        null,
+      );
     }
 
     const birthYear = dob.getUTCFullYear();
@@ -420,7 +435,7 @@ export const addEmploymentDetails = async (req, res) => {
         false,
         "You must be at least 18 years old at the time of joining.",
         null,
-        null
+        null,
       );
     }
 
@@ -437,11 +452,17 @@ export const addEmploymentDetails = async (req, res) => {
 
       if (isNewFullTime || isExistingFullTime) {
         // Compute timelines in months
-        const s1 = (Number(joining_year) || 0) * 12 + (Number(joining_month) || 0);
-        const e1 = currentlyWorkingBool ? Infinity : ((Number(leaving_year) || 0) * 12 + (Number(leaving_month) || 0));
+        const s1 =
+          (Number(joining_year) || 0) * 12 + (Number(joining_month) || 0);
+        const e1 = currentlyWorkingBool
+          ? Infinity
+          : (Number(leaving_year) || 0) * 12 + (Number(leaving_month) || 0);
 
-        const s2 = (emp.joiningDate?.year || 0) * 12 + (emp.joiningDate?.month || 0);
-        const e2 = emp.currentEmployment ? Infinity : ((emp.leavingDate?.year || 0) * 12 + (emp.leavingDate?.month || 0));
+        const s2 =
+          (emp.joiningDate?.year || 0) * 12 + (emp.joiningDate?.month || 0);
+        const e2 = emp.currentEmployment
+          ? Infinity
+          : (emp.leavingDate?.year || 0) * 12 + (emp.leavingDate?.month || 0);
 
         // Overlap condition
         if (s1 <= e2 && s2 <= e1) {
@@ -451,7 +472,7 @@ export const addEmploymentDetails = async (req, res) => {
             false,
             "Full-time employment cannot overlap with any other employment in the same timeline.",
             null,
-            null
+            null,
           );
         }
       }
@@ -463,8 +484,7 @@ export const addEmploymentDetails = async (req, res) => {
       trim: true,
     });
 
-
-    console.log("Main sluuuggg ===>", companySlug)
+    console.log("Main sluuuggg ===>", companySlug);
 
     const existingCompany = await companylist
       .findOne({
@@ -531,21 +551,17 @@ export const addEmploymentDetails = async (req, res) => {
       if (!newEmployeeUser) {
         console.log("New employee user not found, skipping email...");
       } else {
-
-        await emailQueue.add('add_employee_details', {
+        await emailQueue.add("add_employee_details", {
           to: existingCompanyUser.email,
           newEmployeeUser,
           job_title,
-        })
-
-
+        });
       }
-
     }
 
     const userdtl = await User.findById(userId);
     if (userdtl) {
-      await emailQueue.add('employment_added', {
+      await emailQueue.add("employment_added", {
         to: userdtl.email,
         userdtl: {
           name: userdtl.name,
@@ -566,12 +582,6 @@ export const addEmploymentDetails = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
 /**
  * @description Fetch all Employment Details for the authenticated user.
  * @route GET /api/candidate/employment/get_employment
@@ -588,9 +598,6 @@ export const getEmploymentDetailsBySql = async (req, res) => {
     if (!userId) {
       return res.status(400).json({ message: "User ID is required." });
     }
-
-
-
 
     // Fetch employment data
     const employmentData = await Employment.find({
@@ -612,14 +619,14 @@ export const getEmploymentDetailsBySql = async (req, res) => {
       tableName,
       idField = "id",
       nameField = "NAME",
-      ids = []
+      ids = [],
     ) => {
       if (!ids.length) return {};
 
       const placeholders = ids.map(() => "?").join(",");
       const [rows] = await db_sql.execute(
         `SELECT ${idField}, ${nameField} FROM ${tableName} WHERE ${idField} IN (${placeholders})`,
-        ids
+        ids,
       );
 
       const map = {};
@@ -705,15 +712,12 @@ export const getEmploymentDetailsBySql = async (req, res) => {
 };
 
 export const getEmploymentDetails = async (req, res) => {
-
   try {
-
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
     logger.info("User ID is required.");
     if (!userId) {
       return res.status(400).json({ message: "User ID is required." });
     }
-
 
     // Fetch employment data
     const employmentData = await Employment.find({
@@ -732,20 +736,19 @@ export const getEmploymentDetails = async (req, res) => {
 
     const companyIds = [
       ...new Set(
-        employmentData.map((emp) => emp.companyName?.toString()).filter(Boolean)
+        employmentData
+          .map((emp) => emp.companyName?.toString())
+          .filter(Boolean),
       ),
     ];
-
 
     const noticePeriodIds = [
       ...new Set(
         employmentData
           .map((emp) => emp.NoticePeriod?.toString())
-          .filter(Boolean)
+          .filter(Boolean),
       ),
     ];
-
-
 
     // Fetch companies
     const companies = await companylist
@@ -764,10 +767,10 @@ export const getEmploymentDetails = async (req, res) => {
 
     // Map data by id for quick lookup
     const companyMap = Object.fromEntries(
-      companies.map((c) => [c._id.toString(), c.companyname])
+      companies.map((c) => [c._id.toString(), c.companyname]),
     );
     const noticePeriodMap = Object.fromEntries(
-      noticePeriods.map((n) => [n.id.toString(), n.name])
+      noticePeriods.map((n) => [n.id.toString(), n.name]),
     );
 
     // Month names
@@ -892,7 +895,8 @@ export const editEmploymentDetails = async (req, res) => {
       return res.status(404).json({ message: "Employment record not found" });
     }
 
-    const currentlyWorkingBool = currentlyWorking === true || currentlyWorking === "true";
+    const currentlyWorkingBool =
+      currentlyWorking === true || currentlyWorking === "true";
 
     if (currentlyWorkingBool) {
       const currentEmployment = await Employment.find({
@@ -903,14 +907,28 @@ export const editEmploymentDetails = async (req, res) => {
       }).select("_id");
 
       if (currentEmployment.length > 0) {
-        return apiResponse(res, 400, false, "Already have a current employment", null, null);
+        return apiResponse(
+          res,
+          400,
+          false,
+          "Already have a current employment",
+          null,
+          null,
+        );
       }
     }
 
     const { dob } = await CandidateDetails.findOne({ userId }).select("dob");
 
     if (!dob) {
-      return apiResponse(res, 400, false, "Date of Birth not found", null, null);
+      return apiResponse(
+        res,
+        400,
+        false,
+        "Date of Birth not found",
+        null,
+        null,
+      );
     }
 
     const birthYear = dob.getUTCFullYear();
@@ -922,7 +940,7 @@ export const editEmploymentDetails = async (req, res) => {
         false,
         "You must be at least 18 years old at the time of joining.",
         null,
-        null
+        null,
       );
     }
 
@@ -940,11 +958,17 @@ export const editEmploymentDetails = async (req, res) => {
 
       if (isNewFullTime || isExistingFullTime) {
         // Compute timelines in months
-        const s1 = (Number(joining_year) || 0) * 12 + (Number(joining_month) || 0);
-        const e1 = currentlyWorkingBool ? Infinity : ((Number(leaving_year) || 0) * 12 + (Number(leaving_month) || 0));
+        const s1 =
+          (Number(joining_year) || 0) * 12 + (Number(joining_month) || 0);
+        const e1 = currentlyWorkingBool
+          ? Infinity
+          : (Number(leaving_year) || 0) * 12 + (Number(leaving_month) || 0);
 
-        const s2 = (emp.joiningDate?.year || 0) * 12 + (emp.joiningDate?.month || 0);
-        const e2 = emp.currentEmployment ? Infinity : ((emp.leavingDate?.year || 0) * 12 + (emp.leavingDate?.month || 0));
+        const s2 =
+          (emp.joiningDate?.year || 0) * 12 + (emp.joiningDate?.month || 0);
+        const e2 = emp.currentEmployment
+          ? Infinity
+          : (emp.leavingDate?.year || 0) * 12 + (emp.leavingDate?.month || 0);
 
         // Overlap condition
         if (s1 <= e2 && s2 <= e1) {
@@ -954,12 +978,11 @@ export const editEmploymentDetails = async (req, res) => {
             false,
             "Full-time employment cannot overlap with any other employment in the same timeline.",
             null,
-            null
+            null,
           );
         }
       }
     }
-
 
     // Checking Company name exist in database. If not exist then insert that value in database
 
@@ -1047,7 +1070,7 @@ export const editEmploymentDetails = async (req, res) => {
 
     const userdtl = await User.findById(userId);
     if (userdtl) {
-      await emailQueue.add('employment_updated', {
+      await emailQueue.add("employment_updated", {
         to: userdtl.email,
         userdtl: {
           name: userdtl.name,
@@ -1107,7 +1130,7 @@ export const deleteEmploymentDetails = async (req, res) => {
 
     const userdtl = await User.findById(userId);
     if (userdtl) {
-      await emailQueue.add('employment_deleted', {
+      await emailQueue.add("employment_deleted", {
         to: userdtl.email,
         userdtl: {
           name: userdtl.name,

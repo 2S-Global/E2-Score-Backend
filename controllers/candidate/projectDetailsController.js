@@ -76,26 +76,39 @@ export const addProjectDetails = async (req, res) => {
       return res.status(400).json({ message: "title is required" });
     }
 
-    const candidateDetails = await CandidateDetails.findOne({ userId }).select("dob");
+    const candidateDetails = await CandidateDetails.findOne({ userId }).select(
+      "dob",
+    );
     if (!candidateDetails || !candidateDetails.dob) {
-      return apiResponse(res, 400, false, "Please update your profile with Date of Birth first.", null)
+      return apiResponse(
+        res,
+        400,
+        false,
+        "Please update your profile with Date of Birth first.",
+        null,
+      );
     }
-
 
     const dob = candidateDetails.dob;
     const birthDate = new Date(dob);
     const birthYear = birthDate.getFullYear();
     const birthMonth = birthDate.getMonth() + 1;
 
-
-
-
     if (workfromyear) {
       const fromYear = parseInt(workfromyear);
       const fromMonth = workfrommonth ? parseInt(workfrommonth) : 1;
 
-      if (fromYear < birthYear || (fromYear === birthYear && fromMonth < birthMonth)) {
-        return apiResponse(res, 400, false, "Project start date cannot be before your Date of Birth.", null)
+      if (
+        fromYear < birthYear ||
+        (fromYear === birthYear && fromMonth < birthMonth)
+      ) {
+        return apiResponse(
+          res,
+          400,
+          false,
+          "Project start date cannot be before your Date of Birth.",
+          null,
+        );
       }
     }
 
@@ -103,11 +116,19 @@ export const addProjectDetails = async (req, res) => {
       const toYear = parseInt(worktoyear);
       const toMonth = worktomonth ? parseInt(worktomonth) : 12;
 
-      if (toYear < birthYear || (toYear === birthYear && toMonth < birthMonth)) {
-        return apiResponse(res, 400, false, "Project end date cannot be before your Date of Birth.", null)
+      if (
+        toYear < birthYear ||
+        (toYear === birthYear && toMonth < birthMonth)
+      ) {
+        return apiResponse(
+          res,
+          400,
+          false,
+          "Project end date cannot be before your Date of Birth.",
+          null,
+        );
       }
     }
-
 
     const projectDetails = new ProjectDetails({
       userId,
@@ -130,10 +151,10 @@ export const addProjectDetails = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-    await emailQueue.add('add_mail', {
+    await emailQueue.add("add_mail", {
       name: userdtl.name,
-      email: userdtl.email
-    })
+      email: userdtl.email,
+    });
 
     res.status(201).json({
       success: true,
@@ -194,9 +215,15 @@ export const editProjectDetails = async (req, res) => {
       return res.status(400).json({ message: "title is required" });
     }
 
-    const candidateDetails = await CandidateDetails.findOne({ userId }).select("dob");
+    const candidateDetails = await CandidateDetails.findOne({ userId }).select(
+      "dob",
+    );
     if (!candidateDetails || !candidateDetails.dob) {
-      return res.status(400).json({ message: "Please update your profile with Date of Birth first." });
+      return res
+        .status(400)
+        .json({
+          message: "Please update your profile with Date of Birth first.",
+        });
     }
 
     const dob = candidateDetails.dob;
@@ -208,7 +235,10 @@ export const editProjectDetails = async (req, res) => {
       const fromYear = parseInt(workfromyear);
       const fromMonth = workfrommonth ? parseInt(workfrommonth) : 1;
 
-      if (fromYear < birthYear || (fromYear === birthYear && fromMonth < birthMonth)) {
+      if (
+        fromYear < birthYear ||
+        (fromYear === birthYear && fromMonth < birthMonth)
+      ) {
         return res.status(400).json({
           message: "Project start date cannot be before your Date of Birth.",
         });
@@ -219,7 +249,10 @@ export const editProjectDetails = async (req, res) => {
       const toYear = parseInt(worktoyear);
       const toMonth = worktomonth ? parseInt(worktomonth) : 12;
 
-      if (toYear < birthYear || (toYear === birthYear && toMonth < birthMonth)) {
+      if (
+        toYear < birthYear ||
+        (toYear === birthYear && toMonth < birthMonth)
+      ) {
         return res.status(400).json({
           message: "Project end date cannot be before your Date of Birth.",
         });
@@ -295,7 +328,7 @@ export const editProjectDetails = async (req, res) => {
  */
 export const getProjectDetails = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
 
     if (!userId) {
       return res.status(400).json({ message: "User ID is required." });
@@ -363,7 +396,7 @@ export const getProjectDetails = async (req, res) => {
           createdAt: doc.createdAt || null,
           updatedAt: doc.updatedAt || null,
         };
-      })
+      }),
     );
 
     return res.status(200).json({
@@ -419,15 +452,11 @@ export const deleteProjectDetails = async (req, res) => {
 
     const userdtl = await User.findById(userId);
 
-
-
     //send mail
     await emailQueue.add("delete_mail", {
       email: userdtl.email,
-      name: userdtl.name
-    })
-
-
+      name: userdtl.name,
+    });
 
     // logger.info("Project Details deleted successfully!");
 

@@ -32,7 +32,7 @@ const getMonthName = (monthNumber) => {
 
 export const getPersonalDetailsWithName = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
 
     const [user, candidate, personal] = await Promise.all([
       User.findById(userId).select("gender"),

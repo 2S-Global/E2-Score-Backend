@@ -217,7 +217,7 @@ export const uploadCoverLetter = async (req, res) => {
 
 export const getResumeDetails = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
 
     if (!userId) {
       return res.status(400).json({ message: "User ID is required." });
@@ -249,7 +249,7 @@ export const getResumeDetails = async (req, res) => {
 
 export const getCoverLetterDetails = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
 
     if (!userId) {
       return res.status(400).json({ message: "User ID is required." });

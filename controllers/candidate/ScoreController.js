@@ -266,7 +266,7 @@ export const verifyPaymentAndGetScore = async (req, res) => {
 };
 
 export const getMyScores = async (req, res) => {
-  const userId = req.userId;
+  const userId = req.query.Id || req.userId;
 
   if (!userId) {
     return apiResponse(

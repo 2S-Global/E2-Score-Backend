@@ -12,7 +12,6 @@ import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import { apiResponse } from "../../utility/apiResponse.js";
 import { emailQueue } from "../../queues/emailQueue.js";
 
-
 const sortWorkSamples = (samples) => {
   return (samples || []).sort((a, b) => {
     const isOngoingA = a.currentlyWorking === true;
@@ -23,7 +22,10 @@ const sortWorkSamples = (samples) => {
       const yearA = Number(a.durationFrom?.year) || 0;
       const yearB = Number(b.durationFrom?.year) || 0;
       if (yearA !== yearB) return yearB - yearA;
-      return (Number(b.durationFrom?.month) || 0) - (Number(a.durationFrom?.month) || 0);
+      return (
+        (Number(b.durationFrom?.month) || 0) -
+        (Number(a.durationFrom?.month) || 0)
+      );
     }
     const toYearA = Number(a.durationTo?.year) || 0;
     const toYearB = Number(b.durationTo?.year) || 0;
@@ -34,7 +36,10 @@ const sortWorkSamples = (samples) => {
     const fromYearA = Number(a.durationFrom?.year) || 0;
     const fromYearB = Number(b.durationFrom?.year) || 0;
     if (fromYearA !== fromYearB) return fromYearB - fromYearA;
-    return (Number(b.durationFrom?.month) || 0) - (Number(a.durationFrom?.month) || 0);
+    return (
+      (Number(b.durationFrom?.month) || 0) -
+      (Number(a.durationFrom?.month) || 0)
+    );
   });
 };
 
@@ -153,7 +158,7 @@ export const getOnlineProfileBySql = async (req, res) => {
 
 export const getOnlineProfile = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
 
     if (!userId) {
       return res.status(400).json({
@@ -448,7 +453,7 @@ export const addWorkSample = async (req, res) => {
  */
 export const getWorkSamples = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
 
     if (!userId) {
       return res.status(400).json({
@@ -704,7 +709,6 @@ export const deleteWorkSample = async (req, res) => {
 
 // -----------------------------Research Publications----------------------------------------
 
-
 export const addResearchPublication = async (req, res) => {
   try {
     const { title, url, publishYear, publishMonth, description } = req.body;
@@ -712,9 +716,16 @@ export const addResearchPublication = async (req, res) => {
     const userId = req.userId;
 
     const { dob } = await CandidateDetails.findOne({ userId }).select("dob");
-    console.log("compare both===>", dob.getUTCFullYear() + 18 > publishYear)
+    console.log("compare both===>", dob.getUTCFullYear() + 18 > publishYear);
     if (!dob) {
-      return apiResponse(res, 400, false, "Date of Birth not found", null, null);
+      return apiResponse(
+        res,
+        400,
+        false,
+        "Date of Birth not found",
+        null,
+        null,
+      );
     }
 
     const birthYear = dob.getUTCFullYear();
@@ -726,7 +737,7 @@ export const addResearchPublication = async (req, res) => {
         false,
         "You must be at least 18 years old at the time of publishing.",
         null,
-        null
+        null,
       );
     }
     //Validate required fields
@@ -741,10 +752,6 @@ export const addResearchPublication = async (req, res) => {
         message: "Required fields: title and url must be non-empty strings.",
       });
     }
-
-
-
-
 
     const newResearchModel = new UserResearch({
       userId,
@@ -796,7 +803,7 @@ export const addResearchPublication = async (req, res) => {
  */
 export const getResearchPublication = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
 
     if (!userId) {
       return res.status(400).json({
@@ -883,11 +890,17 @@ export const updateResearchPublication = async (req, res) => {
       });
     }
 
-
     const { dob } = await CandidateDetails.findOne({ userId }).select("dob");
 
     if (!dob) {
-      return apiResponse(res, 400, false, "Date of Birth not found", null, null);
+      return apiResponse(
+        res,
+        400,
+        false,
+        "Date of Birth not found",
+        null,
+        null,
+      );
     }
 
     const birthYear = dob.getUTCFullYear();
@@ -899,10 +912,9 @@ export const updateResearchPublication = async (req, res) => {
         false,
         "You must be at least 18 years old at the time of publishing.",
         null,
-        null
+        null,
       );
     }
-
 
     // Find the existing document
     const userResearch = await UserResearch.findOne({
@@ -1051,7 +1063,6 @@ export const addpresentaion = async (req, res) => {
     await newpresentation.save();
 
     const userdtl = await User.findById(userId);
-
 
     try {
       await emailQueue.add("presentation_added", {
@@ -1220,7 +1231,7 @@ export const deletepresentaion = async (req, res) => {
  */
 export const getpresetation = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
     const presentations = await UserPresentation.find({ userId, isDel: false });
     res.status(200).json({
       success: true,
@@ -1476,7 +1487,7 @@ export const updatepatent = async (req, res) => {
  */
 export const listpatent = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
     const patents = await UserPatent.find({ userId, isDel: false });
     res.status(200).json({
       success: true,
@@ -1575,7 +1586,7 @@ export const addcertificate = async (req, res) => {
  */
 export const list_certificate = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
     const certificates = await UserCertification.find({ userId, isDel: false });
     res.status(200).json({
       success: true,

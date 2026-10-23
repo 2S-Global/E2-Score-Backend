@@ -40,7 +40,7 @@ export const giveIDgetname = async (value) => {
     }
 
     const skill = await getTechSkills.findById(
-      new mongoose.Types.ObjectId(value)
+      new mongoose.Types.ObjectId(value),
     );
 
     if (!skill) return "Unknown Skill";
@@ -60,7 +60,7 @@ export const giveIDgetnameForOtherSkill = async (value) => {
     }
 
     const skill = await list_non_tech_skill.findById(
-      new mongoose.Types.ObjectId(value)
+      new mongoose.Types.ObjectId(value),
     );
 
     if (!skill) return "Unknown Skill";
@@ -118,13 +118,8 @@ export const getOrInsertIdForOtherSkill = async (value) => {
 export const additskill = async (req, res) => {
   try {
     const userId = req.userId;
-    const {
-      skillSearch,
-      version,
-      lastUsed,
-      experienceyear,
-      experiencemonth,
-    } = req.body;
+    const { skillSearch, version, lastUsed, experienceyear, experiencemonth } =
+      req.body;
 
     if (!userId) {
       return res.status(400).json({
@@ -171,8 +166,7 @@ export const additskill = async (req, res) => {
 
     const hasBirthdayPassed =
       today.getMonth() > dob.getMonth() ||
-      (today.getMonth() === dob.getMonth() &&
-        today.getDate() >= dob.getDate());
+      (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
 
     if (!hasBirthdayPassed) {
       age--;
@@ -203,7 +197,7 @@ export const additskill = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `Maximum allowed experience for a ${age}-year-old candidate is ${maxAllowedExperience.toFixed(
-          1
+          1,
         )} years`,
       });
     }
@@ -215,7 +209,7 @@ export const additskill = async (req, res) => {
     const existingSkill = await Itskill.exists({
       userId,
       skillSearch: skillId,
-      is_del: false
+      is_del: false,
     });
 
     if (existingSkill) {
@@ -246,7 +240,7 @@ export const additskill = async (req, res) => {
     await itskill.save();
 
     try {
-      await emailQueue.add('itskill_added', {
+      await emailQueue.add("itskill_added", {
         to: userdtl.email,
         userdtl: {
           name: userdtl.name,
@@ -270,7 +264,6 @@ export const additskill = async (req, res) => {
     });
   }
 };
-
 
 export const edititskill = async (req, res) => {
   try {
@@ -339,8 +332,7 @@ export const edititskill = async (req, res) => {
 
     const hasBirthdayPassed =
       today.getMonth() > dob.getMonth() ||
-      (today.getMonth() === dob.getMonth() &&
-        today.getDate() >= dob.getDate());
+      (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
 
     if (!hasBirthdayPassed) {
       age--;
@@ -371,7 +363,7 @@ export const edititskill = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `Maximum allowed experience for a ${age}-year-old candidate is ${maxAllowedExperience.toFixed(
-          1
+          1,
         )} years.`,
       });
     }
@@ -412,7 +404,7 @@ export const edititskill = async (req, res) => {
       },
       {
         new: true,
-      }
+      },
     );
 
     if (!itskill) {
@@ -436,7 +428,7 @@ export const edititskill = async (req, res) => {
     // ---------------- Email ----------------
 
     try {
-      await emailQueue.add('itskill_updated', {
+      await emailQueue.add("itskill_updated", {
         to: userdtl.email,
         userdtl: {
           name: userdtl.name,
@@ -462,10 +454,9 @@ export const edititskill = async (req, res) => {
   }
 };
 
-
 export const getitskill = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
     //where is_del is false
     const itskills = await Itskill.find({ userId, is_del: false });
 
@@ -478,7 +469,7 @@ export const getitskill = async (req, res) => {
         lastUsed: itskill.lastUsed,
         experienceyear: itskill.experienceyear,
         experiencemonth: itskill.experiencemonth,
-      }))
+      })),
     );
 
     res.status(200).json({ success: true, data: formatteditskills });
@@ -489,7 +480,6 @@ export const getitskill = async (req, res) => {
       .json({ message: "Error fetching itskills", error: error.message });
   }
 };
-
 
 export const deleteitskill = async (req, res) => {
   try {
@@ -507,13 +497,13 @@ export const deleteitskill = async (req, res) => {
     const itskill = await Itskill.findOneAndUpdate(
       { _id, userId },
       { is_del: true, updatedAt: Date.now() },
-      { new: true }
+      { new: true },
     );
 
     const userdtl = await User.findById(userId);
 
     if (userdtl) {
-      await emailQueue.add('itskill_deleted', {
+      await emailQueue.add("itskill_deleted", {
         to: userdtl.email,
         userdtl: {
           name: userdtl.name,
@@ -531,7 +521,6 @@ export const deleteitskill = async (req, res) => {
       .json({ message: "Error adding itskill", error: error.message });
   }
 };
-
 
 export const addOtherSkill = async (req, res) => {
   try {
@@ -585,8 +574,7 @@ export const addOtherSkill = async (req, res) => {
 
     const hasBirthdayPassed =
       today.getMonth() > dob.getMonth() ||
-      (today.getMonth() === dob.getMonth() &&
-        today.getDate() >= dob.getDate());
+      (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
 
     if (!hasBirthdayPassed) {
       age--;
@@ -616,7 +604,7 @@ export const addOtherSkill = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `Maximum allowed experience for a ${age}-year-old candidate is ${maxAllowedExperience.toFixed(
-          1
+          1,
         )} years.`,
       });
     }
@@ -665,7 +653,7 @@ export const addOtherSkill = async (req, res) => {
     // ---------------- Email ----------------
 
     try {
-      await emailQueue.add('otherskill_added', {
+      await emailQueue.add("otherskill_added", {
         to: userdtl.email,
         userdtl: {
           name: userdtl.name,
@@ -690,16 +678,10 @@ export const addOtherSkill = async (req, res) => {
   }
 };
 
-
 export const editotherskill = async (req, res) => {
   try {
     const userId = req.userId;
-    const {
-      _id,
-      skillSearch,
-      experienceyear,
-      experiencemonth,
-    } = req.body;
+    const { _id, skillSearch, experienceyear, experiencemonth } = req.body;
 
     if (!userId) {
       return res.status(400).json({
@@ -755,8 +737,7 @@ export const editotherskill = async (req, res) => {
 
     const hasBirthdayPassed =
       today.getMonth() > dob.getMonth() ||
-      (today.getMonth() === dob.getMonth() &&
-        today.getDate() >= dob.getDate());
+      (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
 
     if (!hasBirthdayPassed) {
       age--;
@@ -786,7 +767,7 @@ export const editotherskill = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `Maximum allowed experience for a ${age}-year-old candidate is ${maxAllowedExperience.toFixed(
-          1
+          1,
         )} years.`,
       });
     }
@@ -824,7 +805,7 @@ export const editotherskill = async (req, res) => {
       },
       {
         new: true,
-      }
+      },
     );
 
     if (!otherskill) {
@@ -848,7 +829,7 @@ export const editotherskill = async (req, res) => {
     // ---------------- Email ----------------
 
     try {
-      await emailQueue.add('otherskill_updated', {
+      await emailQueue.add("otherskill_updated", {
         to: userdtl.email,
         userdtl: {
           name: userdtl.name,
@@ -883,7 +864,7 @@ export const editotherskill = async (req, res) => {
  */
 export const getotherskill = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.query.Id || req.userId;
     //where is_del is false
     const otherskills = await Otherskill.find({ userId, is_del: false });
 
@@ -896,7 +877,7 @@ export const getotherskill = async (req, res) => {
         lastUsed: otherskill.lastUsed,
         experienceyear: otherskill.experienceyear,
         experiencemonth: otherskill.experiencemonth,
-      }))
+      })),
     );
 
     res.status(200).json({ success: true, data: formattedotherskills });
@@ -938,12 +919,12 @@ export const deleteotherskill = async (req, res) => {
     const otherskill = await Otherskill.findOneAndUpdate(
       { _id, userId },
       { is_del: true, updatedAt: Date.now() },
-      { new: true }
+      { new: true },
     );
     const userdtl = await User.findById(userId);
 
     if (userdtl) {
-      await emailQueue.add('otherskill_deleted', {
+      await emailQueue.add("otherskill_deleted", {
         to: userdtl.email,
         userdtl: {
           name: userdtl.name,

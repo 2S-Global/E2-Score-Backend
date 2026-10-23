@@ -101,7 +101,7 @@ export const addOrUpdateKYC = async (req, res) => {
  * @throws {Error} 404 - User not found or KYC not found
  */
 export const getKYC = async (req, res) => {
-  const userId = req.userId;
+  const userId = req.query.Id || req.userId;
   if (!userId) return res.status(400).json({ message: "User ID is required" });
 
   const userExists = await User.findById(userId);

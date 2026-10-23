@@ -82,6 +82,7 @@ import CandidateJobListingRouter from "./routes/candidate/CandidateJobListingRou
 import CandidateDetailsRouter from "./routes/candidate/candidateDetailsRoute.js";
 import ScoreRouter from "./routes/candidate/scoreRoute.js";
 import candidateBookmarkRouter from "./routes/admin/candidateBookmarkRoute.js";
+import candidateRouter from "./routes/admin/candidateRoutes.js";
 
 //company Routes
 import CompanyProfileRouter from "./routes/company/CompanyProfileRoute.js";
@@ -182,6 +183,7 @@ app.use("/api/admin/cart", CandidateListVerifiedRoute);
 app.use("/api/about", aboutPageRoute);
 app.use("/api/testimonials", testimonialRoute);
 app.use("/api/clients", clientRoute);
+app.use("/api/admin/candidate", candidateRouter);
 
 //Admin Routes Abhishek Dey
 app.use("/api/useradmin", userAdminRouter);

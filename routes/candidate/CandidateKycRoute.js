@@ -15,6 +15,7 @@ import {
 //import middleware
 import userAuth from "../../middleware/authMiddleware.js";
 import Candimid from "../../middleware/candidateMiddleware.js";
+import Companymid from "../../middleware/companyMiddleware.js";
 
 const CandidateKycRoute = express.Router(); // Setup multer with memory storage for handling file uploads
 const storage = multer.memoryStorage();
@@ -31,10 +32,11 @@ CandidateKycRoute.post(
   userAuth,
   Candimid,
   upload.none(),
-  asyncHandler(addOrUpdateKYC)
+  asyncHandler(addOrUpdateKYC),
 );
 // Get KYC Information
 CandidateKycRoute.get("/kyc", userAuth, Candimid, asyncHandler(getKYC));
+CandidateKycRoute.get("/kyc/view", userAuth, asyncHandler(getKYC));
 
 //get fees
 CandidateKycRoute.get("/fees", userAuth, Candimid, asyncHandler(getFees));
@@ -44,7 +46,7 @@ CandidateKycRoute.get(
   "/fees/:documentType",
   userAuth,
   Candimid,
-  asyncHandler(getSpecificFees)
+  asyncHandler(getSpecificFees),
 );
 
 //create a order
@@ -53,7 +55,7 @@ CandidateKycRoute.post(
   userAuth,
   Candimid,
   upload.none(),
-  asyncHandler(CreateOrder)
+  asyncHandler(CreateOrder),
 );
 
 //verify order
@@ -62,7 +64,7 @@ CandidateKycRoute.post(
   userAuth,
   Candimid,
   upload.none(),
-  asyncHandler(VerifyOrder)
+  asyncHandler(VerifyOrder),
 );
 
 //verify otp
@@ -71,7 +73,7 @@ CandidateKycRoute.post(
   userAuth,
   Candimid,
   upload.none(),
-  asyncHandler(VerifyOtp)
+  asyncHandler(VerifyOtp),
 );
 
 export default CandidateKycRoute;
