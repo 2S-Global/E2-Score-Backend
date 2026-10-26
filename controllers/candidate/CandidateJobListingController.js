@@ -319,6 +319,78 @@ export const getAllJob_List = async (req, res) => {
   }
 };
 
+//Job Applications Not specified
+export const getJobApplicationsNotspecified = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.userId);
+
+    const job = await JobApplication.aggregate([
+      {
+        $match: {
+          userId: userId,
+          $or: [
+            { noticePeriod: "Not specified" },
+            { preferredTime: "Not specified" },
+            { availabilityOnSaturday: "Not specified" },
+            { willingToRelocate: "Not specified" },
+            { experienceLevel: "Not specified" },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "jobpostinglists",
+          localField: "jobId",
+          foreignField: "_id",
+          as: "jobposting",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobposting",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "jobposting.userId",
+          foreignField: "_id",
+          as: "company",
+        },
+      },
+      {
+        $unwind: {
+          path: "$company",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $limit: 1,
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Job listing fetched successfully.",
+      data: job,
+      length: job?.length || 0,
+    });
+  } catch (error) {
+    console.error("Job List Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 export const jobsearchFilters = async (req, res) => {
   try {
     const { keyword, city, range } = req.body;

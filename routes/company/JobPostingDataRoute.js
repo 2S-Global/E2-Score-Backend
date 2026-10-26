@@ -46,6 +46,7 @@ import {
   GetRecentSearches,
   getJobListingNotExpir,
   restoreJobApplicationStatus,
+  updateJobPosting,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -192,6 +193,13 @@ jobPostingDataRouter.post(
   upload.none(),
   userAuth,
   applyJobPosting,
+);
+
+jobPostingDataRouter.post(
+  "/apply-update-job-application",
+  upload.none(),
+  userAuth,
+  updateJobPosting,
 );
 
 jobPostingDataRouter.get(

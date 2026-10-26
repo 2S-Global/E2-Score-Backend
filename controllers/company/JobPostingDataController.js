@@ -2068,6 +2068,79 @@ export const applyJobPosting = async (req, res) => {
   }
 };
 
+// update to Job Posting API (Candidate)
+export const updateJobPosting = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { jobId, id } = req.query;
+    const {
+      noticePeriod,
+      preferredTime,
+      availabilityOnSaturday,
+      willingToRelocate,
+      description,
+      acceptedTerms,
+      experienceLevel,
+      recruitmentSources,
+    } = req.body;
+
+    if (!jobId || !id) {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID and ID is required",
+      });
+    }
+
+    if (!acceptedTerms) {
+      return res.status(400).json({
+        success: false,
+        message: "You must accept Terms and Conditions",
+      });
+    }
+
+    if (
+      !noticePeriod ||
+      !preferredTime ||
+      !availabilityOnSaturday ||
+      !willingToRelocate
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All mandatory fields are required",
+      });
+    }
+
+    await JobApplication.findByIdAndUpdate(
+      {
+        userId,
+        jobId,
+        _id: id,
+      },
+      {
+        $set: {
+          noticePeriod,
+          preferredTime,
+          availabilityOnSaturday,
+          willingToRelocate,
+          description,
+          acceptedTerms,
+          experienceLevel,
+          recruitmentSources,
+        },
+      },
+      { new: true, runValidators: true },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Job update successfully",
+    });
+  } catch (error) {
+    console.error("Error creating job update:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getAppliedCandidatesByJob = async (req, res) => {
   try {
     const { jobId } = req.query;

@@ -11,6 +11,7 @@ import {
   getMySavedJobs,
   getJobsByUserIndustry,
   getAllJob_List,
+  getJobApplicationsNotspecified,
 } from "../../controllers/candidate/CandidateJobListingController.js";
 
 //import middleware
@@ -73,5 +74,11 @@ CandidateJobListingRouter.get(
   userAuth,
   Candimid,
   getJobsByUserIndustry,
+);
+CandidateJobListingRouter.get(
+  "/get-job-applications-not-specified",
+  userAuth,
+  Candimid,
+  getJobApplicationsNotspecified,
 );
 export default CandidateJobListingRouter;
