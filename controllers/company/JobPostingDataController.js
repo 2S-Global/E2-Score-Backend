@@ -3265,6 +3265,7 @@ export const acceptJobApplicationStatus = async (req, res) => {
         user: user,
         designation: designation,
         companyName: companyName,
+        loginId: req?.userId,
       });
     }
 
@@ -3378,6 +3379,7 @@ export const acceptShortlistedCandidates = async (req, res) => {
         interviewLocation,
         applicationId,
         jobId,
+        loginId: req?.userId,
       });
     }
 
@@ -3674,6 +3676,81 @@ export const getMyAppliedJobs = async (req, res) => {
       success: true,
       count: formattedApplications.length,
       data: formattedApplications,
+    });
+  } catch (error) {
+    console.error("getMyAppliedJobs error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getMyAppliedJobsGraph = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID missing" });
+    }
+
+    // 1. Get the start of the current week (Monday)
+    const now = new Date();
+    const currentDay = now.getDay();
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() + distanceToMonday);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // End of the week (Next Monday)
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+    // 2. Fetch applications created this week
+    const applications = await JobApplication.find({
+      userId,
+      isDel: false,
+      appliedAt: { $gte: startOfWeek, $lt: endOfWeek },
+    });
+
+    // 3. Initialize the template with all days set to 0
+    const weekDays = [
+      { d: "Mon", apps: 0 },
+      { d: "Tue", apps: 0 },
+      { d: "Wed", apps: 0 },
+      { d: "Thu", apps: 0 },
+      { d: "Fri", apps: 0 },
+      { d: "Sat", apps: 0 },
+      { d: "Sun", apps: 0 },
+    ];
+
+    const dayNamesMap = {
+      1: "Mon",
+      2: "Tue",
+      3: "Wed",
+      4: "Thu",
+      5: "Fri",
+      6: "Sat",
+      0: "Sun",
+    };
+
+    // 4. Populate and count applications for each day
+    applications.forEach((app) => {
+      const appDayIndex = new Date(app.appliedAt).getDay();
+      const dayName = dayNamesMap[appDayIndex];
+
+      const targetDay = weekDays.find((item) => item.d === dayName);
+      if (targetDay) {
+        targetDay.apps += 1;
+      }
+    });
+
+    // `weekDays` has your final response format
+
+    /* ================= ADD END ================= */
+
+    return res.status(200).json({
+      success: true,
+      count: weekDays.length,
+      data: weekDays,
     });
   } catch (error) {
     console.error("getMyAppliedJobs error:", error);

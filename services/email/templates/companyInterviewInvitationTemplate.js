@@ -1,8 +1,54 @@
-export const companyInterviewInvitationTemplate = (userName, designation, companyName, interviewDateString, formattedInterviewTime, interviewLocation, applicationId, jobId) => {
-  return `
-        <div style="text-align: center; margin-bottom: 20px;">
-          <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
-        </div>
+import {
+  replaceMailPlaceholders,
+  CompanyMailLayout,
+} from "../../../utility/MailTeamplates.js";
+import {
+  CompanyMailTemplate,
+  MailTemplate,
+} from "../../../models/company_Models/MailTemplatesModel.js";
+export const companyInterviewInvitationTemplate = async (
+  userName,
+  designation,
+  companyName = "GEISIL",
+  interviewDateString,
+  formattedInterviewTime,
+  interviewLocation,
+  applicationId,
+  jobId,
+  loginId,
+) => {
+  let template = "";
+  // Fetch template from database
+  const templateOne = await MailTemplate.findOne({
+    slug: "interview_invitation",
+  });
+  template = templateOne;
+  const templateTwo = await CompanyMailTemplate.findOne({
+    templateId: templateOne?._id,
+    userId: loginId,
+  });
+  if (templateTwo?.description) {
+    template = templateTwo;
+  }
+
+  if (!template) {
+    throw new Error("Mail template not found");
+  }
+
+  const data = {
+    candidateName: userName,
+    designation: designation,
+    companyName: companyName,
+    interviewDate: interviewDateString,
+    interviewTime: formattedInterviewTime,
+    interviewLocation: interviewLocation,
+    interviewResponseUrl: `${process.env.frontend_url}/interview-response?id=${applicationId}&jobId=${jobId}`,
+  };
+  let templateDescription = CompanyMailLayout(template.description);
+  // Replace placeholders
+  return replaceMailPlaceholders(templateDescription, data);
+  /* return `
+      
 
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
               style="font-family:Arial,Helvetica,sans-serif;background-color:#f4f4f4;padding:20px;">
@@ -13,12 +59,12 @@ export const companyInterviewInvitationTemplate = (userName, designation, compan
 
                 <tr>
                   <td>
-                    <p>Dear ${userName || "Candidate"},</p>
+                    <p>Dear {candidateName},</p>
                       
                     <p>
                       Thank you for your interest in the
-                      <strong>${designation}</strong> position at
-                      <strong>${companyName}</strong>.
+                      <strong>{designation}</strong> position at
+                      <strong>{companyName}</strong>.
                       After reviewing your application and profile, we are pleased to invite you
                       for an interview at our Kolkata office.
                     </p>
@@ -32,9 +78,9 @@ export const companyInterviewInvitationTemplate = (userName, designation, compan
                     <h3 style="margin-top:20px;">Interview Details</h3>
 
                     <p>
-                      <strong>Date:</strong> ${interviewDateString}<br />
-                      <strong>Time:</strong> ${formattedInterviewTime}<br />
-                      <strong>Location:</strong> ${interviewLocation}
+                      <strong>Date:</strong>{interviewDate}<br />
+                      <strong>Time:</strong> {interviewTime}<br />
+                      <strong>Location:</strong> {interviewLocation}
                     </p>
 
                     <h3 style="margin-top:20px;">Action Required</h3>
@@ -82,7 +128,7 @@ export const companyInterviewInvitationTemplate = (userName, designation, compan
                     <p style="margin-top:24px;">
                       Thanks &amp; Regards,<br />
                       <strong>Hiring Team</strong><br />
-                      ${companyName}
+                      {companyName}
                     </p>
                   </td>
                 </tr>
@@ -91,5 +137,5 @@ export const companyInterviewInvitationTemplate = (userName, designation, compan
             </td>
           </tr>
         </table>
-      `;
+      `; */
 };

@@ -54,42 +54,62 @@ const createInvitationHandoff = async (userId) => {
   return ticket;
 };
 
-const htmlResponsePage = (content, companyName = "GEISIL") => `<!doctype html>
+const htmlResponsePage = (content, companyName = "GEISIL") => `<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Job invitation</title>
-  </head>
-  <body style="font-family:Arial,sans-serif;color:#222;max-width:560px;margin:48px auto;padding:24px;line-height:1.5">
-<div style="position: relative; margin-bottom: 20px; text-align: center; overflow: hidden;">
-  <img
-    src="https://res.cloudinary.com/da4unxero/image/upload/v1791972718/jobinvitationEmail_wxx3la.jpg"
-    alt=""
-    style="display: block; width: 100%; height: auto;"
-  />
-
-  <div style="
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 66px;
-    color: #1107ed !important;
-   font-size: 18px;
-   font-weight: bold;
-   text-transform: uppercase;
-  ">
-    ${companyName}
-  </div>
-</div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Invitation</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  
+  <!-- Outer Centered Wrapper -->
+  <div style="background-color: #f8fafc; padding: 16px 8px; width: 100%; box-sizing: border-box; min-height: 100vh;">
     
-    ${content}
-     <div style="text-align: center; margin-top: 30px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
+    <!-- Main Email Card -->
+    <div style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; width: 100%; box-sizing: border-box;">
+      
+      <!-- Top Banner Image Block (Fully Responsive) -->
+      <div style="width: 100%; background-color: #ffffff; line-height: 0; text-align: center;">
+        <img 
+          src="https://res.cloudinary.com/da4unxero/image/upload/v1791972718/jobinvitationEmail_wxx3la.jpg" 
+          alt="${escapeHtml(companyName)}" 
+          style="display: block; width: 100%; max-width: 100%; height:149px; border: 0;" 
+        />
+      </div>
+
+      <!-- Centered Company Name Bar -->
+      <div style="background-color: #ffffff; padding: 14px 20px; text-align: center; border-bottom: 1px solid #e2e8f0;">
+        <span style="color: #0f172a; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; display: inline-block;">
+          ${escapeHtml(companyName)}
+        </span>
+      </div>
+      <!-- Main Content Body -->
+      <div style="padding: 28px 20px; color: #334155; line-height: 1.6; font-size: 15px;">
+        <!-- Custom htmlContent -->
+        ${content ? `<div style="margin-bottom: 24px; color: #475569;">${content}</div>` : ""}
+        <div style="margin-top: 28px; border-top: 1px solid #f1f5f9; padding-top: 20px; font-size: 14px; color: #475569;">
+          Regards,<br />
+          <strong style="color: #0f172a;">${escapeHtml(companyName)}</strong>
+        </div>
+      </div>
+
+      <!-- Footer Section -->
+      <div style="padding: 24px 20px; text-align: center; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+        <!-- Footer Logo -->
+        <div style="margin-bottom: 12px;">
+          <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer Logo" style="display: inline-block; border: 0; width: 65px; height: auto;" />
+        </div>
+        <!-- Copyright & Company Info -->
+        <div style="font-size: 12px; color: #94a3b8; line-height: 1.5;">
+          &copy; ${new Date().getFullYear()} ${escapeHtml(companyName)}. All rights reserved.<br />
+          You received this email because you applied for a job through our platform.
+        </div>
+      </div>
+
     </div>
-  </body>
+  </div>
+</body>
 </html>`;
 
 export const showJobInvitationResponse = async (req, res) => {
@@ -109,7 +129,7 @@ export const showJobInvitationResponse = async (req, res) => {
         .type("html")
         .send(
           htmlResponsePage(
-            "<h1>Invitation unavailable</h1><p>This invitation has already been answered or is no longer valid.</p>",
+            "<strong>Invitation unavailable</strong><p>This invitation has already been answered or is no longer valid.</p>",
             payload?.companyName?.trim(),
           ),
         );
@@ -520,6 +540,7 @@ export const addJobInvitation = async (req, res) => {
       jobTitle: invitation.jobTitle,
       companyName: companyDetails?.name?.trim() || "GEISIL",
       respondUrl: `${backendUrl}/api/job-invitations/respond?token=${encodeURIComponent(responseToken)}`,
+      loginId: req?.userId,
     });
 
     return res.status(201).json({

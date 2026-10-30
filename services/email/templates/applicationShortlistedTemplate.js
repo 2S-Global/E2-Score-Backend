@@ -1,4 +1,45 @@
-export const applicationShortlistedTemplate = (user, designation, companyName) => `
+import {
+  replaceMailPlaceholders,
+  CompanyMailLayout,
+} from "../../../utility/MailTeamplates.js";
+import {
+  CompanyMailTemplate,
+  MailTemplate,
+} from "../../../models/company_Models/MailTemplatesModel.js";
+export const applicationShortlistedTemplate = async (
+  user,
+  designation,
+  companyName = "GEISIL",
+  loginId,
+) => {
+  let template = "";
+  // Fetch template from database
+  const templateOne = await MailTemplate.findOne({
+    slug: "application_shortlisted",
+  });
+  template = templateOne;
+  const templateTwo = await CompanyMailTemplate.findOne({
+    templateId: templateOne?._id,
+    userId: loginId,
+  });
+  if (templateTwo?.description) {
+    template = templateTwo;
+  }
+
+  if (!template) {
+    throw new Error("Mail template not found");
+  }
+
+  const data = {
+    candidateName: user.name,
+    designation: designation,
+    companyName: companyName,
+  };
+  let templateDescription = CompanyMailLayout(template.description);
+  // Replace placeholders
+  return replaceMailPlaceholders(templateDescription, data);
+
+  /*   const html = `
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
     
     <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
@@ -23,3 +64,6 @@ export const applicationShortlistedTemplate = (user, designation, companyName) =
     </div>
   </div>
 `;
+
+  return html; */
+};

@@ -47,6 +47,7 @@ import {
   getJobListingNotExpir,
   restoreJobApplicationStatus,
   updateJobPosting,
+  getMyAppliedJobsGraph,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -304,6 +305,11 @@ jobPostingDataRouter.post(
 
 // Get All Job Listing API
 jobPostingDataRouter.get("/get_all_my_applied_job", userAuth, getMyAppliedJobs);
+jobPostingDataRouter.get(
+  "/applied-jobs-graph",
+  userAuth,
+  getMyAppliedJobsGraph,
+);
 
 // Accept or Reject Interview Invitation API
 jobPostingDataRouter.post(
