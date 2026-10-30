@@ -1,4 +1,6 @@
-export const companyAssociatedEmployeesTemplate = (employeeListHtml) => `
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
+export const companyAssociatedEmployeesTemplate = (employeeListHtml) => {
+  let html = `
   <div style="max-width:600px; margin:auto; font-family:Arial, sans-serif; background:#f4f6f9; padding:20px;">
     <h2 style="color:#333; text-align:center;">Employees Associated with Your Company</h2>
     <p style="color:#555; text-align:center;">Here are the employees currently linked with your company record:</p>
@@ -8,3 +10,5 @@ export const companyAssociatedEmployeesTemplate = (employeeListHtml) => `
     </p>
   </div>
 `;
+  return GeneralMailLayout(html);
+};

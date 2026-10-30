@@ -1,7 +1,6 @@
-export const companyRegistrationTemplate = (name, email, password) => `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
+export const companyRegistrationTemplate = (name, email, password) => {
+  let html = `
         <p>Dear <strong>${name}</strong>,</p>
         <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
         <p>
@@ -42,11 +41,13 @@ export const companyRegistrationTemplate = (name, email, password) => `
           <li><strong>Phone:</strong> 9831823898</li>
         </ul>
       
-        <p>Thank you for choosing <strong>E2Score India Limited</strong>.</p>
+        <p>Thank you for choosing <strong>Global Employability Information Services India Limited</strong>.</p>
         <p>We look forward to supporting your KYC verification needs.</p>
       
         <br />
         <p>Sincerely,<br />
         The Admin Team<br />
-        <strong>E2Score India Limited</strong></p>
+        <strong>Global Employability Information Services India Limited</strong></p>
 `;
+  return GeneralMailLayout(html);
+};

@@ -1,7 +1,7 @@
-export const instituteRegistrationTemplate = (name, email, password, token) => `
-      <div style="text-align: center; margin-bottom: 20px;">
-    <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
-  </div>
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
+export const instituteRegistrationTemplate = (name, email, password, token) => {
+  let html = `
+     
         <p>Dear <strong>${name}</strong>,</p>
         <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
         <p>
@@ -48,7 +48,8 @@ export const instituteRegistrationTemplate = (name, email, password, token) => `
         The Admin Team<br />
         <strong>Global Employability Information Services India Limited</strong></p>
 
-         <div style="text-align: center; margin-top: 30px;">
-      <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
-    </div>
+      
       `;
+
+  return GeneralMailLayout(html);
+};

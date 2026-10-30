@@ -149,7 +149,6 @@ export const registerUser = async (req, res) => {
   }
 };
 
-
 // Register a new Institute
 export const registerInstituteft = async (req, res) => {
   try {
@@ -348,12 +347,12 @@ export const registerCompany = async (req, res) => {
     //   return;
     // }
 
-    res.status(201).json({
+    /*     res.status(201).json({
       success: true,
       message: "User registered successfully!",
       token,
-      /*  data: newUser, */
-    });
+     
+    }); */
 
     const userIds = [
       ...new Set(employments.map((emp) => emp.user.toString())),
@@ -396,12 +395,15 @@ export const registerCompany = async (req, res) => {
          alt="profile" 
          style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-right:12px; border:1px solid #ccc;" />
     <div>
-      <h3 style="margin:0; font-size:16px; color:#0073b1;">${emp.name || "N/A"
-            }</h3>
-      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${emp.jobTitle || "Unknown"
-            }</p>
-      <p style="margin:2px 0; font-size:13px; color:#555;">${emp.email || ""
-            }</p>
+      <h3 style="margin:0; font-size:16px; color:#0073b1;">${
+        emp.name || "N/A"
+      }</h3>
+      <p style="margin:4px 0 0 0; font-size:14px; font-weight:bold; color:#333;">${
+        emp.jobTitle || "Unknown"
+      }</p>
+      <p style="margin:2px 0; font-size:13px; color:#555;">${
+        emp.email || ""
+      }</p>
     </div>
   </div>
 `,
