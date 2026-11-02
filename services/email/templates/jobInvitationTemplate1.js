@@ -1,3 +1,4 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 const escapeHtml = (value = "") =>
   String(value).replace(/[&<>"']/g, (character) => {
     const entities = {
@@ -15,10 +16,10 @@ export const jobInvitationTemplate = ({
   jobTitle,
   companyName = "GEISIL",
   respondUrl,
-}) => `
+}) => GeneralMailLayout(`
   <div style="font-family:Arial,sans-serif;color:#252525;max-width:600px;margin:0 auto;padding:24px;line-height:1.6">
     <div style="position:relative;margin-bottom:20px;text-align:center;overflow:hidden">
-      <img src="${escapeHtml(process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp")}" alt="" style="display:block;width:100%;height:auto" />
+      
       <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.42);color:#fff;font-size:24px;font-weight:bold;text-shadow:0 1px 3px #000">
         ${escapeHtml(companyName)}
       </div>
@@ -37,4 +38,4 @@ export const jobInvitationTemplate = ({
       <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
     </div>
   </div>
-`;
+`);

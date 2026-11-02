@@ -1,3 +1,4 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 const employeeCardHtml = (newEmployeeUser, job_title) => `
       <div style="display:flex; align-items:center; border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:12px; background:#fff; font-family:Arial, sans-serif;">
         <img src="${newEmployeeUser.profilePicture || "https://via.placeholder.com/50"
@@ -15,7 +16,7 @@ const employeeCardHtml = (newEmployeeUser, job_title) => `
       </div>
     `;
 
-export const htmlTemplate = (newEmployeeUser, job_title) => `
+export const htmlTemplate = (newEmployeeUser, job_title) => GeneralMailLayout(`
       <div style="max-width:600px; margin:auto; font-family:Arial, sans-serif; background:#f4f6f9; padding:20px;">
         <h2 style="color:#333; text-align:center;">New Employee Associated with Your Company</h2>
         <p style="color:#555; text-align:center;">A new employee has added your company in their employment details:</p>
@@ -24,4 +25,4 @@ export const htmlTemplate = (newEmployeeUser, job_title) => `
           If you think some information is incorrect, please contact support.
         </p>
       </div>
-    `;
+    `);

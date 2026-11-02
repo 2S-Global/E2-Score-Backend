@@ -18,6 +18,7 @@ export const jobInvitationTemplate = async ({
   // Fetch template from database
   const templateOne = await MailTemplate.findOne({
     slug: "job_invitation",
+    role: "2",
   });
   template = templateOne;
   const templateTwo = await CompanyMailTemplate.findOne({

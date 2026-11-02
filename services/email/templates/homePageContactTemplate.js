@@ -1,4 +1,5 @@
-export const homePageContactTemplate = (name, email, subject, message) => `
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
+export const homePageContactTemplate = (name, email, subject, message) => GeneralMailLayout(`
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
         <!-- Header -->
         <div style="background: #4f46e5; color: white; padding: 16px; text-align: center;">
@@ -37,4 +38,4 @@ export const homePageContactTemplate = (name, email, subject, message) => `
           <p style="margin: 4px 0 0;">&copy; ${new Date().getFullYear()} GEISIL</p>
         </div>
       </div>
-      `;
+      `);

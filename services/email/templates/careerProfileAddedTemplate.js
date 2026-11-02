@@ -1,6 +1,7 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 
 
-export const careerProfileAddedTemplate = (user) => `
+export const careerProfileAddedTemplate = (user) => GeneralMailLayout(`
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
     
     <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
@@ -34,4 +35,4 @@ export const careerProfileAddedTemplate = (user) => `
       <strong>Geisil Admin Team</strong></p>
     </div>
   </div>
-`;
+`);

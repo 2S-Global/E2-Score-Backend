@@ -1,6 +1,6 @@
-import csv from 'csv-parser';
-import streamifier from 'streamifier';
-import validator from 'validator';
+import csv from "csv-parser";
+import streamifier from "streamifier";
+import validator from "validator";
 import { InstitueStudent } from "../../models/InstitueStudentModel.js";
 import { InstitueStudentSemester } from "../../models/InstitueStudentModel.js";
 import { instituteStudentAvgMarks } from "../../controllers/institute/instituteStudentController.js";
@@ -12,15 +12,14 @@ import mongoose from "mongoose";
 import { GetProgress } from "../../utility/helper/getprogress.js";
 
 function convertDate(dateStr) {
-
-  if (dateStr.includes('/')) {
-    dateStr.replace("/", "-")
+  if (dateStr.includes("/")) {
+    dateStr.replace("/", "-");
   }
-  const [d, m, y] = dateStr.split('-');
-  return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  const [d, m, y] = dateStr.split("-");
+  return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
 }
 function year(y) {
-  return /^[1-9][0-9]{3}$/.test(y)
+  return /^[1-9][0-9]{3}$/.test(y);
 }
 
 const validGenders = ["m", "f", "o"];
@@ -31,32 +30,33 @@ function validateGender(gender) {
 export const processCSV = (buffer) => {
   return new Promise((resolve, reject) => {
     const results = [];
-    streamifier.createReadStream(buffer)
+    streamifier
+      .createReadStream(buffer)
       .pipe(csv())
-      .on('data', (data) => {
-        let rowData = data
+      .on("data", (data) => {
+        let rowData = data;
         results.push({
           name: rowData?.name?.toLowerCase().trim(),
           USN: rowData?.usn?.toLowerCase().trim(),
           gender: rowData?.gender?.toLowerCase().trim(),
           dob: rowData?.dob,
-          tenTh: rowData['10th(%)'],
-          twelveTh: rowData['12th(%)'],
+          tenTh: rowData["10th(%)"],
+          twelveTh: rowData["12th(%)"],
           email: rowData?.email,
-          phoneNumber: rowData?.phoneNumber
+          phoneNumber: rowData?.phoneNumber,
         });
       })
-      .on('end', () => resolve(results))
-      .on('error', reject);
+      .on("end", () => resolve(results))
+      .on("error", reject);
   });
 };
 //Institute Student Import
 export const insStudentImport = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: 'File is required' });
+      return res.status(400).json({ message: "File is required" });
     }
-    const user = req?.user
+    const user = req?.user;
     const data = await processCSV(req.file.buffer); // use buffer instead of path
     // --------------------------------
     // Audit logs
@@ -70,17 +70,10 @@ export const insStudentImport = async (req, res) => {
     // Process each imported user
     // --------------------------------
     for (let i = 0; i < data.length; i++) {
-      const { name,
-        USN,
-        gender,
-        dob,
-        tenTh,
-        twelveTh,
-        email,
-        phoneNumber
-      } = data[i];
+      const { name, USN, gender, dob, tenTh, twelveTh, email, phoneNumber } =
+        data[i];
 
-      console.log('Processing row: ', i + 2, data[i]);
+      console.log("Processing row: ", i + 2, data[i]);
 
       const logEntry = {
         row: i + 2, // Excel row (header = row 1)
@@ -108,7 +101,10 @@ export const insStudentImport = async (req, res) => {
       if (!admissionYear) logEntry.errors.push("Admission Year missing.");
       if (!tenTh) logEntry.errors.push("10TH(%) missing.");
       if (!twelveTh) logEntry.errors.push("12TH(%) marks missing.");
-      if (!validateGender(gender)) logEntry.errors.push("Only the gender values 'M', 'F', and 'O' are allowed.");
+      if (!validateGender(gender))
+        logEntry.errors.push(
+          "Only the gender values 'M', 'F', and 'O' are allowed.",
+        );
       // Email Validation
       if (!email) {
         logEntry.errors.push("Email missing.");
@@ -121,15 +117,19 @@ export const insStudentImport = async (req, res) => {
         logEntry.errors.push("Phone Number missing.");
       } else if (!/^[6-9]\d{9}$/.test(phoneNumber)) {
         logEntry.errors.push(
-          "Phone Number must be a valid 10-digit Indian mobile number."
+          "Phone Number must be a valid 10-digit Indian mobile number.",
         );
       }
-      if (!validator.isDate(dob, {
-        format: 'DD-MM-YYYY',
-        strictMode: true
-      })) logEntry.errors.push("DOB not valid formate.");
+      if (
+        !validator.isDate(dob, {
+          format: "DD-MM-YYYY",
+          strictMode: true,
+        })
+      )
+        logEntry.errors.push("DOB not valid formate.");
 
-      if (!year(admissionYear)) logEntry.errors.push("Admission Year not valid formate.");
+      if (!year(admissionYear))
+        logEntry.errors.push("Admission Year not valid formate.");
 
       if (logEntry.errors.length) {
         logEntry.status = "invalid";
@@ -137,21 +137,25 @@ export const insStudentImport = async (req, res) => {
         invalidCount++;
         continue;
       }
-      let dobYMD = convertDate(dob)
+      let dobYMD = convertDate(dob);
       const currentYear = new Date().getFullYear();
 
       // Check if email already exists in InstitueStudent
       const existingStudentEmail = await InstitueStudent.findOne({
         email: email.toLowerCase(),
-        instituteId: user.userId
+        instituteId: user.userId,
       });
 
       const existingUser = await User.findOne({ email, is_del: false });
 
-      if ((existingUser && !existingStudentEmail) || (!existingUser && existingStudentEmail) || (existingUser && existingStudentEmail)) {
+      if (
+        (existingUser && !existingStudentEmail) ||
+        (!existingUser && existingStudentEmail) ||
+        (existingUser && existingStudentEmail)
+      ) {
         return res.status(400).json({
           success: false,
-          message: "Student already exists."
+          message: "Student already exists.",
         });
       }
 
@@ -166,7 +170,7 @@ export const insStudentImport = async (req, res) => {
           {
             USN,
             instituteId: user.userId,
-            admissionYear
+            admissionYear,
           },
           {
             $set: {
@@ -179,21 +183,20 @@ export const insStudentImport = async (req, res) => {
               semester,
               email,
               phoneNumber,
-              program: new mongoose.Types.ObjectId(program),// ✅ FIX 
+              program: new mongoose.Types.ObjectId(program), // ✅ FIX
               admissionYear,
               instituteId: user.userId,
               presentYear: currentYear,
               promotedYear: currentYear,
-              promotedSemester: semester
-            }
+              promotedSemester: semester,
+            },
           },
           {
             upsert: true,
             new: true,
-            runValidators: true
-          }
+            runValidators: true,
+          },
         );
-
 
         // User Account Creation Starts from here
 
@@ -225,7 +228,7 @@ export const insStudentImport = async (req, res) => {
           password: hashedPassword,
           role: 1,
           phone_number: phoneNumber,
-          usn: USN
+          usn: USN,
         });
         await newUser.save();
 
@@ -233,26 +236,29 @@ export const insStudentImport = async (req, res) => {
           student._id,
           {
             $set: {
-              userCreatedId: newUser._id
-            }
+              userCreatedId: newUser._id,
+            },
           },
-          { new: true }
+          { new: true },
         );
 
-        const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
-          expiresIn: "30d",
-        });
+        const token = jwt.sign(
+          { userId: newUser._id },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: "30d",
+          },
+        );
 
         // Send email with login credentials via queue
         await emailQueue.add("institute_student_import_credentials", {
           name,
           email,
           password: newPassword,
-          token
+          token,
         });
 
         // User Account Creation Ends here
-
       }
       // Here code Updation ends
 
@@ -261,7 +267,6 @@ export const insStudentImport = async (req, res) => {
       createdCount++;
 
       // User Account Creation Starts from here
-
     }
 
     // --------------------------------
@@ -273,13 +278,12 @@ export const insStudentImport = async (req, res) => {
       total: data.length,
       created: createdCount,
       invalid: invalidCount,
-      audit
+      audit,
     });
-
   } catch (err) {
     return res.status(500).json({
-      message: 'Processing failed',
-      error: err.message
+      message: "Processing failed",
+      error: err.message,
     });
   }
 };
@@ -305,7 +309,7 @@ export const addInstituteStudentManually = async (req, res) => {
       admissionYear,
       email,
       phoneNumber,
-      isSelfRegistered
+      isSelfRegistered,
     } = req.body;
 
     console.log("all data: ", req.body);
@@ -316,9 +320,9 @@ export const addInstituteStudentManually = async (req, res) => {
     // Audit log
     // -----------------------------
     const logEntry = {
-      name,     // name
-      USN,      // USN
-      program,  // program
+      name, // name
+      USN, // USN
+      program, // program
       gender,
       dob,
       admissionYear,
@@ -356,7 +360,7 @@ export const addInstituteStudentManually = async (req, res) => {
       logEntry.errors.push("Phone Number missing.");
     } else if (!/^[6-9]\d{9}$/.test(phoneNumber)) {
       logEntry.errors.push(
-        "Phone Number must be a valid 10-digit Indian mobile number."
+        "Phone Number must be a valid 10-digit Indian mobile number.",
       );
     }
 
@@ -416,84 +420,95 @@ export const addInstituteStudentManually = async (req, res) => {
     const existingData = await InstitueStudent.findOne({
       USN,
       instituteId: user.userId,
-      admissionYear
-    })
+      admissionYear,
+    });
 
     const usnCheck = await InstitueStudent.find({
       USN,
       instituteId: user.userId,
-      admissionYear
-    })
+      admissionYear,
+    });
 
     // Check if email already exists in InstitueStudent
     const existingStudentEmail = await InstitueStudent.findOne({
       email: email.toLowerCase(),
-      instituteId: user.userId
+      instituteId: user.userId,
     });
 
     const existingUser = await User.findOne({ email, is_del: false });
 
     //  here code Updation starts
 
-    if(existingStudentEmail?._id.toString()){
-
-    }
-    else if(isSelfRegistered){
-      
-    }
-    else if ((existingUser && !existingStudentEmail) || (!existingUser && existingStudentEmail) || (existingUser && existingStudentEmail)) {
+    if (existingStudentEmail?._id.toString()) {
+    } else if (isSelfRegistered) {
+    } else if (
+      (existingUser && !existingStudentEmail) ||
+      (!existingUser && existingStudentEmail) ||
+      (existingUser && existingStudentEmail)
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Student already exists."
+        message: "Student already exists.",
       });
     }
 
     let student;
     let isNewStudent = false;
     let message;
-    if (_id && existingStudentEmail && existingStudentEmail?._id.toString() === _id) {
-       const checkData = await InstitueStudent.findOne({_id})
-       console.log('checkData kkkkkkkkkkkkkkkkkkkkkkkk jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj',usnCheck?.length,checkData,USN)
-      if((usnCheck?.length === 1 && checkData?.USN===USN && checkData?.admissionYear===admissionYear )|| usnCheck?.length === 0){
-            message = "Student updated successfully.";
-            student = await InstitueStudent.findByIdAndUpdate(
-            existingStudentEmail._id,
-            {
-              $set: {
-                name,
-                USN,
-                gender,
-                dob: dobYMD,
-                tenTh,
-                twelveTh,
-                // email, // keep this
-                phoneNumber,
-                program: new mongoose.Types.ObjectId(program),
-                admissionYear,
-                instituteId: user.userId,
-                promotedYear: currentYear,
-                promotedSemester:
-                  (existingData?.promotedSemester &&
-                    existingData.promotedSemester > semesters?.length)
-                    ? existingData.promotedSemester
-                    : semesters?.length
-              }
+    if (
+      _id &&
+      existingStudentEmail &&
+      existingStudentEmail?._id.toString() === _id
+    ) {
+      const checkData = await InstitueStudent.findOne({ _id });
+      console.log(
+        "checkData kkkkkkkkkkkkkkkkkkkkkkkk jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj",
+        usnCheck?.length,
+        checkData,
+        USN,
+      );
+      if (
+        (usnCheck?.length === 1 &&
+          checkData?.USN === USN &&
+          checkData?.admissionYear === admissionYear) ||
+        usnCheck?.length === 0
+      ) {
+        message = "Student updated successfully.";
+        student = await InstitueStudent.findByIdAndUpdate(
+          existingStudentEmail._id,
+          {
+            $set: {
+              name,
+              USN,
+              gender,
+              dob: dobYMD,
+              tenTh,
+              twelveTh,
+              // email, // keep this
+              phoneNumber,
+              program: new mongoose.Types.ObjectId(program),
+              admissionYear,
+              instituteId: user.userId,
+              promotedYear: currentYear,
+              promotedSemester:
+                existingData?.promotedSemester &&
+                existingData.promotedSemester > semesters?.length
+                  ? existingData.promotedSemester
+                  : semesters?.length,
             },
-            { new: true }
-          );
-   }
-      else{
+          },
+          { new: true },
+        );
+      } else {
         message = "USN number already exist.";
-      } 
-      
-
+      }
     } else if (!_id && !existingStudentEmail) {
       message = "Student created successfully.";
       student = await InstitueStudent.findOneAndUpdate(
         {
           USN,
           instituteId: user.userId,
-          admissionYear
+          admissionYear,
         },
         {
           $set: {
@@ -509,16 +524,19 @@ export const addInstituteStudentManually = async (req, res) => {
             admissionYear,
             instituteId: user.userId,
             promotedYear: currentYear,
-            promotedSemester: (existingData?.promotedSemester && existingData?.promotedSemester > semesters?.length) ? existingData?.promotedSemester : semesters?.length
-          }
+            promotedSemester:
+              existingData?.promotedSemester &&
+              existingData?.promotedSemester > semesters?.length
+                ? existingData?.promotedSemester
+                : semesters?.length,
+          },
         },
         {
           upsert: true,
           new: true,
-          runValidators: true
-        }
+          runValidators: true,
+        },
       );
-
 
       // User Account Creation Starts from here
 
@@ -550,7 +568,7 @@ export const addInstituteStudentManually = async (req, res) => {
         password: hashedPassword,
         role: 1,
         phone_number: phoneNumber,
-        usn: USN
+        usn: USN,
       });
       await newUser.save();
 
@@ -558,10 +576,10 @@ export const addInstituteStudentManually = async (req, res) => {
         student._id,
         {
           $set: {
-            userCreatedId: newUser._id
-          }
+            userCreatedId: newUser._id,
+          },
         },
-        { new: true }
+        { new: true },
       );
 
       const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
@@ -573,18 +591,17 @@ export const addInstituteStudentManually = async (req, res) => {
         name,
         email,
         password: newPassword,
-        token
+        token,
       });
 
       // User Account Creation Ends here
-
     }
     // Here code Updation ends
 
     if (!student && existingStudentEmail) {
       return res.status(400).json({
         success: false,
-        message: "Student already exists"
+        message: "Student already exists",
       });
     }
 
@@ -597,8 +614,8 @@ export const addInstituteStudentManually = async (req, res) => {
     });
 
     const semesterData = semesters.map((sem) => {
-      const key = Object.keys(sem)[0];   // "1"
-      const value = sem[key];            // "56"
+      const key = Object.keys(sem)[0]; // "1"
+      const value = sem[key]; // "56"
 
       return {
         InstitueStudentId: student._id,
@@ -610,32 +627,29 @@ export const addInstituteStudentManually = async (req, res) => {
     let sem = await InstitueStudentSemester.insertMany(semesterData);
 
     if (sem) {
-      let avgMarks = await instituteStudentAvgMarks(req?.user, student._id)
-      console.log('avgMarks', avgMarks?.[0]?.averagePercentage);
+      let avgMarks = await instituteStudentAvgMarks(req?.user, student._id);
+      console.log("avgMarks", avgMarks?.[0]?.averagePercentage);
       if (avgMarks?.[0]?.averagePercentage) {
         let res = await InstitueStudent.findOneAndUpdate(
           {
             USN,
             instituteId: user.userId,
-            admissionYear
+            admissionYear,
           },
           {
             $set: {
-              graduationMarks: avgMarks?.[0]?.averagePercentage
-            }
+              graduationMarks: avgMarks?.[0]?.averagePercentage,
+            },
           },
           {
             upsert: true,
             new: true,
-            runValidators: true
-          }
-        )
-        console.log(res)
+            runValidators: true,
+          },
+        );
+        console.log(res);
       }
-
     }
-
-
 
     // -----------------------------
     // Success log
@@ -643,7 +657,6 @@ export const addInstituteStudentManually = async (req, res) => {
     logEntry.status = "created";
     audit.push(logEntry);
     createdCount++;
-
 
     // -----------------------------
     // Final Response
@@ -666,7 +679,6 @@ export const addInstituteStudentManually = async (req, res) => {
       studentId: student._id,
       audit,
     });
-
   } catch (err) {
     return res.status(500).json({
       message: "Processing failed",
@@ -699,14 +711,14 @@ export const deleteInstituteStudent = async (req, res) => {
       {
         _id: id,
         instituteId: user.userId,
-        is_del: false
+        is_del: false,
       },
       {
-        $set: { is_del: true }
+        $set: { is_del: true },
       },
       {
-        new: true
-      }
+        new: true,
+      },
     );
 
     // -----------------------------
@@ -727,7 +739,6 @@ export const deleteInstituteStudent = async (req, res) => {
       success: true,
       data: student,
     });
-
   } catch (err) {
     return res.status(500).json({
       message: "Delete failed",
@@ -749,6 +760,9 @@ export const sendProgressScoreMail = async (req, res) => {
       });
     }
 
+    // Institute
+    const institute = await User.findById(req?.userId).select("name");
+
     // Find user
     // InstituteStudent
     const user = await InstitueStudent.findById(studentId).select("-password");
@@ -768,6 +782,7 @@ export const sendProgressScoreMail = async (req, res) => {
       name: user.name,
       email: user.email,
       progress,
+      institute,
     });
 
     return res.status(200).json({

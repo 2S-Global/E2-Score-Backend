@@ -1,10 +1,7 @@
-export const educationAddedTemplate = (user) => `
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
+export const educationAddedTemplate = (user) => GeneralMailLayout(`
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    <div>
-      <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}"
-           alt="GEISIL Banner" 
-           style="width:100%; border-radius:8px 8px 0 0; display:block;" />
-    </div>
+    
     <div style="background:#0052cc; padding:15px 20px; border-radius:8px 8px 0 0;">
       <h2 style="color:#fff; margin:0; font-size:20px;">Academic Update Notification</h2>
     </div>
@@ -28,9 +25,9 @@ export const educationAddedTemplate = (user) => `
       Global Employability Information Services India Limited</p>
     </div>
   </div>
-`;
+`);
 
-export const instituteReferenceTemplate = (user, instituteName) => `
+export const instituteReferenceTemplate = (user, instituteName) => GeneralMailLayout(`
   <div style="font-family: Arial, sans-serif;">
     <h2>Institute Reference Notification</h2>
     <p>Hello,</p>
@@ -43,4 +40,4 @@ export const instituteReferenceTemplate = (user, instituteName) => `
     <br/>
     <p>Regards,<br/>Geisil Team</p>
   </div>
-`;
+`);

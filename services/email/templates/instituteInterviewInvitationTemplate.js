@@ -1,9 +1,11 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 export const instituteInterviewInvitationTemplate = (
   studentName,
   role,
   recruiterName,
   date,
   time,
+  institueName,
 ) => {
   const dateTime = `
         <ul>
@@ -12,11 +14,11 @@ export const instituteInterviewInvitationTemplate = (
         </ul>
       `;
 
-  return `<p>Dear <strong>${studentName}</strong>,</p>
-        <p>We are pleased to invite you to an interview for the position of ${role} at ${recruiterName}.</p>
+  return GeneralMailLayout(`<p>Dear <strong>${studentName}</strong>,</p>
+        <p>We are pleased to invite you to an interview for the position of ${role} at <strong>${recruiterName}</strong>.</p>
         <p>Interview Details:</p>
         ${dateTime}
         <p>If you have any questions, feel free to contact us.</p>
         <br/>
-        <p>Regards,<br/>Global Employability Information Services India Limited</p>`;
+        <p>Regards,<br/>${institueName}</p>`);
 };

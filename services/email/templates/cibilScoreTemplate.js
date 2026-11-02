@@ -1,11 +1,6 @@
-export const cibilScoreTemplate = (name, cibilScore) => `
-  <div style="text-align: center; margin-bottom: 20px;">
-    <img 
-      src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" 
-      alt="Global Employability Information Services India Limited" 
-      style="width: 100%; height: auto;" 
-    />
-  </div>
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
+export const cibilScoreTemplate = (name, cibilScore) => GeneralMailLayout(`
+  
 
   <p>Dear <strong>${name}</strong>,</p>
 
@@ -54,4 +49,4 @@ export const cibilScoreTemplate = (name, cibilScore) => `
     <strong>Global Employability Information Services India Limited</strong><br />
     Support Team
   </p>
-`;
+`);

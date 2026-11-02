@@ -5,7 +5,7 @@ export const companyRegistrationTemplate = (name, email, password) => {
         <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
         <p>
           We are pleased to provide you with access to our newly launched platform,
-          <a href="https://www.e2score.in" target="_blank">https://www.e2score.in</a>,
+          <a href="https://geisil.com" target="_blank">https://geisil.com</a>,
           designed for fast and accurate verification of KYC documents. This platform will
           streamline your verification processes, enhance efficiency, and ensure compliance.
         </p>
@@ -18,7 +18,7 @@ export const companyRegistrationTemplate = (name, email, password) => {
       
         <p>
           Please log in to the platform at 
-          <a href="https://www.e2score.in" target="_blank">https://www.e2score.in</a> 
+          <a href="https://geisil.com" target="_blank">https://geisil.com</a> 
           using the provided credentials. We strongly recommend that you change your password
           upon your first login for security reasons.
         </p>

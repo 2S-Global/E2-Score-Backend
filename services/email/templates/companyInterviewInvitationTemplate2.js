@@ -1,8 +1,7 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 export const companyInterviewInvitationTemplate = (userName, designation, companyName, interviewDateString, formattedInterviewTime, interviewLocation, applicationId, jobId) => {
-  return `
-        <div style="text-align: center; margin-bottom: 20px;">
-          <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
-        </div>
+  return GeneralMailLayout(`
+        
 
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
               style="font-family:Arial,Helvetica,sans-serif;background-color:#f4f4f4;padding:20px;">
@@ -91,5 +90,5 @@ export const companyInterviewInvitationTemplate = (userName, designation, compan
             </td>
           </tr>
         </table>
-      `;
+      `);
 };

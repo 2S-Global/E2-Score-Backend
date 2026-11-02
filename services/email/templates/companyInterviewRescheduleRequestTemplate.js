@@ -1,5 +1,6 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 export const companyInterviewRescheduleRequestTemplate = (employerName, candidateName, jobTitle, requestDateString, requestStartTime, requestEndTime) => {
-  return `
+  return GeneralMailLayout(`
           <p>Hello ${employerName || "Employer"},</p>
 
           <p>
@@ -23,5 +24,5 @@ export const companyInterviewRescheduleRequestTemplate = (employerName, candidat
             Regards,<br />
             <strong>GEISIL</strong>
           </p>
-        `;
+        `);
 };

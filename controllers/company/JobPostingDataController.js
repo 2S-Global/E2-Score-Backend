@@ -3477,6 +3477,7 @@ export const rescheduleInterview = async (req, res) => {
         interviewDateString: new Date(interviewDate).toDateString(),
         formattedInterviewTime,
         interviewLocation,
+        loginId: req?.userId,
       });
     }
 
@@ -3569,6 +3570,7 @@ export const sentOfferToCandidates = async (req, res) => {
         ).toDateString(),
         offer_letter_salary,
         offer_letter_message,
+        loginId: req?.userId,
       });
     }
 

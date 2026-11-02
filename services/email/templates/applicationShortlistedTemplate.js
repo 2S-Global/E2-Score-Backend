@@ -16,6 +16,7 @@ export const applicationShortlistedTemplate = async (
   // Fetch template from database
   const templateOne = await MailTemplate.findOne({
     slug: "application_shortlisted",
+    role: "2",
   });
   template = templateOne;
   const templateTwo = await CompanyMailTemplate.findOne({

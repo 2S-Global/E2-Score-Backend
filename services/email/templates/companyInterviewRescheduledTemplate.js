@@ -1,15 +1,59 @@
-export const companyInterviewRescheduledTemplate = (userName, designation, companyName, interviewDateString, formattedInterviewTime, interviewLocation) => {
-  return `
-        <div style="text-align: center; margin-bottom: 20px;">
-          <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
-        </div>
+import {
+  replaceMailPlaceholders,
+  CompanyMailLayout,
+} from "../../../utility/MailTeamplates.js";
+import {
+  CompanyMailTemplate,
+  MailTemplate,
+} from "../../../models/company_Models/MailTemplatesModel.js";
+export const companyInterviewRescheduledTemplate = async (
+  userName,
+  designation,
+  companyName,
+  interviewDateString,
+  formattedInterviewTime,
+  interviewLocation,
+  loginId,
+) => {
+  let template = "";
+  // Fetch template from database
+  const templateOne = await MailTemplate.findOne({
+    slug: "interview_rescheduled",
+    role: "2",
+  });
+  template = templateOne;
+  const templateTwo = await CompanyMailTemplate.findOne({
+    templateId: templateOne?._id,
+    userId: loginId,
+  });
+  if (templateTwo?.description) {
+    template = templateTwo;
+  }
 
+  if (!template) {
+    throw new Error("Mail template not found");
+  }
+
+  const data = {
+    candidateName: userName,
+    designation: designation,
+    companyName: companyName,
+    interviewDate: interviewDateString,
+    interviewTime: formattedInterviewTime,
+    interviewLocation: interviewLocation,
+  };
+  let templateDescription = CompanyMailLayout(template.description);
+  // Replace placeholders
+  return replaceMailPlaceholders(templateDescription, data);
+
+  /*  
+    `
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-              style="font-family:Arial,Helvetica,sans-serif;background-color:#f4f4f4;padding:20px;">
+              style="font-family:Arial,Helvetica,sans-serif;padding:20px;">
           <tr>
             <td align="center">
               <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-                    style="max-width:600px;background:#ffffff;padding:24px;border-radius:6px;color:#333;">
+                    style="max-width:600px;padding:24px;border-radius:6px;color:#333;">
 
                 <tr>
                   <td>
@@ -62,5 +106,5 @@ export const companyInterviewRescheduledTemplate = (userName, designation, compa
             </td>
           </tr>
         </table>
-      `;
+      ` */
 };

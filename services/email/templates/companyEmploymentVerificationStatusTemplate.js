@@ -1,4 +1,14 @@
-export const companyEmploymentVerificationStatusTemplate = (employeeName, companyName, workedInCompanyBool, VerifiedBool, designationVerifiedBool, durationVerifiedBool, employmentTypeVerifiedBool, remarks) => {
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
+export const companyEmploymentVerificationStatusTemplate = (
+  employeeName,
+  companyName,
+  workedInCompanyBool,
+  VerifiedBool,
+  designationVerifiedBool,
+  durationVerifiedBool,
+  employmentTypeVerifiedBool,
+  remarks,
+) => {
   let verificationStatus = `
       <ul>
         <li>Worked in Company: <strong>${
@@ -24,11 +34,11 @@ export const companyEmploymentVerificationStatusTemplate = (employeeName, compan
     verificationStatus += `<p><strong>Remarks:</strong> ${remarks}</p>`;
   }
 
-  return `<p>Dear <strong>${employeeName}</strong>,</p>
+  return GeneralMailLayout(`<p>Dear <strong>${employeeName}</strong>,</p>
         <p>Your employment verification details have been updated by <strong>${companyName}</strong>.</p>
         <p>Here is the status of your verification:</p>
-        \${verificationStatus}
+        ${verificationStatus}
         <p>If you believe there is an error, please contact our support team.</p>
         <br/>
-        <p>Regards,<br/>E2Score Verification Team</p>`;
+        <p>Regards,<br/>Global Employability Information Services India Limited</p>`);
 };

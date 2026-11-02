@@ -1,4 +1,10 @@
-export const instituteStudentProfileCompletionTemplate = (name, progress) => `
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
+export const instituteStudentProfileCompletionTemplate = (
+  name,
+  progress,
+  institute,
+) =>
+  GeneralMailLayout(`
       <div style="font-family: Arial, sans-serif;">
         <h2>Hello ${name || "Candidate"},</h2>
 
@@ -29,7 +35,7 @@ export const instituteStudentProfileCompletionTemplate = (name, progress) => `
 
         <p>
           Best Regards,<br/>
-          Placement Team
+          ${institute?.name}
         </p>
       </div>
-`;
+`);

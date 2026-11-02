@@ -1,6 +1,7 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 export const companyInterviewResponseTemplate = (accept, employerName, candidateName, jobTitle) => {
   if (accept) {
-    return `
+    return GeneralMailLayout(`
             <p>Hello ${employerName || "Employer"},</p>
 
             <p>
@@ -18,9 +19,9 @@ export const companyInterviewResponseTemplate = (accept, employerName, candidate
               Regards,<br />
               <strong>GEISIL</strong>
             </p>
-          `;
+          `);
   } else {
-    return `
+    return GeneralMailLayout(`
           <p>Hello ${employerName || "Employer"},</p>
 
           <p>
@@ -38,6 +39,6 @@ export const companyInterviewResponseTemplate = (accept, employerName, candidate
             Regards,<br />
             <strong>GEISIL</strong>
           </p>
-        `;
+        `);
   }
 };

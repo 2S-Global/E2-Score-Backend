@@ -49,6 +49,9 @@ const MailTemplatesSchema = new mongoose.Schema(
     description: {
       type: String,
     },
+    role: {
+      type: String,
+    },
   },
   {
     timestamps: true,

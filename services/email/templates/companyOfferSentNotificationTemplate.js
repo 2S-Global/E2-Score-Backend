@@ -1,5 +1,6 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 export const companyOfferSentNotificationTemplate = (designation, userName, userEmail, offer_letter_designation, offer_letter_joining_date_string, offer_letter_salary) => {
-  return `
+  return GeneralMailLayout(`
     <h2>Offer Letter Sent Notification</h2>
 
     <p>
@@ -31,5 +32,5 @@ export const companyOfferSentNotificationTemplate = (designation, userName, user
 
     <br/>
     <p>— System Notification</p>
-  `;
+  `);
 };

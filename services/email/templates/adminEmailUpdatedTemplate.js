@@ -1,7 +1,7 @@
-export const adminEmailUpdatedTemplate = (name, email) => `
-        <div style="text-align: center; margin-bottom: 20px;">
-      <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
-    </div>
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
+export const adminEmailUpdatedTemplate = (name, email) =>
+  GeneralMailLayout(`
+      
           <p>Dear <strong>${name}</strong>,</p>
           <p>We wanted to let you know that the email address associated with your account was recently changed.</p>
 
@@ -13,5 +13,5 @@ export const adminEmailUpdatedTemplate = (name, email) => `
           <br />
           <p>Sincerely,<br />
           The Admin Team<br />
-          <strong>E2Score India Limited</strong></p>
-`;
+          <strong>Global Employability Information Services India Limited</strong></p>
+`);

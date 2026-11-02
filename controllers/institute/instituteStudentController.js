@@ -23,7 +23,7 @@ import { Types } from "mongoose";
 import { GetProgress } from "../../utility/helper/getprogress.js";
 import { studentDetails } from "../../utility/student.js";
 import CompanyByInstitute from "../../models/CompanyByInstituteModel.js";
-export const sendMailSudent = async (data) => {
+export const sendMailSudent = async (data, institueName) => {
   // Send email via queue
   await emailQueue.add("institute_interview_invitation", {
     studentName: data?.studentName,
@@ -32,6 +32,7 @@ export const sendMailSudent = async (data) => {
     recruiterName: data?.recruiterName,
     date: data?.date && new Date(data?.date).toISOString().split("T")[0],
     time: data?.time,
+    institueName,
   });
 };
 
@@ -1774,12 +1775,15 @@ export const StudentInterview = async (req, res) => {
           "All selected students are already assigned to this recruiter.",
       });
     }
-
+    //
+    let institueName = await User.findById(req?.userId, { name: 1 }).lean();
     // Insert only new records
     const result = await StudentPlacement.insertMany(newStudents);
 
     // Send student emails
-    await Promise.all(newStudents.map((item) => sendMailSudent(item)));
+    await Promise.all(
+      newStudents.map((item) => sendMailSudent(item, institueName?.name)),
+    );
 
     // Send recruiter email
     const rec = {
@@ -2574,7 +2578,7 @@ export const getActiveCompanies = async (req, res) => {
   }
 };
 
-export const instituteStudentByPlacementReady = async (req, res) => {
+/* export const instituteStudentByPlacementReady = async (req, res) => {
   try {
     const user = req?.user;
     console.log("user in instituteStudent controller", user);
@@ -2648,13 +2652,7 @@ export const instituteStudentByPlacementReady = async (req, res) => {
         $unwind: { path: "$programDetails", preserveNullAndEmptyArrays: true },
       },
 
-      /*   {
-          $addFields: {
-            debugProgramId: "$program",
-            debugMatchedCourseId: "$programDetails._id",
-            debugMarksType: "$programDetails.marksType"
-          }
-        }, */
+    
 
       {
         $addFields: {
@@ -2707,6 +2705,7 @@ export const instituteStudentByPlacementReady = async (req, res) => {
           },
         },
       },
+
     ]);
 
     const studentsWithProgress = await Promise.all(
@@ -2722,14 +2721,7 @@ export const instituteStudentByPlacementReady = async (req, res) => {
       }),
     );
 
-    /*
-    return res.status(200).json({
-      success: true,
-      count: institueStudent.length,
-      data: institueStudent,
-      progress
-    });
-    */
+   
 
     return res.status(200).json({
       success: true,
@@ -2738,6 +2730,238 @@ export const instituteStudentByPlacementReady = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching student:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}; */
+
+export const instituteStudentByPlacementReady = async (req, res) => {
+  try {
+    const user = req?.user;
+    console.log("user in instituteStudent controller", user);
+
+    const progress = await GetProgress(user.user_id);
+
+    // 2️⃣ Get Institute Student
+    const institueStudent = await InstitueStudent.aggregate([
+      {
+        $match: {
+          instituteId: new Types.ObjectId(user?.userId),
+          status: true,
+          is_del: false,
+        },
+      },
+
+      // Sort latest students first
+      {
+        $sort: { createdAt: -1 },
+      },
+
+      {
+        $lookup: {
+          from: "instituestudentsemesters",
+          let: { insId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$InstitueStudentId", "$$insId"] },
+                    { $eq: ["$is_del", false] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "semesters",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "student_course_details",
+          let: { pro: "$program" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$_id", "$$pro"] }, { $eq: ["$is_del", 0] }],
+                },
+              },
+            },
+            {
+              $project: {
+                name: 1,
+                total_number_of_semesters: 1,
+                type: 1,
+                course_durartion: 1,
+                courseStructure: 1,
+                marksType: 1,
+              },
+            },
+          ],
+          as: "programDetails",
+        },
+      },
+
+      {
+        $unwind: {
+          path: "$programDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // ✅ Placement eligibility filter
+      {
+        $match: {
+          $expr: {
+            $let: {
+              vars: {
+                remainingSemesters: {
+                  $subtract: [
+                    {
+                      $convert: {
+                        input: "$programDetails.total_number_of_semesters",
+                        to: "double",
+                        onError: 0,
+                        onNull: 0,
+                      },
+                    },
+                    {
+                      $convert: {
+                        input: "$promotedSemester",
+                        to: "double",
+                        onError: 0,
+                        onNull: 0,
+                      },
+                    },
+                  ],
+                },
+                courseType: {
+                  $toLower: {
+                    $ifNull: ["$programDetails.courseStructure", ""],
+                  },
+                },
+              },
+              in: {
+                $or: [
+                  // Semester: difference <= 2
+                  {
+                    $and: [
+                      { $eq: ["$$courseType", "semester"] },
+                      { $lte: ["$$remainingSemesters", 2] },
+                    ],
+                  },
+
+                  // Yearly: difference <= 1
+                  {
+                    $and: [
+                      { $eq: ["$$courseType", "yearly"] },
+                      { $lte: ["$$remainingSemesters", 1] },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+
+      /*
+      {
+        $addFields: {
+          debugProgramId: "$program",
+          debugMatchedCourseId: "$programDetails._id",
+          debugMarksType: "$programDetails.marksType"
+        }
+      },
+      */
+
+      {
+        $addFields: {
+          semesters: {
+            $map: {
+              input: "$semesters",
+              as: "sem",
+              in: {
+                $mergeObjects: [
+                  "$$sem",
+                  {
+                    marksType: "$programDetails.marksType",
+                    courseStructure: "$programDetails.courseStructure",
+
+                    originalMarks: "$$sem.marks",
+
+                    convertedMarks: {
+                      $let: {
+                        vars: {
+                          type: {
+                            $toLower: {
+                              $ifNull: ["$programDetails.marksType", ""],
+                            },
+                          },
+                        },
+                        in: {
+                          $cond: [
+                            { $eq: ["$$type", "cgpa"] },
+
+                            {
+                              $multiply: ["$$sem.marks", 10],
+                            },
+
+                            {
+                              $cond: [
+                                { $eq: ["$$type", "dgpa"] },
+
+                                {
+                                  $multiply: [
+                                    {
+                                      $subtract: ["$$sem.marks", 0.75],
+                                    },
+                                    10,
+                                  ],
+                                },
+
+                                "$$sem.marks",
+                              ],
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    // Get student progress
+    const studentsWithProgress = await Promise.all(
+      institueStudent.map(async (student) => {
+        const progress = student.userCreatedId
+          ? await GetProgress(student.userCreatedId)
+          : 0;
+
+        return {
+          ...student,
+          progress,
+        };
+      }),
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: studentsWithProgress.length,
+      data: studentsWithProgress,
+    });
+  } catch (error) {
+    console.error("Error fetching student:", error);
+
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -2813,18 +3037,18 @@ export const getTotalRecruit = async (req, res) => {
       });
     }
 
-    // Count students for this institute
-    const totalStudents = await CompanyByInstitute.countDocuments({
+    // Count  Recruiters
+    const totalRecruiters = await CompanyByInstitute.countDocuments({
       userId: instituteId,
       status: "Active",
     });
 
     return res.status(200).json({
       success: true,
-      totalStudents,
+      totalRecruiters,
     });
   } catch (error) {
-    console.error("Error in getTotalStudentsCount:", error);
+    console.error("Error in totalRecruiters:", error);
     return res.status(500).json({
       success: false,
       message: "Server error",

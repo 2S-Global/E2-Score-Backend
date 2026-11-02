@@ -1,3 +1,4 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 const escapeHtml = (value = "") =>
   String(value).replace(/[&<>"']/g, (character) => {
     const entities = {
@@ -16,7 +17,7 @@ export const jobInvitationTemplate = ({
   companyName = "GEISIL",
   respondUrl,
   htmlContent = "",
-}) => `
+}) => GeneralMailLayout(`
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -94,4 +95,4 @@ export const jobInvitationTemplate = ({
   </div>
 </body>
 </html>
-`;
+`);

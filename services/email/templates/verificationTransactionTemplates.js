@@ -1,7 +1,12 @@
-export const verificationOrderConfirmedTemplate = (user, orderNumber, overallBillingTotal, emailTable) => `
-  <div style="text-align: center; margin-bottom: 20px;">
-<img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
-</div>
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
+export const verificationOrderConfirmedTemplate = (
+  user,
+  orderNumber,
+  overallBillingTotal,
+  emailTable,
+) =>
+  GeneralMailLayout(`
+
     <p>Dear <strong>${user.name}</strong>,</p>
     <p>Thank you for shopping with QuikChek. We have successfully received your order, and it's now being processed.</p>
     <p><strong>Order Details:</strong></p>
@@ -19,15 +24,16 @@ export const verificationOrderConfirmedTemplate = (user, orderNumber, overallBil
     The Admin Team<br />
     <strong>Global Employability Information Services India Limited</strong></p>
 
-    <div style="text-align: center; margin-top: 30px;">
-  <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
-</div>
-`;
 
-export const verificationPaymentReceivedTemplate = (user, orderNumber, emailTable) => `
-  <div style="text-align: center; margin-bottom: 20px;">
-<img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
-</div>
+`);
+
+export const verificationPaymentReceivedTemplate = (
+  user,
+  orderNumber,
+  emailTable,
+) =>
+  GeneralMailLayout(`
+
     <p>Dear <strong>${user.name}</strong>,</p>
     <p>Thank you for your payment! We are pleased to inform you that your payment for Order #${orderNumber} has been successfully processed.</p>
    
@@ -41,15 +47,16 @@ export const verificationPaymentReceivedTemplate = (user, orderNumber, emailTabl
     The Admin Team<br />
     <strong>Global Employability Information Services India Limited</strong></p>
 
-            <div style="text-align: center; margin-top: 30px;">
-  <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
-</div>
-`;
+`);
 
-export const verificationAdminNotificationTemplate = (user, orderNumber, amount, emailTable) => `
-<div style="text-align: center; margin-bottom: 20px;">
-  <img src="${process.env.EMAIL_HEADER_LOGO_URL || "https://services.geisil.com/assets/Logo-D7c9kIlT.webp"}" alt="Banner" style="width: 100%; height: auto;" />
-</div>
+export const verificationAdminNotificationTemplate = (
+  user,
+  orderNumber,
+  amount,
+  emailTable,
+) =>
+  GeneralMailLayout(`
+
 
 <p>Dear <strong>Admin</strong>,</p>
 
@@ -71,7 +78,5 @@ ${emailTable}
 The Admin Team<br />
 <strong>Global Employability Information Services India Limited</strong></p>
 
-<div style="text-align: center; margin-top: 30px;">
-  <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
-</div>
-`;
+
+`);

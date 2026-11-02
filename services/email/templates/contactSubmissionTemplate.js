@@ -1,5 +1,6 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 export const contactSubmissionTemplate = (name, email, subject, message, dispute) => {
-    return dispute
+    return GeneralMailLayout(dispute
       ? `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
         <!-- Header -->
@@ -73,5 +74,5 @@ export const contactSubmissionTemplate = (name, email, subject, message, dispute
           <p style="margin: 4px 0 0;">&copy; ${new Date().getFullYear()} Quikchek</p>
         </div>
       </div>
-      `;
+      `);
 };

@@ -1,3 +1,4 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 const escapeHtml = (value = "") =>
   String(value).replace(/[&<>"']/g, (character) => {
     const entities = {
@@ -15,7 +16,7 @@ export const jobInvitationTemplate = ({
   jobTitle,
   companyName = "GEISIL",
   respondUrl,
-}) => `
+}) => GeneralMailLayout(`
   <div style="font-family:Arial,sans-serif;color:#252525;max-width:600px;margin:0 auto;padding:24px;line-height:1.6">
     
     <!-- Hero Image with Centered Text Overlay -->
@@ -50,7 +51,7 @@ export const jobInvitationTemplate = ({
       <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
     </div>
   </div>
-`;
+`);
 
 const escapeHtml = (value = "") =>
   String(value).replace(/[&<>"']/g, (character) => {
@@ -69,7 +70,7 @@ export const jobInvitationTemplate = ({
   jobTitle,
   companyName = "GEISIL",
   respondUrl,
-}) => `
+}) => GeneralMailLayout(`
   <div style="font-family:Arial,sans-serif;color:#252525;max-width:600px;margin:0 auto;padding:24px;line-height:1.6">
     
     <!-- Full Responsive Image (Guarantees the entire image shows on mobile) -->
@@ -97,4 +98,4 @@ export const jobInvitationTemplate = ({
       <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
     </div>
   </div>
-`;
+`);

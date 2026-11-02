@@ -1,5 +1,6 @@
+import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 export const companyJobApplicationsSummaryTemplate = (jobTitle, totalApplications, applicantsHtml) => {
-  return `
+  return GeneralMailLayout(`
       <h2>Job Applications Summary</h2>
       <p><strong>Job Title:</strong> ${jobTitle}</p>
       <p><strong>Total Applications:</strong> ${totalApplications}</p>
@@ -21,5 +22,5 @@ export const companyJobApplicationsSummaryTemplate = (jobTitle, totalApplication
       <br/>
       <p>Please log in to your dashboard to review the complete profiles of these candidates.</p>
       <p>Regards,<br/>E2Score Team</p>
-  `;
+  `);
 };
