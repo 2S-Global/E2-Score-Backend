@@ -25,11 +25,8 @@ export const certificateAddedTemplate = (user) =>
 
       <p>If the button does not work, use this link:</p>
       <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
-
       <br />
-
       <p>Sincerely,<br />
-      <strong>Admin Team</strong><br/>
       Global Employability Information Services India Limited</p>
     </div>
   </div>

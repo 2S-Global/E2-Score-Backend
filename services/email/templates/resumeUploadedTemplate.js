@@ -27,8 +27,7 @@ export const resumeUploadedTemplate = (user) =>
       <p><a href="${process.env.ORIGIN}" style="color:#0052cc;">${process.env.ORIGIN}</a></p>
 
       <p>Sincerely,<br />
-      <strong>Admin Team</strong><br />
-      Global Employability Information Services India Limited
+     Global Employability Information Services India Limited
       </p>
     </div>
   </div>

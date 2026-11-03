@@ -40,5 +40,5 @@ export const companyEmploymentVerificationStatusTemplate = (
         ${verificationStatus}
         <p>If you believe there is an error, please contact our support team.</p>
         <br/>
-        <p>Regards,<br/>Global Employability Information Services India Limited</p>`);
+        <p>Regards,<br/> Global Employability Information Services India Limited</p>`);
 };

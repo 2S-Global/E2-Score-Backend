@@ -29,8 +29,7 @@ export const coverLetterUploadedTemplate = (name) => {
         <br />
   
         <p>Sincerely,<br />
-        <strong>Admin Team</strong><br />
-        Global Employability Information Services India Limited
+         Global Employability Information Services India Limited
         </p>
       </div>
     </div>

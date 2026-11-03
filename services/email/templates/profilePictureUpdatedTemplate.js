@@ -33,7 +33,7 @@ export const profilePictureUpdatedTemplate = (user) =>
 
       <p>Sincerely,<br />
       <strong>Admin Team</strong><br />
-      Global Employability Information Services India Limited</p>
+       Global Employability Information Services India Limited</p>
     </div>
   </div>
 `);

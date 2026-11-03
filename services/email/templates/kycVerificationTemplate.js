@@ -1,5 +1,6 @@
 import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
-export const kycVerficationTemplate = (user, changeListHTML) => GeneralMailLayout(`
+export const kycVerficationTemplate = (user, changeListHTML) =>
+  GeneralMailLayout(`
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
        
 
@@ -33,8 +34,7 @@ export const kycVerficationTemplate = (user, changeListHTML) => GeneralMailLayou
       <br />
 
       <p>Sincerely,<br />
-      <strong>Admin Team</strong><br />
-    Global Employability Information Services India Limited</p>
+     Global Employability Information Services India Limited</p>
     </div>
   </div>
   `);

@@ -1,9 +1,8 @@
 import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
-export const jobApplicationCandidateTemplate = (job) => GeneralMailLayout(`
+export const jobApplicationCandidateTemplate = (job) =>
+  GeneralMailLayout(`
   <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
-    <h2>Application Confirmation</h2>
-
-    <p>Hi <strong>${job.candidateName}</strong>,</p>
+   <p>Hi <strong>${job.candidateName}</strong>,</p>
 
     <p>
       Thank you for applying for the position of 
@@ -38,6 +37,6 @@ export const jobApplicationCandidateTemplate = (job) => GeneralMailLayout(`
     </p>
 
     <br/>
-    <p>Best regards,<br/>Team GEISIL</p>
+    <p>Best regards,<br/> Global Employability Information Services India Limited</p>
   </div>
 `);

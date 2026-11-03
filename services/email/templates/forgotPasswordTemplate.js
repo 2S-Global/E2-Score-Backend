@@ -1,5 +1,6 @@
 import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
-export const forgotPasswordTemplate = (name, newPassword) => GeneralMailLayout(`
+export const forgotPasswordTemplate = (name, newPassword) =>
+  GeneralMailLayout(`
 
               <h3>Dear ${name},</h3>
               <p>Your password has been successfully reset as per your request. Please find your new login credentials below:</p>
@@ -11,5 +12,5 @@ export const forgotPasswordTemplate = (name, newPassword) => GeneralMailLayout(`
               
               </p>
               <br/>
-              <p>Stay secure,<br/>E2Score Team</p>
+              <p>Stay secure,<br/>Global Employability Information Services India Limited</p>
           `);

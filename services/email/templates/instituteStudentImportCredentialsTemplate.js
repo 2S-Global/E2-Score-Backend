@@ -3,10 +3,11 @@ export const instituteStudentImportCredentialsTemplate = (
   name,
   email,
   password,
-) => GeneralMailLayout(`
+) =>
+  GeneralMailLayout(`
       
         <p>Dear <strong>${name}</strong>,</p>
-        <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
+        <p>Greetings from Global Employability Information Services India Limited.</p>
         <p>
           We are pleased to provide you with access to our newly launched platform,
           <a href="https://services.geisil.com" target="_blank">https://services.geisil.com</a>,
@@ -36,7 +37,5 @@ export const instituteStudentImportCredentialsTemplate = (
         <p>Thank you for choosing <strong>Geisil India Limited</strong>.</p>
       
         <br />
-        <p>Sincerely,<br />
-        The Admin Team<br />
-        <strong>Geisil India Limited</strong></p>
+        <p>Sincerely,<br /> Global Employability Information Services India Limited</p>
 `);

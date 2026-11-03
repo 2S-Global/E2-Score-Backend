@@ -12,6 +12,5 @@ export const adminEmailUpdatedTemplate = (name, email) =>
           <p>If you didn’t make this change or believe it was done in error, please contact our support team immediately so we can help secure your account.</p>
           <br />
           <p>Sincerely,<br />
-          The Admin Team<br />
-          <strong>Global Employability Information Services India Limited</strong></p>
+          Global Employability Information Services India Limited</p>
 `);

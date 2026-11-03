@@ -11,5 +11,5 @@ export const instituteRecruiterInterviewScheduleTemplate = (
         <p>Kindly review the candidate list and confirm the interview schedule. Please let me know if any additional information or documentation is required.</p>
         <p>Thank you for your assistance.</p>
         <br/>
-        <p>Regards,<br/>Global Employability Information Services India Limited</p>`);
+        <p>Regards,<br/> Global Employability Information Services India Limited</p>`);
 };

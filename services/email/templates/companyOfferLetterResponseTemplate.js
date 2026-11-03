@@ -1,5 +1,10 @@
 import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
-export const companyOfferLetterResponseTemplate = (accept, employerName, candidateName, jobTitle) => {
+export const companyOfferLetterResponseTemplate = (
+  accept,
+  employerName,
+  candidateName,
+  jobTitle,
+) => {
   if (accept) {
     return GeneralMailLayout(`
             <p>Hello ${employerName || "Employer"},</p>
@@ -16,7 +21,7 @@ export const companyOfferLetterResponseTemplate = (accept, employerName, candida
 
             <p>
               Regards,<br />
-              <strong>GEISIL</strong>
+              Global Employability Information Services India Limited
             </p>
           `);
   } else {
@@ -36,7 +41,7 @@ export const companyOfferLetterResponseTemplate = (accept, employerName, candida
 
           <p>
             Regards,<br />
-            <strong>GEISIL</strong>
+            Global Employability Information Services India Limited
           </p>
         `);
   }

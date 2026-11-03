@@ -27,8 +27,7 @@ export const userCredentialsTemplate = (name, email, password, token) =>
 
       <br />
       <p>Sincerely,<br />
-         The Admin Team<br />
-         <strong>Global Employability Information Services India Limited</strong>
+         Global Employability Information Services India Limited
       </p>
 
    

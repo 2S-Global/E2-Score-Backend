@@ -21,8 +21,7 @@ export const verificationOrderConfirmedTemplate = (
     <p>Thank you for choosing QuikChek. We appreciate your trust in us and look forward to serving you again.</p>
     <br />
     <p>Sincerely,<br />
-    The Admin Team<br />
-    <strong>Global Employability Information Services India Limited</strong></p>
+    Global Employability Information Services India Limited</p>
 
 
 `);
@@ -44,8 +43,7 @@ export const verificationPaymentReceivedTemplate = (
     <p>Thank you for choosing QuikChek. We appreciate your trust in us and look forward to serving you again.</p>
     <br />
     <p>Sincerely,<br />
-    The Admin Team<br />
-    <strong>Global Employability Information Services India Limited</strong></p>
+    Global Employability Information Services India Limited</p>
 
 `);
 
@@ -75,8 +73,7 @@ ${emailTable}
 
 <br />
 <p>Sincerely,<br />
-The Admin Team<br />
-<strong>Global Employability Information Services India Limited</strong></p>
+Global Employability Information Services India Limited</p>
 
 
 `);

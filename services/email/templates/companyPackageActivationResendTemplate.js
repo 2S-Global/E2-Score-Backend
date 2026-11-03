@@ -1,11 +1,16 @@
 import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
-export const companyPackageActivationResendTemplate = (companyName, planDetailsHtml, discount) => GeneralMailLayout(`
+export const companyPackageActivationResendTemplate = (
+  companyName,
+  planDetailsHtml,
+  discount,
+) =>
+  GeneralMailLayout(`
         
 
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <p>Dear ${companyName || "Valued Partner"},</p>
 
-          <p>Greetings from <strong>Global Employability Information Services India Limited</strong>.</p>
+          <p>Greetings from Global Employability Information Services India Limited.</p>
 
           <p>This is a follow-up email to confirm your <strong>QuikChek</strong> service package.</p>
 
@@ -25,12 +30,8 @@ export const companyPackageActivationResendTemplate = (companyName, planDetailsH
             <li><strong>Phone:</strong> 9831823898</li>
           </ul>
 
-          <p>Thank you for choosing <strong>Global Employability Information Services India Limited</strong>.</p>
+          <p>Thank you for choosing Global Employability Information Services India Limited.</p>
 
-          <p>Sincerely,<br/>The Admin Team<br/><strong>Global Employability Information Services India Limited</strong></p>
-
-           <div style="text-align: center; margin-top: 30px;">
-            <img src="https://res.cloudinary.com/da4unxero/image/upload/v1746776002/QuikChek%20images/ntvxq8yy2l9de25t1rmu.png" alt="Footer" style="width:97px; height: 116px;" />
-          </div>
+          <p>Sincerely,<br/>The Admin Team<br/>Global Employability Information Services India Limited</p>
         </div>
 `);

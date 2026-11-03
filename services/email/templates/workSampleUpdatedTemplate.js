@@ -29,7 +29,6 @@ export const workSampleUpdatedTemplate = (user) =>
       <br />
 
       <p>Sincerely,<br />
-      <strong>Admin Team</strong><br />
       Global Employability Information Services India Limited</p>
     </div>
   </div>

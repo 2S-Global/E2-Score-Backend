@@ -1,5 +1,6 @@
 import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
-export const experianScoreTemplate = (name, experianScore, pdfUrl) => GeneralMailLayout(`
+export const experianScoreTemplate = (name, experianScore, pdfUrl) =>
+  GeneralMailLayout(`
   
 
   <p>Dear <strong>${name}</strong>,</p>
@@ -67,14 +68,13 @@ export const experianScoreTemplate = (name, experianScore, pdfUrl) => GeneralMai
   </p>
 
   <p>
-    Thank you for choosing <strong>Global Employability Information Services India Limited</strong>.
+    Thank you for choosing Global Employability Information Services India Limited.
   </p>
 
   <br />
 
   <p>
     Sincerely,<br />
-    <strong>Global Employability Information Services India Limited</strong><br />
-    Support Team
+    Global Employability Information Services India Limited<br />
   </p>
 `);

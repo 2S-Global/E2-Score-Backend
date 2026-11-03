@@ -29,7 +29,6 @@ export const projectAddedTemplate = (name) =>
           <br />
     
           <p>Sincerely,<br />
-          <strong>Admin Team</strong><br />
           Global Employability Information Services India Limited
           </p>
         </div>
