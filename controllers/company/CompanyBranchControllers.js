@@ -707,6 +707,7 @@ export const addEmployeeVerificationDetails = async (req, res) => {
         durationVerifiedBool,
         employmentTypeVerifiedBool,
         remarks,
+        loginId: req?.userId,
       });
     }
 

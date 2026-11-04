@@ -1,11 +1,11 @@
 import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 export const keySkillsUpdatedTemplate = (user) =>
   GeneralMailLayout(`
-      <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+      <div style="font-family: Arial, sans-serif;  padding:20px; line-height:1.6; max-width:600px; margin:auto;  border-radius:8px;">
         
 
-        <div style="background:#0052cc; padding:15px 20px;">
-          <h2 style="color:#fff; margin:0;">Key Skill List Update Notification</h2>
+        <div style=" padding:15px 20px;">
+          <strong>Key Skill List Update Notification</strong>
         </div>
 
         <div style="padding:20px; background:#fff;">
