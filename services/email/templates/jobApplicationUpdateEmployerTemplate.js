@@ -1,7 +1,7 @@
 import { GeneralMailLayout } from "../../../utility/MailTeamplates.js";
 export const jobApplicationUpdateEmployerTemplate = (job) =>
   GeneralMailLayout(`
-  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto; background:#f9f9f9; border-radius:8px;">
+  <div style="font-family: Arial, sans-serif; color:#333; padding:20px; line-height:1.6; max-width:600px; margin:auto;border-radius:8px;">
     <h2>Application Update Notification</h2>
 
     <p>
