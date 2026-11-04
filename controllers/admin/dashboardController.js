@@ -1020,7 +1020,7 @@ export const getAllJobApplicantsList = async (req, res) => {
           preferredTime: 1,
           availabilityOnSaturday: 1,
           willingToRelocate: 1,
-
+          miscellaneousJobTitle: 1,
           candidateName: "$user.name",
           profilePicture: "$user.profilePicture",
           interviewInvitationAccepted: 1,

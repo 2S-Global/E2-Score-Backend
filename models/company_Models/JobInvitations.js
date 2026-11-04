@@ -15,6 +15,9 @@ const Schema = new mongoose.Schema(
     jobTitle: {
       type: String,
     },
+    miscellaneousJobTitle: {
+      type: String,
+    },
     senderName: {
       type: String,
       required: true,

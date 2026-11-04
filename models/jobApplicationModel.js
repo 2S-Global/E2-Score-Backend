@@ -13,7 +13,10 @@ const jobApplicationSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-
+    //additional job title if selected mis
+    miscellaneousJobTitle: {
+      type: String,
+    },
     // user additional information started
     noticePeriod: {
       type: String,

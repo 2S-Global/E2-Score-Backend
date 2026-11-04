@@ -349,6 +349,7 @@ export const respondToJobInvitation = async (req, res) => {
         experienceLevel: "Not specified",
         acceptedTerms: true,
         recruitmentSources: "Direct",
+        miscellaneousJobTitle: invitation?.miscellaneousJobTitle || "",
       });
     }
 
@@ -485,7 +486,13 @@ export const addJobInvitation = async (req, res) => {
       });
     }
 
-    const { jobId, senderName, senderEmail, designation } = req.body;
+    const {
+      jobId,
+      senderName,
+      senderEmail,
+      designation,
+      miscellaneousJobTitle,
+    } = req.body;
 
     if (
       !mongoose.isValidObjectId(jobId) ||
@@ -517,6 +524,7 @@ export const addJobInvitation = async (req, res) => {
       employerId: req.userId,
       jobId: job._id,
       jobTitle: job.jobTitle,
+      miscellaneousJobTitle: miscellaneousJobTitle,
       senderName: senderName.trim(),
       senderEmail: senderEmail.trim().toLowerCase(),
       designation: designation.trim(),
@@ -534,10 +542,13 @@ export const addJobInvitation = async (req, res) => {
       companyName: companyDetails?.name?.trim() || "GEISIL",
     };
     const responseToken = createInvitationToken(newInvitation);
+    let newjobTitle = miscellaneousJobTitle
+      ? invitation.jobTitle + " - " + miscellaneousJobTitle
+      : invitation.jobTitle;
     await emailQueue.add("job_invitation", {
       name: invitation.senderName,
       email: invitation.senderEmail,
-      jobTitle: invitation.jobTitle,
+      jobTitle: newjobTitle,
       companyName: companyDetails?.name?.trim() || "GEISIL",
       respondUrl: `${backendUrl}/api/job-invitations/respond?token=${encodeURIComponent(responseToken)}`,
       loginId: req?.userId,
