@@ -338,20 +338,20 @@ export const respondToJobInvitation = async (req, res) => {
     });
     const wasAlreadyApplied = Boolean(application);
 
-    if (!application) {
-      await JobApplication.create({
-        jobId: invitation.jobId,
-        userId: candidate._id,
-        noticePeriod: "Not specified",
-        preferredTime: "Not specified",
-        availabilityOnSaturday: "Not specified",
-        willingToRelocate: "Not specified",
-        experienceLevel: "Not specified",
-        acceptedTerms: true,
-        recruitmentSources: "Direct",
-        miscellaneousJobTitle: invitation?.miscellaneousJobTitle || "",
-      });
-    }
+    //if (!application) {
+    await JobApplication.create({
+      jobId: invitation.jobId,
+      userId: candidate._id,
+      noticePeriod: "Not specified",
+      preferredTime: "Not specified",
+      availabilityOnSaturday: "Not specified",
+      willingToRelocate: "Not specified",
+      experienceLevel: "Not specified",
+      acceptedTerms: true,
+      recruitmentSources: "Direct",
+      miscellaneousJobTitle: invitation?.miscellaneousJobTitle || "",
+    });
+    //}
 
     invitation.status = "Accepted";
     await invitation.save();
