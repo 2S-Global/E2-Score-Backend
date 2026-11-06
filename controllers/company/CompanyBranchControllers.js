@@ -14,7 +14,7 @@ import JobPosting from "../../models/company_Models/JobPostingModel.js";
 import CompanyDetails from "../../models/company_Models/companydetails.js";
 import companyBranchDetailsModel from "../../models/companyBranchDetailsModel.js";
 import { emailQueue } from "../../queues/emailQueue.js";
-
+import { syncCandidateExperience } from "../../utility/experienceHelper.js";
 // Get Conunty
 
 export const getConunty = async (req, res) => {
@@ -651,7 +651,9 @@ export const addEmployeeVerificationDetails = async (req, res) => {
       { $set: updatedFields },
       { new: true },
     ).lean();
-
+    if (updatedEmployment?.user) {
+      await syncCandidateExperience(updatedEmployment?.user);
+    }
     if (!updatedEmployment) {
       return res.status(404).json({ message: "Employment update failed" });
     }

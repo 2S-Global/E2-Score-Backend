@@ -11,7 +11,12 @@ export const convertMonthsToYearsAndMonths = (totalMonths) => {
 };
 
 export const calculateTotalExperience = async (userId) => {
-  const employments = await Employment.find({ user: userId, isDel: false });
+  //const employments = await Employment.find({ user: userId, isDel: false });
+  const employments = await Employment.find({
+    user: userId,
+    isDel: false,
+    $or: [{ workedInCompany: { $exists: false } }, { workedInCompany: true }],
+  });
 
   const intervals = [];
   let fallbackMonths = 0;
@@ -46,9 +51,10 @@ export const calculateTotalExperience = async (userId) => {
       // Fallback: If no joining/leaving dates are defined, sum their manually inputted experience
       const expYears = Number(emp.totalExperience?.year) || 0;
       const expMonths = Number(emp.totalExperience?.month) || 0;
-      fallbackMonths += (expYears * 12) + expMonths;
+      fallbackMonths += expYears * 12 + expMonths;
     }
-  }0
+  }
+  0;
 
   // Sort intervals by start month ascending
   intervals.sort((a, b) => a.start - b.start);
@@ -69,10 +75,9 @@ export const calculateTotalExperience = async (userId) => {
     }
   }
 
-  
   let mergedMonths = 0;
   for (const interval of merged) {
-    mergedMonths += (interval.end - interval.start + 1);
+    mergedMonths += interval.end - interval.start + 1;
   }
 
   const totalMonths = mergedMonths + fallbackMonths;
@@ -83,7 +88,7 @@ export const calculateTotalExperience = async (userId) => {
   return {
     years,
     months,
-    totalMonths
+    totalMonths,
   };
 };
 
@@ -98,10 +103,10 @@ export const syncCandidateExperience = async (userId) => {
       $set: {
         "totalExperience.year": years.toString(),
         "totalExperience.month": months.toString(),
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     },
-    { new: true, upsert: true }
+    { new: true, upsert: true },
   );
 
   return updatedDetails;

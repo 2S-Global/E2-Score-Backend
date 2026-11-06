@@ -11,6 +11,8 @@ import User from "../../models/userModel.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
 import personalDetails from "../../models/personalDetails.js";
 import { emailQueue } from "../../queues/emailQueue.js";
+import csv from "csv-parser";
+import streamifier from "streamifier";
 
 const escapeHtml = (value = "") =>
   String(value).replace(/[&<>"']/g, (character) => {
@@ -563,6 +565,151 @@ export const addJobInvitation = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to add job invitation.",
+      error: error.message,
+    });
+  }
+};
+
+export const excelUploadJobInvitation = async (req, res) => {
+  try {
+    const backendUrl = process.env.BACKEND_URL?.replace(/\/$/, "");
+
+    if (!backendUrl || !process.env.JWT_SECRET) {
+      return res.status(500).json({
+        success: false,
+        message: "Invitation email configuration is incomplete.",
+      });
+    }
+
+    const { jobId, miscellaneousJobTitle } = req.body;
+    if (!mongoose.isValidObjectId(jobId)) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid jobId is required.",
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "A CSV file is required.",
+      });
+    }
+
+    const rows = await new Promise((resolve, reject) => {
+      const results = [];
+      streamifier
+        .createReadStream(req.file.buffer)
+        .pipe(csv({ mapHeaders: ({ header }) => header.trim().toLowerCase() }))
+        .on("data", (row) => results.push(row))
+        .on("end", () => resolve(results))
+        .on("error", reject);
+    });
+
+    if (!rows.length) {
+      return res.status(400).json({
+        success: false,
+        message: "The CSV file contains no invitation rows.",
+      });
+    }
+
+    const invitations = rows.map((row, index) => {
+      const senderName = row.recipientname?.trim();
+      const senderEmail = row.recipientemail?.trim();
+      const designation = row.designation?.trim();
+      return {
+        row: index + 2,
+        senderName,
+        senderEmail,
+        designation,
+      };
+    });
+    const invalidRows = invitations
+      .filter(
+        ({ senderName, senderEmail, designation }) =>
+          !senderName || !senderEmail || !designation,
+      )
+      .map(({ row }) => row);
+    console.log(
+      "aaaaaaaaSSSSSSSSSSSddddddddddd=>",
+      rows,
+      invitations,
+      invalidRows,
+    );
+    if (invalidRows.length) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Every CSV row must include recipientName, recipientEmail, and designation.",
+        invalidRows,
+      });
+    }
+
+    const job = await JobPosting.findOne({
+      _id: jobId,
+      userId: req.userId,
+      is_del: false,
+    }).select("jobTitle");
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found for this company.",
+      });
+    }
+
+    const companyDetails = await CompanyDetails.findOne({
+      userId: req.userId,
+      isDel: false,
+    })
+      .select("name")
+      .lean();
+    const companyName = companyDetails?.name?.trim() || "GEISIL";
+    const normalizedMiscellaneousJobTitle =
+      typeof miscellaneousJobTitle === "string"
+        ? miscellaneousJobTitle.trim()
+        : "";
+    const createdInvitations = [];
+
+    for (const row of invitations) {
+      const invitation = await JobInvitations.create({
+        employerId: req.userId,
+        jobId: job._id,
+        jobTitle: job.jobTitle,
+        miscellaneousJobTitle: normalizedMiscellaneousJobTitle || undefined,
+        senderName: row.senderName,
+        senderEmail: row.senderEmail.toLowerCase(),
+        designation: row.designation,
+      });
+      const responseToken = createInvitationToken({
+        ...invitation.toObject(),
+        companyName,
+      });
+      const newJobTitle = normalizedMiscellaneousJobTitle
+        ? `${invitation.jobTitle} - ${normalizedMiscellaneousJobTitle}`
+        : invitation.jobTitle;
+
+      await emailQueue.add("job_invitation", {
+        name: invitation.senderName,
+        email: invitation.senderEmail,
+        jobTitle: newJobTitle,
+        companyName,
+        respondUrl: `${backendUrl}/api/job-invitations/respond?token=${encodeURIComponent(responseToken)}`,
+        loginId: req.userId,
+      });
+      createdInvitations.push(invitation);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Job invitations added and emails queued successfully.",
+      data: createdInvitations,
+    });
+  } catch (error) {
+    console.error("Failed to upload job invitations:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to upload job invitations.",
       error: error.message,
     });
   }
