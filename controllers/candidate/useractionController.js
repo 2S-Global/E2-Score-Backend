@@ -2968,7 +2968,7 @@ export const comparativeStudyList = async (req, res) => {
     const limit =
       Number.isInteger(limitValue) && limitValue > 0
         ? Math.min(limitValue, 100)
-        : 50;
+        : 15;
 
     // Sorting
     const sortFields = {
