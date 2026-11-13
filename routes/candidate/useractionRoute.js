@@ -15,7 +15,9 @@ import {
   deleteProfileSummary,
   addCareerProfile,
   getCareerProfile,
-  removeProfilePicture
+  comparativeStudy,
+  comparativeStudyList,
+  removeProfilePicture,
 } from "../../controllers/candidate/useractionController.js";
 
 import userAuth from "../../middleware/authMiddleware.js";
@@ -32,26 +34,18 @@ userRouter.post(
   "/update-profile-picture",
   userAuth,
   upload.single("profile_picture"),
-  addProfilePicture
+  addProfilePicture,
 );
-//remove profile picture 
+//remove profile picture
 
-userRouter.delete(
-  "/remove-profile-picture",
-  userAuth,
-  removeProfilePicture
-);
-
-
-
-
+userRouter.delete("/remove-profile-picture", userAuth, removeProfilePicture);
 
 // Update user details
 userRouter.post(
   "/update-user-details",
   userAuth,
   upload.none(),
-  updateUserDetails
+  updateUserDetails,
 );
 
 // Update user resume Headline
@@ -69,7 +63,7 @@ userRouter.post(
     { name: "transcript", maxCount: 1 },
     { name: "certificate", maxCount: 1 },
   ]),
-  submitUserEducation
+  submitUserEducation,
 );
 
 userRouter.put(
@@ -79,14 +73,14 @@ userRouter.put(
     { name: "transcript", maxCount: 1 },
     { name: "certificate", maxCount: 1 },
   ]),
-  updateUserEducation
+  updateUserEducation,
 );
 
 userRouter.delete(
   "/delete_user_data",
   userAuth,
   upload.none(),
-  deleteUserEducation
+  deleteUserEducation,
 );
 
 // Delete profile summary
@@ -94,7 +88,7 @@ userRouter.delete(
   "/delete_profile_summary",
   userAuth,
   upload.none(),
-  deleteProfileSummary
+  deleteProfileSummary,
 );
 
 // ----------------------Career Profile Route---------------------------------
@@ -103,9 +97,11 @@ userRouter.post(
   "/add_career_profile",
   userAuth,
   upload.none(),
-  addCareerProfile
+  addCareerProfile,
 );
 
 userRouter.get("/get_career_profile", userAuth, getCareerProfile);
+userRouter.get("/comparative_study", userAuth, comparativeStudy);
+userRouter.get("/comparative-study-list", userAuth, comparativeStudyList);
 
 export default userRouter;

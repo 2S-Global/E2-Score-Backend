@@ -17,6 +17,7 @@ import {
   getMonthlyAppliedJobsStatus,
   getAllJobApplicantsList,
   getAllJobApplicantsCount,
+  getAllJobApplicantsStatusCount,
   instituteStudentAssessment,
   jobSourcing,
   getJobApplicantsByCandidate,
@@ -123,6 +124,12 @@ userRouter.get(
   userAuth,
   Companymid,
   getAllJobApplicantsCount,
+);
+userRouter.get(
+  "/getAllJobApplicantsStatusCount",
+  userAuth,
+  Companymid,
+  getAllJobApplicantsStatusCount,
 );
 
 userRouter.get("/jobSourcing", userAuth, Companymid, jobSourcing);

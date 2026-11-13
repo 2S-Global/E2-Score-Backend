@@ -2,6 +2,7 @@ import User from "../../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
 import PersonalDetails from "../../models/personalDetails.js";
 import CandidateDetails from "../../models/CandidateDetailsModel.js";
+import Employment from "../../models/Employment.js";
 import db_sql from "../../config/sqldb.js";
 import UserEducation from "../../models/userEducationModel.js";
 import axios from "axios";
@@ -14,12 +15,20 @@ import list_industries from "../../models/monogo_query/industryModel.js";
 import list_department from "../../models/monogo_query/departmentsModel.js";
 import list_job_role from "../../models/monogo_query/jobRolesModel.js";
 import list_india_cities from "../../models/monogo_query/indiaCitiesModel.js";
+import list_notice from "../../models/monogo_query/noticeModel.js";
 import list_university_univercities from "../../models/monogo_query/universityUniversityModel.js";
 import list_education_boards from "../../models/monogo_query/educationBoardModel.js";
 import list_university_colleges from "../../models/monogo_query/universityCollegesModel.js";
 import list_university_course from "../../models/monogo_query/universityCourseModel.js";
 import list_school_list from "../../models/monogo_query/schoolListModel.js";
 import CompanyDetails from "../../models/company_Models/companydetails.js";
+import list_education_level from "../../models/monogo_query/educationLevelModel.js";
+import list_university_state from "../../models/monogo_query/universityStateModel.js";
+import list_course_type from "../../models/monogo_query/courseTypeModel.js";
+import list_grading_system from "../../models/monogo_query/gradingSystemModel.js";
+import list_medium_of_education from "../../models/monogo_query/mediumOfEducationModel.js";
+import JobApplication from "../../models/jobApplicationModel.js";
+import Job from "../../models/company_Models/JobPostingModel.js";
 
 import { emailQueue } from "../../queues/emailQueue.js";
 import { apiResponse } from "../../utility/apiResponse.js";
@@ -911,11 +920,9 @@ export const submitUserEducation = async (req, res) => {
     if (data.marks !== undefined && data.marks !== null && data.marks !== "") {
       const marksNum = Number(data.marks);
       if (isNaN(marksNum) || marksNum < 0 || marksNum > 100) {
-        return res
-          .status(400)
-          .json({
-            message: "Marks percentage must be a number between 0 and 100.",
-          });
+        return res.status(400).json({
+          message: "Marks percentage must be a number between 0 and 100.",
+        });
       }
     }
 
@@ -1770,6 +1777,2237 @@ export const getCareerProfile = async (req, res) => {
       message: "Error fetching Career Profile",
       error: error.message,
       success: false,
+    });
+  }
+};
+
+export const comparativeStudy = async (req, res) => {
+  try {
+    const userId = req.query.Id || req.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User not authenticated" });
+    }
+
+    const [user, candidateDetails, education, careerProfile, lastEmployment] =
+      await Promise.all([
+        User.findById(userId).select("name").lean(),
+        CandidateDetails.findOne({ userId })
+          .select("dob currentSalary totalExperience")
+          .lean(),
+        UserEducation.findOne({ userId, isDel: false })
+          .sort({ createdAt: -1 })
+          .lean(),
+        UserCareer.findOne({ userId, isDel: false })
+          .select("expectedSalary")
+          .lean(),
+        Employment.findOne({
+          user: userId,
+          isDel: false,
+          $or: [
+            { workedInCompany: { $exists: false } },
+            { workedInCompany: true },
+          ],
+        })
+          .sort({
+            "joiningDate.year": -1,
+            "joiningDate.month": -1,
+            createdAt: -1,
+          })
+          .select("NoticePeriod")
+          .lean(),
+      ]);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
+      });
+    }
+
+    // Get education lookup details
+    const [
+      level,
+      state,
+      university,
+      institute,
+      course,
+      courseType,
+      gradingSystem,
+      medium,
+      board,
+      school,
+    ] = await Promise.all([
+      education?.level
+        ? list_education_level
+            .findOne({ id: education.level }, { id: 1, level: 1, _id: 0 })
+            .lean()
+        : null,
+
+      education?.state
+        ? list_university_state
+            .findOne({ id: education.state })
+            .select("id name -_id")
+            .lean()
+        : null,
+
+      education?.universityName
+        ? list_university_univercities
+            .findOne({ id: education.universityName })
+            .select("id name -_id")
+            .lean()
+        : null,
+
+      education?.instituteName
+        ? list_university_colleges
+            .findOne({ id: education.instituteName })
+            .select("id name -_id")
+            .lean()
+        : null,
+
+      education?.courseName
+        ? list_university_course
+            .findOne({ id: education.courseName })
+            .select("id name -_id")
+            .lean()
+        : null,
+
+      education?.courseType
+        ? list_course_type
+            .findOne({ id: education.courseType })
+            .select("id name -_id")
+            .lean()
+        : null,
+
+      education?.gradingSystem
+        ? list_grading_system
+            .findOne({ id: education.gradingSystem })
+            .select("id name -_id")
+            .lean()
+        : null,
+
+      education?.medium_of_education
+        ? list_medium_of_education
+            .findOne({ id: education.medium_of_education })
+            .select("id name -_id")
+            .lean()
+        : null,
+
+      education?.board
+        ? list_education_boards
+            .findOne({ id: education.board })
+            .select("id board_name -_id")
+            .lean()
+        : null,
+
+      education?.school_name
+        ? list_school_list
+            .findOne({ id: education.school_name })
+            .select("id school_name -_id")
+            .lean()
+        : null,
+    ]);
+
+    const noticePeriod = lastEmployment?.NoticePeriod
+      ? await list_notice
+          .findOne({
+            id: lastEmployment.NoticePeriod,
+            is_del: 0,
+            is_active: 1,
+          })
+          .select("name")
+          .lean()
+      : null;
+    return res.status(200).json({
+      message: "Comparative study details fetched successfully",
+      success: true,
+      data: {
+        name: user.name || "",
+        date_of_birth: candidateDetails?.dob || null,
+
+        total_experience: {
+          year: candidateDetails?.totalExperience?.year || "",
+          month: candidateDetails?.totalExperience?.month || "",
+        },
+
+        last_qualification: {
+          ...education,
+          level: level?.level || education?.level || "",
+          level_id: education?.level || "",
+          course_name: course?.name || education?.courseName || "",
+          year_of_passing: education?.year_of_passing || "",
+          state: state?.name || education?.state || "",
+          universityName: university?.name || education?.universityName || "",
+          instituteName: institute?.name || education?.instituteName || "",
+          courseType: courseType?.name || education?.courseType || "",
+          gradingSystem: gradingSystem?.name || education?.gradingSystem || "",
+          medium_of_education:
+            medium?.name || education?.medium_of_education || "",
+          board: board?.board_name || education?.board || "",
+          school_name: school?.school_name || education?.school_name || "",
+        },
+
+        current_ctc: {
+          currency: candidateDetails?.currentSalary?.currency || "",
+          amount: candidateDetails?.currentSalary?.salary ?? 0,
+        },
+
+        expected_ctc: {
+          currency: careerProfile?.expectedSalary?.currency || "",
+          amount: careerProfile?.expectedSalary?.salary ?? 0,
+        },
+
+        last_employment_notice_period: noticePeriod?.name || "",
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching comparative study details:", error.message);
+    return res.status(500).json({
+      message: "Error fetching comparative study details",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
+/* export const comparativeStudyList = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Pagination
+    const pageValue = Number.parseInt(req.query.page, 10);
+    const limitValue = Number.parseInt(req.query.limit, 10);
+
+    const page = Number.isInteger(pageValue) && pageValue > 0 ? pageValue : 1;
+
+    const limit =
+      Number.isInteger(limitValue) && limitValue > 0
+        ? Math.min(limitValue, 100)
+        : 2;
+
+    // Sorting
+    const sortFields = {
+      candidateName: "candidateName",
+      jobTitle: "jobTitle",
+      noticePeriod: "noticePeriod",
+      status: "status",
+    };
+
+    const requestedSortField =
+      typeof req.query.sortBy === "string" ? req.query.sortBy : "";
+
+    const sortField = Object.prototype.hasOwnProperty.call(
+      sortFields,
+      requestedSortField,
+    )
+      ? sortFields[requestedSortField]
+      : null;
+
+    const sortOrder =
+      typeof req.query.sortOrder === "string" &&
+      req.query.sortOrder.toLowerCase() === "asc"
+        ? 1
+        : -1;
+
+    // Search and status
+    const search =
+      typeof req.query.search === "string" ? req.query.search.trim() : "";
+
+    const status =
+      typeof req.query.status === "string" ? req.query.status.trim() : "";
+
+    const searchFilters = {};
+
+    const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    if (status && status.toLowerCase() !== "all") {
+      searchFilters.status = status;
+    }
+
+    if (search) {
+      const searchRegex = {
+        $regex: escapeRegex(search),
+        $options: "i",
+      };
+
+      searchFilters.$or = [
+        { candidateName: searchRegex },
+        { jobTitle: searchRegex },
+        { miscellaneousJobTitle: searchRegex },
+      ];
+    }
+
+    // 1. Get jobs posted by logged-in user
+    const myJobs = await Job.find(
+      { userId: userId, is_del: false },
+      { _id: 1 },
+    );
+
+    if (!myJobs.length) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: [],
+        pagination: {
+          page,
+          limit,
+          totalPages: 0,
+        },
+      });
+    }
+
+    const jobIds = myJobs.map((job) => job._id);
+
+    // 2. Get applicants for those jobs
+    const appliedCandidates = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+          isDel: false,
+        },
+      },
+
+      // Latest applications first
+      {
+        $sort: { appliedAt: -1 },
+      },
+
+      // 3. User details
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: {
+          path: "$user",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 4. Personal details
+      {
+        $lookup: {
+          from: "personaldetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "personalDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$personalDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 5. Candidate details
+      {
+        $lookup: {
+          from: "candidatedetails",
+          let: {
+            candidateUserId: "$userId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$userId", "$$candidateUserId"],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "candidateDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 6. Career profile
+      {
+        $lookup: {
+          from: "usercareers",
+          let: {
+            candidateUserId: "$userId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$userId", "$$candidateUserId"],
+                },
+                isDel: false,
+              },
+            },
+            {
+              $project: {
+                expectedSalary: 1,
+                JobRole: 1,
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "career",
+        },
+      },
+      {
+        $unwind: {
+          path: "$career",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 7. Job details
+      {
+        $lookup: {
+          from: "jobpostinglists",
+          localField: "jobId",
+          foreignField: "_id",
+          as: "jobDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 8. Convert JobRole string to ObjectId
+      {
+        $addFields: {
+          jobRoleObjectId: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$career.JobRole", null] },
+                  { $ne: ["$career.JobRole", ""] },
+                ],
+              },
+              then: {
+                $convert: {
+                  input: "$career.JobRole",
+                  to: "objectId",
+                  onError: null,
+                  onNull: null,
+                },
+              },
+              else: null,
+            },
+          },
+        },
+      },
+
+      // 9. Job role master
+      {
+        $lookup: {
+          from: "list_job_roles",
+          localField: "jobRoleObjectId",
+          foreignField: "_id",
+          as: "jobRoleData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobRoleData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 10. Interview feedback
+      {
+        $lookup: {
+          from: "interviewfeedbacks",
+          localField: "_id",
+          foreignField: "applicationId",
+          as: "feedback",
+        },
+      },
+      {
+        $unwind: {
+          path: "$feedback",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 11. Interview invitation status
+      {
+        $addFields: {
+          interviewInvitationStatus: {
+            $cond: {
+              if: {
+                $ne: [
+                  {
+                    $ifNull: ["$interviewInvitationAccepted", null],
+                  },
+                  null,
+                ],
+              },
+              then: {
+                $cond: {
+                  if: {
+                    $eq: ["$interviewInvitationAccepted", true],
+                  },
+                  then: "accepted",
+                  else: {
+                    $cond: {
+                      if: {
+                        $eq: ["$interviewInvitationAccepted", false],
+                      },
+                      then: "rejected",
+                      else: "pending",
+                    },
+                  },
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $eq: ["$requestReschedule", true],
+                  },
+                  then: "reschedule_request",
+                  else: "pending",
+                },
+              },
+            },
+          },
+        },
+      },
+
+      // 12. Latest education
+      {
+        $lookup: {
+          from: "usereducations",
+          let: {
+            candidateUserId: "$userId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$userId", "$$candidateUserId"],
+                },
+                isDel: false,
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "education",
+        },
+      },
+      {
+        $unwind: {
+          path: "$education",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 13. Last employment
+      {
+        $lookup: {
+          from: "employments",
+          let: {
+            candidateUserId: "$userId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$user", "$$candidateUserId"],
+                    },
+                    {
+                      $eq: ["$isDel", false],
+                    },
+                    {
+                      $or: [
+                        {
+                          $eq: [{ $type: "$workedInCompany" }, "missing"],
+                        },
+                        {
+                          $eq: ["$workedInCompany", true],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+            { $limit: 1 },
+            {
+              $project: {
+                NoticePeriod: 1,
+              },
+            },
+          ],
+          as: "lastEmployment",
+        },
+      },
+      {
+        $unwind: {
+          path: "$lastEmployment",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 14. Education level master
+      // String conversion handles string/number ID differences.
+      {
+        $lookup: {
+          from: "list_education_level",
+          let: {
+            lookupId: "$education.level",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: [{ $toString: "$id" }, "$$lookupId"],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                id: 1,
+                level: 1,
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "educationLevel",
+        },
+      },
+      {
+        $unwind: {
+          path: "$educationLevel",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 15. University state master
+      {
+        $lookup: {
+          from: "list_university_states",
+          let: {
+            lookupId: "$education.state",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$lookupId" }],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "educationState",
+        },
+      },
+      {
+        $unwind: {
+          path: "$educationState",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 16. University master
+      {
+        $lookup: {
+          from: "list_university_univercities",
+          let: {
+            lookupId: "$education.universityName",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$lookupId" }],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "university",
+        },
+      },
+      {
+        $unwind: {
+          path: "$university",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 17. Institute / college master
+      {
+        $lookup: {
+          from: "list_university_colleges",
+          let: {
+            lookupId: "$education.instituteName",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$lookupId" }],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "institute",
+        },
+      },
+      {
+        $unwind: {
+          path: "$institute",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 18. Course master
+      {
+        $lookup: {
+          from: "list_university_courses",
+          let: {
+            lookupId: "$education.courseName",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, "$$lookupId"],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "course",
+        },
+      },
+      {
+        $unwind: {
+          path: "$course",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 19. Course type master
+      {
+        $lookup: {
+          from: "list_course_types",
+          let: {
+            lookupId: "$education.courseType",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$lookupId" }],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "courseType",
+        },
+      },
+      {
+        $unwind: {
+          path: "$courseType",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 20. Grading system master
+      {
+        $lookup: {
+          from: "list_grading_systems",
+          let: {
+            lookupId: "$education.gradingSystem",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$lookupId" }],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "gradingSystem",
+        },
+      },
+      {
+        $unwind: {
+          path: "$gradingSystem",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 21. Medium of education master
+      {
+        $lookup: {
+          from: "list_medium_of_educations",
+          let: {
+            lookupId: "$education.medium_of_education",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$lookupId" }],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "medium",
+        },
+      },
+      {
+        $unwind: {
+          path: "$medium",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 22. Education board master
+      {
+        $lookup: {
+          from: "list_education_boards",
+          let: {
+            lookupId: "$education.board",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$lookupId" }],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "educationBoard",
+        },
+      },
+      {
+        $unwind: {
+          path: "$educationBoard",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 23. School master
+      {
+        $lookup: {
+          from: "list_school_lists",
+          let: {
+            lookupId: "$education.school_name",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$lookupId" }],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "school",
+        },
+      },
+      {
+        $unwind: {
+          path: "$school",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 24. Notice period master
+      {
+        $lookup: {
+          from: "list_notices",
+          let: {
+            noticeId: "$lastEmployment.NoticePeriod",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$noticeId" }],
+                    },
+                  ],
+                },
+                is_del: 0,
+                is_active: 1,
+              },
+            },
+            {
+              $project: {
+                name: 1,
+                _id: 0,
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "noticePeriodDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$noticePeriodDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 25. Final response projection
+      {
+        $project: {
+          _id: 1,
+          jobId: 1,
+          userId: 1,
+          status: 1,
+          noticePeriod: 1,
+          experienceLevel: 1,
+          preferredTime: 1,
+          availabilityOnSaturday: 1,
+          willingToRelocate: 1,
+          miscellaneousJobTitle: 1,
+
+          // Candidate information
+          name: {
+            $ifNull: ["$user.name", ""],
+          },
+          candidateName: {
+            $ifNull: ["$user.name", ""],
+          },
+          profilePicture: "$user.profilePicture",
+
+          date_of_birth: {
+            $ifNull: ["$candidateDetails.dob", null],
+          },
+
+          currentLocation: {
+            $ifNull: ["$candidateDetails.currentLocation", ""],
+          },
+
+          // Total experience
+          total_experience: {
+            year: {
+              $ifNull: ["$candidateDetails.totalExperience.year", ""],
+            },
+            month: {
+              $ifNull: ["$candidateDetails.totalExperience.month", ""],
+            },
+          },
+
+          // Skills
+          skills: {
+            $ifNull: ["$personalDetails.skills", []],
+          },
+
+          // Job information
+          jobRole: "$jobRoleData.job_role",
+          jobTitle: "$jobDetails.jobTitle",
+
+          // Current CTC
+          current_ctc: {
+            currency: {
+              $ifNull: ["$candidateDetails.currentSalary.currency", ""],
+            },
+            amount: {
+              $ifNull: ["$candidateDetails.currentSalary.salary", 0],
+            },
+          },
+
+          // Expected CTC
+          expected_ctc: {
+            currency: {
+              $ifNull: ["$career.expectedSalary.currency", ""],
+            },
+            amount: {
+              $ifNull: ["$career.expectedSalary.salary", 0],
+            },
+          },
+
+          // Last employment notice period
+          last_employment_notice_period: {
+            $ifNull: ["$noticePeriodDetails.name", ""],
+          },
+
+          // Complete last qualification
+          last_qualification: {
+            $mergeObjects: [
+              {
+                $ifNull: ["$education", {}],
+              },
+              {
+                level: {
+                  $ifNull: ["$educationLevel.level", ""],
+                },
+
+                level_id: {
+                  $ifNull: ["$education.level", ""],
+                },
+
+                course_name: {
+                  $ifNull: ["$course.name", "$education.courseName", ""],
+                },
+
+                year_of_passing: {
+                  $ifNull: ["$education.year_of_passing", ""],
+                },
+
+                state: {
+                  $ifNull: ["$educationState.name", "$education.state", ""],
+                },
+
+                universityName: {
+                  $ifNull: [
+                    "$university.name",
+                    "$education.universityName",
+                    "",
+                  ],
+                },
+
+                instituteName: {
+                  $ifNull: ["$institute.name", "$education.instituteName", ""],
+                },
+
+                courseType: {
+                  $ifNull: ["$courseType.name", "$education.courseType", ""],
+                },
+
+                gradingSystem: {
+                  $ifNull: [
+                    "$gradingSystem.name",
+                    "$education.gradingSystem",
+                    "",
+                  ],
+                },
+
+                medium_of_education: {
+                  $ifNull: [
+                    "$medium.name",
+                    "$education.medium_of_education",
+                    "",
+                  ],
+                },
+
+                board: {
+                  $ifNull: [
+                    "$educationBoard.board_name",
+                    "$education.board",
+                    "",
+                  ],
+                },
+
+                school_name: {
+                  $ifNull: [
+                    "$school.school_name",
+                    "$education.school_name",
+                    "",
+                  ],
+                },
+              },
+            ],
+          },
+
+          // Interview information
+          interviewInvitationAccepted: 1,
+          isInterviewFeedbackSubmitted: 1,
+          interviewInvitationStatus: 1,
+          interviewDate: 1,
+          interviewTime: 1,
+          // Interview feedback
+          feedback: {
+            communicationSkillScore: "$feedback.communicationSkillScore",
+            technicalSkillScore: "$feedback.technicalSkillScore",
+            aptitudeScore: "$feedback.aptitudeScore",
+            overallScore: "$feedback.overallScore",
+            lastDrawnSalary: "$feedback.lastDrawnSalary",
+            expectedSalary: "$feedback.expectedSalary",
+            message: "$feedback.message",
+            createdAt: "$feedback.createdAt",
+            appeared: "$feedback.appeared",
+          },
+        },
+      },
+
+      // 26. Search and status filters
+      ...(Object.keys(searchFilters).length ? [{ $match: searchFilters }] : []),
+
+      // 27. Sorting
+      ...(sortField
+        ? [
+            {
+              $sort: {
+                [sortField]: sortOrder,
+                _id: -1,
+              },
+            },
+          ]
+        : []),
+
+      // 28. Pagination
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+        },
+      },
+    ]);
+
+    const { metadata = [], data = [] } = appliedCandidates[0] || {};
+
+    const totalCount = metadata[0]?.total || 0;
+
+    console.log("Applicant list response ==>", data);
+
+    return res.status(200).json({
+      success: true,
+      count: totalCount,
+      data,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching applied candidates:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}; */
+
+export const comparativeStudyList = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Pagination
+    const pageValue = Number.parseInt(req.query.page, 10);
+    const limitValue = Number.parseInt(req.query.limit, 10);
+
+    const page = Number.isInteger(pageValue) && pageValue > 0 ? pageValue : 1;
+
+    const limit =
+      Number.isInteger(limitValue) && limitValue > 0
+        ? Math.min(limitValue, 100)
+        : 50;
+
+    // Sorting
+    const sortFields = {
+      candidateName: "candidateName",
+      jobTitle: "jobTitle",
+      noticePeriod: "noticePeriod",
+      status: "status",
+      total_experience: "totalExperienceMonths",
+      current_ctc: "currentCtcAmount",
+      expected_ctc: "expectedCtcAmount",
+    };
+
+    const requestedSortField =
+      typeof req.query.sortBy === "string" ? req.query.sortBy : "";
+
+    const sortField = Object.prototype.hasOwnProperty.call(
+      sortFields,
+      requestedSortField,
+    )
+      ? sortFields[requestedSortField]
+      : null;
+    console.log("wwwwwwwwwwwwwwwwwwwww=>", sortField);
+    const sortOrder =
+      typeof req.query.sortOrder === "string" &&
+      req.query.sortOrder.toLowerCase() === "asc"
+        ? 1
+        : -1;
+
+    // Search and status
+    const search =
+      typeof req.query.search === "string" ? req.query.search.trim() : "";
+
+    const status =
+      typeof req.query.status === "string" ? req.query.status.trim() : "";
+
+    const searchFilters = {};
+
+    const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    if (status && status.toLowerCase() !== "all") {
+      searchFilters.status = status;
+    }
+
+    if (search) {
+      const searchRegex = {
+        $regex: escapeRegex(search),
+        $options: "i",
+      };
+
+      searchFilters.$or = [
+        { candidateName: searchRegex },
+        { jobTitle: searchRegex },
+        { miscellaneousJobTitle: searchRegex },
+      ];
+    }
+
+    // 1. Get jobs posted by logged-in user
+    const myJobs = await Job.find(
+      { userId: userId, is_del: false },
+      { _id: 1 },
+    );
+
+    if (!myJobs.length) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: [],
+        pagination: {
+          page,
+          limit,
+          totalPages: 0,
+        },
+      });
+    }
+
+    const jobIds = myJobs.map((job) => job._id);
+
+    // 2. Get applicants for those jobs
+    const appliedCandidates = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+          isDel: false,
+        },
+      },
+
+      // Latest applications first
+      {
+        $sort: { appliedAt: -1 },
+      },
+
+      // 3. User details
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: {
+          path: "$user",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 4. Personal details
+      {
+        $lookup: {
+          from: "personaldetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "personalDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$personalDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 5. Candidate details
+      {
+        $lookup: {
+          from: "candidatedetails",
+          let: {
+            candidateUserId: "$userId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$userId", "$$candidateUserId"],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "candidateDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 6. Career profile
+      {
+        $lookup: {
+          from: "usercareers",
+          let: {
+            candidateUserId: "$userId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$userId", "$$candidateUserId"],
+                },
+                isDel: false,
+              },
+            },
+            {
+              $project: {
+                expectedSalary: 1,
+                JobRole: 1,
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "career",
+        },
+      },
+      {
+        $unwind: {
+          path: "$career",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 7. Job details
+      {
+        $lookup: {
+          from: "jobpostinglists",
+          localField: "jobId",
+          foreignField: "_id",
+          as: "jobDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 8. Convert JobRole string to ObjectId
+      {
+        $addFields: {
+          jobRoleObjectId: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$career.JobRole", null] },
+                  { $ne: ["$career.JobRole", ""] },
+                ],
+              },
+              then: {
+                $convert: {
+                  input: "$career.JobRole",
+                  to: "objectId",
+                  onError: null,
+                  onNull: null,
+                },
+              },
+              else: null,
+            },
+          },
+        },
+      },
+
+      // 9. Job role master
+      {
+        $lookup: {
+          from: "list_job_roles",
+          localField: "jobRoleObjectId",
+          foreignField: "_id",
+          as: "jobRoleData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobRoleData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 10. Interview feedback
+      {
+        $lookup: {
+          from: "interviewfeedbacks",
+          localField: "_id",
+          foreignField: "applicationId",
+          as: "feedback",
+        },
+      },
+      {
+        $unwind: {
+          path: "$feedback",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 11. Interview invitation status
+      {
+        $addFields: {
+          interviewInvitationStatus: {
+            $cond: {
+              if: {
+                $ne: [
+                  {
+                    $ifNull: ["$interviewInvitationAccepted", null],
+                  },
+                  null,
+                ],
+              },
+              then: {
+                $cond: {
+                  if: {
+                    $eq: ["$interviewInvitationAccepted", true],
+                  },
+                  then: "accepted",
+                  else: {
+                    $cond: {
+                      if: {
+                        $eq: ["$interviewInvitationAccepted", false],
+                      },
+                      then: "rejected",
+                      else: "pending",
+                    },
+                  },
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $eq: ["$requestReschedule", true],
+                  },
+                  then: "reschedule_request",
+                  else: "pending",
+                },
+              },
+            },
+          },
+        },
+      },
+
+      // 12. Latest education
+      {
+        $lookup: {
+          from: "usereducations",
+          let: {
+            candidateUserId: "$userId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$userId", "$$candidateUserId"],
+                },
+                isDel: false,
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "education",
+        },
+      },
+      {
+        $unwind: {
+          path: "$education",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 13. Last employment
+      {
+        $lookup: {
+          from: "employments",
+          let: {
+            candidateUserId: "$userId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$user", "$$candidateUserId"],
+                    },
+                    {
+                      $eq: ["$isDel", false],
+                    },
+                    {
+                      $or: [
+                        {
+                          $eq: [{ $type: "$workedInCompany" }, "missing"],
+                        },
+                        {
+                          $eq: ["$workedInCompany", true],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+            { $limit: 1 },
+            {
+              $project: {
+                NoticePeriod: 1,
+              },
+            },
+          ],
+          as: "lastEmployment",
+        },
+      },
+      {
+        $unwind: {
+          path: "$lastEmployment",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 14. Education level master
+      {
+        $lookup: {
+          from: "list_education_level",
+          let: {
+            lookupId: "$education.level",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: [{ $toString: "$id" }, "$$lookupId"],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                id: 1,
+                level: 1,
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "educationLevel",
+        },
+      },
+      {
+        $unwind: {
+          path: "$educationLevel",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 15. University state master
+      {
+        $lookup: {
+          from: "list_university_states",
+          let: {
+            lookupId: "$education.state",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$lookupId" }],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "educationState",
+        },
+      },
+      {
+        $unwind: {
+          path: "$educationState",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 16. University master
+      {
+        $lookup: {
+          from: "list_university_univercities",
+          let: {
+            lookupId: "$education.universityName",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$lookupId" }],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "university",
+        },
+      },
+      {
+        $unwind: {
+          path: "$university",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 17. Institute / college master
+      {
+        $lookup: {
+          from: "list_university_colleges",
+          let: {
+            lookupId: "$education.instituteName",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$lookupId" }],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "institute",
+        },
+      },
+      {
+        $unwind: {
+          path: "$institute",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 18. Course master
+      {
+        $lookup: {
+          from: "list_university_courses",
+          let: {
+            lookupId: "$education.courseName",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, "$$lookupId"],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "course",
+        },
+      },
+      {
+        $unwind: {
+          path: "$course",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 19. Course type master
+      {
+        $lookup: {
+          from: "list_course_types",
+          let: {
+            lookupId: "$education.courseType",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, "$$lookupId"],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "courseType",
+        },
+      },
+      {
+        $unwind: {
+          path: "$courseType",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 20. Grading system master
+      {
+        $lookup: {
+          from: "list_grading_systems",
+          let: {
+            lookupId: "$education.gradingSystem",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, "$$lookupId"],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "gradingSystem",
+        },
+      },
+      {
+        $unwind: {
+          path: "$gradingSystem",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 21. Medium of education master
+      {
+        $lookup: {
+          from: "list_medium_of_educations",
+          let: {
+            lookupId: "$education.medium_of_education",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, "$$lookupId"],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "medium",
+        },
+      },
+      {
+        $unwind: {
+          path: "$medium",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 22. Education board master
+      {
+        $lookup: {
+          from: "list_education_boards",
+          let: {
+            lookupId: "$education.board",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, "$$lookupId"],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "educationBoard",
+        },
+      },
+      {
+        $unwind: {
+          path: "$educationBoard",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 23. School master
+      {
+        $lookup: {
+          from: "list_school_lists",
+          let: {
+            lookupId: "$education.school_name",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$$lookupId", null] },
+                    {
+                      $eq: [{ $toString: "$id" }, "$$lookupId"],
+                    },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "school",
+        },
+      },
+      {
+        $unwind: {
+          path: "$school",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 24. Notice period master
+      {
+        $lookup: {
+          from: "list_notices",
+          let: {
+            noticeId: "$lastEmployment.NoticePeriod",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: [{ $toString: "$id" }, { $toString: "$$noticeId" }],
+                    },
+                  ],
+                },
+                is_del: 0,
+                is_active: 1,
+              },
+            },
+            {
+              $project: {
+                name: 1,
+                _id: 0,
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: "noticePeriodDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$noticePeriodDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 25. Final response projection
+      {
+        $project: {
+          _id: 1,
+          jobId: 1,
+          userId: 1,
+          status: 1,
+          noticePeriod: 1,
+          experienceLevel: 1,
+          preferredTime: 1,
+          availabilityOnSaturday: 1,
+          willingToRelocate: 1,
+          miscellaneousJobTitle: 1,
+
+          // Candidate information
+          name: {
+            $ifNull: ["$user.name", ""],
+          },
+          candidateName: {
+            $ifNull: ["$user.name", ""],
+          },
+          profilePicture: "$user.profilePicture",
+
+          date_of_birth: {
+            $ifNull: ["$candidateDetails.dob", null],
+          },
+
+          currentLocation: {
+            $ifNull: ["$candidateDetails.currentLocation", ""],
+          },
+
+          // Total experience
+          total_experience: {
+            year: {
+              $ifNull: ["$candidateDetails.totalExperience.year", ""],
+            },
+            month: {
+              $ifNull: ["$candidateDetails.totalExperience.month", ""],
+            },
+          },
+
+          // Skills
+          skills: {
+            $ifNull: ["$personalDetails.skills", []],
+          },
+
+          // Job information
+          jobRole: "$jobRoleData.job_role",
+          jobTitle: "$jobDetails.jobTitle",
+
+          // Current CTC
+          current_ctc: {
+            currency: {
+              $ifNull: ["$candidateDetails.currentSalary.currency", ""],
+            },
+            amount: {
+              $ifNull: ["$candidateDetails.currentSalary.salary", 0],
+            },
+          },
+
+          // Expected CTC
+          expected_ctc: {
+            currency: {
+              $ifNull: ["$career.expectedSalary.currency", ""],
+            },
+            amount: {
+              $ifNull: ["$career.expectedSalary.salary", 0],
+            },
+          },
+
+          // Last employment notice period
+          last_employment_notice_period: {
+            $ifNull: ["$noticePeriodDetails.name", ""],
+          },
+
+          // Complete last qualification
+          last_qualification: {
+            $mergeObjects: [
+              {
+                $ifNull: ["$education", {}],
+              },
+              {
+                level: {
+                  $ifNull: ["$educationLevel.level", ""],
+                },
+
+                level_id: {
+                  $ifNull: ["$education.level", ""],
+                },
+
+                course_name: {
+                  $ifNull: ["$course.name", "$education.courseName", ""],
+                },
+
+                year_of_passing: {
+                  $ifNull: ["$education.year_of_passing", ""],
+                },
+
+                state: {
+                  $ifNull: ["$educationState.name", "$education.state", ""],
+                },
+
+                universityName: {
+                  $ifNull: [
+                    "$university.name",
+                    "$education.universityName",
+                    "",
+                  ],
+                },
+
+                instituteName: {
+                  $ifNull: ["$institute.name", "$education.instituteName", ""],
+                },
+
+                courseType: {
+                  $ifNull: ["$courseType.name", "$education.courseType", ""],
+                },
+
+                gradingSystem: {
+                  $ifNull: [
+                    "$gradingSystem.name",
+                    "$education.gradingSystem",
+                    "",
+                  ],
+                },
+
+                medium_of_education: {
+                  $ifNull: [
+                    "$medium.name",
+                    "$education.medium_of_education",
+                    "",
+                  ],
+                },
+
+                board: {
+                  $ifNull: [
+                    "$educationBoard.board_name",
+                    "$education.board",
+                    "",
+                  ],
+                },
+
+                school_name: {
+                  $ifNull: [
+                    "$school.school_name",
+                    "$education.school_name",
+                    "",
+                  ],
+                },
+              },
+            ],
+          },
+
+          // Interview information
+          interviewInvitationAccepted: 1,
+          isInterviewFeedbackSubmitted: 1,
+          interviewInvitationStatus: 1,
+          interviewDate: 1,
+          interviewTime: 1,
+
+          // Interview feedback
+          feedback: {
+            communicationSkillScore: "$feedback.communicationSkillScore",
+            technicalSkillScore: "$feedback.technicalSkillScore",
+            aptitudeScore: "$feedback.aptitudeScore",
+            overallScore: "$feedback.overallScore",
+            lastDrawnSalary: "$feedback.lastDrawnSalary",
+            expectedSalary: "$feedback.expectedSalary",
+            message: "$feedback.message",
+            createdAt: "$feedback.createdAt",
+            appeared: "$feedback.appeared",
+          },
+        },
+      },
+
+      // 26. Search and status filters
+      ...(Object.keys(searchFilters).length ? [{ $match: searchFilters }] : []),
+
+      // 27. Prepare numeric values for sorting
+      {
+        $addFields: {
+          // Total experience in months
+          totalExperienceMonths: {
+            $add: [
+              {
+                $multiply: [
+                  {
+                    $convert: {
+                      input: "$total_experience.year",
+                      to: "double",
+                      onError: 0,
+                      onNull: 0,
+                    },
+                  },
+                  12,
+                ],
+              },
+              {
+                $convert: {
+                  input: "$total_experience.month",
+                  to: "double",
+                  onError: 0,
+                  onNull: 0,
+                },
+              },
+            ],
+          },
+
+          // Current CTC numeric value
+          currentCtcAmount: {
+            $convert: {
+              input: "$current_ctc.amount",
+              to: "double",
+              onError: 0,
+              onNull: 0,
+            },
+          },
+
+          // Expected CTC numeric value
+          expectedCtcAmount: {
+            $convert: {
+              input: "$expected_ctc.amount",
+              to: "double",
+              onError: 0,
+              onNull: 0,
+            },
+          },
+        },
+      },
+
+      // 28. Sorting
+      ...(sortField
+        ? [
+            {
+              $sort: {
+                [sortField]: sortOrder,
+                _id: -1,
+              },
+            },
+          ]
+        : [
+            {
+              $sort: {
+                appliedAt: -1,
+                _id: -1,
+              },
+            },
+          ]),
+
+      // 29. Pagination
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+            {
+              $unset: [
+                "totalExperienceMonths",
+                "currentCtcAmount",
+                "expectedCtcAmount",
+              ],
+            },
+          ],
+        },
+      },
+    ]);
+
+    const { metadata = [], data = [] } = appliedCandidates[0] || {};
+
+    const totalCount = metadata[0]?.total || 0;
+
+    console.log("Applicant list response ==>", data);
+
+    return res.status(200).json({
+      success: true,
+      count: totalCount,
+      data,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching applied candidates:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };

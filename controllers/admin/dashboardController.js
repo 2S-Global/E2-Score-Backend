@@ -829,6 +829,54 @@ export const getLatestApplicants = async (req, res) => {
 export const getAllJobApplicantsList = async (req, res) => {
   try {
     const userId = req.userId;
+    const pageValue = Number.parseInt(req.query.page, 10);
+    const limitValue = Number.parseInt(req.query.limit, 10);
+    const page = Number.isInteger(pageValue) && pageValue > 0 ? pageValue : 1;
+    const limit =
+      Number.isInteger(limitValue) && limitValue > 0
+        ? Math.min(limitValue, 100)
+        : 100;
+    const sortFields = {
+      candidateName: "candidateName",
+      jobTitle: "jobTitle",
+      noticePeriod: "noticePeriod",
+      status: "status",
+    };
+    const requestedSortField =
+      typeof req.query.sortBy === "string" ? req.query.sortBy : "";
+    const sortField = Object.prototype.hasOwnProperty.call(
+      sortFields,
+      requestedSortField,
+    )
+      ? sortFields[requestedSortField]
+      : null;
+    const sortOrder =
+      typeof req.query.sortOrder === "string" &&
+      req.query.sortOrder.toLowerCase() === "asc"
+        ? 1
+        : -1;
+    const search =
+      typeof req.query.search === "string" ? req.query.search.trim() : "";
+    const status =
+      typeof req.query.status === "string" ? req.query.status.trim() : "";
+    const searchFilters = {};
+    const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    if (status && status.toLowerCase() !== "all") {
+      searchFilters.status = status;
+    }
+
+    if (search) {
+      const searchRegex = {
+        $regex: escapeRegex(search),
+        $options: "i",
+      };
+      searchFilters.$or = [
+        { candidateName: searchRegex },
+        { jobTitle: searchRegex },
+        { miscellaneousJobTitle: searchRegex },
+      ];
+    }
 
     // 1️⃣ Get jobs posted by logged-in user
     const myJobs = await Job.find(
@@ -841,6 +889,11 @@ export const getAllJobApplicantsList = async (req, res) => {
         success: true,
         count: 0,
         data: [],
+        pagination: {
+          page,
+          limit,
+          totalPages: 0,
+        },
       });
     }
 
@@ -1048,14 +1101,30 @@ export const getAllJobApplicantsList = async (req, res) => {
           },
         },
       },
+      ...(Object.keys(searchFilters).length ? [{ $match: searchFilters }] : []),
+      ...(sortField ? [{ $sort: { [sortField]: sortOrder, _id: -1 } }] : []),
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+        },
+      },
     ]);
 
-    console.log("is it wokring==>", appliedCandidates);
+    const { metadata = [], data = [] } = appliedCandidates[0] || {};
+    const totalCount = metadata[0]?.total || 0;
+
+    console.log("is it wokring==>", data);
 
     return res.status(200).json({
       success: true,
-      count: appliedCandidates.length,
-      data: appliedCandidates,
+      count: totalCount,
+      data,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+      },
     });
   } catch (error) {
     console.error("Error fetching applied candidates:", error);
@@ -1396,6 +1465,78 @@ export const getAllJobApplicantsCount = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching applicant counts:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getAllJobApplicantsStatusCount = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const jobIds = await Job.find({ userId, is_del: false }, { _id: 1 }).lean();
+    const counts = {
+      applied: 0,
+      shortlisted: 0,
+      invitation_sent: 0,
+      offer_sent: 0,
+      rejected: 0,
+    };
+
+    if (jobIds.length) {
+      const ids = jobIds.map((job) => job._id);
+      const result = await JobApplication.aggregate([
+        {
+          $match: {
+            jobId: { $in: ids },
+            isDel: false,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            applied: {
+              $sum: {
+                $cond: [{ $eq: ["$status", "applied"] }, 1, 0],
+              },
+            },
+            shortlisted: {
+              $sum: {
+                $cond: [{ $eq: ["$status", "shortlisted"] }, 1, 0],
+              },
+            },
+            invitation_sent: {
+              $sum: {
+                $cond: [{ $eq: ["$status", "invitation_sent"] }, 1, 0],
+              },
+            },
+            offer_sent: {
+              $sum: {
+                $cond: [{ $eq: ["$status", "offer_sent"] }, 1, 0],
+              },
+            },
+            rejected: {
+              $sum: {
+                $cond: [{ $eq: ["$status", "rejected"] }, 1, 0],
+              },
+            },
+          },
+        },
+      ]);
+
+      for (const status of Object.keys(counts)) {
+        counts[status] = result[0]?.[status] || 0;
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: counts,
+    });
+  } catch (error) {
+    console.error("Error fetching applicant status counts:", error);
 
     return res.status(500).json({
       success: false,
