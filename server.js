@@ -90,6 +90,7 @@ import jobPostingDataRouter from "./routes/company/JobPostingDataRoute.js";
 import CompanyKycRoute from "./routes/company/companykycRoute.js";
 import jobInvitationsRouter from "./routes/company/JobInvitationsRoute.js";
 import mailTemplatesRouter from "./routes/company/MailTemplatesRoute.js";
+import vendorRouter from "./routes/company/VendorRoute.js";
 //Institute Routes
 import InstituteProfileRouter from "./routes/institute/InstituteProfileRoute.js";
 import InstituteStudentRouter from "./routes/institute/instituteStudentRoute.js";
@@ -195,6 +196,7 @@ app.use("/api/jobposting", jobPostingDataRouter);
 app.use("/api/companykyc", CompanyKycRoute);
 app.use("/api/job-invitations", jobInvitationsRouter);
 app.use("/api/mail", mailTemplatesRouter);
+app.use("/api/vendors", vendorRouter);
 app.use("/api/fields", fieldsRouts);
 
 //Bookmark routes for Admin
