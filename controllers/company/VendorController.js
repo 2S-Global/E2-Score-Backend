@@ -195,16 +195,21 @@ export const addVendor = async (req, res) => {
 export const listVendors = async (req, res) => {
   try {
     const page = parsePositiveInteger(req.query.page, 1, 1_000_000);
-    const limit = parsePositiveInteger(req.query.limit, 10, 100);
+    //const limit = parsePositiveInteger(req.query.limit, 10, 100);
+    const limit =
+      req.query.limit === 0
+        ? 0
+        : parsePositiveInteger(req.query.limit, 10, 100);
+
     const sort = req.query.sort || "createdAt";
     const sortOrder = req.query.sortOrder || "desc";
 
-    if (!page || !limit) {
+    /*     if (!page || !limit) {
       return res.status(422).json({
         success: false,
         message: "page and limit must be positive integers.",
       });
-    }
+    } */
     if (!sortFields.has(sort)) {
       return res.status(422).json({
         success: false,
