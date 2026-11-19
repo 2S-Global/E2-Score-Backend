@@ -2,9 +2,14 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { randomBytes } from "node:crypto";
 import CompanyDetails from "../../models/company_Models/companydetails.js";
+import JobPosting from "../../models/company_Models/JobPostingModel.js";
 import User from "../../models/userModel.js";
-import { VendorDetails } from "../../models/VendorModel.js";
+import {
+  VendorDetails,
+  VendorSubmitRequest,
+} from "../../models/VendorModel.js";
 import { emailQueue } from "../../queues/emailQueue.js";
+import mongoose from "mongoose";
 
 const vendorFields = [
   "name",
@@ -15,6 +20,15 @@ const vendorFields = [
   "contact_person_email",
   "contact_person_phone_number",
   "contact_person_designation",
+];
+
+const vendorSearchFields = [
+  "name",
+  "email",
+  "phone_number",
+  "contact_person_name",
+  "contact_person_email",
+  "contact_person_phone_number",
 ];
 
 const sortFields = new Set([
@@ -135,7 +149,7 @@ export const addVendor = async (req, res) => {
       isDel: false,
     }).lean();
     const companyUser = await User.findById(req.userId).select("name").lean();
-    const companyName = company?.name || companyUser?.name || "Your company";
+    const companyName = company?.name || companyUser?.name || "GEISIL";
 
     let vendor;
     if (existingAssociation) {
@@ -241,12 +255,18 @@ export const listVendors = async (req, res) => {
     } */
     if (typeof req.query.search === "string" && req.query.search.trim()) {
       const search = new RegExp(escapeRegex(req.query.search.trim()), "i");
-      filter.$or = [...vendorFields.map((field) => ({ [field]: search }))];
+      filter.$or = [
+        ...vendorSearchFields.map((field) => ({ [field]: search })),
+      ];
     }
 
     const [vendors, total] = await Promise.all([
       VendorDetails.find(filter)
-        .sort({ [sort]: sortOrder === "asc" ? 1 : -1, _id: 1 })
+        .collation({ locale: "en", strength: 2 })
+        .sort({
+          [sort]: sortOrder === "asc" ? 1 : -1,
+          _id: 1,
+        })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
@@ -425,5 +445,378 @@ export const deleteVendor = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Unable to delete vendor." });
+  }
+};
+
+export const vendorSubmitRequest = async (req, res) => {
+  try {
+    const { jobId, vendors } = req.body || {};
+    if (!mongoose.isValidObjectId(jobId)) {
+      return res
+        .status(422)
+        .json({ success: false, message: "A valid jobId is required." });
+    }
+
+    if (!Array.isArray(vendors) || vendors.length === 0) {
+      return res.status(422).json({
+        success: false,
+        message: "At least one vendor must be submitted.",
+      });
+    }
+
+    const submittedVendors = [];
+    const seenVendorDetailsIds = new Set();
+    for (const vendor of vendors) {
+      if (
+        !vendor ||
+        typeof vendor !== "object" ||
+        Array.isArray(vendor) ||
+        !mongoose.isValidObjectId(vendor.vendorId) ||
+        !mongoose.isValidObjectId(vendor.VendorDetailsId) ||
+        !Number.isInteger(Number(vendor.candidateCount)) ||
+        Number(vendor.candidateCount) < 1
+      ) {
+        return res.status(422).json({
+          success: false,
+          message:
+            "Each vendor requires valid vendorId, VendorDetailsId, and a positive integer candidateCount.",
+        });
+      }
+
+      const vendorDetailsId = String(vendor.VendorDetailsId);
+      if (seenVendorDetailsIds.has(vendorDetailsId)) {
+        return res.status(422).json({
+          success: false,
+          message: "A vendor can only be included once per submission.",
+        });
+      }
+      seenVendorDetailsIds.add(vendorDetailsId);
+      submittedVendors.push({
+        vendorId: String(vendor.vendorId),
+        VendorDetailsId: vendorDetailsId,
+        candidateCount: Number(vendor.candidateCount),
+      });
+    }
+
+    const job = await JobPosting.findOne({
+      _id: jobId,
+      userId: req.userId,
+      is_del: false,
+    })
+      .populate("branch", "name")
+      .lean();
+
+    if (!job) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Job not found." });
+    }
+
+    const vendorDetails = await VendorDetails.find({
+      _id: { $in: submittedVendors.map((vendor) => vendor.VendorDetailsId) },
+      employerId: req.userId,
+      is_del: false,
+      status: true,
+    }).lean();
+    const vendorDetailsById = new Map(
+      vendorDetails.map((vendor) => [String(vendor._id), vendor]),
+    );
+    const vendorUsers = await User.find({
+      _id: { $in: submittedVendors.map((vendor) => vendor.vendorId) },
+      role: 4,
+      is_del: false,
+      is_active: { $ne: false },
+    })
+      .select("_id")
+      .lean();
+    const vendorUserIds = new Set(
+      vendorUsers.map((vendor) => String(vendor._id)),
+    );
+
+    const requestRecords = [];
+    for (const submittedVendor of submittedVendors) {
+      const vendor = vendorDetailsById.get(submittedVendor.VendorDetailsId);
+      if (
+        !vendor ||
+        String(vendor.userId) !== submittedVendor.vendorId ||
+        !vendorUserIds.has(submittedVendor.vendorId)
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: "One or more selected vendors are unavailable.",
+        });
+      }
+
+      requestRecords.push({
+        VendorDetailsId: vendor._id,
+        VendorId: vendor.userId,
+        employerId: req.userId,
+        jobId: job._id,
+        requestId: new mongoose.Types.ObjectId().toString(),
+        jobTitle: job.jobTitle,
+        candidateCount: submittedVendor.candidateCount,
+        vendorName: vendor.name,
+        email: vendor.email,
+        contact_person_name: vendor.contact_person_name,
+        contact_person_email: vendor.contact_person_email,
+        branch: job.branch?._id || job.branch || undefined,
+      });
+    }
+
+    const requestId = new mongoose.Types.ObjectId().toString();
+    requestRecords.forEach((record) => {
+      record.requestId = requestId;
+    });
+
+    const savedRequests = await VendorSubmitRequest.insertMany(requestRecords);
+    const company = await CompanyDetails.findOne({
+      userId: req.userId,
+      isDel: false,
+    })
+      .select("name")
+      .lean();
+    const companyUser = await User.findById(req.userId).select("name").lean();
+    const companyName =
+      company?.name?.trim() || companyUser?.name?.trim() || "GEISIL";
+    const mailJobs = [];
+    for (const request of savedRequests) {
+      const recipients = new Map([
+        [request.email, request.vendorName],
+        [request.contact_person_email, request.contact_person_name],
+      ]);
+      for (const [email, recipientName] of recipients) {
+        if (email) {
+          mailJobs.push(
+            emailQueue.add("vendor_submit_request", {
+              email,
+              recipientName,
+              jobTitle: request.jobTitle,
+              candidateCount: request.candidateCount,
+              requestId,
+              branchName: job.branch?.name || "",
+              companyName,
+            }),
+          );
+        }
+      }
+    }
+
+    try {
+      await Promise.all(mailJobs);
+    } catch (error) {
+      console.error("Vendor request saved but email queueing failed:", error);
+      return res.status(503).json({
+        success: false,
+        message:
+          "Vendor requests were saved, but one or more email notifications could not be queued.",
+        requestId,
+        data: savedRequests,
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Vendor requests submitted and notifications queued.",
+      requestId,
+      data: savedRequests,
+    });
+  } catch (error) {
+    console.error("Submit vendor request error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to submit vendor requests.",
+    });
+  }
+};
+
+/* export const vendorSubmitRequestlist = async (req, res) => {
+  try {
+    const page = parsePositiveInteger(req.query.page, 1, 1_000_000);
+    const limit = parsePositiveInteger(req.query.limit, 10, 100);
+    if (!page || !limit) {
+      return res.status(422).json({
+        success: false,
+        message: "page and limit must be positive integers.",
+      });
+    }
+
+    const sortFields = new Set([
+      "requestId",
+      "jobTitle",
+      "candidateCount",
+      "vendorName",
+      "email",
+      "contact_person_name",
+      "contact_person_email",
+      "branch",
+      "createdAt",
+      "updatedAt",
+    ]);
+    const sort = req.query.sort || "createdAt";
+    const sortOrder = req.query.sortOrder || "desc";
+    if (!sortFields.has(sort)) {
+      return res
+        .status(422)
+        .json({ success: false, message: "Invalid sort field." });
+    }
+    if (!["asc", "desc"].includes(sortOrder)) {
+      return res.status(422).json({
+        success: false,
+        message: "sortOrder must be asc or desc.",
+      });
+    }
+
+    const filter = { employerId: req.userId, is_del: false };
+    if (typeof req.query.search === "string" && req.query.search.trim()) {
+      const search = new RegExp(escapeRegex(req.query.search.trim()), "i");
+      console.log("search=====================>", search);
+      filter.$or = [
+        { jobTitle: search },
+        { vendorName: search },
+        { email: search },
+        { contact_person_name: search },
+        { contact_person_email: search },
+      ];
+    }
+    console.log("filter=====================>", filter);
+    const [requests, total] = await Promise.all([
+      VendorSubmitRequest.find(filter)
+        .sort({ [sort]: sortOrder === "asc" ? 1 : -1, _id: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      VendorSubmitRequest.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: requests,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("List vendor submit requests error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch vendor submit requests.",
+    });
+  }
+}; */
+
+export const vendorSubmitRequestlist = async (req, res) => {
+  try {
+    const page = parsePositiveInteger(req.query.page, 1, 1_000_000);
+    const limit = parsePositiveInteger(req.query.limit, 10, 100);
+
+    if (!page || !limit) {
+      return res.status(422).json({
+        success: false,
+        message: "page and limit must be positive integers.",
+      });
+    }
+
+    const sortFields = new Set([
+      "requestId",
+      "jobTitle",
+      "candidateCount",
+      "vendorName",
+      "email",
+      "contact_person_name",
+      "contact_person_email",
+      "contact_person_phone_number",
+      "branch",
+      "createdAt",
+      "updatedAt",
+    ]);
+
+    const sort = req.query.sort || "createdAt";
+    const sortOrder = req.query.sortOrder || "desc";
+
+    if (!sortFields.has(sort)) {
+      return res.status(422).json({
+        success: false,
+        message: "Invalid sort field.",
+      });
+    }
+
+    if (!["asc", "desc"].includes(sortOrder)) {
+      return res.status(422).json({
+        success: false,
+        message: "sortOrder must be asc or desc.",
+      });
+    }
+
+    const filter = {
+      employerId: req.userId,
+      is_del: false,
+    };
+
+    if (typeof req.query.search === "string" && req.query.search.trim()) {
+      const search = new RegExp(escapeRegex(req.query.search.trim()), "i");
+
+      filter.$or = [
+        { jobTitle: search },
+        { vendorName: search },
+        { email: search },
+        { contact_person_name: search },
+        { contact_person_email: search },
+      ];
+    }
+
+    console.log("filter=====================>", filter);
+
+    const [requests, total] = await Promise.all([
+      VendorSubmitRequest.find(filter)
+        .populate({
+          path: "VendorDetailsId",
+          select:
+            "contact_person_name contact_person_email contact_person_phone_number",
+        })
+        .collation({ locale: "en", strength: 2 })
+        .sort({
+          [sort]: sortOrder === "asc" ? 1 : -1,
+          _id: 1,
+        })
+
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+
+      VendorSubmitRequest.countDocuments(filter),
+    ]);
+
+    const formattedRequests = requests.map((item) => ({
+      ...item,
+
+      // Prefer VendorDetails values, otherwise use VendorSubmitRequest values
+      contact_person_name: item.VendorDetailsId?.contact_person_name || "",
+
+      contact_person_email: item.VendorDetailsId?.contact_person_email || "",
+
+      contact_person_phone_number:
+        item.VendorDetailsId?.contact_person_phone_number || "",
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: formattedRequests,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("List vendor submit requests error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch vendor submit requests.",
+    });
   }
 };

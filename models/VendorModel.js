@@ -28,3 +28,48 @@ const VendorSchema = new mongoose.Schema(
 );
 
 export const VendorDetails = mongoose.model("vendordetails", VendorSchema);
+
+const VendorSubmitRequestSchema = new mongoose.Schema(
+  {
+    VendorDetailsId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "vendordetails",
+      required: true,
+    },
+    VendorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    employerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    jobId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "JobPostingList",
+      required: true,
+    },
+    requestId: { type: String, required: true, trim: true },
+    jobTitle: { type: String, required: true, trim: true },
+    candidateCount: { type: Number, required: true, trim: true },
+    vendorName: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true },
+    contact_person_name: { type: String, required: true, trim: true },
+    contact_person_email: { type: String, required: true, trim: true },
+    branch: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CompanyBranch",
+    },
+
+    is_del: { type: Boolean, default: false },
+    status: { type: Boolean, default: true },
+  },
+  { timestamps: true },
+);
+
+export const VendorSubmitRequest = mongoose.model(
+  "VendorSubmitRequest",
+  VendorSubmitRequestSchema,
+);

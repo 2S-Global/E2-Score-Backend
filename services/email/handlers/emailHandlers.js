@@ -79,6 +79,7 @@ import { coverLetterUploadedHandler } from "./actions/coverLetterUpload.js";
 import { cibilScoreHandler } from "./actions/cibilScoreHandler.js";
 import { experianScoreHandler } from "./actions/experianScoreHandler.js";
 import { vendorAssociationHandler } from "./actions/vendorAssociationHandler.js";
+import { vendorSubmitRequestHandler } from "./actions/vendorSubmitRequestHandler.js";
 
 //notification background JOBS
 
@@ -170,6 +171,7 @@ export const emailHandlers = {
   latest_CIBIL_score: cibilScoreHandler,
   latest_experian_score: experianScoreHandler,
   vendor_association_notice: vendorAssociationHandler,
+  vendor_submit_request: vendorSubmitRequestHandler,
 };
 
 export default emailHandlers;

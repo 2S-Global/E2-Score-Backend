@@ -102,6 +102,12 @@ const accounts = {
     pass: process.env.SMTP_VERIFICATION_PASS,
     name: "GEISIL Verification",
   },
+
+  submitrequest: {
+    user: process.env.SMTP_SUBMIT_REQUEST,
+    pass: process.env.SMTP_SUBMIT_REQUEST_PASS,
+    name: "GEISIL",
+  },
 };
 
 const HOST = process.env.EMAIL_HOST;
@@ -119,7 +125,10 @@ function getTransporter(type) {
   if (!account.user || !account.pass) {
     throw new Error(`Missing SMTP credentials for: ${type}`);
   }
-  console.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww=>", account);
+  console.log(
+    "sendEmail=======================================================>",
+    account,
+  );
   if (!transporters[type]) {
     transporters[type] = nodemailer.createTransport({
       host: HOST,
