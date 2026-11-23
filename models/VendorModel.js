@@ -73,3 +73,72 @@ export const VendorSubmitRequest = mongoose.model(
   "VendorSubmitRequest",
   VendorSubmitRequestSchema,
 );
+
+const VendorCandidateSchema = new mongoose.Schema(
+  {
+    VendorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    CandidateId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true },
+    phone_number: { type: String, required: true, trim: true },
+    cv: { type: String, required: true, trim: true },
+    cvPublicId: { type: String, trim: true },
+    role: { type: Number, default: 1 },
+    is_del: { type: Boolean, default: false },
+    status: { type: Boolean, default: true },
+  },
+  { timestamps: true },
+);
+
+export const VendorCandidates = mongoose.model(
+  "VendorCandidates",
+  VendorCandidateSchema,
+);
+
+const VendorSendCandidateSchema = new mongoose.Schema(
+  {
+    VendorSubmitRequestId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "VendorSubmitRequest",
+      required: true,
+    },
+    jobId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "JobPostingList",
+      required: true,
+    },
+    employerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    VendorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    CandidateId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    isSelected: { type: Boolean, default: false },
+    selectedDate: { type: Date, default: null },
+    is_del: { type: Boolean, default: false },
+    status: { type: Boolean, default: true },
+  },
+  { timestamps: true },
+);
+
+export const VendorSendCandidate = mongoose.model(
+  "VendorSendCandidate",
+  VendorSendCandidateSchema,
+);
