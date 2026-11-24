@@ -20,7 +20,8 @@ export const vendorCandidateSharedTemplate = ({
 }) =>
   GeneralMailLayout(`
     <p>Dear <strong>${escapeHtml(candidateName)}</strong>,</p>
-    <p><strong>${escapeHtml(vendorName)}</strong> has shared your profile with <strong>${escapeHtml(companyName)}</strong> for the <strong>${escapeHtml(jobTitle)}</strong> position.</p>
-    <p>The company may contact you if your profile matches its hiring needs.</p>
+    <p>We are pleased to inform you that <strong>${escapeHtml(vendorName)}</strong> has shared your professional profile with <strong>${escapeHtml(companyName)}</strong> for the <strong>${escapeHtml(jobTitle)}</strong> position.</p>
+    <p>The hiring team will review your profile, and if your qualifications and experience align with their requirements, they may contact you regarding the next steps in the recruitment process.</p>
+    <p>Thank you for your interest and for considering this opportunity</p>
     <p>Best regards,<br /><strong>${escapeHtml(vendorName)}</strong></p>
   `);
