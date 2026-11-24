@@ -8,6 +8,8 @@ import {
   updateCandidate,
   listEmployerSubmitRequest,
   employerSubmitRequest,
+  VendorSendCandidate,
+  getSharedCandidate,
 } from "../../controllers/vendor/candidateController.js";
 import userAuth from "../../middleware/authMiddleware.js";
 import VendorMiddleware from "../../middleware/vendorMiddleware.js";
@@ -47,10 +49,12 @@ const uploadCv = (req, res, next) => {
 
 candidateRouter.use(userAuth, VendorMiddleware);
 candidateRouter.post("/", uploadCv, addCandidate);
+candidateRouter.post("/send-candidates", VendorSendCandidate);
 candidateRouter.get("/", listCandidates);
 
 candidateRouter.get("/employer-request", listEmployerSubmitRequest);
 candidateRouter.get("/single-employer-request", employerSubmitRequest);
+candidateRouter.get("/shared-candidate", getSharedCandidate);
 candidateRouter.get("/:id", getCandidate);
 candidateRouter.put("/:id", uploadCv, updateCandidate);
 candidateRouter.delete("/:id", deleteCandidate);

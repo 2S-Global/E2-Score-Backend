@@ -54,6 +54,9 @@ const VendorSubmitRequestSchema = new mongoose.Schema(
     requestId: { type: String, required: true, trim: true },
     jobTitle: { type: String, required: true, trim: true },
     candidateCount: { type: Number, required: true, trim: true },
+    sharedCandidate: { type: Number, trim: true, default: 0 },
+    sharedCandidateDate: { type: Date, default: null },
+    sharedCandidateHistory: [{ type: Date }],
     vendorName: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true },
     contact_person_name: { type: String, required: true, trim: true },
@@ -136,6 +139,11 @@ const VendorSendCandidateSchema = new mongoose.Schema(
     status: { type: Boolean, default: true },
   },
   { timestamps: true },
+);
+
+VendorSendCandidateSchema.index(
+  { VendorId: 1, jobId: 1, CandidateId: 1 },
+  { unique: true },
 );
 
 export const VendorSendCandidate = mongoose.model(

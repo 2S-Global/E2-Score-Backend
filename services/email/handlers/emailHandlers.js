@@ -81,6 +81,8 @@ import { experianScoreHandler } from "./actions/experianScoreHandler.js";
 import { vendorAssociationHandler } from "./actions/vendorAssociationHandler.js";
 import { vendorSubmitRequestHandler } from "./actions/vendorSubmitRequestHandler.js";
 import { vendorCandidateNoticeHandler } from "./actions/vendorCandidateNoticeHandler.js";
+import { vendorCandidateSharedHandler } from "./actions/vendorCandidateSharedHandler.js";
+import { vendorCandidatesSharedEmployerHandler } from "./actions/vendorCandidatesSharedEmployerHandler.js";
 
 //notification background JOBS
 
@@ -174,6 +176,8 @@ export const emailHandlers = {
   vendor_association_notice: vendorAssociationHandler,
   vendor_submit_request: vendorSubmitRequestHandler,
   vendor_candidate_notice: vendorCandidateNoticeHandler,
+  vendor_candidate_shared: vendorCandidateSharedHandler,
+  vendor_candidates_shared_employer: vendorCandidatesSharedEmployerHandler,
 };
 
 export default emailHandlers;
