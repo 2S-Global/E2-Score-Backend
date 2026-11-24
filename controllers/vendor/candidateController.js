@@ -795,6 +795,8 @@ export const listEmployerSubmitRequest = async (req, res) => {
       "jobTitle",
       "candidateCount",
       "employerName",
+      "sharedCandidate",
+      "sharedCandidateDate",
       "createdAt",
     ]);
 
@@ -865,6 +867,7 @@ export const listEmployerSubmitRequest = async (req, res) => {
       if (!isNaN(Number(searchValue))) {
         searchConditions.push({
           candidateCount: Number(searchValue),
+          sharedCandidate: Number(searchValue),
         });
       }
 
