@@ -7,6 +7,8 @@ import {
   updateVendor,
   vendorSubmitRequest,
   vendorSubmitRequestlist,
+  updateVendorSubmitRequest,
+  deleteVendorSubmitRequest,
 } from "../../controllers/company/VendorController.js";
 import userAuth from "../../middleware/authMiddleware.js";
 import Companymid from "../../middleware/companyMiddleware.js";
@@ -16,6 +18,14 @@ vendorRouter.use(userAuth, Companymid);
 
 vendorRouter.post("/", addVendor);
 vendorRouter.post("/submit-request", vendorSubmitRequest);
+vendorRouter.delete(
+  "/delete-vendor-submit-request/:id",
+  deleteVendorSubmitRequest,
+);
+vendorRouter.put(
+  "/update-vendor-submit-request/:id",
+  updateVendorSubmitRequest,
+);
 vendorRouter.get("/submit-request/list", vendorSubmitRequestlist);
 vendorRouter.get("/", listVendors);
 vendorRouter.get("/:id", getVendor);

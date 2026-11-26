@@ -629,84 +629,6 @@ export const vendorSubmitRequest = async (req, res) => {
   }
 };
 
-/* export const vendorSubmitRequestlist = async (req, res) => {
-  try {
-    const page = parsePositiveInteger(req.query.page, 1, 1_000_000);
-    const limit = parsePositiveInteger(req.query.limit, 10, 100);
-    if (!page || !limit) {
-      return res.status(422).json({
-        success: false,
-        message: "page and limit must be positive integers.",
-      });
-    }
-
-    const sortFields = new Set([
-      "requestId",
-      "jobTitle",
-      "candidateCount",
-      "vendorName",
-      "email",
-      "contact_person_name",
-      "contact_person_email",
-      "branch",
-      "createdAt",
-      "updatedAt",
-    ]);
-    const sort = req.query.sort || "createdAt";
-    const sortOrder = req.query.sortOrder || "desc";
-    if (!sortFields.has(sort)) {
-      return res
-        .status(422)
-        .json({ success: false, message: "Invalid sort field." });
-    }
-    if (!["asc", "desc"].includes(sortOrder)) {
-      return res.status(422).json({
-        success: false,
-        message: "sortOrder must be asc or desc.",
-      });
-    }
-
-    const filter = { employerId: req.userId, is_del: false };
-    if (typeof req.query.search === "string" && req.query.search.trim()) {
-      const search = new RegExp(escapeRegex(req.query.search.trim()), "i");
-      console.log("search=====================>", search);
-      filter.$or = [
-        { jobTitle: search },
-        { vendorName: search },
-        { email: search },
-        { contact_person_name: search },
-        { contact_person_email: search },
-      ];
-    }
-    console.log("filter=====================>", filter);
-    const [requests, total] = await Promise.all([
-      VendorSubmitRequest.find(filter)
-        .sort({ [sort]: sortOrder === "asc" ? 1 : -1, _id: 1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),
-      VendorSubmitRequest.countDocuments(filter),
-    ]);
-
-    return res.status(200).json({
-      success: true,
-      data: requests,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error("List vendor submit requests error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Unable to fetch vendor submit requests.",
-    });
-  }
-}; */
-
 export const vendorSubmitRequestlist = async (req, res) => {
   try {
     const page = parsePositiveInteger(req.query.page, 1, 1_000_000);
@@ -819,6 +741,110 @@ export const vendorSubmitRequestlist = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Unable to fetch vendor submit requests.",
+    });
+  }
+};
+
+export const updateVendorSubmitRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { candidateCount } = req.body;
+
+    // Validate MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request ID",
+      });
+    }
+
+    // Validate candidateCount
+    if (!Number.isInteger(candidateCount) || candidateCount < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Candidate count must be a positive integer",
+      });
+    }
+
+    // Find existing request
+    const existingRequest = await VendorSubmitRequest.findOne({
+      _id: id,
+      employerId: req.userId,
+      is_del: false,
+    });
+
+    if (!existingRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor submit request not found",
+      });
+    }
+
+    // Candidate count cannot be less than sharedCandidate
+    if (candidateCount < (existingRequest.sharedCandidate || 0)) {
+      return res.status(400).json({
+        success: false,
+        message: `Candidate count cannot be less than already shared candidates (${existingRequest.sharedCandidate})`,
+      });
+    }
+
+    // Update only candidateCount
+    existingRequest.candidateCount = candidateCount;
+    await existingRequest.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Candidate count updated successfully",
+      data: existingRequest,
+    });
+  } catch (error) {
+    console.error("Update VendorSubmitRequest:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const deleteVendorSubmitRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Validate MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request ID",
+      });
+    }
+    const deletedRequest = await VendorSubmitRequest.findOneAndUpdate(
+      {
+        _id: id,
+        employerId: req.userId,
+        is_del: false,
+      },
+      {
+        $set: { is_del: true },
+      },
+      {
+        new: true,
+      },
+    );
+    if (!deletedRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor submit request not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Vendor submit request deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete VendorSubmitRequest:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };

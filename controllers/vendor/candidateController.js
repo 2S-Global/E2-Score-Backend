@@ -574,8 +574,7 @@ export const VendorSendCandidate = async (req, res) => {
 
     const previouslyShared = await VendorSendCandidateModel.find(
       {
-        VendorId: vendorId,
-        jobId,
+        VendorSubmitRequestId: submitRequestId,
         CandidateId: { $in: candidateObjectIds },
       },
       { CandidateId: 1 },
@@ -775,6 +774,283 @@ export const VendorSendCandidate = async (req, res) => {
         error.statusCode && error.statusCode < 500
           ? error.message
           : "Unable to share candidates.",
+    });
+  }
+};
+
+export const vendorSendSingleCandidateMultipleEmployer = async (req, res) => {
+  const body = req.body || {};
+  const employerRequests = body.employerRequests;
+
+  if (
+    !body ||
+    typeof body !== "object" ||
+    Array.isArray(body) ||
+    typeof body.VendorId !== "string" ||
+    !mongoose.isValidObjectId(body.VendorId) ||
+    typeof body.candidateId !== "string" ||
+    !mongoose.isValidObjectId(body.candidateId) ||
+    !Array.isArray(employerRequests) ||
+    employerRequests.length === 0 ||
+    employerRequests.some(
+      (employerRequest) =>
+        !employerRequest ||
+        typeof employerRequest !== "object" ||
+        Array.isArray(employerRequest) ||
+        typeof employerRequest.employerId !== "string" ||
+        !mongoose.isValidObjectId(employerRequest.employerId) ||
+        typeof employerRequest.submitRequestId !== "string" ||
+        !mongoose.isValidObjectId(employerRequest.submitRequestId),
+    )
+  ) {
+    return res.status(422).json({
+      success: false,
+      message: "A valid candidate ID and employerRequests array are required.",
+    });
+  }
+
+  if (String(req.userId) !== body.VendorId) {
+    return res.status(403).json({
+      success: false,
+      message: "VendorId must match the authenticated vendor.",
+    });
+  }
+
+  try {
+    const vendorId = new mongoose.Types.ObjectId(body.VendorId);
+    const candidateId = new mongoose.Types.ObjectId(
+      body.candidateId.toLowerCase(),
+    );
+
+    const ownedCandidate = await VendorCandidates.findOne(
+      {
+        VendorId: vendorId,
+        CandidateId: candidateId,
+        is_del: false,
+        status: true,
+      },
+      { CandidateId: 1 },
+    ).lean();
+
+    if (!ownedCandidate) {
+      return res.status(403).json({
+        success: false,
+        message: "The candidate is not an active candidate of this vendor.",
+      });
+    }
+
+    const candidateUser = await User.findById(candidateId)
+      .select("name email")
+      .lean();
+
+    if (!candidateUser?.email) {
+      return res.status(422).json({
+        success: false,
+        message: "Candidate email details are unavailable.",
+      });
+    }
+
+    const uniqueRequestPairs = new Set();
+    const validEmployerRequests = employerRequests.filter(
+      ({ employerId, submitRequestId }) => {
+        const pair = `${submitRequestId.toLowerCase()}:${employerId.toLowerCase()}`;
+        if (uniqueRequestPairs.has(pair)) return false;
+        uniqueRequestPairs.add(pair);
+        return true;
+      },
+    );
+
+    const resolvedRequests = await Promise.all(
+      validEmployerRequests.map(({ employerId, submitRequestId }) =>
+        VendorSubmitRequest.findOne({
+          _id: new mongoose.Types.ObjectId(submitRequestId),
+          employerId: new mongoose.Types.ObjectId(employerId),
+          VendorId: vendorId,
+          is_del: false,
+        }).lean(),
+      ),
+    );
+
+    if (resolvedRequests.some((submitRequest) => !submitRequest)) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "One or more submit requests do not belong to the specified employer and vendor.",
+      });
+    }
+
+    const results = [];
+    const failures = [];
+
+    for (const submitRequest of resolvedRequests) {
+      const employerId = new mongoose.Types.ObjectId(submitRequest.employerId);
+
+      try {
+        const previouslyShared = await VendorSendCandidateModel.findOne(
+          {
+            VendorSubmitRequestId: submitRequest._id,
+            CandidateId: candidateId,
+          },
+          { CandidateId: 1 },
+        ).lean();
+
+        if (previouslyShared) {
+          results.push({
+            employerId: String(employerId),
+            submitRequestId: String(submitRequest._id),
+            addedCount: 0,
+            sharedCandidate: submitRequest.sharedCandidate || 0,
+            candidateCount: submitRequest.candidateCount,
+          });
+          continue;
+        }
+
+        const employerUser = await User.findById(employerId)
+          .select("name email")
+          .lean();
+
+        if (!employerUser?.email) {
+          failures.push({
+            employerId: String(employerId),
+            submitRequestId: String(submitRequest._id),
+            message: "Employer email details are unavailable.",
+            data: null,
+          });
+          continue;
+        }
+
+        const company = await CompanyDetails.findOne({
+          userId: employerId,
+          isDel: false,
+        })
+          .select("name")
+          .lean();
+
+        const companyName =
+          company?.name?.trim() || employerUser.name?.trim() || "The employer";
+        const vendorName = submitRequest.vendorName?.trim() || "The vendor";
+        const sharedAt = new Date();
+
+        const updatedRequest = await VendorSubmitRequest.findOneAndUpdate(
+          {
+            _id: submitRequest._id,
+            $expr: {
+              $lte: [
+                { $add: [{ $ifNull: ["$sharedCandidate", 0] }, 1] },
+                "$candidateCount",
+              ],
+            },
+          },
+          {
+            $inc: { sharedCandidate: 1 },
+            $set: { sharedCandidateDate: sharedAt },
+            $push: { sharedCandidateHistory: sharedAt },
+          },
+          { new: true },
+        );
+
+        if (!updatedRequest) {
+          failures.push({
+            employerId: String(employerId),
+            submitRequestId: String(submitRequest._id),
+            message:
+              "Sharing this candidate would exceed the requested candidate count.",
+            data: null,
+          });
+          continue;
+        }
+
+        const createdCandidate = await VendorSendCandidateModel.create({
+          VendorSubmitRequestId: submitRequest._id,
+          jobId: submitRequest.jobId,
+          employerId,
+          VendorId: vendorId,
+          CandidateId: candidateId,
+        });
+
+        try {
+          await Promise.all([
+            emailQueue.add("vendor_candidate_shared", {
+              candidateName: candidateUser.name || "Candidate",
+              email: candidateUser.email,
+              vendorName,
+              companyName,
+              jobTitle: submitRequest.jobTitle,
+            }),
+            emailQueue.add("vendor_candidates_shared_employer", {
+              employerName: employerUser.name || "Employer",
+              employerEmail: employerUser.email,
+              vendorName,
+              companyName,
+              jobTitle: submitRequest.jobTitle,
+              candidateCount: 1,
+            }),
+          ]);
+        } catch (error) {
+          console.error(
+            "Candidate shared but notification queueing failed:",
+            error,
+          );
+          failures.push({
+            employerId: String(employerId),
+            submitRequestId: String(submitRequest._id),
+            message:
+              "Candidate was shared, but email notifications could not be queued.",
+            data: {
+              addedCount: 1,
+              candidate: createdCandidate,
+            },
+          });
+          continue;
+        }
+
+        results.push({
+          employerId: String(employerId),
+          submitRequestId: String(submitRequest._id),
+          addedCount: 1,
+          sharedCandidate: updatedRequest.sharedCandidate,
+          sharedCandidateDate: updatedRequest.sharedCandidateDate,
+          sharedCandidateHistory: updatedRequest.sharedCandidateHistory,
+          candidateCount: updatedRequest.candidateCount,
+          candidate: createdCandidate,
+        });
+      } catch (error) {
+        console.error(
+          "Vendor send candidate to single employer submit request error:",
+          error,
+        );
+        failures.push({
+          employerId: String(employerId),
+          submitRequestId: String(submitRequest._id),
+          message:
+            error.code === 11000
+              ? "This candidate has already been shared for this submit request."
+              : "Unable to share candidate.",
+          data: null,
+        });
+      }
+    }
+
+    if (failures.length > 0) {
+      return res.status(failures[0].data ? 503 : 409).json({
+        success: false,
+        message: failures[0].message,
+        data: { results, failures },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: results.every((result) => result.addedCount === 0)
+        ? "This candidate has already been shared with these employers."
+        : "Candidate shared successfully.",
+      data: { results },
+    });
+  } catch (error) {
+    console.error("Vendor send candidate to multiple employers error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to share candidate with multiple employers.",
     });
   }
 };
@@ -999,18 +1275,38 @@ export const employerSubmitRequest = async (req, res) => {
   }
 };
 
-export const getSharedCandidate = async (req, res) => {
+/* export const getSharedCandidate = async (req, res) => {
   try {
-    const sRId = req.query.sRId;
+    const { sRId } = req.query;
+    if (!sRId) {
+      return res.status(400).json({
+        success: false,
+        message: "sRId is required.",
+      });
+    }
+
+    //  Validate MongoDB ObjectId format
+    if (
+      typeof sRId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(sRId) ||
+      !/^[0-9a-fA-F]{24}$/.test(sRId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid sRId format.",
+      });
+    }
+
+    const userId = req.userId;
+    const requestObjectId = new mongoose.Types.ObjectId(sRId);
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
     const candidates = await VendorSendCandidateModel.aggregate([
       {
         $match: {
-          VendorSubmitRequestId: new mongoose.Types.ObjectId(sRId),
+          VendorSubmitRequestId: requestObjectId,
           is_del: false,
-          $or: [
-            { VendorId: new mongoose.Types.ObjectId(req.userId) },
-            { employerId: new mongoose.Types.ObjectId(req.userId) },
-          ],
+          $or: [{ VendorId: userObjectId }, { employerId: userObjectId }],
         },
       },
       {
@@ -1021,15 +1317,132 @@ export const getSharedCandidate = async (req, res) => {
           as: "candidateDetails",
         },
       },
+
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ]);
+
     return res.status(200).json({
       success: true,
       data: candidates,
     });
   } catch (error) {
     console.error("List candidates error:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Unable to fetch candidates." });
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch candidates.",
+    });
+  }
+};
+ */
+
+export const getSharedCandidate = async (req, res) => {
+  try {
+    const { sRId, sort = "createdAt", sortOrder = "desc" } = req.query;
+
+    if (!sRId) {
+      return res.status(400).json({
+        success: false,
+        message: "sRId is required.",
+      });
+    }
+
+    if (
+      typeof sRId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(sRId) ||
+      !/^[0-9a-fA-F]{24}$/.test(sRId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid sRId format.",
+      });
+    }
+
+    const sortFields = {
+      currentStatus: "currentStatus",
+      phone_number: "candidateDetails.phone_number",
+      createdAt: "createdAt",
+      name: "candidateDetails.name",
+      email: "candidateDetails.email",
+    };
+
+    const sortField = sortFields[sort] || "createdAt";
+    const order = sortOrder === "asc" ? 1 : -1;
+
+    const userId = req.userId;
+    const requestObjectId = new mongoose.Types.ObjectId(sRId);
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const candidates = await VendorSendCandidateModel.aggregate([
+      {
+        $match: {
+          VendorSubmitRequestId: requestObjectId,
+          is_del: false,
+          $or: [{ VendorId: userObjectId }, { employerId: userObjectId }],
+        },
+      },
+      {
+        $lookup: {
+          from: "vendorcandidates",
+          localField: "CandidateId",
+          foreignField: "CandidateId",
+          as: "candidateDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$candidateDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "jobpostinglists",
+          let: { jobId: "$jobId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$jobId"] },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                jobTitle: 1,
+              },
+            },
+          ],
+          as: "jobpost",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobpost",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $sort: {
+          [sortField]: order,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: candidates,
+    });
+  } catch (error) {
+    console.error("List candidates error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch candidates.",
+    });
   }
 };

@@ -9,6 +9,7 @@ import {
   listEmployerSubmitRequest,
   employerSubmitRequest,
   VendorSendCandidate,
+  vendorSendSingleCandidateMultipleEmployer,
   getSharedCandidate,
 } from "../../controllers/vendor/candidateController.js";
 import userAuth from "../../middleware/authMiddleware.js";
@@ -50,6 +51,10 @@ const uploadCv = (req, res, next) => {
 candidateRouter.use(userAuth, VendorMiddleware);
 candidateRouter.post("/", uploadCv, addCandidate);
 candidateRouter.post("/send-candidates", VendorSendCandidate);
+candidateRouter.post(
+  "/send-single-candidate-multiple-employers",
+  vendorSendSingleCandidateMultipleEmployer,
+);
 candidateRouter.get("/", listCandidates);
 
 candidateRouter.get("/employer-request", listEmployerSubmitRequest);

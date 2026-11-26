@@ -135,6 +135,7 @@ const VendorSendCandidateSchema = new mongoose.Schema(
     },
     isSelected: { type: Boolean, default: false },
     selectedDate: { type: Date, default: null },
+    currentStatus: { type: String, trim: true, default: "pending" },
     is_del: { type: Boolean, default: false },
     status: { type: Boolean, default: true },
   },
@@ -142,7 +143,7 @@ const VendorSendCandidateSchema = new mongoose.Schema(
 );
 
 VendorSendCandidateSchema.index(
-  { VendorId: 1, jobId: 1, CandidateId: 1 },
+  { VendorSubmitRequestId: 1, CandidateId: 1 },
   { unique: true },
 );
 
