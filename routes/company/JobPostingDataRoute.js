@@ -48,6 +48,7 @@ import {
   restoreJobApplicationStatus,
   updateJobPosting,
   getMyAppliedJobsGraph,
+  getAllActiveJobListing,
 } from "../../controllers/company/JobPostingDataController.js";
 
 //middleware
@@ -157,6 +158,14 @@ jobPostingDataRouter.get(
   userAuth,
   Companymid,
   getAllJobListing,
+);
+
+// Get All Active Job Listing API
+jobPostingDataRouter.get(
+  "/get_all_active_job_listing",
+  userAuth,
+  Companymid,
+  getAllActiveJobListing,
 );
 
 jobPostingDataRouter.get(

@@ -1295,6 +1295,129 @@ export const getAllJobListing = async (req, res) => {
 };
 
 // Get All Job Listing API
+export const getAllActiveJobListing = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const company = await User.findById(userId);
+    if (!company) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Fetch logo from companyDetails
+    const companyDetails = await CompanyDetails.findOne({ userId }).select(
+      "logo",
+    );
+    const logo = companyDetails?.logo || null;
+
+    const today = new Date();
+
+    // Fetch jobs for this user where status is "completed" and expiryDate is not passed
+    const jobs = await JobPosting.find({
+      userId,
+      status: "completed",
+      is_del: false,
+    })
+      .populate("jobType", "name")
+      .populate("country", "name")
+      .populate("city", "city_name")
+      .populate("branch", "name")
+      .select(
+        "_id jobTitle jobType jobLocationType advertiseCity advertiseCityName country city branch createdAt jobExpiryDate status",
+      )
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // console.log("Here is my all Job List", jobs)
+
+    // Get all job IDs
+    const jobIds = jobs.map((job) => job._id);
+
+    // Aggregate application counts
+    const applicationCounts = await JobApplication.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+          isDel: false,
+          status: { $ne: "rejected" },
+        },
+      },
+      {
+        $group: {
+          _id: "$jobId",
+          appliedCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Convert to lookup map
+    const applicationCountMap = {};
+    applicationCounts.forEach((item) => {
+      applicationCountMap[item._id.toString()] = item.appliedCount;
+    });
+
+    // Build response
+    const jobList = jobs.map((job) => {
+      let location = "";
+      let advertiseCityName = "";
+
+      // Remote job logic
+      if (job.jobLocationType === "remote") {
+        location = "Remote";
+        advertiseCityName =
+          job.advertiseCity === "Yes" ? job.advertiseCityName || "" : "";
+      }
+
+      // On-site job logic
+      else if (job.jobLocationType === "on-site") {
+        const country = job.country?.name || "";
+        const city = job.city?.city_name || "";
+        const branch = job.branch?.name || "";
+
+        location = [city, country].filter(Boolean).join(", ");
+      }
+
+      // Format date to "October 27, 2017"
+      const formatDate = (date) => {
+        if (!date) return "";
+        return new Date(date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+      };
+
+      return {
+        _id: job._id,
+        jobTitle: job.jobTitle,
+        jobType: job.jobType.map((item) => item.name),
+        jobLocationType: job.jobLocationType,
+        location,
+        advertiseCityName,
+        createdAt: formatDate(job.createdAt),
+        expiryDate: formatDate(job.jobExpiryDate),
+        isActive: !job.jobExpiryDate || new Date(job.jobExpiryDate) >= today,
+        logo,
+        appliedCount: applicationCountMap[job._id.toString()] || 0,
+        status: job.status,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Job listing fetched successfully.",
+      data: jobList,
+    });
+  } catch (error) {
+    console.error("Error fetching job listings:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get All Job Listing API
 export const getJobListingNotExpir = async (req, res) => {
   try {
     const userId = req.userId;
